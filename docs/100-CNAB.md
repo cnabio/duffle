@@ -21,7 +21,7 @@ The invocation image contains a standardized filesystem layout where metadata an
 - Container: An OSI container
 - Image: An OSI container image
 - Manifest.json: The CNAB file that enumerates the images that are compositionally part of this application
-- Parameters.json: The CNAB file that maps configurable params (incomming) to internal paramaters (such as references in a template file)
+- Parameters.json: The CNAB file that maps configurable params (incoming) to internal paramaters (such as references in a template file)
 
 
 
