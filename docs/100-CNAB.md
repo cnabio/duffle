@@ -79,7 +79,7 @@ Supported substitution formats:
 
 - JSON
 - YAML
-- ZML
+- XML
 
 ```json
 { ​
