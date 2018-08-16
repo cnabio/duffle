@@ -1,9 +1,0 @@
-BINDIR    := $(CURDIR)/bin
-GO        ?= go
-GOFLAGS   :=
-TAGS      :=
-LDFLAGS   := -w -s
-
-.PHONY: build
-build:
-	$(GO) build -o $(BINDIR)/duffle.exe $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' github.com/deis/duffle/cmd/...
