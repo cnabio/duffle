@@ -160,7 +160,28 @@ TODO: How do we specify URI is a VM image (or Jar or other) instead of a Docker-
 
 A CNAB bundle is parameterized via a `parameters.js` file, which maps external names to internal configuration settings. For example, the externally visible `hostname` name can be set to `example.com`. Doing so will allow the CNAB bundle to substitute that value (`example.com`) in places where a hostname value is required.
 
-*TODO:* Insert example
+The parameters format is based upon [Azure ARM template parameters](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-templates-parameters). The syntax of a `parameters.js` file is as follows:
+
+```json
+"parameters": {
+    "<parameter-name>" : {
+        "type" : "<type-of-parameter-value>",
+        "defaultValue": "<default-value-of-parameter>",
+        "allowedValues": [ "<array-of-allowed-values>" ],
+        "minValue": <minimum-value-for-int>,
+        "maxValue": <maximum-value-for-int>,
+        "minLength": <minimum-length-for-string-or-array>,
+        "maxLength": <maximum-length-for-string-or-array-parameters>,
+        "metadata": {
+            "description": "<description-of-the parameter>" 
+        }
+    }
+}
+```
+
+Fields are described in detail [here](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-templates-parameters#available-properties), and the formal JSONSchema is [also available](http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#). (Note that only the `parameters` subsection is supported).
+
+TODO: Extract this into  a formal spec.
 
 ## Dockerfile
 
