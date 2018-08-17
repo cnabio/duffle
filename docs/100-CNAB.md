@@ -2,13 +2,13 @@
 
 CNAB is a _standard packaging format_ for multi-container cloud native applications. It allows packages to target different runtimes and architectures. It empowers application distributors to package applications for deployment on a wide variety of cloud platforms, cloud providers, and cloud services. It also provides the utilities necessary for delivering multi-container applications in disconnected environments.
 
-CNAB is not a platform-specific tool. While it uses containers for encapsulating installation logic, it remains unopinionated about what cloud environment it runs in. CNAB developers can bundle applications targeting environments spanning IaaS (like OpenStack or Azure), container orchestrators (like Kubernetes or Nomad), container runtimes (like local Docker or ACI), and cloud services (like object storage or Database as a Service).
+CNAB is not a platform-specific tool. While it uses containers for encapsulating installation logic, it remains un-opinionated about what cloud environment it runs in. CNAB developers can bundle applications targeting environments spanning IaaS (like OpenStack or Azure), container orchestrators (like Kubernetes or Nomad), container runtimes (like local Docker or ACI), and cloud services (like object storage or Database as a Service).
 
 This is a working document tracking the current design for CNAB. At a later point, this document will be superseded by a formal specification.
 
 ## Approach
 
-The CNAB specification builds on the [Open Container Initiative (OCI)]() family of specifications. It relies upon OSI's content addressable storage (CAS) and multi-architecture support, as well as OSI's specification for cytographic integrity checking.
+The CNAB specification builds on the [Open Container Initiative (OCI)](https://www.opencontainers.org/) family of specifications. It relies upon OCI's content addressable storage (CAS) and multi-architecture support, as well as OCI's specification for cryptographic integrity checking.
 
 The core concept of CNAB is that a bundle is comprised of a _lightweight invocation image_ whose job is to install zero or more cloud components, including (but not limited to): containers, IaaS and PaaS layers, and service frameworks.
 
@@ -18,10 +18,10 @@ The invocation image contains a standardized filesystem layout where metadata an
 
 - Bundle: the collection of CNAB data and metadata necessary for installing an application on the designated cloud services
 - Invocation Image: The OCI image that contains the bootstrapping and installation logic for the bundle
-- Container: An OSI container
-- Image: An OSI container image
+- Container: An OCI container
+- Image: An OCI container image
 - Manifest.json: The CNAB file that enumerates the images that are compositionally part of this application
-- Parameters.json: The CNAB file that maps configurable params (incoming) to internal paramaters (such as references in a template file)
+- Parameters.json: The CNAB file that maps configurable params (incoming) to internal parameters (such as references in a template file)
 
 
 
@@ -137,7 +137,7 @@ Supported substitution formats:
 Fields:
 
 - name: the name of the application
-- version: The version of the application, which MUST comply with SemVer2
+- version: The version of the application, which MUST comply with SemVer 2
 - images: The list of dependent images
     - name: The image name
     - URI: The image reference (REGISTRY/NAME:TAG). Note that _should_ be a CAS SHA, not a version tag as in the example above.
@@ -180,9 +180,9 @@ CMD /cnab/app/run
 
 The above example installs and configures Helm inside of a base Ubuntu image. Note that there are no restrictions on what tools may be installed.
 
-## The Main Entrypoint
+## The Main Entry Point
 
-Convention suggests that the main entrypoint be at `/app/run`, though the actual execution is determine by the `Dockerfile`. The main entrypoint must be an executable of some sort, whether a script or a binary.
+Convention suggests that the main entry point be at `/app/run`, though the actual execution is determine by the `Dockerfile`. The main entry point must be an executable of some sort, whether a script or a binary.
 
 Example:
 
@@ -192,7 +192,7 @@ Example:
 helm install example-stable/wordpress
 ```
 
-This simple example merely executes Helm, installing the wordpress chart with the default settings.
+This simple example merely executes Helm, installing the Wordpress chart with the default settings.
 
 ## Overriding Parameters
 
