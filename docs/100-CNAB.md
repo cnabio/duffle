@@ -69,7 +69,29 @@ The contents beneath `app/` are undefined by the spec.
 
 _NOTE:_ While _ad hoc_ data may be placed under `app/`, all possible names under the root container directory (`cnab/`) are considered reserved, and no additional names may be added beyond the spec. For example, creating `cnab/bin/` would violate the specification.
 
-_Note:_ Earlier versions of the spec did not include a top-level `cnab` directory, and dropped all files in `/`. However, this leads to the potential for unintended namespace collisions if a base image (injected via `FROM` in the Dockerfile) may unintentionally override a CNAB reserved file.
+### Why a `cnab/` directory?
+
+Earlier versions of the spec did not include a top-level `cnab` directory, and dropped all files in `/`. However, this would put packages into an unregulated namespace (the root directory). Existing images may already contain or require files and directories like `run` or `app`. In turn, this leads to the potential for unintended namespace collisions.
+
+By declaring a `cnab` directory, we reduce the likelihood of collisions, while also making it possible for base images to scaffold out CNAB constructs that can be leveraged.
+
+For example, a base CNAB image may provide something like this:
+
+```Dockerfile
+FROM ubuntu:latest
+
+COPY ./some-chart /cnab/app/charts/some-chart
+```
+
+Then a later `Dockerfile` could do this:
+
+```Dockerfile
+FROM above-image:latest
+
+RUN helm inspect values /cnab/app/charts/some-chart > ./myvals.yaml &&  sed ...
+```
+
+The example above is simply intended to show how by reserving the `/cnab` directory, we can make images composable, while not worrying about non-CNAB images putting data in places CNAB treats as special.
 
 ## Manifest
 
@@ -119,9 +141,15 @@ Fields:
 - images: The list of dependent images
     - name: The image name
     - URI: The image reference (REGISTRY/NAME:TAG). Note that _should_ be a CAS SHA, not a version tag as in the example above.
-    - refs: array of objects each containing...
-        - path: the path to a replacement (UNIX-style)
-        - field: the [CSS selector](https://www.w3.org/TR/selectors-3/) path to replace within that file.
+    - refs: An array listing the locations which refer to this image, and whose values should be replaced by the value specified in URI. Each entry contains the following properties:
+        - path: the path of the file where the value should be replaced
+        - field:a selector specifying a location (or locations) within that file where the value should be replaced
+        
+Selectors are based on the _de facto_ format used in tools like `jq`, which is a subset of the [CSS selector](https://www.w3.org/TR/selectors-3/) path. Examples:
+
+- `foo.bar.baz` is interpreted as "find element baz whose parent is bar and whose grandparent is foo".
+- `#baz` in XML is "the element whose ID attribute is set to "baz"". It is a no-op in YAML and JSON.
+- TODO: Will we need to support attribute selectors?
 
 TODO: How do we specify multiple replacements within a single file?
 
