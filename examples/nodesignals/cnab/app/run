@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd /cnab/app
+node ./index.js
