@@ -22,11 +22,11 @@ The situation is complicated by the following factors:
 - There is no standard file format for storing credentials
 - The consuming applications may require the credentials be submitted via different methods, including as environment variables, files, or STDIN.
 
-Subsequently, and satisfactory solution must be able to accomodate a wide variety of configurational permutations, ideally without dictating that credentialing tools change in any way.
+Subsequently, any satisfactory solution must be able to accommodate a wide variety of configurational permutations, ideally without dictating that credentialing tools change in any way.
 
 ## Credential Sets
 
-A *credential set* is a named set of credentials (or credential generators) that can is managed on the local host (via duffle) and injected into the invocation container on demand.
+A *credential set* is a named set of credentials (or credential generators) that is managed on the local host (via duffle) and injected into the invocation container on demand.
 
 ### On-disk format
 
@@ -67,17 +67,17 @@ credentials:
        name: SERVICE_TOKEN
 ```
 
-The above declares two different credentails. One is a kubeconfig file that will be copied from the localhost into the container verbatim. The second is a security token that will be generated on the localhost, and passed into the container as an environment variable (`$SERVICE_TOKEN`).
+The above declares two different credentials. One is a `kubeconfig` file that will be copied from the localhost into the container verbatim. The second is a security token that will be generated on the localhost, and passed into the container as an environment variable (`$SERVICE_TOKEN`).
 
 Credential sets are specified when needed:
 
 ```console
 $ duffle run --credentials=staging example/myapp:1.0.0
-> loading credentials from $HOME/.duffle/credentails/staging.yaml
+> loading credentials from $HOME/.duffle/credentials/staging.yaml
 > running example/myapp:1.0.0
 ```
 
-## Default Credentail Sets
+## Default Credential Sets
 
 A default credential set may be specified in the Duffle preferences. They may be set in a project's `duffle.yaml`, or (more frequently) per user in the `$HOME/.duffle/preferences.yaml` file:
 
@@ -91,6 +91,6 @@ In this model, credentials can only be injected as files and environment variabl
 
 Other:
 
-- We might be able to put all credentials in one large YAML file. Credentails may include x509 certs or other large things
-- There is no way to specify in a CNAB bunfle what credentials are required on the host system, other than by documentation. We might have to figure that out at some point
+- We might be able to put all credentials in one large YAML file. Credentials may include x509 certs or other large things
+- There is no way to specify in a CNAB bundle what credentials are required on the host system, other than by documentation. We might have to figure that out at some point
 - We don't address how a credential might be injected into a file on the image. The assumption is that such a thing would be scripted
