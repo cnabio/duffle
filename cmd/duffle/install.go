@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -26,6 +27,20 @@ this package can be referenced by installation name.
 Example:
 	$ duffle install my_release duffle/example:0.1.0
 	$ duffle status my_release
+
+Different drivers are available for executing the duffle invocation image. The following drivers
+are built-in:
+
+	- docker: run the Docker client. Works for OCI and Docker images
+	- debug: fake a run of the invocation image, and print out what would have been sent
+
+Some drivers have additional configuration that can be passed via environment variable.
+
+	docker:
+	  - VERBOSE: "true" turns on extra output
+
+Example:
+	$ VERBOSE=true duffle install -d docker  install my_release duffle/example:0.1.0
 `
 	var installDriver string
 	var valuesFile string
@@ -46,7 +61,7 @@ Example:
 				return err
 			}
 
-			driverImpl, err := driver.Lookup(installDriver)
+			driverImpl, err := prepareDriver(installDriver)
 			if err != nil {
 				return err
 			}
@@ -75,6 +90,21 @@ Example:
 	cmd.Flags().StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 
 	return cmd
+}
+
+func prepareDriver(driverName string) (driver.Driver, error) {
+	driverImpl, err := driver.Lookup(driverName)
+	if err != nil {
+		return driverImpl, err
+	}
+
+	// Load any driver-specific config out of the environment.
+	driverCfg := map[string]string{}
+	for env := range driverImpl.Config() {
+		driverCfg[env] = os.Getenv(env)
+	}
+	driverImpl.SetConfig(driverCfg)
+	return driverImpl, err
 }
 
 func validateDockerish(s string) error {

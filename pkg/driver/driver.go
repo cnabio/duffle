@@ -50,30 +50,19 @@ type Driver interface {
 	Run(*Operation) error
 	// Handles receives an ImageType* and answers whether this driver supports that type
 	Handles(string) bool
-}
-
-// DockerDriver is capable of running Docker invocation images using Docker itself.
-type DockerDriver struct{}
-
-func (d *DockerDriver) Run(op *Operation) error {
-	fmt.Printf("CNAB_INSTALLATION_NAME=%q\n", op.Installation)
-	fmt.Printf("CNAB_ACTION=%q\n", op.Action)
-	fmt.Printf("CNAB_BUNDLE_NAME=%q\n", op.Image)
-	for k, v := range op.Parameters {
-		// TODO: Vet against bundle's parameters.json
-		fmt.Printf("CNAB_P_%s='%v'\n", strings.ToUpper(k), v)
-	}
-	return nil
-}
-
-func (d *DockerDriver) Handles(dt string) bool {
-	return dt == ImageTypeDocker || dt == ImageTypeOCI
+	// Config returns a map of configuration names and values that can be set via environment variable
+	Config() map[string]string
+	// SetConfig allows setting configuration, where name correspends to the key in Config, and value is
+	// the value to be set.
+	SetConfig(map[string]string)
 }
 
 // DebugDriver prints the information passed to a driver
 //
 // It does not ever run the image.
-type DebugDriver struct{}
+type DebugDriver struct {
+	config map[string]string
+}
 
 func (d *DebugDriver) Run(op *Operation) error {
 	data, err := json.MarshalIndent(op, "", "  ")
@@ -86,4 +75,18 @@ func (d *DebugDriver) Run(op *Operation) error {
 
 func (d *DebugDriver) Handles(dt string) bool {
 	return true
+}
+
+func (d *DebugDriver) Config() map[string]string {
+	return map[string]string{
+		"VERBOSE": "Increase verbosity. true, false are supported values",
+	}
+}
+
+func (d *DebugDriver) SetConfig(settings map[string]string) {
+	d.config = settings
+}
+
+func isTrue(val string) bool {
+	return strings.ToLower(val) == "true"
 }
