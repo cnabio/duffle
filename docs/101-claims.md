@@ -77,6 +77,7 @@ The CNAB claim is defined as a JSON document.
         - upgrade
         - delete
         - downgrade
+        - status
         - unknown
     - status: Indicates the status of the last phase transition. Valid statuses are:
         - success: completed successfully

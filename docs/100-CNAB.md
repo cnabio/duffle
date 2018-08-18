@@ -12,7 +12,9 @@ The CNAB specification builds on the [Open Container Initiative (OCI)](https://w
 
 The core concept of CNAB is that a bundle is comprised of a _lightweight invocation image_ whose job is to install zero or more cloud components, including (but not limited to): containers, IaaS and PaaS layers, and service frameworks.
 
-The invocation image contains a standardized filesystem layout where metadata and installation data is stored in predictable places. A "main" script or tool contains top-layer orchestration logic. Parameterization and credentialing allow injection of configuration data into the main image. And using the process interface, signals are sent to the main program to indicate information about user intent. Finally, to tie in other container images, CNAB bundles include a manifest for image tracking.
+The invocation image contains a standardized filesystem layout where metadata and installation data is stored in predictable places. A "main" script or tool contains top-layer orchestration logic. Parameterization and credentialing allow injection of configuration data into the main image.
+
+Actions are sent to the `run` command via environment variable. Actions determine whether a bundle is to be installed, upgraded, downgraded, uninstalled, or merely queried for status.
 
 ### Key Terms:
 
@@ -22,6 +24,7 @@ The invocation image contains a standardized filesystem layout where metadata an
 - Image: An OCI container image
 - Manifest.json: The CNAB file that enumerates the images that are compositionally part of this application
 - Parameters.json: The CNAB file that maps configurable params (incoming) to internal parameters (such as references in a template file)
+- `action`: The operation requested from the CNAB bundle (e.g. install, upgrade, uninstall)
 
 
 
@@ -182,17 +185,35 @@ The above example installs and configures Helm inside of a base Ubuntu image. No
 
 ## The Main Entry Point
 
-Convention suggests that the main entry point be at `/app/run`, though the actual execution is determine by the `Dockerfile`. The main entry point must be an executable of some sort, whether a script or a binary.
+Convention suggests that the main entry point be at `/app/run`. The the `Dockerfile`'s `exec` array must point to this entry point. The main entry point must be an executable of some sort, whether a script or a binary.
+
+The environment will provide the name of the current installation as `$CNAB_INSTALLATION_NAME` and the name of the action will be passed as `$CNAB_ACTION`.
 
 Example:
 
-```bash
+```bash.
 #!/bin/bash
+action=$CNAB_ACTION
 
-helm install example-stable/wordpress
+# TODO: probably do a switch here?
+if [[ action == "install" ]]; then
+  helm install example-stable/wordpress -n $CNAB_INSTALLATION_NAME
+elif [[ action == "delete" ]]; then
+  helm delete $CNAB_INSTALLATION_NAME
+fi
 ```
 
-This simple example merely executes Helm, installing the Wordpress chart with the default settings.
+This simple example merely executes Helm, installing the Wordpress chart with the default settings if `install` is sent, or deleting the installation if `delete` is sent.
+
+The following actions are supported:
+
+- install
+- upgrade
+- delete
+- downgrade
+- status
+
+None of the actions are required to be implemented. However, none of the actions may returned an error if not implemented.
 
 ## Overriding Parameters
 
