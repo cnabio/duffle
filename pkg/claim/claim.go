@@ -31,12 +31,13 @@ const (
 // provide the necessary data to upgrade, uninstall, and downgrade
 // a CNAB package.
 type Claim struct {
-	Name     string    `json:"name"`
-	Revision string    `json:"revision"`
-	Created  time.Time `json:"created"`
-	Modified time.Time `json:"modified"`
-	Bundle   Bundle    `json:"bundle"`
-	Result   Result    `json:"result"`
+	Name       string                 `json:"name"`
+	Revision   string                 `json:"revision"`
+	Created    time.Time              `json:"created"`
+	Modified   time.Time              `json:"modified"`
+	Bundle     string                 `json:"bundle"`
+	Result     Result                 `json:"result"`
+	Parameters map[string]interface{} `json:"parameters"`
 }
 
 // New creates a new Claim initialized for an installation operation.
@@ -51,6 +52,7 @@ func New(name string) *Claim {
 			Action: ActionUnknown,
 			Status: StatusUnknown,
 		},
+		Parameters: map[string]interface{}{},
 	}
 }
 
@@ -70,13 +72,6 @@ type Result struct {
 	Message string `json:"message"`
 	Action  string `json:"action"`
 	Status  string `json:"status"`
-}
-
-// Bundle describes the bundle metadata in a Claim
-type Bundle struct {
-	URI     string `json:"uri"`
-	Name    string `json:"name"`
-	Version string `json:"version"`
 }
 
 // ULID generates a string representation of a ULID.

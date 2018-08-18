@@ -46,28 +46,23 @@ The CNAB claim is defined as a JSON document.
 {
     "name": "galloping-pony",
     "revision": "01CN530TF9Q095VTRYP1M8797C",
-    "bundle": {
-        "uri": "hub.docker.com/technosophos/vote",
-        "name": "vote",
-        "version": "0.1.0"
-    },
+    "bundle": "technosophos.azurecr.io/cnab/example:0.1.0"
     "created": "TIMESTAMP",
     "modified": "TIMESTAMP",
     "result": {
         "message": "installed vote 0.1.0",
         "action": "install",
         "status": "success"
+    },
+    "parameters": {
+        "SOME_KEY": "SOME_VALUE"
     }
-    
 }
 ```
 
 - name: The name of the _installation_. This can be automatically generated, though humans may need to interact with it. It must be unique within the installation environment, though that constraint must be imposed externally.
 - revision: An [ULID](https://github.com/ulid/spec) that must change each time the release is modified.
-- bundle: An object that describes which CNAB bundle was installed by providing the following required information:
-  - uri: The URI (according to the CNAB spec) of the CNAB bundle
-  - name: The short name of the bundle (per that bundle's `manifest.json`)
-  - version: The version of the bundle (per that bundle's `manifest.json`)
+- bundle: The resource name (e.g. `technosophos.azurecr.io/cnab/example:0.1.0`)
 - created: A timestamp indicating when this release claim was first created. This must not be changed after initial creation.
 - updated: A timestamp indicating the last time this release claim was modified
 - result: The outcome of the bundle's action (e.g. if action is install, this indicates the outcome of the installation.). It is an object with the following fields:
@@ -84,6 +79,7 @@ The CNAB claim is defined as a JSON document.
         - failure: failed before completion
         - underway: in progress. This should only be used if the invocation container must exit before it can determine whether all operations are complete. Note that underway is a _long term status_ that indicates that the installation's final state cannot be determined by the system. For this reason, it should be avoided.
         - unknown: unknown
+- parameters: Key/value pairs that were passed in during the operation. These are stored so that the operation can be re-run. Some implementations may choose not to store these for security or portability reasons.
 
 TODO: What is the best timestamp format to use? Does JSON have a preference?
 
@@ -114,16 +110,14 @@ To satisfy these requirements, implementations of a CNAB package manager are exp
 
 ## Producing a Claim
 
-The claim is produced by the invocation image during execution of an installation operation.
+The claim is produced outside of the CNAB package. The following claim data is injected
+into the invocation container at runtime:
 
-During upgrade and delete operations, a claim _must be provided_ by the CNAB package manager implementation. That claim is then _modified_ by the invocation image, and re-sent back to the client.
+- `$CNAB_INSTALLATION_NAME`: The value of `claim.name`.
+- `$CNAB_BUNDLE_NAME`: The name of the present bundle.
+- `$CNAB_ACTION`: The action to be performed (install, upgrade, ...)
 
-Claims are communicated via a UNIX socket mounted inside the host at the path `/var/run/cnab/claim.sock`
-
-FIXME: alternative options:
-- shared file bind-mounted (race-y)
-- injected via env var, ejected via STDOUT or STDERR (parser-heavy)
-- ???
+The parameters passed in by the user are vetted against `parameters.json` outside of the container, and then injected into the container as environment variables of the form: `$CNAB_P_{parameterName.toUpper}="{parameterValue}"`.
 
 ## Calculating the Result
 
@@ -162,6 +156,5 @@ If both commands exit with 0, then the resulting claim will look like this:
 
 ## TODO
 
-- Finalize how we do message passing
 - Define downgrade
 - Define how action is determined, as this is beyond merely running an executable
