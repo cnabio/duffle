@@ -120,7 +120,7 @@ During upgrade and delete operations, a claim _must be provided_ by the CNAB pac
 Claims are communicated via a UNIX socket mounted inside the host at the path `/var/run/cnab/claim.sock`
 
 FIXME: alternative options:
-- shared file bind-mounted (racey)
+- shared file bind-mounted (race-y)
 - injected via env var, ejected via STDOUT or STDERR (parser-heavy)
 - ???
 
