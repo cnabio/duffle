@@ -18,7 +18,7 @@ Duffle is intended to perform the following tasks:
 
 the `duffle build` command takes a file-based representation of a CNAB bundle, combined with Duffle configuration, and builds a CNAB bundle.
 
-It builds invocation images. When a Duffle applicatiomn is multi-container, it also will build those images.
+It builds invocation images. When a Duffle application is multi-container, it also will build those images.
 
 ### Example
 
@@ -34,7 +34,13 @@ Consider an application named `myapp` with a `manifest.json` like this:
       "uri": "example/myapp-server:a5ff67...",​
       "refs": []​
     }​
-  ]​
+  ]​,
+  "parameters": {
+    "server_port": {
+      "type": "int",
+      "defaultValue": 80
+    }
+  }
 }
 ```
 
@@ -76,14 +82,22 @@ For thick images, it will load the images into the local registry.
 
 For thin images, it will (if necessary) pull the dependent images from a registry and load them into the local Docker/Moby daemon.
 
+## Passing Parameters into the Invocation Image
+
+CNAB includes a method for declaring user-facing parameters that can be changed during certain operations (like installation). Parameters are specified in the `manifest.json` file. Duffle processes these as follows:
+
+- The user may specify values when invoking `duffle run` or similar commands.
+- Prior to executing the image, Duffle will read the manifest file, extract the parameters definitions, and then merge specified values and defaults into one set of finalized parameters
+- During startup of the image, Duffle will inject each parameter as an environment variable, following the conversion method determined by CNAB:
+  - The variable name will be: CNAB_P_ plus the uppercased variable name (e.g. CNAB_P_SERVER_PORT), and the value will be a string representation of the value.
+
 ## TODO
 
 The following items remain to be specified:
 
-- How configuration data is passed into bundles
 - The format and contents of `duffle.yaml`
 - How Duffle does install/upgrade/delete
-- How Duffle will use signals
+- How Duffle will use signals (which it probably won't)
 - How Duffle does `duffle run` for a production grade long-lived application
 - How Duffle does state management for installations
 - How `duffle init` works, or whether that is done by a separate tool (or set of tools).
