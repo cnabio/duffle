@@ -104,7 +104,7 @@ The claim is used to inform any CNAB tooling about how to address a particular i
     - This is accompanied by running the `upgrade` path in the bundle
 - Given an installation's name, mark the claim as deleted.
     - This is accompanied by running the `uninstall` path in the bundle
-    - XXX: DO we want to allow the implementing system to remove the claim from it's database (e.g. helm delete --purge) or remain silent on this matter?
+    - XXX: Do we want to allow the implementing system to remove the claim from its database (e.g. helm delete --purge) or remain silent on this matter?
 
 To satisfy these requirements, implementations of a CNAB package manager are expected to be able to store and retrieve state information. However, note that nothing in the CNAB specification tells _how or where_ this state information is to be stored. It is _not a requirement_ to store that state information inside of the invocation image. (In fact, this is discouraged.)
 
@@ -116,6 +116,7 @@ into the invocation container at runtime:
 - `$CNAB_INSTALLATION_NAME`: The value of `claim.name`.
 - `$CNAB_BUNDLE_NAME`: The name of the present bundle.
 - `$CNAB_ACTION`: The action to be performed (install, upgrade, ...)
+- `$CNAB_REVISION`: The ULID for the present release revision. (On upgrade, this is the _new_ revision)
 
 The parameters passed in by the user are vetted against `parameters.json` outside of the container, and then injected into the container as environment variables of the form: `$CNAB_P_{parameterName.toUpper}="{parameterValue}"`.
 
@@ -132,6 +133,8 @@ helm install stable/wordpress -n $CNAB_INSTALLATION_NAME > /dev/null
 kubectl create pod $CNAB_INSTALLATION_NAME > /dev/null
 echo "yay!"
 ```
+
+(Note that we are redirecting data to `/dev/null` just to make the example easier. A production CNAB bundle might choose to include more verbose output.)
 
 If both commands exit with 0, then the resulting claim will look like this:
 

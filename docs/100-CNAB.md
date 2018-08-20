@@ -213,7 +213,7 @@ The following actions are supported:
 - downgrade
 - status
 
-None of the actions are required to be implemented. However, none of the actions may returned an error if not implemented.
+None of the actions are required to be implemented. However, none of the actions may return an error if not implemented.
 
 ## Overriding Parameters
 
