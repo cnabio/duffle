@@ -94,7 +94,6 @@ func Display(ctx context.Context, app string, summaries <-chan *builder.Summary,
 		}
 		cli.Stop()
 		wg.Wait()
-		fmt.Fprintf(cli.opts.stdout, "%s `%s`\n", blue("Inspect the logs with"), yellow("kubed logs ", id))
 	}()
 	for {
 		select {
