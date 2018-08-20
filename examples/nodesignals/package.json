@@ -1,0 +1,11 @@
+{
+  "name": "nodesignals",
+  "version": "1.0.0",
+  "description": "Example of signal handling in Node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "technosophos",
+  "license": "MIT"
+}
