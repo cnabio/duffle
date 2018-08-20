@@ -24,6 +24,7 @@ Actions are sent to the `run` command via environment variable. Actions determin
 - Image: An OCI container image
 - Manifest.json: The CNAB file that enumerates the images that are compositionally part of this application, and enumerates which parameters can be overridden.
 
+
 ## Container Registry and Bundle
 
 A CNAB bundle must point to one image (the invocation image). It _may_ point to other images in its `manifest.json` file. Logically, we can talk about those containers as _parts of_ the application. But when stored in a container registry, they will each be stored as independent images.
