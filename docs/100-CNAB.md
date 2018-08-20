@@ -158,9 +158,9 @@ TODO: How do we specify URI is a VM image (or Jar or other) instead of a Docker-
 
 ## Parameterization
 
-A CNAB bundle is parameterized via a `parameters.js` file, which maps external names to internal configuration settings. For example, the externally visible `hostname` name can be set to `example.com`. Doing so will allow the CNAB bundle to substitute that value (`example.com`) in places where a hostname value is required.
+A CNAB bundle is parameterized via a `parameters.json` file, which maps external names to internal configuration settings. For example, the externally visible `hostname` name can be set to `example.com`. Doing so will allow the CNAB bundle to substitute that value (`example.com`) in places where a hostname value is required.
 
-The parameters format is based upon [Azure ARM template parameters](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-templates-parameters). The syntax of a `parameters.js` file is as follows:
+The parameters format is based upon [Azure ARM template parameters](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-templates-parameters). The syntax of a `parameters.json` file is as follows:
 
 ```json
 "parameters": {
