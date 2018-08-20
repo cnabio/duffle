@@ -172,9 +172,15 @@ Example:
 
 ```Dockerfile
 FROM ubuntu:latest
+
+COPY ./Dockerfile /cnab/Dockerfile
+COPY ./manifest.json /cnab/manfiest.json
+COPY ./parameters.json /cnab/parameters.json
+
 RUN curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
 RUN helm init --client-only
 RUN helm repo add example-stable https://repo.example.com/stable
+
 CMD /cnab/app/run
 ```
 
