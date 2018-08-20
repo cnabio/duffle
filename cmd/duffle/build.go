@@ -33,7 +33,6 @@ const (
 
 var (
 	dockerCertPath = os.Getenv("DOCKER_CERT_PATH")
-	autoConnect    bool
 )
 
 type buildCmd struct {
@@ -103,7 +102,6 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 	f.BoolVar(&build.dockerClientOptions.Common.TLS, "docker-tls", defaultDockerTLS(), "Use TLS; implied by --tlsverify")
 	f.BoolVar(&build.dockerClientOptions.Common.TLSVerify, fmt.Sprintf("docker-%s", dockerflags.FlagTLSVerify), defaultDockerTLSVerify(), "Use TLS and verify the remote")
 	f.StringVar(&build.dockerClientOptions.ConfigDir, "docker-config", cliconfig.Dir(), "Location of client config files")
-	f.BoolVarP(&autoConnect, "auto-connect", "", false, "specifies if kubed up should automatically connect to the application")
 
 	build.dockerClientOptions.Common.TLSOptions = &tlsconfig.Options{
 		CAFile:   filepath.Join(dockerCertPath, dockerflags.DefaultCaFile),
@@ -131,11 +129,6 @@ func (b *buildCmd) run() (err error) {
 	bldr.LogsDir = b.home.Logs()
 	if buildctx, err = builder.LoadWithEnv(b.src); err != nil {
 		return fmt.Errorf("failed loading build context: %v", err)
-	}
-
-	if buildctx.Registry == "" {
-		fmt.Fprintln(b.out, "WARNING: no registry has been set, therefore Kubed will not push to a container registry. This can be fixed by running `kubed config set registry docker.io/myusername`")
-		fmt.Fprintln(b.out, "Hint: this warning can be disabled by running `kubed config set disable-push-warning 1`")
 	}
 
 	var cb builder.ContainerBuilder

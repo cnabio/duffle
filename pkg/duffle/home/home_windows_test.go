@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestKubedHome(t *testing.T) {
+func TestDuffleHome(t *testing.T) {
 	ph := Home("r:\\")
 	isEq := func(t *testing.T, a, b string) {
 		if a != b {

@@ -19,8 +19,8 @@ var (
 	red    = color.New(color.FgHiRed, color.BgBlack).Add(color.Italic).SprintFunc()
 )
 
-// cmdline provides a basic cli ui/ux for kubed client operations. It handles
-// the kubed state machine and displays a measure of progress for each kubed
+// cmdline provides a basic cli ui/ux for the duffle client operations. It handles
+// the duffle state machine and displays a measure of progress for each duffle
 // client api invocation.
 type cmdline struct {
 	ctx  context.Context
@@ -71,15 +71,15 @@ func (cli *cmdline) Stop() error {
 	return cli.err
 }
 
-// Display provides a UI for the kubed client. When performing a kubed 'up'
+// Display provides a UI for the duffle client. When performing a duffle 'build'
 // Display will output a measure of progress for each summary yielded by the
-// kubed state machine.
+// duffle state machine.
 func Display(ctx context.Context, app string, summaries <-chan *builder.Summary, opts ...Option) {
 	var cli cmdline
 	cli.Init(ctx, opts...)
 
 	fmt.Fprintf(cli.opts.stdout, "%s: '%s': %s\n",
-		blue("Kubed Up Started"),
+		blue("Duffle Build Started"),
 		cyan(app),
 		yellow(cli.opts.buildID),
 	)

@@ -7,7 +7,7 @@ import (
 	"github.com/technosophos/moniker"
 )
 
-// Manifest represents a kubed.toml
+// Manifest represents a duffle.toml
 type Manifest struct {
 	Name       string   `toml:"name,omitempty"`
 	Registry   string   `toml:"registry,omitempty"`
