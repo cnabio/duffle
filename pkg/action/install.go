@@ -1,6 +1,8 @@
 package action
 
 import (
+	"fmt"
+
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/driver"
 )
@@ -31,6 +33,10 @@ func (i *Install) Run(c *claim.Claim) error {
 		// FIXME: This is hard coded for now, but should be loaded from manifest
 		ImageType: driver.ImageTypeDocker,
 		Revision:  c.Revision,
+	}
+
+	if !i.Driver.Handles(op.ImageType) {
+		return fmt.Errorf("driver does not handle image type %s", op.ImageType)
 	}
 
 	// Perform install:

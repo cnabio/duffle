@@ -2,7 +2,6 @@ package driver
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -21,10 +20,7 @@ func Lookup(name string) (Driver, error) {
 	case "debug":
 		return &DebugDriver{}, nil
 	default:
-		// TODO: What would be great is if we could check for an executable
-		// named `duffle-DRIVER` and wrap execution of that. I'm thinking we could
-		// send it a JSON payload containing the Operation
-		return &DebugDriver{}, errors.New("driver not found")
+		return &CommandDriver{Name: name}, nil
 	}
 }
 
@@ -59,6 +55,9 @@ type Driver interface {
 	Run(*Operation) error
 	// Handles receives an ImageType* and answers whether this driver supports that type
 	Handles(string) bool
+}
+
+type Configurable interface {
 	// Config returns a map of configuration names and values that can be set via environment variable
 	Config() map[string]string
 	// SetConfig allows setting configuration, where name correspends to the key in Config, and value is

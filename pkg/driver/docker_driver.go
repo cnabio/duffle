@@ -2,6 +2,7 @@ package driver
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -24,8 +25,7 @@ func (d *DockerDriver) Run(op *Operation) error {
 		env[fmt.Sprintf("CNAB_P_%s", strings.ToUpper(k))] = v
 	}
 
-	d.exec(op.Image, env)
-	return nil
+	return d.exec(op.Image, env)
 }
 
 func (d *DockerDriver) Handles(dt string) bool {
@@ -55,7 +55,13 @@ func (d *DockerDriver) exec(img string, env map[string]interface{}) error {
 	if d.Simulate {
 		return nil
 	}
-	out, err := exec.Command("docker", args...).CombinedOutput()
+	var err error
+	cmd := exec.Command("docker", args...)
+	cmd.Dir, err = os.Getwd()
+	if err != nil {
+		return err
+	}
+	out, err := cmd.CombinedOutput()
 	fmt.Println(string(out))
 	return err
 }

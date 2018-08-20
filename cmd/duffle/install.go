@@ -103,11 +103,14 @@ func prepareDriver(driverName string) (driver.Driver, error) {
 	}
 
 	// Load any driver-specific config out of the environment.
-	driverCfg := map[string]string{}
-	for env := range driverImpl.Config() {
-		driverCfg[env] = os.Getenv(env)
+	if configurable, ok := driverImpl.(driver.Configurable); ok {
+		driverCfg := map[string]string{}
+		for env := range configurable.Config() {
+			driverCfg[env] = os.Getenv(env)
+		}
+		configurable.SetConfig(driverCfg)
 	}
-	driverImpl.SetConfig(driverCfg)
+
 	return driverImpl, err
 }
 

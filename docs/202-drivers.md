@@ -23,7 +23,7 @@ A driver will (MUST) fail if the given driver cannot handle the CNAB bundle's in
 Duffle has a few default drivers:
 
 - `docker`: Runs OCI and Docker images using a local Docker client (currently requires the Docker CLI)
-- `aci`: Runs a Docker image inside of Azure ACI (currently requires the `az` commandline client)
+- `aci`: Runs a Docker image inside of Azure ACI (currently requires the `az` command line client)
 - `debug`: Dumps the info that was sent to the driver, and exits
 - `???`: Runs a VM image on... (TODO: We want a VM version if possible. Maybe `az` for this?)
 
@@ -59,6 +59,58 @@ If a suitable executable is found, Duffle will execute that program, using the a
 ```
 
 The custom driver is expected to take that information and execute the appropriate action for the given image.
+
+### Required Flags for a Driver
+
+A driver must implement two flags:
+
+- `--handles`: Must return a comma-separated list of image types that it can handle
+- `--help`: Must return user-friendly documentation on the driver
+
+Only one of these two flags will be provided. No other flags will be sent. When these flags are
+sent, no data will be sent over STDIN.
+
+### Example
+
+The following is a simple Bash script that implements both of the required flags, and responds to a request by printing the action and then exiting.
+
+```bash
+#!/bin/bash
+set -eo pipefail
+
+if [[ $1 == "--handles" ]]; then
+    echo docker,oci,qcow
+    exit 0;
+elif [[ $1 == "--help" ]]; then
+    echo "Put yer helptext here"
+    exit 1;
+fi
+
+echo -n "Plugin: The action is "
+cat - | jq .action
+```
+
+If the `--handles` flag is set, this will return `docker,oci,qcow` and exit with code 0 (no error). If `--help` is set, the help text will be sent.
+
+Under all other cases, it will attempt to read STDIN, pipe that through the `jq` command, and print the `action` found in the JSON body.
+
+By naming this file `duffle-foo` and placing it in the `$PATH`, we can execute it as a driver:
+
+```console
+$ duffle -d foo install myname technosophos/helloworld:0.1.0
+Plugin: The action is "install"
+```
+
+Note that when it comes to execution order, it will be invoked as follows:
+
+- When Duffle loads, it will look for an internal driver named `foo`.
+    - If Duffle finds an internal driver named `foo` (which it won't), it will execute the internal version
+    - If Duffle does not find an internal driver named `foo`, it will create a stub command executor for `duffle-foo`.
+- When Duffle determines what image type the `manifest.json`, it will run `duffle-foo --handles`.
+    - If the declared image type is not in the returned list, Duffle will return an error and quit.
+- When the operation is ready, Duffle will run `duffle-foo` and pipe the JSON data into `duffle-foo`'s standard input.
+    - if `duffle-foo` returns with an exit code > 1, Duffle will generate an error and exit
+    - if `duffle-foo` returns an exit code 0, Duffle will mark this as a successful operation
 
 ### Parameters and Credentials for Custom Drivers
 
