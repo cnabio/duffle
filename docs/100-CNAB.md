@@ -178,6 +178,12 @@ TODO: How do we specify multiple replacements within a single file?
 
 TODO: How do we specify URI is a VM image (or Jar or other) instead of a Docker-style image? Or do we? And if not, why not?
 
+### Parameter Names
+
+Parameter names (the keys in `parameters`) ought to conform to the [Open Group Base Specification Issue 6, Section 8.1, paragraph 4](http://pubs.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap08.html) definition of environment variable names with one exception: parameter names _may_ begin with a digit (approximately `[A-Z0-9_]+`).
+
+For convenience, if lowercase characters are used in parameter names, they will be automatically capitalized. This effectively makes parameter names case-insensitive.
+
 ### Format of Parameters
 
 The structure of a parameters section looks like this:
@@ -231,7 +237,7 @@ The environment will provide the name of the current installation as `$CNAB_INST
 
 Example:
 
-```bash.
+```bash
 #!/bin/bash
 action=$CNAB_ACTION
 
@@ -255,9 +261,11 @@ The following actions are supported:
 
 None of the actions are required to be implemented. However, none of the actions may return an error if not implemented.
 
-## Overriding Parameters
+## Overriding Parameter Values
 
-Parameters that are passed into the container are passed in as environment variables, where each environment variable begins with the prefix `CNAB_P_` and to which the uppercased parameter name is appended. For example `backend_port` will be exposed inside the container as `CNAB_P_BACKEND_PORT`, and thus can be accessed inside of the `run` script:
+A CNAB `bundle.json` file may specify zero or more parameters whose values may be specified by a user.
+
+Values that are passed into the container are passed in as environment variables, where each environment variable begins with the prefix `CNAB_P_` and to which the uppercased parameter name is appended. For example `backend_port` will be exposed inside the container as `CNAB_P_BACKEND_PORT`, and thus can be accessed inside of the `run` script:
 
 ```bash
 #!/bin/sh
@@ -265,18 +273,9 @@ Parameters that are passed into the container are passed in as environment varia
 echo $CNAB_P_BACKEND_PORT
 ```
 
-The validation of parameters must happen outside of the CNAB bundle, with the results injected into the bundle before the bundle's `run` is executed (and also in such a way that the `run` has access to these variables.) This works analogously to `CNAB_ACTION` and `CNAB_INSTALLATION_NAME`.
+The validation of user-supplied values must happen outside of the CNAB bundle. Implementations of CNAB bundle tools MUST validate user-supplied values against the `parameters` section of a `bundle.json` before injecting them into the image. The outcome of validation must be the collection containing all parameters where either the user has supplied a value (that has been validated) or the `parameters` section of `bundles.json` contains a `defaultValue`.
 
-Optionally, installers may additionally mount a file inside of the image that also declares the variables, so that other scripts may take advantage of these values:
-
-```
-#!/bin/sh
-
-export CNAB_P_BACKEND_PORT=8080
-
-export CNAB_ACTION=upgrade
-export CNAB_INSTALLATION_NAME=wild-panda
-```
+The resulting calculated values are injected into the bundle before the bundle's `run` is executed (and also in such a way that the `run` has access to these variables.) This works analogously to `CNAB_ACTION` and `CNAB_INSTALLATION_NAME`.
 
 ## TODO
 
