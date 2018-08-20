@@ -31,7 +31,8 @@ type Image struct {
 
 // Metadata is a CNAB metadata document
 type Metadata struct {
-	Name    string  `json:"name"`
-	Version string  `json:"version"`
-	Images  []Image `json:"images"`
+	Name       string                         `json:"name"`
+	Version    string                         `json:"version"`
+	Images     []Image                        `json:"images"`
+	Parameters map[string]ParameterDefinition `json:"parameters"`
 }

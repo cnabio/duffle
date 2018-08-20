@@ -12,7 +12,7 @@ func TestCanReadParameterNames(t *testing.T) {
 			"bar": { }
 		}
 	}`
-	definitions, err := ParseParameterDefinitions(json)
+	definitions, err := Parse(json)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func TestCanReadParameterDefinition(t *testing.T) {
 		dataType, defaultValue, allowedValues0, allowedValues1,
 		minValue, maxValue, minLength, maxLength, description)
 
-	definitions, err := ParseParameterDefinitions(json)
+	definitions, err := Parse(json)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,21 +140,21 @@ func TestCanReadValues(t *testing.T) {
 	intValue := "123"
 	boolValue := "true"
 
-	strDef, err := ParseParameterDefinitions(valueTestJSON(strValue))
+	strDef, err := Parse(valueTestJSON(strValue))
 	if err != nil {
 		t.Fatal(err)
 	}
 	expectString("default value", "some string", strDef.Parameters["test"].DefaultValue, t)
 	expectString("allowed value", "some string", strDef.Parameters["test"].AllowedValues[0], t)
 
-	intDef, err := ParseParameterDefinitions(valueTestJSON(intValue))
+	intDef, err := Parse(valueTestJSON(intValue))
 	if err != nil {
 		t.Fatal(err)
 	}
 	expectInt("default value", 123, intDef.Parameters["test"].DefaultValue, t)
 	expectInt("allowed value", 123, intDef.Parameters["test"].AllowedValues[0], t)
 
-	boolDef, err := ParseParameterDefinitions(valueTestJSON(boolValue))
+	boolDef, err := Parse(valueTestJSON(boolValue))
 	if err != nil {
 		t.Fatal(err)
 	}
