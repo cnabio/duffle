@@ -22,10 +22,7 @@ Actions are sent to the `run` command via environment variable. Actions determin
 - Invocation Image: The OCI image that contains the bootstrapping and installation logic for the bundle
 - Container: An OCI container
 - Image: An OCI container image
-- Manifest.json: The CNAB file that enumerates the images that are compositionally part of this application
-- Parameters.json: The CNAB file that maps configurable params (incoming) to internal parameters (such as references in a template file)
-- `action`: The operation requested from the CNAB bundle (e.g. install, upgrade, uninstall)
-
+- Manifest.json: The CNAB file that enumerates the images that are compositionally part of this application, and enumerates which parameters can be overridden.
 
 
 ## Container Registry and Bundle
@@ -41,8 +38,7 @@ An invocation image is composed of the following:
 - A file system hierarchy following a defined pattern (below)
 - A main entry point, which is an executable (often a script)
 - Runtime metadata (Helm charts, Terraform templates, etc)
-- The manifest file, which enumerates images used
-- The parameters file, which enumerates user-settable parameters
+- The manifest file, which enumerates images used and available parameters, along with other metadata.
 - The Dockerfile used to produce the invocation image
 
 ### The File System Layout
@@ -52,7 +48,6 @@ The following exhibits the filesystem layout:
 ```yaml
 cnab/
 ├── manifest.json​      # Required
-├── parameters.json​    # Optional; default = no user-configurable values
 └── Dockerfile​         # Required
 └── app​                # Required
     ├── run​            # Required: This is the main entrypoint, and must be executable
@@ -98,7 +93,7 @@ The example above is simply intended to show how by reserving the `/cnab` direct
 
 ## Manifest
 
-The `manifest.json` maps container metadata (name, repository, tag) to placeholders within the bundle. This allows images to be renamed, relabeled, or replaced during the CNAB bundle build operation.
+The `manifest.json` maps container metadata (name, repository, tag) to placeholders within the bundle. This allows images to be renamed, relabeled, or replaced during the CNAB bundle build operation. It also specifies the parameters that may be overridden in this image, giving tooling the ability to expose configuration options.
 
 Supported substitution formats:
 
@@ -131,7 +126,18 @@ Supported substitution formats:
         }​
       ]​
     }​
-  ]​
+  ]​,
+  "parameters": {
+    "backend_port" : {
+      "type" : "int",
+      "defaultValue": 80,
+      "minValue": 10,
+      "maxValue": 10240,
+      "metadata": {
+        "description": "The port that the backend will listen on" 
+      }
+    }
+  }
 }
 ```
 
@@ -147,8 +153,22 @@ Fields:
     - refs: An array listing the locations which refer to this image, and whose values should be replaced by the value specified in URI. Each entry contains the following properties:
         - path: the path of the file where the value should be replaced
         - field:a selector specifying a location (or locations) within that file where the value should be replaced
-        
-Selectors are based on the _de facto_ format used in tools like `jq`, which is a subset of the [CSS selector](https://www.w3.org/TR/selectors-3/) path. Examples:
+- parameters: name/value pairs describing a user-overridable parameter
+  - <name>: The name of the parameter. In the example above, this is `backend_port`. This
+    is mapped to a value definition, which contains the following fields:
+    - type: one of string, int, boolean
+    - defaultValue: The default value (optional)
+    - allowedValues: an array of allowed values (optional)
+    - minValue: Minimum value (for ints) (optional)
+    - maxValue: Maximum value (for ints) (optional)
+    - minLength: Minimum number of characters allowed in the field (for strings) (optional)
+    - maxLength: Maximum number of characters allowed in the field (for strings) (optional)
+    - metadata: Holds fields that are not used in validation
+      - description: A user-friendly description of the parameter
+
+### Field Selectors
+
+For fields, the selectors are based on the _de facto_ format used in tools like `jq`, which is a subset of the [CSS selector](https://www.w3.org/TR/selectors-3/) path. Examples:
 
 - `foo.bar.baz` is interpreted as "find element baz whose parent is bar and whose grandparent is foo".
 - `#baz` in XML is "the element whose ID attribute is set to "baz"". It is a no-op in YAML and JSON.
@@ -158,12 +178,15 @@ TODO: How do we specify multiple replacements within a single file?
 
 TODO: How do we specify URI is a VM image (or Jar or other) instead of a Docker-style image? Or do we? And if not, why not?
 
+### Parameter Names
 
-## Parameterization
+Parameter names (the keys in `parameters`) ought to conform to the [Open Group Base Specification Issue 6, Section 8.1, paragraph 4](http://pubs.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap08.html) definition of environment variable names with one exception: parameter names _may_ begin with a digit (approximately `[A-Z0-9_]+`).
 
-A CNAB bundle is parameterized via a `parameters.json` file, which maps external names to internal configuration settings. For example, the externally visible `hostname` name can be set to `example.com`. Doing so will allow the CNAB bundle to substitute that value (`example.com`) in places where a hostname value is required.
+For convenience, if lowercase characters are used in parameter names, they will be automatically capitalized. This effectively makes parameter names case-insensitive.
 
-The parameters format is based upon [Azure ARM template parameters](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-templates-parameters). The syntax of a `parameters.json` file is as follows:
+### Format of Parameters
+
+The structure of a parameters section looks like this:
 
 ```json
 "parameters": {
@@ -181,10 +204,6 @@ The parameters format is based upon [Azure ARM template parameters](https://docs
     }
 }
 ```
-
-Fields are described in detail [here](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-templates-parameters#available-properties), and the formal JSONSchema is [also available](http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#). (Note that only the `parameters` subsection is supported).
-
-TODO: Extract this into  a formal spec.
 
 ## Dockerfile
 
@@ -218,7 +237,7 @@ The environment will provide the name of the current installation as `$CNAB_INST
 
 Example:
 
-```bash.
+```bash
 #!/bin/bash
 action=$CNAB_ACTION
 
@@ -242,19 +261,21 @@ The following actions are supported:
 
 None of the actions are required to be implemented. However, none of the actions may return an error if not implemented.
 
-## Overriding Parameters
+## Overriding Parameter Values
 
-Parameters that are passed into the container are passed in as *HOW?*.
+A CNAB `bundle.json` file may specify zero or more parameters whose values may be specified by a user.
 
-Substitution of parameters happens as *HOW?*
+Values that are passed into the container are passed in as environment variables, where each environment variable begins with the prefix `CNAB_P_` and to which the uppercased parameter name is appended. For example `backend_port` will be exposed inside the container as `CNAB_P_BACKEND_PORT`, and thus can be accessed inside of the `run` script:
 
-TODO: This is unspecified in the draft. We could say that the replacement is a feature of the installer. However, that is likely to lead to fragmentation unless we provide clear guidelines on how this is to be done.
+```bash
+#!/bin/sh
 
-Options include:
+echo $CNAB_P_BACKEND_PORT
+```
 
-- Providing or prescribing a binary to do this
-- Documenting the exact substitution algorithm (which is what we did with images)
-- Requiring that the tool handle this, and inject finalized files directly into the image via mounts
+The validation of user-supplied values must happen outside of the CNAB bundle. Implementations of CNAB bundle tools MUST validate user-supplied values against the `parameters` section of a `bundle.json` before injecting them into the image. The outcome of validation must be the collection containing all parameters where either the user has supplied a value (that has been validated) or the `parameters` section of `bundles.json` contains a `defaultValue`.
+
+The resulting calculated values are injected into the bundle before the bundle's `run` is executed (and also in such a way that the `run` has access to these variables.) This works analogously to `CNAB_ACTION` and `CNAB_INSTALLATION_NAME`.
 
 ## TODO
 
