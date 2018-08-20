@@ -26,10 +26,11 @@ func (i *Install) Run(c *claim.Claim) error {
 		Action:       claim.ActionInstall,
 		Installation: c.Name,
 		Parameters:   c.Parameters,
-		Credentials:  []string{},
+		Credentials:  []driver.ResolvedCred{},
 		Image:        c.Bundle,
 		// FIXME: This is hard coded for now, but should be loaded from manifest
 		ImageType: driver.ImageTypeDocker,
+		Revision:  c.Revision,
 	}
 
 	// Perform install:

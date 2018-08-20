@@ -39,8 +39,12 @@ Some drivers have additional configuration that can be passed via environment va
 	docker:
 	  - VERBOSE: "true" turns on extra output
 
-Example:
+UNIX Example:
 	$ VERBOSE=true duffle install -d docker  install my_release duffle/example:0.1.0
+
+Windows Example:
+	$ $env:VERBOSE = true
+	$ duffle install -d docker install my_release duffle/example:0.1.0
 `
 	var installDriver string
 	var valuesFile string

@@ -31,17 +31,26 @@ func Lookup(name string) (Driver, error) {
 // Operation describes the data passed into the driver to run an operation
 type Operation struct {
 	// Installation is the name of this installation
-	Installation string
+	Installation string `json:"installation_name"`
+	// The revision ID for this installation
+	Revision string `json:"revision"`
 	// Action is the action to be performed
-	Action string
+	Action string `json:"action"`
 	// Parameters are the paramaters to be injected into the container
-	Parameters map[string]interface{}
+	Parameters map[string]interface{} `json:"parameters"`
 	// Credentials are the credential sets to be loaded into the container
-	Credentials []string
+	Credentials []ResolvedCred `json:"credentials"`
 	// Image is the invocation image
-	Image string
+	Image string `json:"image"`
 	// ImageType is the type of image.
-	ImageType string
+	ImageType string `json:"image_type"`
+}
+
+// ResolvedCred is a credential that has been resolved and is ready for injection into the runtime.
+type ResolvedCred struct {
+	Type  string `json:"type"`
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 // Driver is capable of running a invocation image
