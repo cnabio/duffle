@@ -25,3 +25,7 @@
 [[override]]
   name = "github.com/docker/go-metrics"
   revision = "d466d4f6fd960e01820085bd7e1a24426ee7ef18"
+
+[[constraint]]
+  name = "github.com/gosuri/uitable"
+  branch = "master"
