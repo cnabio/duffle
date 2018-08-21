@@ -32,7 +32,7 @@ func TestOpFromClaim(t *testing.T) {
 		Parameters: map[string]interface{}{"duff": "beer"},
 	}
 
-	op := opFromClaim(c)
+	op := opFromClaim(claim.ActionInstall, c)
 
 	is := assert.New(t)
 
