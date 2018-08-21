@@ -24,7 +24,7 @@ func (i *Install) Run(c *claim.Claim) error {
 	// TODO: get image type from bundle.json and call driver.Handles() on that.
 	// TODO: should credentials hang off Claim or be injected into Run() above
 
-	op := opFromClaim(c)
+	op := opFromClaim(claim.ActionInstall, c)
 
 	if !i.Driver.Handles(op.ImageType) {
 		return fmt.Errorf("driver does not handle image type %s", op.ImageType)

@@ -18,9 +18,9 @@ type Action interface {
 	Run(*claim.Claim) error
 }
 
-func opFromClaim(c *claim.Claim) *driver.Operation {
+func opFromClaim(action string, c *claim.Claim) *driver.Operation {
 	return &driver.Operation{
-		Action:       claim.ActionStatus,
+		Action:       action,
 		Installation: c.Name,
 		Parameters:   c.Parameters,
 		Credentials:  []driver.ResolvedCred{},

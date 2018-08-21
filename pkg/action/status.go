@@ -14,7 +14,7 @@ type Status struct {
 
 func (i *Status) Run(c *claim.Claim) error {
 	// FIXME: Need to set op.ImageType and op.Credentials
-	op := opFromClaim(c)
+	op := opFromClaim(claim.ActionStatus, c)
 	if !i.Driver.Handles(op.ImageType) {
 		return fmt.Errorf("driver does not handle image type %s", op.ImageType)
 	}

@@ -10,7 +10,6 @@ import (
 	"github.com/deis/duffle/pkg/claim"
 )
 
-// TODO
 func newStatusCmd(w io.Writer) *cobra.Command {
 	const short = "get the status of an installation"
 	const long = `Get the status of an existing installation.
