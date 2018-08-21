@@ -6,9 +6,12 @@ LDFLAGS   := -w -s
 
 ifeq ($(OS),Windows_NT)
 	TARGET = duffle.exe
+	SHELL = cmd.exe
+	CHECK = where.exe
 else
 	TARGET = duffle
-	HAS_DEP := $(shell command -v dep;)
+	SHELL = bash
+	CHECK = command -v
 endif
 
 GIT_TAG  := $(shell git describe --tags --always)
@@ -19,10 +22,10 @@ LDFLAGS  += -X github.com/deis/duffle/pkg/version.Version=$(VERSION)
 build:
 	$(GO) build $(GOFLAGS) -o $(BINDIR)/$(TARGET) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' github.com/deis/duffle/cmd/...
 
+HAS_DEP := $(shell $(CHECK) dep)
 .PHONY: bootstrap
 bootstrap:
 ifndef HAS_DEP
 	go get -u github.com/golang/dep/cmd/dep
 endif
 	dep ensure -v
-
