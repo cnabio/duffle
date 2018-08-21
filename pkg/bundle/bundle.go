@@ -29,10 +29,17 @@ type Image struct {
 	Refs []LocationRef `json:"refs"`
 }
 
+// InvocationImage contains the image type and location for the installation of a bundle
+type InvocationImage struct {
+	ImageType string `json:"imageType"`
+	Image     string `json:"image"`
+}
+
 // Bundle is a CNAB metadata document
 type Bundle struct {
-	Name       string                         `json:"name"`
-	Version    string                         `json:"version"`
-	Images     []Image                        `json:"images"`
-	Parameters map[string]ParameterDefinition `json:"parameters"`
+	Name            string                         `json:"name"`
+	Version         string                         `json:"version"`
+	InvocationImage InvocationImage                `json:"invocationImage"`
+	Images          []Image                        `json:"images"`
+	Parameters      map[string]ParameterDefinition `json:"parameters"`
 }
