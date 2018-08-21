@@ -26,6 +26,11 @@ func (h Home) Config() string {
 	return h.Path("config.toml")
 }
 
+// Repositories returns the path to the Duffle repositories.
+func (h Home) Repositories() string {
+	return h.Path("repositories")
+}
+
 // Logs returns the path to the Duffle logs.
 func (h Home) Logs() string {
 	return h.Path("logs")

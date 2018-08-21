@@ -3,6 +3,10 @@
   version = "0.0.3"
 
 [[constraint]]
+  name = "github.com/Masterminds/semver"
+  version = "1.4.2"
+
+[[constraint]]
   name = "github.com/Masterminds/vcs"
   version = "1.11.1"
 
@@ -14,10 +18,10 @@
   name = "github.com/docker/cli"
   version = "v18.06.0-ce"
 
-  [[override]]
+[[override]]
   name = "github.com/docker/distribution"
   revision = "83389a148052d74ac602f5f1d62f86ff2f3c4aa5"
 
-  [[override]]
+[[override]]
   name = "github.com/docker/go-metrics"
   revision = "d466d4f6fd960e01820085bd7e1a24426ee7ef18"
