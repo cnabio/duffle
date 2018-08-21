@@ -8,7 +8,7 @@ To accommodate this case, Duffle provides multiple drivers.
 
 ## Image Types
 
-Duffle inspects the manifest.json to determine the _image type_ of the image. (FIXME: Actually, right now it just assumes Docker. See `cmd/duffle/install.go`.) Each image can be a particular type, such as a Docker image or a QCOW image.
+Duffle inspects the bundle.json to determine the _image type_ of the image. (FIXME: Actually, right now it just assumes Docker. See `cmd/duffle/install.go`.) Each image can be a particular type, such as a Docker image or a QCOW image.
 
 Drivers can support different image types. The `docker` driver supports `oci` and `docker` image types. The `debug` driver supports all image types. When creating a new driver, developers must specify which image types that driver can support.
 
@@ -106,7 +106,7 @@ Note that when it comes to execution order, it will be invoked as follows:
 - When Duffle loads, it will look for an internal driver named `foo`.
     - If Duffle finds an internal driver named `foo` (which it won't), it will execute the internal version
     - If Duffle does not find an internal driver named `foo`, it will create a stub command executor for `duffle-foo`.
-- When Duffle determines what image type the `manifest.json`, it will run `duffle-foo --handles`.
+- When Duffle determines what image type the `bundle.json`, it will run `duffle-foo --handles`.
     - If the declared image type is not in the returned list, Duffle will return an error and quit.
 - When the operation is ready, Duffle will run `duffle-foo` and pipe the JSON data into `duffle-foo`'s standard input.
     - if `duffle-foo` returns with an exit code > 1, Duffle will generate an error and exit
@@ -116,7 +116,7 @@ Note that when it comes to execution order, it will be invoked as follows:
 
 The parameters and credentials that are sent to a custom driver will have already been verified.
 
-Parameters will contain the validated, merged parameters. They will be validated against the parameters specification contained in the `manifest.json` file.
+Parameters will contain the validated, merged parameters. They will be validated against the parameters specification contained in the `bundle.json` file.
 
 Credentials will be loaded and converted to their `destination` format.
 

@@ -22,7 +22,7 @@ It builds invocation images. When a Duffle application is multi-container, it al
 
 ### Example
 
-Consider an application named `myapp` with a `manifest.json` like this:
+Consider an application named `myapp` with a `bundle.json` like this:
 
 ```json
 { ​
@@ -62,7 +62,7 @@ For example, if the `duffle build` produced `example/myapp:0.1.0` and `example/m
 
 The `duffle pull` command will pull a named CNAB bundle from a registry to a local Docker/Moby daemon.
 
-For example, `duffle pull example/myapp:0.1.0` would fetch the image `example/myapp:0.1.0`, which is an invocation image. It would then inspect the `manifest.json` in that image and fetch the associated `example/myapp-server:a5ff67...` image as well.
+For example, `duffle pull example/myapp:0.1.0` would fetch the image `example/myapp:0.1.0`, which is an invocation image. It would then inspect the `bundle.json` in that image and fetch the associated `example/myapp-server:a5ff67...` image as well.
 
 TODO: We are investigating storing the manifest in the registry and fetching that directly, which allows parallelizing the pull and also does not require a Docker runtime for fetching. Additionally, it may open the possibility of using a VM image for initialization.
 
@@ -84,7 +84,7 @@ For thin images, it will (if necessary) pull the dependent images from a registr
 
 ## Passing Parameters into the Invocation Image
 
-CNAB includes a method for declaring user-facing parameters that can be changed during certain operations (like installation). Parameters are specified in the `manifest.json` file. Duffle processes these as follows:
+CNAB includes a method for declaring user-facing parameters that can be changed during certain operations (like installation). Parameters are specified in the `bundle.json` file. Duffle processes these as follows:
 
 - The user may specify values when invoking `duffle run` or similar commands.
 - Prior to executing the image, Duffle will read the manifest file, extract the parameters definitions, and then merge specified values and defaults into one set of finalized parameters
