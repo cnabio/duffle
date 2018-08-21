@@ -1,6 +1,10 @@
 {
     "name": "foo",
     "version": "1.0",
+    "invocationImage": {
+        "imageType": "docker",
+        "image": "technosophos/helloworld:0.1.0"
+      },
     "images": [
         {
             "name": "image1",

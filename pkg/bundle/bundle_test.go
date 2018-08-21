@@ -1,6 +1,7 @@
 package bundle
 
 import (
+	"io/ioutil"
 	"testing"
 )
 
@@ -26,33 +27,12 @@ func TestReadTopLevelProperties(t *testing.T) {
 }
 
 func TestReadImageProperties(t *testing.T) {
-	json := `{
-		"name": "foo",
-		"version": "1.0",
-		"images": [
-			{
-				"name": "image1",
-				"uri": "urn:image1uri",
-				"refs": [
-					{
-						"path": "image1path",
-						"field": "image.1.field"
-					}
-				]
-			},
-			{
-				"name": "image2",
-				"uri": "urn:image2uri",
-				"refs": [
-					{
-						"path": "image2path",
-						"field": "image.2.field"
-					}
-				]
-			}
-		]
-	}`
-	bundle, err := Parse(json)
+	data, err := ioutil.ReadFile("testdata/bundle.json")
+	if err != nil {
+		t.Errorf("cannot read bundle file: %v", err)
+	}
+
+	bundle, err := ParseBuffer(data)
 	if err != nil {
 		t.Fatal(err)
 	}
