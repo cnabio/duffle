@@ -19,6 +19,11 @@ func NewClaimStore(backingStore crud.Store) Store {
 	}
 }
 
+// List lists the names of the stored claims.
+func (s Store) List() ([]string, error) {
+	return s.backingStore.List()
+}
+
 // Store saves a claim. Any previous version of the claim (that is, with the same
 // name) is overwritten.
 func (s Store) Store(claim Claim) error {
