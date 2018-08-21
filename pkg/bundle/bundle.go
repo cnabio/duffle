@@ -1,18 +1,18 @@
-package metadata
+package bundle
 
 import (
 	"encoding/json"
 )
 
 // ParseBuffer reads CNAB metadata out of a JSON byte stream
-func ParseBuffer(data []byte) (Metadata, error) {
-	metadata := Metadata{}
-	err := json.Unmarshal(data, &metadata)
-	return metadata, err
+func ParseBuffer(data []byte) (Bundle, error) {
+	b := Bundle{}
+	err := json.Unmarshal(data, &b)
+	return b, err
 }
 
 // Parse reads CNAB metadata from a JSON string
-func Parse(text string) (Metadata, error) {
+func Parse(text string) (Bundle, error) {
 	return ParseBuffer([]byte(text))
 }
 
@@ -29,8 +29,8 @@ type Image struct {
 	Refs []LocationRef `json:"refs"`
 }
 
-// Metadata is a CNAB metadata document
-type Metadata struct {
+// Bundle is a CNAB metadata document
+type Bundle struct {
 	Name       string                         `json:"name"`
 	Version    string                         `json:"version"`
 	Images     []Image                        `json:"images"`

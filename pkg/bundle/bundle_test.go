@@ -1,4 +1,4 @@
-package metadata
+package bundle
 
 import (
 	"testing"
@@ -10,18 +10,18 @@ func TestReadTopLevelProperties(t *testing.T) {
 		"version": "1.0",
 		"images": []
 	}`
-	metadata, err := Parse(json)
+	bundle, err := Parse(json)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if metadata.Name != "foo" {
-		t.Errorf("Expected name 'foo', got '%s'", metadata.Name)
+	if bundle.Name != "foo" {
+		t.Errorf("Expected name 'foo', got '%s'", bundle.Name)
 	}
-	if metadata.Version != "1.0" {
-		t.Errorf("Expected version '1.0', got '%s'", metadata.Version)
+	if bundle.Version != "1.0" {
+		t.Errorf("Expected version '1.0', got '%s'", bundle.Version)
 	}
-	if len(metadata.Images) != 0 {
-		t.Errorf("Expected no images, got %d", len(metadata.Images))
+	if len(bundle.Images) != 0 {
+		t.Errorf("Expected no images, got %d", len(bundle.Images))
 	}
 }
 
@@ -52,14 +52,14 @@ func TestReadImageProperties(t *testing.T) {
 			}
 		]
 	}`
-	metadata, err := Parse(json)
+	bundle, err := Parse(json)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(metadata.Images) != 2 {
-		t.Errorf("Expected 2 images, got %d", len(metadata.Images))
+	if len(bundle.Images) != 2 {
+		t.Errorf("Expected 2 images, got %d", len(bundle.Images))
 	}
-	image1 := metadata.Images[0]
+	image1 := bundle.Images[0]
 	if image1.Name != "image1" {
 		t.Errorf("Expected name 'image1', got '%s'", image1.Name)
 	}
