@@ -2,6 +2,7 @@ package home
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 )
@@ -29,6 +30,11 @@ func (h Home) Config() string {
 // Repositories returns the path to the Duffle repositories.
 func (h Home) Repositories() string {
 	return h.Path("repositories")
+}
+
+// DefaultRepository returns the name of the default repository.
+func (h Home) DefaultRepository() string {
+	return path.Join("github.com", "deis", "duffle-bundles")
 }
 
 // Logs returns the path to the Duffle logs.
