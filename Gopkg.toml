@@ -2,10 +2,31 @@
   name = "github.com/spf13/cobra"
   version = "0.0.3"
 
-[prune]
-  go-tests = true
-  unused-packages = true
-
 [[constraint]]
   name = "github.com/stretchr/testify"
   version = "1.2.2"
+
+[[constraint]]
+  name = "github.com/Masterminds/vcs"
+  version = "1.11.1"
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "v1.0.4"
+
+[[constraint]]
+  name = "github.com/docker/docker"
+  source = "https://github.com/moby/moby"
+  revision = "ae7016427f8cba4e4d8fcb979d6ba313ee2c0702"
+
+[[constraint]]
+  name = "github.com/docker/cli"
+  revision = "37eebe5cb6eff08bde94d17111caa8fc099d7a94"
+
+[[override]]
+  name = "github.com/docker/distribution"
+  revision = "a97d7c0c155be14d1380c075d3197a5d89c2abc2"
+
+[prune]
+  go-tests = true
+  unused-packages = true
