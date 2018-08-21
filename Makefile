@@ -5,12 +5,10 @@ TAGS      :=
 LDFLAGS   := -w -s
 
 
-UNAME := $(shell uname)
-
-ifneq ($(findstring $(UNAME), "Linux", "Darwin"),)
-TARGET = duffle
+ifeq ($(OS),Windows_NT)
+	TARGET = duffle.exe
 else
-TARGET = duffle.exe
+	TARGET = duffle
 endif
 
 GIT_TAG  := $(shell git describe --tags --always)
