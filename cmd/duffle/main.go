@@ -6,12 +6,15 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/spf13/cobra"
+
 	"github.com/deis/duffle/pkg/duffle/home"
 )
 
 var (
 	// duffleHome depicts the home directory where all duffle config is stored.
 	duffleHome string
+	rootCmd    *cobra.Command
 )
 
 func unimplemented(msg string) {
@@ -50,5 +53,6 @@ func main() {
 			}
 		}
 	}()
-	must(newRootCmd(os.Stdout).Execute())
+	rootCmd = newRootCmd(os.Stdout)
+	must(rootCmd.Execute())
 }
