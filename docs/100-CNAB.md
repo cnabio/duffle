@@ -22,12 +22,12 @@ Actions are sent to the `run` command via environment variable. Actions determin
 - Invocation Image: The OCI image that contains the bootstrapping and installation logic for the bundle
 - Container: An OCI container
 - Image: An OCI container image
-- Manifest.json: The CNAB file that enumerates the images that are compositionally part of this application, and enumerates which parameters can be overridden.
+- bundle.json: The CNAB file that enumerates the images that are compositionally part of this application, and enumerates which parameters can be overridden.
 
 
 ## Container Registry and Bundle
 
-A CNAB bundle must point to one image (the invocation image). It _may_ point to other images in its `manifest.json` file. Logically, we can talk about those containers as _parts of_ the application. But when stored in a container registry, they will each be stored as independent images.
+A CNAB bundle must point to one image (the invocation image). It _may_ point to other images in its `bundle.json` file. Logically, we can talk about those containers as _parts of_ the application. But when stored in a container registry, they will each be stored as independent images.
 
 In other words, while CNAB bundles contain fixed and verifiable references to containers, it is not a precondition of a CNAB bundle that it actually contain the binary data of those containers. This is similar to the way in which Docker and OCI registries store layers independently while representing the top-level layer as a single object (though it is composed of separately stored layers).
 
@@ -47,7 +47,7 @@ The following exhibits the filesystem layout:
 
 ```yaml
 cnab/
-├── manifest.json​      # Required
+├── bundle.json​      # Required
 └── Dockerfile​         # Required
 └── app​                # Required
     ├── run​            # Required: This is the main entrypoint, and must be executable
@@ -93,7 +93,7 @@ The example above is simply intended to show how by reserving the `/cnab` direct
 
 ## Manifest
 
-The `manifest.json` maps container metadata (name, repository, tag) to placeholders within the bundle. This allows images to be renamed, relabeled, or replaced during the CNAB bundle build operation. It also specifies the parameters that may be overridden in this image, giving tooling the ability to expose configuration options.
+The `bundle.json` maps container metadata (name, repository, tag) to placeholders within the bundle. This allows images to be renamed, relabeled, or replaced during the CNAB bundle build operation. It also specifies the parameters that may be overridden in this image, giving tooling the ability to expose configuration options.
 
 Supported substitution formats:
 
@@ -141,7 +141,7 @@ Supported substitution formats:
 }
 ```
 
-*TODO:* `manifest.json` probably requires a few more top-level fields, such as something about who published it, and something about the license. A decision on this is deferred until after the PoC
+*TODO:* `bundle.json` probably requires a few more top-level fields, such as something about who published it, and something about the license. A decision on this is deferred until after the PoC
 
 Fields:
 
@@ -217,7 +217,7 @@ Example:
 FROM ubuntu:latest
 
 COPY ./Dockerfile /cnab/Dockerfile
-COPY ./manifest.json /cnab/manfiest.json
+COPY ./bundle.json /cnab/manfiest.json
 COPY ./parameters.json /cnab/parameters.json
 
 RUN curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash

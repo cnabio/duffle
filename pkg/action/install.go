@@ -21,7 +21,7 @@ func (i *Install) Run(c *claim.Claim) error {
 	// images (like VMs)
 
 	// TODO: load CNAB and resolve params
-	// TODO: get image type from manifest.json and call driver.Handles() on that.
+	// TODO: get image type from bundle.json and call driver.Handles() on that.
 	// TODO: should credentials hang off Claim or be injected into Run() above
 
 	op := &driver.Operation{
