@@ -10,8 +10,10 @@ import (
 	"strings"
 
 	"github.com/deis/duffle/pkg/action"
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/driver"
+	"github.com/deis/duffle/pkg/loader"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
@@ -46,22 +48,38 @@ Windows Example:
 	$ $env:VERBOSE = true
 	$ duffle install -d docker install my_release duffle/example:0.1.0
 `
-	var installDriver string
-	var valuesFile string
+	var (
+		installDriver string
+		valuesFile    string
+		bundleFile    string
+
+		installationName string
+		bundle           bundle.Bundle
+	)
 
 	cmd := &cobra.Command{
 		Use:   "install NAME BUNDLE",
 		Short: "install a CNAB package",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Basically, we want an image and a name. Then we want to create an installation
-			// from that image, and record it with the name.
-			if len(args) != 2 {
-				return errors.New("required arguments are NAME (name of the instllation) and BUNDLE (CNAB bundle name)")
+
+			if len(args) < 2 && bundleFile == "" {
+				return errors.New("required arguments are NAME (name of the instllation) and BUNDLE (CNAB bundle name) or file")
 			}
-			installationName := args[0]
-			bundle := args[1]
-			if err := validateDockerish(bundle); err != nil {
+
+			l, err := loader.New(bundleFile)
+			if err != nil {
+				return err
+			}
+
+			installationName = args[0]
+
+			bundle, err = l.Load()
+			if err != nil {
+				return err
+			}
+
+			if err = validateDockerish(bundle.InvocationImage.Image); err != nil {
 				return err
 			}
 
@@ -73,7 +91,7 @@ Windows Example:
 			// Because this is an install, we create a new claim. For upgrades, we'd
 			// load the claim based on installationName
 			c := claim.New(installationName)
-			c.Bundle = bundle
+			c.Bundle = bundle.InvocationImage.Image
 			if valuesFile != "" {
 				vals, err := parseValues(valuesFile)
 				if err != nil {
@@ -92,7 +110,7 @@ Windows Example:
 	//cmd.Flags().StringSliceP("credentials", "c", []string{}, "Specify one or more credential sets")
 	cmd.Flags().StringVarP(&installDriver, "driver", "d", "docker", "Specify a driver name")
 	cmd.Flags().StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
-
+	cmd.Flags().StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
 	return cmd
 }
 
