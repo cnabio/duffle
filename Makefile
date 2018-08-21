@@ -6,6 +6,8 @@ LDFLAGS   := -w -s
 
 ifeq ($(OS),Windows_NT)
 	TARGET = duffle.exe
+	SHELL = cmd.exe
+	HAS_DEP := $(shell where.exe dep)
 else
 	TARGET = duffle
 	HAS_DEP := $(shell command -v dep;)
