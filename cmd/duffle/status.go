@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -41,10 +40,9 @@ reason, it may need the same credentials used to install.
 				return err
 			}
 
-			// TODO: Do we pass values in here? Just from Claim?
-
+			// TODO: Do we pass new values in here? Or just from Claim?
 			action := &action.Status{Driver: driverImpl}
-			return action.Run(c)
+			return action.Run(&c)
 		},
 	}
 	cmd.Flags().StringVarP(&statusDriver, "driver", "d", "docker", "Specify a driver name")
@@ -52,6 +50,7 @@ reason, it may need the same credentials used to install.
 	return cmd
 }
 
-func loadClaim(name string) (*claim.Claim, error) {
-	return nil, fmt.Errorf("not iplemented for %s", name)
+func loadClaim(name string) (claim.Claim, error) {
+	storage := claimStorage()
+	return storage.Read(name)
 }

@@ -8,7 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/utils/crud"
 )
 
 var (
@@ -36,6 +38,11 @@ func defaultDuffleHome() string {
 	}
 
 	return filepath.Join(homeEnvPath, ".duffle")
+}
+
+func claimStorage() claim.Store {
+	h := home.Home(homePath())
+	return claim.NewClaimStore(crud.NewFileSystemStore(h.Claims(), "json"))
 }
 
 func must(err error) {

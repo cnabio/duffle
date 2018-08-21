@@ -48,6 +48,8 @@ func (i *initCmd) run() error {
 		home.Logs(),
 		home.Plugins(),
 		home.Repositories(),
+		home.Claims(),
+		home.Credentials(),
 	}
 
 	if err := i.ensureDirectories(dirs); err != nil {
