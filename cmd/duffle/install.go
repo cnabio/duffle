@@ -10,13 +10,10 @@ import (
 	"strings"
 
 	"github.com/deis/duffle/pkg/action"
-	"github.com/deis/duffle/pkg/claim"
-
 	"github.com/deis/duffle/pkg/bundle"
-
-	"github.com/deis/duffle/pkg/loader"
-
+	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/driver"
+	"github.com/deis/duffle/pkg/loader"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
