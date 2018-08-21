@@ -3,10 +3,6 @@
   version = "0.0.3"
 
 [[constraint]]
-  name = "github.com/stretchr/testify"
-  version = "1.2.2"
-
-[[constraint]]
   name = "github.com/Masterminds/vcs"
   version = "1.11.1"
 
@@ -15,18 +11,13 @@
   version = "v1.0.4"
 
 [[constraint]]
-  name = "github.com/docker/docker"
-  source = "https://github.com/moby/moby"
-  revision = "ae7016427f8cba4e4d8fcb979d6ba313ee2c0702"
-
-[[constraint]]
   name = "github.com/docker/cli"
-  revision = "37eebe5cb6eff08bde94d17111caa8fc099d7a94"
+  version = "v18.06.0-ce"
 
-[[override]]
+  [[override]]
   name = "github.com/docker/distribution"
-  revision = "a97d7c0c155be14d1380c075d3197a5d89c2abc2"
+  revision = "83389a148052d74ac602f5f1d62f86ff2f3c4aa5"
 
-[prune]
-  go-tests = true
-  unused-packages = true
+  [[override]]
+  name = "github.com/docker/go-metrics"
+  revision = "d466d4f6fd960e01820085bd7e1a24426ee7ef18"
