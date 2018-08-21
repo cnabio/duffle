@@ -162,10 +162,8 @@ func archiveSrc(contextPath, dockerfileName string) (*DockerContext, error) {
 		return nil, fmt.Errorf("unable to prepare docker context: %s", err)
 	}
 	// canonicalize dockerfile name to a platform-independent one
-	relDockerfile, err = archive.CanonicalTarNameForPath(relDockerfile)
-	if err != nil {
-		return nil, fmt.Errorf("cannot canonicalize dockerfile path %s: %v", relDockerfile, err)
-	}
+	relDockerfile = archive.CanonicalTarNameForPath(relDockerfile)
+
 	f, err := os.Open(filepath.Join(contextDir, DockerignoreFilename))
 	if err != nil && !os.IsNotExist(err) {
 		return nil, err
