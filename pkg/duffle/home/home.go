@@ -36,6 +36,16 @@ func (h Home) Logs() string {
 	return h.Path("logs")
 }
 
+// Claims is where claims are stored when the filesystem driver is used.
+func (h Home) Claims() string {
+	return h.Path("claims")
+}
+
+// Credentials are where credentialsets are stored.
+func (h Home) Credentials() string {
+	return h.Path("credentials")
+}
+
 // Plugins returns the path to the Duffle plugins.
 func (h Home) Plugins() string {
 	plugdirs := os.Getenv(PluginEnvVar)
