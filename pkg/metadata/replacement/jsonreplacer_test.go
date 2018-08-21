@@ -7,9 +7,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCanReplaceInYAML(t *testing.T) {
-	source := "a: 1\nb:\n  c: d\n  e: f"
-	r := NewYAMLReplacer()
+func TestCanReplaceInJSON(t *testing.T) {
+	source := `{
+	"a": 1,
+	"b": {
+		"c": "d",
+		"e": "f"
+	}
+}`
+	r := NewJSONReplacer("\t")
 	result, err := r.Replace(source, "b.c", "test")
 	if err != nil {
 		t.Fatalf("Replace failed: %s", err)
