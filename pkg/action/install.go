@@ -24,16 +24,7 @@ func (i *Install) Run(c *claim.Claim) error {
 	// TODO: get image type from bundle.json and call driver.Handles() on that.
 	// TODO: should credentials hang off Claim or be injected into Run() above
 
-	op := &driver.Operation{
-		Action:       claim.ActionInstall,
-		Installation: c.Name,
-		Parameters:   c.Parameters,
-		Credentials:  []driver.ResolvedCred{},
-		Image:        c.Bundle,
-		// FIXME: This is hard coded for now, but should be loaded from manifest
-		ImageType: driver.ImageTypeDocker,
-		Revision:  c.Revision,
-	}
+	op := opFromClaim(c)
 
 	if !i.Driver.Handles(op.ImageType) {
 		return fmt.Errorf("driver does not handle image type %s", op.ImageType)

@@ -1,0 +1,57 @@
+package main
+
+import (
+	"errors"
+	"fmt"
+	"io"
+
+	"github.com/spf13/cobra"
+
+	"github.com/deis/duffle/pkg/action"
+	"github.com/deis/duffle/pkg/claim"
+)
+
+// TODO
+func newStatusCmd(w io.Writer) *cobra.Command {
+	const short = "get the status of an installation"
+	const long = `Get the status of an existing installation.
+
+Given an installation name, execute the status task for this. A status
+action will restart the CNAB image and ask it to query for status. For that
+reason, it may need the same credentials used to install.
+`
+	var statusDriver string
+
+	cmd := &cobra.Command{
+		Use:   "status NAME",
+		Short: short,
+		Long:  long,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return errors.New("required arg is NAME (installation name")
+			}
+			claimName := args[0]
+			c, err := loadClaim(claimName)
+			if err != nil {
+				return err
+			}
+
+			driverImpl, err := prepareDriver(statusDriver)
+			if err != nil {
+				return err
+			}
+
+			// TODO: Do we pass values in here? Just from Claim?
+
+			action := &action.Status{Driver: driverImpl}
+			return action.Run(c)
+		},
+	}
+	cmd.Flags().StringVarP(&statusDriver, "driver", "d", "docker", "Specify a driver name")
+
+	return cmd
+}
+
+func loadClaim(name string) (*claim.Claim, error) {
+	return nil, fmt.Errorf("not iplemented for %s", name)
+}
