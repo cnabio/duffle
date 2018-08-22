@@ -37,6 +37,18 @@ func TestCanSaveReadAndDelete(t *testing.T) {
 		t.Errorf("Expected to read back bundle %s, got %s", claim.Bundle, c.Bundle)
 	}
 
+	claims, err := store.List()
+	if err != nil {
+		t.Errorf("Failed to list: %s", err)
+	}
+
+	if len(claims) != 1 {
+		t.Errorf("Expected 1 claim in list but got %d", len(claims))
+	}
+	if claims[0] != claim.Name {
+		t.Errorf("Expected to list claim '%s' in list but got '%s'", claim.Name, claims[0])
+	}
+
 	err = store.Delete("foo")
 	if err != nil {
 		t.Errorf("Failed to delete: %s", err)
