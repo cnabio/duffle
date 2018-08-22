@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"net/url"
 	"os"
 
 	"github.com/deis/duffle/pkg/bundle"
@@ -17,6 +18,10 @@ func New(bundleFile string) (Loader, error) {
 		return LocalLoader{source: bundleFile}, nil
 	}
 
+	_, err := url.ParseRequestURI(bundleFile)
+	if err != nil {
+		return nil, err
+	}
 	return RemoteLoader{source: bundleFile}, nil
 }
 
