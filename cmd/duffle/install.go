@@ -79,7 +79,7 @@ Windows Example:
 				return err
 			}
 
-			if err = validateDockerish(bundle.InvocationImage.Image); err != nil {
+			if err = validateImage(bundle.InvocationImage); err != nil {
 				return err
 			}
 
@@ -92,6 +92,7 @@ Windows Example:
 			// load the claim based on installationName
 			c := claim.New(installationName)
 			c.Bundle = bundle.InvocationImage.Image
+			c.ImageType = bundle.InvocationImage.ImageType
 			if valuesFile != "" {
 				vals, err := parseValues(valuesFile)
 				if err != nil {
@@ -130,6 +131,15 @@ func prepareDriver(driverName string) (driver.Driver, error) {
 	}
 
 	return driverImpl, err
+}
+
+func validateImage(img bundle.InvocationImage) error {
+	switch img.ImageType {
+	case "docker", "oci":
+		return validateDockerish(img.Image)
+	default:
+		return nil
+	}
 }
 
 func validateDockerish(s string) error {

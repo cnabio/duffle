@@ -25,7 +25,7 @@ func opFromClaim(action string, c *claim.Claim) *driver.Operation {
 		Parameters:   c.Parameters,
 		Credentials:  []driver.ResolvedCred{},
 		Image:        c.Bundle,
-		ImageType:    driver.ImageTypeDocker,
+		ImageType:    c.ImageType,
 		Revision:     c.Revision,
 	}
 }
