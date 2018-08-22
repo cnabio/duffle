@@ -24,11 +24,31 @@ func (r jsonReplacer) Replace(source string, selector string, value string) (str
 	}
 
 	selectorPath := parseSelector(selector)
-	replaceInStringMap(dict, selectorPath, value)
+	replaceIn(jsonDocMap{m: dict}, selectorPath, value)
 
 	bytes, err := json.MarshalIndent(dict, "", r.indent)
 	if err != nil {
 		return "", err
 	}
 	return string(bytes), nil
+}
+
+type jsonDocMap struct {
+	m map[string]interface{}
+}
+
+func (m jsonDocMap) get(key string) (interface{}, bool) {
+	e, ok := m.m[key]
+	return e, ok
+}
+
+func (m jsonDocMap) set(key string, value interface{}) {
+	m.m[key] = value
+}
+
+func (m jsonDocMap) asInstance(value interface{}) (docmap, bool) {
+	if e, ok := value.(map[string]interface{}); ok {
+		return jsonDocMap{m: e}, ok
+	}
+	return jsonDocMap{}, false
 }

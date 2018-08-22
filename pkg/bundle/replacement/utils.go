@@ -6,47 +6,33 @@ import (
 	"strings"
 )
 
+// Abstraction over map to permit generic traversal and substitution
+type docmap interface {
+	get(key string) (interface{}, bool)
+	set(key string, value interface{})
+	asInstance(value interface{}) (docmap, bool)
+}
+
 func parseSelector(selector string) []string {
 	return strings.Split(selector, ".")
 }
 
-func replaceInObjectMap(dict map[interface{}]interface{}, selectorPath []string, value string) error {
-	entry, ok := dict[selectorPath[0]]
+func replaceIn(dict docmap, selectorPath []string, value string) error {
+	entry, ok := dict.get(selectorPath[0])
 	if !ok {
 		return errors.New("Selector not found")
 	}
 
 	if len(selectorPath) == 1 {
-		dict[selectorPath[0]] = value
+		dict.set(selectorPath[0], value)
 		return nil
 	}
 
-	entryDict, ok := entry.(map[interface{}]interface{})
+	entryDict, ok := dict.asInstance(entry)
 	if !ok {
 		return fmt.Errorf("Entry %s is not a map", selectorPath[0])
 	}
 	rest := selectorPath[1:]
 
-	return replaceInObjectMap(entryDict, rest, value)
-}
-
-// TODO: This duplication makes me VERY ANGRY
-func replaceInStringMap(dict map[string]interface{}, selectorPath []string, value string) error {
-	entry, ok := dict[selectorPath[0]]
-	if !ok {
-		return errors.New("Selector not found")
-	}
-
-	if len(selectorPath) == 1 {
-		dict[selectorPath[0]] = value
-		return nil
-	}
-
-	entryDict, ok := entry.(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("Entry %s is not a map", selectorPath[0])
-	}
-	rest := selectorPath[1:]
-
-	return replaceInStringMap(entryDict, rest, value)
+	return replaceIn(entryDict, rest, value)
 }
