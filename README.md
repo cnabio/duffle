@@ -24,7 +24,7 @@ Once you have everything configured, you can start installing bundles!
 
 ```
 $ duffle search
-$ duffle install foo
+$ duffle install foo foo
 ```
 
 
