@@ -14,9 +14,6 @@ func newRootCmd(w io.Writer) *cobra.Command {
 		Use:   "duffle",
 		Short: usage,
 		Long:  usage,
-		Run: func(cmd *cobra.Command, args []string) {
-			unimplemented("duffle")
-		},
 	}
 
 	p := cmd.PersistentFlags()
