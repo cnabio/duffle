@@ -17,7 +17,6 @@ import (
 	"github.com/deis/duffle/pkg/driver"
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
-	"github.com/deis/duffle/pkg/utils/crud"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
@@ -140,8 +139,7 @@ Windows Example:
 				c.Parameters = vals
 			}
 
-			store := defaultClaimStore()
-			err = store.Store(*c)
+			err = claimStorage().Store(*c)
 			if err != nil {
 				return err
 			}
@@ -236,10 +234,4 @@ func getBundleFile(bundleName string) (string, string, error) {
 	}
 
 	return filepath.Join(home.Repositories(), repo, "bundles", fmt.Sprintf("%s.json", name)), repo, nil
-}
-
-func defaultClaimStore() claim.Store {
-	h := home.Home(homePath())
-	storageDir := h.Claims()
-	return claim.NewClaimStore(crud.NewFileSystemStore(storageDir, "json"))
 }
