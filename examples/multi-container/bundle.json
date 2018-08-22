@@ -15,11 +15,6 @@
             "name": "component-b",
             "uri": "radumatei/multi-container-component-b:12bd396dc897bada5d8b4c8db477399481d37b86",
             "refs": null
-        },
-        {
-            "name": "cnab",
-            "uri": "radumatei/multi-container-cnab:6695ef525959a236f1faff44221dcdfd84441c62",
-            "refs": null
         }
     ],
     "parameters": null

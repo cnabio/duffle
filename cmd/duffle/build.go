@@ -163,6 +163,7 @@ func (b *buildCmd) run() (err error) {
 				// TODO - handle image type
 				ImageType: "docker",
 			}
+			continue
 		}
 		bf.Images = append(bf.Images, bundle.Image{Name: c.Name, URI: c.Images[0]})
 	}
