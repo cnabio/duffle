@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -168,10 +167,16 @@ func (b *buildCmd) run() (err error) {
 		bf.Images = append(bf.Images, bundle.Image{Name: c.Name, URI: c.Images[0]})
 	}
 
-	mb, err := json.Marshal(bf)
+	f, err := os.OpenFile("bundle.json", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile("bundle.json", mb, 0644)
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "    ")
+	if err := enc.Encode(bf); err != nil {
+		return err
+	}
+
+	return nil
 }
