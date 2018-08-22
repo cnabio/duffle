@@ -13,7 +13,7 @@ $ $env:DUFFLE_HOME = ".\tests\testdata\home"
 $ .\bin\duffle.exe help
 ```
 
-For everyone else other than Matt, Radu and Ivan:
+For everyone else other than Fisher, Radu and Ivan:
 
 ```
 $ export DUFFLE_HOME="$PWD/tests/testdata/home"
