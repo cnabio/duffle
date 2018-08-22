@@ -31,6 +31,12 @@ lint:
 HAS_DEP          := $(shell $(CHECK) dep)
 HAS_GOMETALINTER := $(shell $(CHECK) gometalinter)
 
+
+.PHONY: build-drivers
+build-drivers:
+	cp drivers/azure-vm/duffle-azvm.sh bin/duffle-azvm
+	cd drivers/azure-vm && pip3 install -r requirements.txt
+
 .PHONY: bootstrap
 bootstrap:
 ifndef HAS_DEP
