@@ -1,8 +1,6 @@
 package replacement
 
 import (
-	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -20,7 +18,7 @@ func parseSelector(selector string) []string {
 func replaceIn(dict docmap, selectorPath []string, value string) error {
 	entry, ok := dict.get(selectorPath[0])
 	if !ok {
-		return errors.New("Selector not found")
+		return ErrSelectorNotFound
 	}
 
 	if len(selectorPath) == 1 {
@@ -30,7 +28,7 @@ func replaceIn(dict docmap, selectorPath []string, value string) error {
 
 	entryDict, ok := dict.asInstance(entry)
 	if !ok {
-		return fmt.Errorf("Entry %s is not a map", selectorPath[0])
+		return ErrSelectorNotFound // Because we have reached a terminal with some of the selectorPath to go
 	}
 	rest := selectorPath[1:]
 

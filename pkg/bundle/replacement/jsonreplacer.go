@@ -24,7 +24,10 @@ func (r jsonReplacer) Replace(source string, selector string, value string) (str
 	}
 
 	selectorPath := parseSelector(selector)
-	replaceIn(jsonDocMap(dict), selectorPath, value)
+	err = replaceIn(jsonDocMap(dict), selectorPath, value)
+	if err != nil {
+		return "", err
+	}
 
 	bytes, err := json.MarshalIndent(dict, "", r.indent)
 	if err != nil {

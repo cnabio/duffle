@@ -21,7 +21,10 @@ func (r yamlReplacer) Replace(source string, selector string, value string) (str
 	}
 
 	selectorPath := parseSelector(selector)
-	replaceIn(yamlDocMap(dict), selectorPath, value)
+	err = replaceIn(yamlDocMap(dict), selectorPath, value)
+	if err != nil {
+		return "", err
+	}
 
 	bytes, err := yaml.Marshal(dict)
 	if err != nil {
