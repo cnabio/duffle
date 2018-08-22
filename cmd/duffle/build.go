@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -18,6 +20,7 @@ import (
 
 	"github.com/deis/duffle/pkg/builder"
 	dockercontainerbuilder "github.com/deis/duffle/pkg/builder/docker"
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/cmdline"
 	"github.com/deis/duffle/pkg/duffle/home"
 )
@@ -146,5 +149,28 @@ func (b *buildCmd) run() (err error) {
 	progressC := bldr.Build(ctx, buildctx)
 	cmdline.Display(ctx, buildctx.Name, progressC, cmdline.WithBuildID(bldr.ID))
 
-	return nil
+	bf := bundle.Bundle{
+		Name: buildctx.Name,
+		// TODO - handle bundle version
+		Version: "1.0.0",
+	}
+	for _, c := range buildctx.DockerContexts {
+
+		// TODO - add invocation image as top level field in duffle.toml
+		if c.Name == "cnab" {
+			bf.InvocationImage = bundle.InvocationImage{
+				Image: c.Images[0],
+				// TODO - handle image type
+				ImageType: "docker",
+			}
+		}
+		bf.Images = append(bf.Images, bundle.Image{Name: c.Name, URI: c.Images[0]})
+	}
+
+	mb, err := json.Marshal(bf)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile("bundle.json", mb, 0644)
 }
