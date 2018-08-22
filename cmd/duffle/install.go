@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/driver"
+	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
 
 	"github.com/BurntSushi/toml"
@@ -63,8 +66,43 @@ Windows Example:
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
+			if len(args) == 2 && bundleFile == "" {
+				return errors.New("please use either -f or specify a BUNDLE, but not both")
+			}
+
 			if len(args) < 2 && bundleFile == "" {
 				return errors.New("required arguments are NAME (name of the instllation) and BUNDLE (CNAB bundle name) or file")
+			}
+
+			if len(args) == 2 {
+				// load bundleFile from a repository
+				bundleName := args[1]
+				relevantBundles := search([]string{bundleName})
+				switch len(relevantBundles) {
+				case 0:
+					return fmt.Errorf("no bundles with the name '%s' was found", bundleName)
+				case 1:
+					bundleName = relevantBundles[0]
+				default:
+					var match bool
+					// check if we have an exact match
+					for _, f := range relevantBundles {
+						if strings.Compare(f, bundleName) == 0 {
+							bundleName = f
+							match = true
+						}
+					}
+					if !match {
+						return fmt.Errorf("%d bundles with the name '%s' was found: %v", len(relevantBundles), bundleName, relevantBundles)
+					}
+				}
+				filePath, repo, err := getBundleFile(bundleName)
+				if err != nil {
+					return err
+				}
+				bundleFile = filePath
+
+				fmt.Fprintf(w, "loaded %s from repository %s\n", bundleFile, repo)
 			}
 
 			l, err := loader.New(bundleFile)
@@ -160,4 +198,25 @@ func parseValues(file string) (map[string]interface{}, error) {
 	default:
 		return vals, errors.New("no decoder for " + ext)
 	}
+}
+
+func getBundleFile(bundleName string) (string, string, error) {
+	var (
+		name string
+		repo string
+	)
+	home := home.Home(homePath())
+	bundleInfo := strings.Split(bundleName, "/")
+	if len(bundleInfo) == 1 {
+		name = bundleInfo[0]
+		repo = home.DefaultRepository()
+	} else {
+		name = bundleInfo[len(bundleInfo)-1]
+		repo = path.Dir(bundleName)
+	}
+	if strings.Contains(name, "./\\") {
+		return "", "", fmt.Errorf("bundle name '%s' is invalid. Bundle names cannot include the following characters: './\\'", name)
+	}
+
+	return filepath.Join(home.Repositories(), repo, "bundles", fmt.Sprintf("%s.json", name)), repo, nil
 }
