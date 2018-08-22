@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,7 @@ import (
 
 func TestRmoteLoader(t *testing.T) {
 
-	data, err := ioutil.ReadFile("../bundle/testdata/bundle.json")
+	data, err := ioutil.ReadFile(filepath.Join("..", "..", "tests", "testdata", "bundles", "foo.json"))
 	if err != nil {
 		t.Fatalf("cannot read bundle file: %v", err)
 	}

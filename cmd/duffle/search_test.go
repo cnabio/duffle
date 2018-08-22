@@ -13,11 +13,11 @@ func TestSearch(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	duffleHome = filepath.Join(cwd, "testdata", "home")
+	duffleHome = filepath.Join(cwd, "..", "..", "tests", "testdata", "home")
 
 	expectedBundleList := []string{
-		"github.com/customorg/duffle-bundles/hello",
-		"hello",
+		"foo",
+		"github.com/customorg/duffle-bundles/foo",
 	}
 
 	bundleList := search([]string{})

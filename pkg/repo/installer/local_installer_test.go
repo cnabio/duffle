@@ -3,6 +3,7 @@ package installer
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/deis/duffle/pkg/duffle/home"
@@ -22,7 +23,7 @@ func TestLocalInstaller(t *testing.T) {
 		t.Fatalf("Could not create %s: %s", home.Repositories(), err)
 	}
 
-	source := "testdata/testrepo"
+	source := filepath.Join("..", "..", "..", "tests", "testdata", "home", "repositories", home.DefaultRepository())
 	i, err := New(source, "", "", home)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
@@ -32,7 +33,7 @@ func TestLocalInstaller(t *testing.T) {
 		t.Error(err)
 	}
 
-	expectedPath := home.Path("repositories", "testrepo")
+	expectedPath := home.Path("repositories", "duffle-bundles")
 	if i.Path() != expectedPath {
 		t.Errorf("expected path '%s', got %q", expectedPath, i.Path())
 	}

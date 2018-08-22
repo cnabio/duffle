@@ -27,7 +27,7 @@ func TestReadTopLevelProperties(t *testing.T) {
 }
 
 func TestReadImageProperties(t *testing.T) {
-	data, err := ioutil.ReadFile("testdata/bundle.json")
+	data, err := ioutil.ReadFile("../../tests/testdata/home/repositories/github.com/deis/duffle-bundles/bundles/foo.json")
 	if err != nil {
 		t.Errorf("cannot read bundle file: %v", err)
 	}
