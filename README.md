@@ -4,5 +4,27 @@
 
 1. Clone this repo: `$ git clone git@github.com:deis/duffle.git`
 2. Vendor dependencies and build the `duffle` binary: `$ make bootstrap build`
+3. Set `$DUFFLE_HOME` to `tests/testdata/home`
+
+In powershell:
+
+```
+$ $env:DUFFLE_HOME = ".\tests\testdata\home"
+$ .\bin\duffle.exe help
+```
+
+For everyone else other than Matt, Radu and Ivan:
+
+```
+$ export DUFFLE_HOME="$PWD/tests/testdata/home"
+$ ./bin/duffle help
+```
+
+Once you have everything configured, you can start installing bundles!
+
+```
+$
+```
+
 
 For more information, see the [docs](docs/).
