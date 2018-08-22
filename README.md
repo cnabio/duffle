@@ -23,7 +23,8 @@ $ ./bin/duffle help
 Once you have everything configured, you can start installing bundles!
 
 ```
-$
+$ duffle search
+$ duffle install foo
 ```
 
 
