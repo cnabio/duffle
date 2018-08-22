@@ -67,6 +67,14 @@ Windows Example:
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			if len(args) == 2 && bundleFile == "" {
+				return errors.New("please use either -f or specify a BUNDLE, but not both")
+			}
+
+			if len(args) < 2 && bundleFile == "" {
+				return errors.New("required arguments are NAME (name of the instllation) and BUNDLE (CNAB bundle name) or file")
+			}
+
+			if len(args) == 2 {
 				// load bundleFile from a repository
 				bundleName := args[1]
 				relevantBundles := search([]string{bundleName})
@@ -94,12 +102,7 @@ Windows Example:
 				}
 				bundleFile = filePath
 
-				// TODO: pass off to radu
 				fmt.Fprintf(w, "loaded %s from repository %s\n", bundleFile, repo)
-			}
-
-			if len(args) < 2 && bundleFile == "" {
-				return errors.New("required arguments are NAME (name of the instllation) and BUNDLE (CNAB bundle name) or file")
 			}
 
 			l, err := loader.New(bundleFile)
