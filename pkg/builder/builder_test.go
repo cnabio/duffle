@@ -7,7 +7,7 @@ import (
 )
 
 func TestArchiveSrc(t *testing.T) {
-	ctx, err := archiveSrc(filepath.Join("testdata", "simple"), "")
+	ctx, err := archiveSrc(filepath.Join("..", "..", "tests", "testdata", "builder", "simple"), "")
 	if err != nil {
 		t.Error(err)
 	}

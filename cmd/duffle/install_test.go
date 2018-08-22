@@ -14,15 +14,15 @@ func TestGetBundleFile(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	duffleHome = filepath.Join(cwd, "testdata", "home")
+	duffleHome = filepath.Join(cwd, "..", "..", "tests", "testdata", "home")
 	testHome := home.Home(duffleHome)
 
-	filePath, repo, err := getBundleFile("hello")
+	filePath, repo, err := getBundleFile("foo")
 	if err != nil {
 		t.Error(err)
 	}
 
-	expectedFilepath := filepath.Join(testHome.Repositories(), testHome.DefaultRepository(), "bundles", "hello.json")
+	expectedFilepath := filepath.Join(testHome.Repositories(), testHome.DefaultRepository(), "bundles", "foo.json")
 	expectedRepo := testHome.DefaultRepository()
 
 	if filePath != expectedFilepath {
