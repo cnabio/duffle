@@ -13,12 +13,11 @@ type Loader interface {
 
 // New determines and returns the correct Loader for the given bundle file
 func New(bundleFile string) (Loader, error) {
-	var l Loader
 	if isLocalReference(bundleFile) {
-		l = LocalLoader{source: bundleFile}
+		return LocalLoader{source: bundleFile}, nil
 	}
 
-	return l, nil
+	return RemoteLoader{source: bundleFile}, nil
 }
 
 func isLocalReference(file string) bool {
