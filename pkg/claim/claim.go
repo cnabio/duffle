@@ -38,6 +38,7 @@ type Claim struct {
 	Bundle     string                 `json:"bundle"`
 	Result     Result                 `json:"result"`
 	Parameters map[string]interface{} `json:"parameters"`
+	ImageType  string                 `json:"image_type"`
 }
 
 // New creates a new Claim initialized for an installation operation.
