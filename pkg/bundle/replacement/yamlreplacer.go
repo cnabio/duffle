@@ -21,7 +21,7 @@ func (r yamlReplacer) Replace(source string, selector string, value string) (str
 	}
 
 	selectorPath := parseSelector(selector)
-	replaceIn(yamlDocMap{m: dict}, selectorPath, value)
+	replaceIn(yamlDocMap(dict), selectorPath, value)
 
 	bytes, err := yaml.Marshal(dict)
 	if err != nil {
@@ -30,22 +30,20 @@ func (r yamlReplacer) Replace(source string, selector string, value string) (str
 	return string(bytes), nil
 }
 
-type yamlDocMap struct {
-	m map[interface{}]interface{}
-}
+type yamlDocMap map[interface{}]interface{}
 
 func (m yamlDocMap) get(key string) (interface{}, bool) {
-	e, ok := m.m[key]
+	e, ok := m[key]
 	return e, ok
 }
 
 func (m yamlDocMap) set(key string, value interface{}) {
-	m.m[key] = value
+	m[key] = value
 }
 
 func (m yamlDocMap) asInstance(value interface{}) (docmap, bool) {
 	if e, ok := value.(map[interface{}]interface{}); ok {
-		return yamlDocMap{m: e}, ok
+		return yamlDocMap(e), ok
 	}
 	return yamlDocMap{}, false
 }
