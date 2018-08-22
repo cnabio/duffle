@@ -67,7 +67,7 @@ Windows Example:
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			if len(args) == 2 && bundleFile == "" {
+			if len(args) == 2 && bundleFile != "" {
 				return errors.New("please use either -f or specify a BUNDLE, but not both")
 			}
 
