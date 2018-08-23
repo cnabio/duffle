@@ -49,6 +49,10 @@ UNIX Example:
 Windows Example:
 	$ $env:VERBOSE = true
 	$ duffle install -d docker my_release duffle/example:0.1.0
+
+For unpublished CNAB bundles, you can also load the bundle.json directly:
+
+    $ duffle install dev_bundle -f path/to/bundle.json
 `
 	var (
 		installDriver string
