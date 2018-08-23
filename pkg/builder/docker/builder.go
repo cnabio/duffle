@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/deis/duffle/pkg/builder"
+
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/docker/api/types"
 	dockerclient "github.com/docker/docker/client"

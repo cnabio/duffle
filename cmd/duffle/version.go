@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/deis/duffle/pkg/version"
+
 	"github.com/spf13/cobra"
 )
 

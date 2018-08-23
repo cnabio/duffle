@@ -9,6 +9,7 @@ import (
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/ohai"
 	"github.com/deis/duffle/pkg/repo/installer"
+
 	"github.com/spf13/cobra"
 )
 

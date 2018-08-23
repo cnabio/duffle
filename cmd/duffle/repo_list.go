@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/deis/duffle/pkg/duffle/home"
+
 	"github.com/spf13/cobra"
 )
 

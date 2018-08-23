@@ -7,7 +7,10 @@ import (
 	"runtime"
 )
 
+// HomeEnvVar is the env var name that points to Duffle home.
 const HomeEnvVar = "DUFFLE_HOME"
+
+// PluginEnvVar defines the plugin environment variable name.
 const PluginEnvVar = `DUFFLE_PLUGIN`
 
 // Home describes the location of a CLI configuration.

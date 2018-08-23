@@ -1,3 +1,3 @@
 package driver
 
-var _ Driver = CommandDriver{}
+var _ Driver = &CommandDriver{}

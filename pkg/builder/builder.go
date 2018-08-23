@@ -15,6 +15,7 @@ import (
 	"github.com/deis/duffle/pkg/duffle"
 	"github.com/deis/duffle/pkg/duffle/manifest"
 	"github.com/deis/duffle/pkg/osutil"
+
 	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/docker/builder/dockerignore"
 	"github.com/docker/docker/pkg/archive"

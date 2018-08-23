@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+// ImageType constants provide some of the image types supported
+// TODO: I think we can remove all but Docker, since the rest are supported externally
 const (
 	ImageTypeDocker = "docker"
 	ImageTypeOCI    = "oci"
@@ -32,7 +34,7 @@ type Operation struct {
 	Revision string `json:"revision"`
 	// Action is the action to be performed
 	Action string `json:"action"`
-	// Parameters are the paramaters to be injected into the container
+	// Parameters are the parameters to be injected into the container
 	Parameters map[string]interface{} `json:"parameters"`
 	// Credentials are the credential sets to be loaded into the container
 	Credentials []ResolvedCred `json:"credentials"`
@@ -57,6 +59,7 @@ type Driver interface {
 	Handles(string) bool
 }
 
+// Configurable drivers can explain their configuration, and have it explicitly set
 type Configurable interface {
 	// Config returns a map of configuration names and values that can be set via environment variable
 	Config() map[string]string
@@ -72,6 +75,7 @@ type DebugDriver struct {
 	config map[string]string
 }
 
+// Run executes the operation on the Debug  driver
 func (d *DebugDriver) Run(op *Operation) error {
 	data, err := json.MarshalIndent(op, "", "  ")
 	if err != nil {
@@ -81,16 +85,19 @@ func (d *DebugDriver) Run(op *Operation) error {
 	return nil
 }
 
+// Handles always returns true, effectively claiming to work for any image type
 func (d *DebugDriver) Handles(dt string) bool {
 	return true
 }
 
+// Config returns the configuration help text
 func (d *DebugDriver) Config() map[string]string {
 	return map[string]string{
 		"VERBOSE": "Increase verbosity. true, false are supported values",
 	}
 }
 
+// SetConfig sets configuration for this driver
 func (d *DebugDriver) SetConfig(settings map[string]string) {
 	d.config = settings
 }

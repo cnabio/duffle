@@ -14,6 +14,7 @@ type DockerDriver struct {
 	Simulate bool
 }
 
+// Run executes the Docker driver
 func (d *DockerDriver) Run(op *Operation) error {
 	env := map[string]interface{}{
 		"CNAB_INSTALLATION_NAME": op.Installation,
@@ -28,6 +29,7 @@ func (d *DockerDriver) Run(op *Operation) error {
 	return d.exec(op.Image, env)
 }
 
+// Handles indicates that the Docker driver supports "docker" and "oci"
 func (d *DockerDriver) Handles(dt string) bool {
 	return dt == ImageTypeDocker || dt == ImageTypeOCI
 }
@@ -66,12 +68,14 @@ func (d *DockerDriver) exec(img string, env map[string]interface{}) error {
 	return err
 }
 
+// Config returns the Docker driver configuration options
 func (d *DockerDriver) Config() map[string]string {
 	return map[string]string{
 		"VERBOSE": "Increase verbosity. true, false are supported values",
 	}
 }
 
+// SetConfig sets Docker driver configuration
 func (d *DockerDriver) SetConfig(settings map[string]string) {
 	d.config = settings
 }
