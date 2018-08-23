@@ -9,11 +9,11 @@ import (
 var _ Driver = &DockerDriver{}
 var _ Driver = &DebugDriver{}
 
-func TestLookup_Error(t *testing.T) {
+func TestLookup_ExternalDriver(t *testing.T) {
 	d, err := Lookup("no_such_driver")
 
-	assert.NotNil(t, d)
-	assert.Error(t, err)
+	assert.NoError(t, err)
+	assert.IsType(t, d, &CommandDriver{})
 }
 
 func TestDebugDriver_Handles(t *testing.T) {

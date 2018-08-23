@@ -30,6 +30,7 @@ func TestOpFromClaim(t *testing.T) {
 		Revision:   "revision",
 		Bundle:     "foo/bar:0.1.0",
 		Parameters: map[string]interface{}{"duff": "beer"},
+		ImageType:  driver.ImageTypeDocker,
 	}
 
 	op := opFromClaim(claim.ActionInstall, c)
