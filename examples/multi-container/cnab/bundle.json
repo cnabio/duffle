@@ -1,9 +1,9 @@
 {
     "name": "multi-container",
-    "version": "1.0.0",
+    "version": "f2f0761a2e2b3823a02bd93f63aac9d496c9b203",
     "invocationImage": {
         "imageType": "docker",
-        "image": "radumatei/multi-container-cnab:6695ef525959a236f1faff44221dcdfd84441c62"
+        "image": "radumatei/multi-container-cnab:f2f0761a2e2b3823a02bd93f63aac9d496c9b203"
     },
     "images": [
         {
