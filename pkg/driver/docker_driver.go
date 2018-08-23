@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 // DockerDriver is capable of running Docker invocation images using Docker itself.
@@ -16,17 +15,8 @@ type DockerDriver struct {
 
 // Run executes the Docker driver
 func (d *DockerDriver) Run(op *Operation) error {
-	env := map[string]interface{}{
-		"CNAB_INSTALLATION_NAME": op.Installation,
-		"CNAB_ACTION":            op.Action,
-		"CNAB_BUNDLE_NAME":       op.Image,
-	}
-	for k, v := range op.Parameters {
-		// TODO: Vet against bundle's parameters.json
-		env[fmt.Sprintf("CNAB_P_%s", strings.ToUpper(k))] = v
-	}
-
-	return d.exec(op.Image, env)
+	// TODO: add op.files
+	return d.exec(op.Image, op.Environment)
 }
 
 // Handles indicates that the Docker driver supports "docker" and "oci"
@@ -34,7 +24,7 @@ func (d *DockerDriver) Handles(dt string) bool {
 	return dt == ImageTypeDocker || dt == ImageTypeOCI
 }
 
-func (d *DockerDriver) exec(img string, env map[string]interface{}) error {
+func (d *DockerDriver) exec(img string, env map[string]string) error {
 	// FIXME: This is all temporary code. We should really just link the Docker library and
 	// directly send this.
 	args := []string{"run"}

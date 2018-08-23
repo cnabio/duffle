@@ -21,11 +21,11 @@ func TestInstall_Run(t *testing.T) {
 	}
 
 	inst := &Install{Driver: &driver.DebugDriver{}}
-	assert.NoError(t, inst.Run(c))
+	assert.NoError(t, inst.Run(c, mockSet))
 
 	inst = &Install{Driver: &mockFailingDriver{}}
-	assert.Error(t, inst.Run(c))
+	assert.Error(t, inst.Run(c, mockSet))
 
 	inst = &Install{Driver: &mockFailingDriver{shouldHandle: true}}
-	assert.Error(t, inst.Run(c))
+	assert.Error(t, inst.Run(c, mockSet))
 }

@@ -50,7 +50,8 @@ name: staging     # Must match the name portion of the file name (staging.yaml)
 credentials:
   - name: read_file
     source:
-      path: testdata/someconfig.txt  # credential will be read from this file
+      path: $SOMEPATH/testdata/someconfig.txt  # credential will be read from this file
+                                               # In 'path', env vars are evaluated.
     destination:
       # credential data will be presented as environment variable $TEST_READ_FILE
       env: TEST_READ_FILE    

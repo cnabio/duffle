@@ -5,10 +5,13 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/claim"
+	"github.com/deis/duffle/pkg/credentials"
+	"github.com/deis/duffle/pkg/driver"
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/utils/crud"
 )
@@ -18,6 +21,18 @@ var (
 	duffleHome string
 	rootCmd    *cobra.Command
 )
+
+func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			if err, ok := r.(error); ok {
+				must(err)
+			}
+		}
+	}()
+	rootCmd = newRootCmd(os.Stdout)
+	must(rootCmd.Execute())
+}
 
 func unimplemented(msg string) {
 	panic(fmt.Errorf("unimplemented: %s", msg))
@@ -40,9 +55,31 @@ func defaultDuffleHome() string {
 	return filepath.Join(homeEnvPath, ".duffle")
 }
 
+// claimStorage returns a claim store for accessing claims.
 func claimStorage() claim.Store {
 	h := home.Home(homePath())
 	return claim.NewClaimStore(crud.NewFileSystemStore(h.Claims(), "json"))
+}
+
+// loadCredentials loads a set of credentials from HOME.
+func loadCredentials(file string) (map[string]credentials.Destination, error) {
+	creds := map[string]credentials.Destination{}
+	if file == "" {
+		return creds, nil
+	}
+	if !isPathy(file) {
+		file = filepath.Join(home.Home(homePath()).Credentials(), file+".yaml")
+	}
+	cset, err := credentials.Load(file)
+	if err != nil {
+		return creds, err
+	}
+	return cset.Resolve()
+}
+
+// isPathy checks to see if a name looks like a path.
+func isPathy(name string) bool {
+	return strings.Contains(name, string(filepath.Separator))
 }
 
 func must(err error) {
@@ -52,14 +89,21 @@ func must(err error) {
 	}
 }
 
-func main() {
-	defer func() {
-		if r := recover(); r != nil {
-			if err, ok := r.(error); ok {
-				must(err)
-			}
+// prepareDriver prepares a driver per the user's request.
+func prepareDriver(driverName string) (driver.Driver, error) {
+	driverImpl, err := driver.Lookup(driverName)
+	if err != nil {
+		return driverImpl, err
+	}
+
+	// Load any driver-specific config out of the environment.
+	if configurable, ok := driverImpl.(driver.Configurable); ok {
+		driverCfg := map[string]string{}
+		for env := range configurable.Config() {
+			driverCfg[env] = os.Getenv(env)
 		}
-	}()
-	rootCmd = newRootCmd(os.Stdout)
-	must(rootCmd.Execute())
+		configurable.SetConfig(driverCfg)
+	}
+
+	return driverImpl, err
 }

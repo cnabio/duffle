@@ -36,12 +36,14 @@ type Operation struct {
 	Action string `json:"action"`
 	// Parameters are the parameters to be injected into the container
 	Parameters map[string]interface{} `json:"parameters"`
-	// Credentials are the credential sets to be loaded into the container
-	Credentials []ResolvedCred `json:"credentials"`
 	// Image is the invocation image
 	Image string `json:"image"`
 	// ImageType is the type of image.
 	ImageType string `json:"image_type"`
+	// Environment contains environment variables that should be injected into the invocation image
+	Environment map[string]string `json:"environment"`
+	// Files contains files that should be injected into the invocation image.
+	Files map[string]string `json:"files"`
 }
 
 // ResolvedCred is a credential that has been resolved and is ready for injection into the runtime.

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -14,7 +13,6 @@ import (
 	"github.com/deis/duffle/pkg/action"
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/claim"
-	"github.com/deis/duffle/pkg/driver"
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
 
@@ -55,9 +53,10 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
     $ duffle install dev_bundle -f path/to/bundle.json
 `
 	var (
-		installDriver string
-		valuesFile    string
-		bundleFile    string
+		installDriver   string
+		credentialsFile string
+		valuesFile      string
+		bundleFile      string
 
 		installationName string
 		bundle           bundle.Bundle
@@ -129,6 +128,11 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 				return err
 			}
 
+			creds, err := loadCredentials(credentialsFile)
+			if err != nil {
+				return err
+			}
+
 			// Because this is an install, we create a new claim. For upgrades, we'd
 			// load the claim based on installationName
 			c := claim.New(installationName)
@@ -142,41 +146,27 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 				c.Parameters = vals
 			}
 
-			err = claimStorage().Store(*c)
-			if err != nil {
-				return err
-			}
-
 			inst := &action.Install{
 				Driver: driverImpl,
 			}
-			return inst.Run(c)
+			err = inst.Run(c, creds)
+
+			// Even if the action fails, we want to store a claim. This is because
+			// we cannot know, based on a failure, whether or not any resources were
+			// created. So we want to suggest that the user take investigative action.
+			err2 := claimStorage().Store(*c)
+			if err != nil {
+				return err
+			}
+			return err2
 		},
 	}
 
-	//cmd.Flags().StringSliceP("credentials", "c", []string{}, "Specify one or more credential sets")
+	cmd.Flags().StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
 	cmd.Flags().StringVarP(&installDriver, "driver", "d", "docker", "Specify a driver name")
 	cmd.Flags().StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	cmd.Flags().StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
 	return cmd
-}
-
-func prepareDriver(driverName string) (driver.Driver, error) {
-	driverImpl, err := driver.Lookup(driverName)
-	if err != nil {
-		return driverImpl, err
-	}
-
-	// Load any driver-specific config out of the environment.
-	if configurable, ok := driverImpl.(driver.Configurable); ok {
-		driverCfg := map[string]string{}
-		for env := range configurable.Config() {
-			driverCfg[env] = os.Getenv(env)
-		}
-		configurable.SetConfig(driverCfg)
-	}
-
-	return driverImpl, err
 }
 
 func validateImage(img bundle.InvocationImage) error {
