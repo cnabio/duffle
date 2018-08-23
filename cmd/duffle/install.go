@@ -22,7 +22,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//
 func newInstallCmd(w io.Writer) *cobra.Command {
 	const usage = `Install a CNAB bundle
 
@@ -45,11 +44,15 @@ Some drivers have additional configuration that can be passed via environment va
 	  - VERBOSE: "true" turns on extra output
 
 UNIX Example:
-	$ VERBOSE=true duffle install -d docker  install my_release duffle/example:0.1.0
+	$ VERBOSE=true duffle install -d docker my_release duffle/example:0.1.0
 
 Windows Example:
 	$ $env:VERBOSE = true
-	$ duffle install -d docker install my_release duffle/example:0.1.0
+	$ duffle install -d docker my_release duffle/example:0.1.0
+
+For unpublished CNAB bundles, you can also load the bundle.json directly:
+
+    $ duffle install dev_bundle -f path/to/bundle.json
 `
 	var (
 		installDriver string
