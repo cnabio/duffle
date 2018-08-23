@@ -24,10 +24,10 @@ import (
 
 //
 func newInstallCmd(w io.Writer) *cobra.Command {
-	const usage = `Install a CNAB package
+	const usage = `Install a CNAB bundle
 
-This installs a CNAB package with a specific installation name. Once the install is complete,
-this package can be referenced by installation name.
+This installs a CNAB bundle with a specific installation name. Once the install is complete,
+this bundle can be referenced by installation name.
 
 Example:
 	$ duffle install my_release duffle/example:0.1.0
@@ -62,7 +62,7 @@ Windows Example:
 
 	cmd := &cobra.Command{
 		Use:   "install NAME BUNDLE",
-		Short: "install a CNAB package",
+		Short: "install a CNAB bundle",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
