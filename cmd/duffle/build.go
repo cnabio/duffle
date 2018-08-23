@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
@@ -18,6 +20,7 @@ import (
 
 	"github.com/deis/duffle/pkg/builder"
 	dockercontainerbuilder "github.com/deis/duffle/pkg/builder/docker"
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/cmdline"
 	"github.com/deis/duffle/pkg/duffle/home"
 )
@@ -143,7 +146,40 @@ func (b *buildCmd) run() (err error) {
 	}
 	bldr.ContainerBuilder = cb
 
-	progressC := bldr.Build(ctx, buildctx)
+	app, err := builder.PrepareBuild(bldr, buildctx)
+	if err != nil {
+		return err
+	}
+
+	bf := bundle.Bundle{Name: buildctx.Name}
+
+	for _, c := range buildctx.DockerContexts {
+
+		// TODO - add invocation image as top level field in duffle.toml
+		if c.Name == "cnab" {
+			bf.InvocationImage = bundle.InvocationImage{
+				Image: c.Images[0],
+				// TODO - handle image type
+				ImageType: "docker",
+			}
+			bf.Version = strings.Split(c.Images[0], ":")[1]
+			continue
+		}
+		bf.Images = append(bf.Images, bundle.Image{Name: c.Name, URI: c.Images[0]})
+	}
+
+	f, err := os.OpenFile("cnab/bundle.json", os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "    ")
+	if err := enc.Encode(bf); err != nil {
+		return err
+	}
+
+	progressC := bldr.Build(ctx, app, buildctx)
 	cmdline.Display(ctx, buildctx.Name, progressC, cmdline.WithBuildID(bldr.ID))
 
 	return nil

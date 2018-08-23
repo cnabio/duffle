@@ -79,8 +79,8 @@ func New() *Builder {
 	}
 }
 
-// newAppContext prepares state carried across the various duffle stage boundaries.
-func newAppContext(b *Builder, buildCtx *Context) (*AppContext, error) {
+// PrepareBuild prepares state carried across the various duffle stage boundaries.
+func PrepareBuild(b *Builder, buildCtx *Context) (*AppContext, error) {
 	var buildContexts []*DockerContext
 
 	for _, dockerBuildContext := range buildCtx.DockerContexts {
@@ -210,26 +210,18 @@ func archiveSrc(contextPath, dockerfileName string) (*DockerContext, error) {
 }
 
 // Build handles incoming duffle build requests and returns a stream of summaries or error.
-func (b *Builder) Build(ctx context.Context, bctx *Context) <-chan *Summary {
+func (b *Builder) Build(ctx context.Context, app *AppContext, bctx *Context) <-chan *Summary {
 	ch := make(chan *Summary, 1)
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go func() {
-		var (
-			app *AppContext
-			err error
-		)
+	go func(app *AppContext) {
 		defer wg.Done()
-		if app, err = newAppContext(b, bctx); err != nil {
-			log.Printf("error creating app context: %v\n", err)
-			return
-		}
 		log.SetOutput(app.Log)
 		if err := b.ContainerBuilder.Build(ctx, app, ch); err != nil {
 			log.Printf("error while building: %v\n", err)
 			return
 		}
-	}()
+	}(app)
 	go func() {
 		wg.Wait()
 		close(ch)
