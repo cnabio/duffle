@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
@@ -145,14 +146,13 @@ func (b *buildCmd) run() (err error) {
 	}
 	bldr.ContainerBuilder = cb
 
-	progressC := bldr.Build(ctx, buildctx)
-	cmdline.Display(ctx, buildctx.Name, progressC, cmdline.WithBuildID(bldr.ID))
-
-	bf := bundle.Bundle{
-		Name: buildctx.Name,
-		// TODO - handle bundle version
-		Version: "1.0.0",
+	app, err := builder.PrepareBuild(bldr, buildctx)
+	if err != nil {
+		return err
 	}
+
+	bf := bundle.Bundle{Name: buildctx.Name}
+
 	for _, c := range buildctx.DockerContexts {
 
 		// TODO - add invocation image as top level field in duffle.toml
@@ -162,12 +162,13 @@ func (b *buildCmd) run() (err error) {
 				// TODO - handle image type
 				ImageType: "docker",
 			}
+			bf.Version = strings.Split(c.Images[0], ":")[1]
 			continue
 		}
 		bf.Images = append(bf.Images, bundle.Image{Name: c.Name, URI: c.Images[0]})
 	}
 
-	f, err := os.OpenFile("bundle.json", os.O_RDWR|os.O_CREATE, 0644)
+	f, err := os.OpenFile("cnab/bundle.json", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
@@ -177,6 +178,9 @@ func (b *buildCmd) run() (err error) {
 	if err := enc.Encode(bf); err != nil {
 		return err
 	}
+
+	progressC := bldr.Build(ctx, app, buildctx)
+	cmdline.Display(ctx, buildctx.Name, progressC, cmdline.WithBuildID(bldr.ID))
 
 	return nil
 }
