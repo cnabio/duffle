@@ -35,9 +35,10 @@ Note that `imageType` is `azure-image` (indicating that it must be looked up in 
 
 ## Usage
 
-1. Run `make build-drivers`
-2. Add `$GOPATH/src/github.com/deis/duffle/bin` to your path
-3. On the Duffle commands, set the driver to `azvm`
+1. Build image with Packer (see below)
+2. Run `make build-drivers`
+3. Add `$GOPATH/src/github.com/deis/duffle/bin` to your path
+4. On the Duffle commands, set the driver to `azvm`
 
 ```console
 $ duffle install -d azvm foo -f ./examples/helloazure/cnab/bundle.json
