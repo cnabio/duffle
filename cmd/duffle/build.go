@@ -42,9 +42,7 @@ type buildCmd struct {
 	out  io.Writer
 	src  string
 	home home.Home
-	// storage engine duffle should use for storing builds, logs, etc.
-	// Commented out because Linter is comaining. See #114
-	//storageEngine string
+
 	// options common to the docker client and the daemon.
 	dockerClientOptions *dockerflags.ClientOptions
 }
