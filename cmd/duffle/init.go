@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/ohai"
+
 	"github.com/spf13/cobra"
 )
 
@@ -52,17 +52,23 @@ func (i *initCmd) run() error {
 		home.Credentials(),
 	}
 
-	if err := i.ensureDirectories(dirs); err != nil {
-		return err
-	}
-	// TODO: add repos here
-	// return i.ensureRepositories()
-	return nil
+	// The only way I can get linter to pass is by commenting this out and simplifying
+	// See issue #113
+	return i.ensureDirectories(dirs)
+	/*
+		if err := i.ensureDirectories(dirs); err != nil {
+			return err
+		}
+		// TODO: add repos here
+		// return i.ensureRepositories()
+		return nil
+	*/
 }
 
 // ensureRepositories checks to see if the default repositories exists.
 //
 // If the repo does not exist, this function will create it.
+/* See #115 - commented out to appease angry linter
 func (i *initCmd) ensureRepositories() error {
 	ohai.Fohailn(i.w, "Installing default repositories...")
 
@@ -78,6 +84,7 @@ func (i *initCmd) ensureRepositories() error {
 	}
 	return repoCmd.RunE(repoCmd, addArgs)
 }
+*/
 
 func (i *initCmd) ensureDirectories(dirs []string) error {
 	fmt.Fprintln(i.w, "The following new directories will be created:")

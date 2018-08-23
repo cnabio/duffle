@@ -11,6 +11,7 @@ import (
 
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
+
 	"github.com/gosuri/uitable"
 	"github.com/renstrom/fuzzysearch/fuzzy"
 	log "github.com/sirupsen/logrus"
@@ -27,6 +28,10 @@ func newSearchCmd(w io.Writer) *cobra.Command {
 			table.AddRow("NAME", "REPOSITORY", "VERSION")
 			for _, bundle := range found {
 				bundleFile, repo, err := getBundleFile(bundle)
+				if err != nil {
+					log.Debugf("bundle %s failed to load. skipping, %s", bundle, err)
+					continue
+				}
 
 				l, err := loader.New(bundleFile)
 				if err != nil {

@@ -12,6 +12,7 @@ type Status struct {
 	Driver driver.Driver
 }
 
+// Run executes a status action in an image
 func (i *Status) Run(c *claim.Claim) error {
 	// FIXME: Need to set op.ImageType and op.Credentials
 	op := opFromClaim(claim.ActionStatus, c)

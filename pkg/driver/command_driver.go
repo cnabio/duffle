@@ -9,14 +9,17 @@ import (
 	"strings"
 )
 
+// CommandDriver relies upon a system command to provide a driver implementation
 type CommandDriver struct {
 	Name string
 }
 
+// Run executes the command
 func (d *CommandDriver) Run(op *Operation) error {
 	return d.exec(op)
 }
 
+// Handles executes the driver with `--handles` and parses the results
 func (d *CommandDriver) Handles(dt string) bool {
 	out, err := exec.Command(d.cliName(), "--handles").CombinedOutput()
 	if err != nil {

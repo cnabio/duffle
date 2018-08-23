@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/deis/duffle/pkg/builder"
+
 	"github.com/fatih/color"
 	"golang.org/x/net/context"
 )

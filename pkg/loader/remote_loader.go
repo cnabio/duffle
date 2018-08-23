@@ -8,7 +8,7 @@ import (
 	"github.com/deis/duffle/pkg/bundle"
 )
 
-// RemoteLoader downloads a remote file containg a bundle and returns it
+// RemoteLoader downloads a remote file containing a bundle and returns it
 type RemoteLoader struct {
 	source string
 }

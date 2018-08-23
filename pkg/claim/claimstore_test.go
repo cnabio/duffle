@@ -75,6 +75,9 @@ func TestCanUpdate(t *testing.T) {
 	store := NewClaimStore(crud.NewFileSystemStore(storeDir, "json"))
 
 	err = store.Store(*claim)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	time.Sleep(1 * time.Millisecond)
 	claim.Update(ActionInstall, StatusSuccess)
