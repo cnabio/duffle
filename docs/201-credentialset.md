@@ -46,28 +46,56 @@ A credential YAML file contains a set of named credentials that are resolved loc
 Example (`staging.yaml`):
 
 ```yaml
+name: staging     # Must match the name portion of the file name (staging.yaml)
 credentials:
-    - name: kubeconfig
-      source:
-        # Where is it on the host system?
-        type: file
-        path: $HOME/.kube/kubeconfig
-      destination:
-        # Where does it go in the container?
-        type: file
-        path: /root/.kube/kubeconfig
-   - name: service-token
-     source:
-       # Run a command on localhost and capture the output
-       type: command
-       command: "gen-token example.com"
-     destination:
-       # Expose the output to the container as an environment variable
-       type: env
-       name: SERVICE_TOKEN
+  - name: read_file
+    source:
+      path: testdata/someconfig.txt  # credential will be read from this file
+    destination:
+      # credential data will be presented as environment variable $TEST_READ_FILE
+      env: TEST_READ_FILE    
+  - name: run_program
+    source:
+      command: "echo wildebeest" # The command `echo wildebeest` will be executed
+                                 # An error will cause the process to exit
+    destination:
+      env: TEST_RUN_PROGRAM  # Results will be placed as an env var.
+  - name: use_var
+    source:
+      env: TEST_USE_VAR      # This will read an env var from local, and copy to dest
+      value: "this space intentionally left non-blank"
+    destination:
+      env: TEST_USE_VAR
+  - name: fallthrough
+    source:
+      name: NO_SUCH_VAR      # Assuming this is not set....
+      value: quokka          # Then this will be used as the default value
+    destination:
+      env: TEST_FALLTHROUGH     # The result will be written to env var...
+      path: animals/quokka.txt  # and also to a file path.
+  - name: plain_value
+    source:
+      value: cassowary       # Load this literal value.
+    destination:
+      path: animals/cassowary.txt  # Save the value to a file on dest.
 ```
 
-The above declares two different credentials. One is a `kubeconfig` file that will be copied from the localhost into the container verbatim. The second is a security token that will be generated on the localhost, and passed into the container as an environment variable (`$SERVICE_TOKEN`).
+The above shows several examples of how credentials can be loaded from a local source and
+sent to an in-image destination.
+
+Loading from source is done from four potential inputs:
+
+- `value` is a literal value
+- `env` is loaded from an environment variable (and can fall back to `value` as a default)
+- `path` is loaded from a file at the given path (or else it errors)
+- `command` executes a command, and returns the output as the value (or else it errors)
+
+Data can then be passed into the image in one of two ways:
+
+- `env` will store the data as an environment variable
+- `path` will store the data as the contents of a file located at the given path
+
+Note that both `env` and `path` can be specified, which will result in the data being stored in both.
 
 Credential sets are specified when needed:
 
@@ -76,6 +104,8 @@ $ duffle run --credentials=staging example/myapp:1.0.0
 > loading credentials from $HOME/.duffle/credentials/staging.yaml
 > running example/myapp:1.0.0
 ```
+
+Credential sets are loaded locally. All commands are executed locally. Then the results are injected into the image at startup.
 
 ## Default Credential Sets
 
