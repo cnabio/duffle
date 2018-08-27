@@ -35,6 +35,13 @@ type InvocationImage struct {
 	Image     string `json:"image"`
 }
 
+// CredentialLocation provides the location of a credential that the invocation
+// image needs to use.
+type CredentialLocation struct {
+	Path                string `json:"path"`
+	EnvironmentVariable string `json:"env"`
+}
+
 // Bundle is a CNAB metadata document
 type Bundle struct {
 	Name            string                         `json:"name"`
@@ -42,4 +49,5 @@ type Bundle struct {
 	InvocationImage InvocationImage                `json:"invocationImage"`
 	Images          []Image                        `json:"images"`
 	Parameters      map[string]ParameterDefinition `json:"parameters"`
+	Credentials     map[string]CredentialLocation  `json:"credentials"`
 }
