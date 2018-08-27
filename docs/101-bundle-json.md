@@ -42,7 +42,7 @@ A full `bundle.json` looks like this:
                "description": "The port that the backend will listen on" 
             }
         }
-    }
+    },
     "credentials": {
         "kubeconfig": {
             "path": "/home/.kube/config",
@@ -101,27 +101,28 @@ Supported substitution formats:
 ```json
 { ​
 "images": [​
-{ ​
-    "name": "frontend",​
-    "uri": "gabrtv.azurecr.io/gabrtv/vote-frontend:a5ff67...",​
-    "refs": [​
-    {​
-        "path": "./charts/azure-voting-app/values.yaml",​
-        "field": "AzureVoteFront.deployment.image"​
-    }​
-    ]​
-},​
-{ ​
-    "name": "backend",​
-    "uri": "gabrtv.azurecr.io/gabrtv/vote-backend:a5ff67...",​
-    "refs": [​
-    {​
-        "path": "./charts/azure-voting-app/values.yaml",​
-        "field": "AzureVoteBack.deployment.image"​
-    }​
-    ]​
-}​
-
+        { ​
+            "name": "frontend",​
+            "uri": "gabrtv.azurecr.io/gabrtv/vote-frontend:a5ff67...",​
+            "refs": [​
+                {​
+                    "path": "./charts/azure-voting-app/values.yaml",​
+                    "field": "AzureVoteFront.deployment.image"​
+                }​
+            ]​
+        },​
+        { ​
+            "name": "backend",​
+            "uri": "gabrtv.azurecr.io/gabrtv/vote-backend:a5ff67...",​
+            "refs": [​
+                {​
+                    "path": "./charts/azure-voting-app/values.yaml",​
+                    "field": "AzureVoteBack.deployment.image"​
+                }​
+            ]​
+        }​
+    ]
+}
 ```
 
 Fields:
