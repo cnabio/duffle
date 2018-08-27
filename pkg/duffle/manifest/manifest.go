@@ -11,6 +11,7 @@ import (
 type Manifest struct {
 	Name       string   `toml:"name,omitempty"`
 	Registry   string   `toml:"registry,omitempty"`
+	Builder    string   `toml:"driver,omitempty"`
 	Components []string `toml:"components,omitempty"`
 }
 
