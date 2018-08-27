@@ -39,6 +39,7 @@ type Builder struct {
 // ContainerBuilder defines how a container is built and pushed to a container registry using the supplied app context.
 type ContainerBuilder interface {
 	Build(ctx context.Context, app *AppContext, out chan<- *Summary) error
+	Push(ctx context.Context, app *AppContext, out chan<- *Summary) error
 }
 
 // Logs returns the path to the build logs.
@@ -200,6 +201,7 @@ func archiveSrc(contextPath, dockerfileName string) (*DockerContext, error) {
 	logrus.Debugf("INCLUDES: %v", includes)
 	logrus.Debugf("EXCLUDES: %v", excludes)
 	dockerArchive, err := archive.TarWithOptions(contextDir, &archive.TarOptions{
+		Compression:     archive.Uncompressed,
 		ExcludePatterns: excludes,
 		IncludeFiles:    includes,
 	})
@@ -220,6 +222,26 @@ func (b *Builder) Build(ctx context.Context, app *AppContext, bctx *Context) <-c
 		log.SetOutput(app.Log)
 		if err := b.ContainerBuilder.Build(ctx, app, ch); err != nil {
 			log.Printf("error while building: %v\n", err)
+			return
+		}
+	}(app)
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+	return ch
+}
+
+// Push handles incoming duffle push requests and returns a stream of summaries or error.
+func (b *Builder) Push(ctx context.Context, app *AppContext, bctx *Context) <-chan *Summary {
+	ch := make(chan *Summary, 1)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func(app *AppContext) {
+		defer wg.Done()
+		log.SetOutput(app.Log)
+		if err := b.ContainerBuilder.Push(ctx, app, ch); err != nil {
+			log.Printf("error while pushing: %v\n", err)
 			return
 		}
 	}(app)

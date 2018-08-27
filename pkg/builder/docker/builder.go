@@ -84,3 +84,69 @@ func (b *Builder) Build(ctx context.Context, app *builder.AppContext, out chan<-
 	}
 	return nil
 }
+
+// Push pushes the results of Build to the image repository.
+func (b *Builder) Push(ctx context.Context, app *builder.AppContext, out chan<- *builder.Summary) (err error) {
+	const stageDesc = "Pushing Docker Images"
+	if app.Ctx.Registry == "" {
+		return
+	}
+
+	summary := builder.Summarize(app.ID, stageDesc, out)
+	defer builder.Complete(app.ID, stageDesc, out, &err)
+
+	// notify that particular stage has started.
+	summary("started", builder.SummaryStarted)
+
+	errc := make(chan error, 1)
+	go func() {
+		defer close(errc)
+		var wg sync.WaitGroup
+		wg.Add(len(app.DockerContexts))
+		for _, dockerContext := range app.DockerContexts {
+			go func(buildContext *builder.DockerContext) {
+				defer wg.Done()
+				registryAuth, err := command.RetrieveAuthTokenFromImage(ctx, b.DockerClient, buildContext.Images[0])
+				if err != nil {
+					errc <- err
+					return
+				}
+
+				for _, tag := range buildContext.Images {
+					wg.Add(1)
+					go func(tag string) {
+						defer wg.Done()
+						resp, err := b.DockerClient.Client().ImagePush(ctx, tag, types.ImagePushOptions{RegistryAuth: registryAuth})
+						if err != nil {
+							errc <- err
+							return
+						}
+
+						defer resp.Close()
+						outFd, isTerm := term.GetFdInfo(app.Log)
+						if err := jsonmessage.DisplayJSONMessagesStream(resp, app.Log, outFd, isTerm, nil); err != nil {
+							errc <- err
+							return
+						}
+					}(tag)
+				}
+			}(dockerContext)
+		}
+		wg.Wait()
+	}()
+
+	for errc != nil {
+		select {
+		case err, ok := <-errc:
+			if !ok {
+				errc = nil
+				continue
+			}
+			return err
+		default:
+			summary("ongoing", builder.SummaryStarted)
+			time.Sleep(time.Second)
+		}
+	}
+	return nil
+}

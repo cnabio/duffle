@@ -79,8 +79,7 @@ func Display(ctx context.Context, app string, summaries <-chan *builder.Summary,
 	var cli cmdline
 	cli.Init(ctx, opts...)
 
-	fmt.Fprintf(cli.opts.stdout, "%s: '%s': %s\n",
-		blue("Duffle Build Started"),
+	fmt.Fprintf(cli.opts.stdout, "%s: %s\n",
 		cyan(app),
 		yellow(cli.opts.buildID),
 	)
