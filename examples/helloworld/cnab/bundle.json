@@ -3,28 +3,10 @@
     "version": "1.0",
     "invocationImage": {
         "imageType": "docker",
-        "image": "technosophos/helloworld:0.1.0"
+        "image": "technosophos/helloworld:0.1.2",
+        "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685"
       },
-    "images": [
-        {
-            "name": "image1",
-            "uri": "urn:image1uri",
-            "refs": [
-                {
-                    "path": "image1path",
-                    "field": "image.1.field"
-                }
-            ]
-        },
-        {
-            "name": "image2",
-            "uri": "urn:image2uri",
-            "refs": [
-                {
-                    "path": "image2path",
-                    "field": "image.2.field"
-                }
-            ]
-        }
-    ]
+    "images": [],
+    "parameters": {},
+    "credentials": {}
 }
