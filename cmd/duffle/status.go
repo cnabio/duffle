@@ -18,7 +18,10 @@ Given an installation name, execute the status task for this. A status
 action will restart the CNAB image and ask it to query for status. For that
 reason, it may need the same credentials used to install.
 `
-	var statusDriver string
+	var (
+		statusDriver    string
+		credentialsFile string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "status NAME",
@@ -34,6 +37,11 @@ reason, it may need the same credentials used to install.
 				return err
 			}
 
+			creds, err := loadCredentials(credentialsFile)
+			if err != nil {
+				return err
+			}
+
 			driverImpl, err := prepareDriver(statusDriver)
 			if err != nil {
 				return err
@@ -41,10 +49,11 @@ reason, it may need the same credentials used to install.
 
 			// TODO: Do we pass new values in here? Or just from Claim?
 			action := &action.Status{Driver: driverImpl}
-			return action.Run(&c)
+			return action.Run(&c, creds)
 		},
 	}
 	cmd.Flags().StringVarP(&statusDriver, "driver", "d", "docker", "Specify a driver name")
+	cmd.Flags().StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
 
 	return cmd
 }

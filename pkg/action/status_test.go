@@ -21,10 +21,10 @@ func TestStatus_Run(t *testing.T) {
 		Parameters: map[string]interface{}{},
 	}
 
-	if err := st.Run(c); err != nil {
+	if err := st.Run(c, mockSet); err != nil {
 		t.Fatal(err)
 	}
 
 	st = &Status{Driver: &mockFailingDriver{}}
-	assert.Error(t, st.Run(c))
+	assert.Error(t, st.Run(c, mockSet))
 }

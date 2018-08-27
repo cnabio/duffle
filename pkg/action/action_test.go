@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/deis/duffle/pkg/claim"
+	"github.com/deis/duffle/pkg/credentials"
 	"github.com/deis/duffle/pkg/driver"
 
 	"github.com/stretchr/testify/assert"
@@ -13,6 +14,17 @@ import (
 
 type mockFailingDriver struct {
 	shouldHandle bool
+}
+
+var mockSet = credentials.Set{
+	"secret_one": {
+		EnvVar: "SECRET_ONE",
+		Value:  "I'm a secret",
+	},
+	"secret_two": {
+		Path:  "secret_two",
+		Value: "I'm also a secret",
+	},
 }
 
 func (d *mockFailingDriver) Handles(imageType string) bool {
@@ -34,7 +46,7 @@ func TestOpFromClaim(t *testing.T) {
 		ImageType:  driver.ImageTypeDocker,
 	}
 
-	op := opFromClaim(claim.ActionInstall, c)
+	op := opFromClaim(claim.ActionInstall, c, mockSet)
 
 	is := assert.New(t)
 
@@ -42,7 +54,7 @@ func TestOpFromClaim(t *testing.T) {
 	is.Equal(c.Revision, op.Revision)
 	is.Equal(c.Bundle, op.Image)
 	is.Equal(driver.ImageTypeDocker, op.ImageType)
-	is.Empty(op.Credentials)
+	is.Equal(op.Environment["SECRET_ONE"], "I'm a secret")
+	is.Equal(op.Files["secret_two"], "I'm also a secret")
 	is.Len(op.Parameters, 1)
-
 }

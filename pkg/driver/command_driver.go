@@ -40,6 +40,23 @@ func (d *CommandDriver) cliName() string {
 }
 
 func (d *CommandDriver) exec(op *Operation) error {
+	// We need to do two things here: We need to make it easier for the
+	// command to access data, and we need to make it easy for the command
+	// to pass that data on to the image it invokes. So we do some data
+	// duplication.
+
+	// Construct an environment for the subprocess by cloning our
+	// environment and adding in all the extra env vars.
+	pairs := os.Environ()
+	added := []string{}
+	for k, v := range op.Environment {
+		pairs = append(pairs, fmt.Sprintf("%s=%s", k, v))
+		added = append(added, k)
+	}
+	// DUFFLE_VARS is a list of variables we added to the env. This is to make
+	// it easier for shell script drivers to clone the env vars.
+	pairs = append(pairs, fmt.Sprintf("DUFFLE_VARS=%s", strings.Join(added, ",")))
+
 	data, err := json.Marshal(op)
 	if err != nil {
 		return err
@@ -50,10 +67,7 @@ func (d *CommandDriver) exec(op *Operation) error {
 	if err != nil {
 		return err
 	}
-	// NB: Since we don't set cmd.Env, we inherit the parent process's environment.
-	// This means that the driver has access to everything in the environment, which I think
-	// is a desirable feature. Option B: Have CommandDriver implement Configurable and get
-	// strict.
+	cmd.Env = pairs
 	cmd.Stdin = bytes.NewBuffer(data)
 	out, err := cmd.CombinedOutput()
 	fmt.Println(string(out))

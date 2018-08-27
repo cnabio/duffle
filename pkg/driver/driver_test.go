@@ -63,6 +63,8 @@ func TestDockerDriver_Run(t *testing.T) {
 		Installation: "test",
 		Image:        "test:1.2.3",
 		ImageType:    "oci",
+		Environment:  map[string]string{},
+		Files:        map[string]string{},
 	}
 	is.NoError(d.Run(op))
 }

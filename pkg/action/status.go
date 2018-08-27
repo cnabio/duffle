@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/deis/duffle/pkg/claim"
+	"github.com/deis/duffle/pkg/credentials"
 	"github.com/deis/duffle/pkg/driver"
 )
 
@@ -13,9 +14,8 @@ type Status struct {
 }
 
 // Run executes a status action in an image
-func (i *Status) Run(c *claim.Claim) error {
-	// FIXME: Need to set op.ImageType and op.Credentials
-	op := opFromClaim(claim.ActionStatus, c)
+func (i *Status) Run(c *claim.Claim, creds credentials.Set) error {
+	op := opFromClaim(claim.ActionStatus, c, creds)
 	if !i.Driver.Handles(op.ImageType) {
 		return fmt.Errorf("driver does not handle image type %s", op.ImageType)
 	}

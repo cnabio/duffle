@@ -36,7 +36,7 @@ func TestCredentialSet(t *testing.T) {
 		{name: "run_program", key: "TEST_RUN_PROGRAM", expect: "wildebeest\n"},
 		{name: "use_var", key: "TEST_USE_VAR", expect: "kakapu"},
 		{name: "read_file", key: "TEST_READ_FILE", expect: "serval"},
-		{name: "fallthrough", key: "TEST_FALLTHROUGH", expect: "quokka", path: "animals/quokka.txt"},
+		{name: "fallthrough", key: "TEST_FALLTHROUGH", expect: "quokka", path: "/animals/quokka.txt"},
 		{name: "plain_value", key: "TEST_PLAIN_VALUE", expect: "cassowary"},
 	} {
 		dest := results[tt.name]
