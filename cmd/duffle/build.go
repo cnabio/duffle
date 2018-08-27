@@ -132,16 +132,26 @@ func (b *buildCmd) run() (err error) {
 		return fmt.Errorf("failed loading build context: %v", err)
 	}
 
-	var bb builder.BundleBuilder
-
 	// setup docker
 	cli := &command.DockerCli{}
 	if err := cli.Initialize(b.dockerClientOptions); err != nil {
 		return fmt.Errorf("failed to create docker client: %v", err)
 	}
-	bb = builder.DockerBuilder{
-		DockerClient: cli,
+
+	var bb builder.BundleBuilder
+
+	// TODO - add more builders here
+	switch buildctx.Manifest.Builder {
+	case "docker":
+		bb = builder.DockerBuilder{
+			DockerClient: cli,
+		}
+	default:
+		bb = builder.DockerBuilder{
+			DockerClient: cli,
+		}
 	}
+
 	bldr.BundleBuilder = bb
 
 	app, err := builder.PrepareBuild(bldr, buildctx)
