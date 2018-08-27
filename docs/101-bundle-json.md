@@ -18,11 +18,13 @@ A full `bundle.json` looks like this:
     "version": "0.1.2",
     "invocationImage": {
         "imageType": "docker",
-        "image": "technosophos/helloworld:0.1.0"
+        "image": "technosophos/helloworld:0.1.0",
+        "digest": "sha256:aaaaaaa..."
     },
     "images": [
         {
             "name": "image1",
+            "digest": "sha256:aaaaaaaaaaaa...",
             "uri": "urn:image1uri",
             "refs": [
                 {
@@ -76,7 +78,8 @@ The `invocationImage` section describes the image that contains the bootstrappin
 ```json
 "invocationImage": {
     "imageType": "docker",
-    "image": "technosophos/helloworld:0.1.0"
+    "image": "technosophos/helloworld:0.1.0",
+    "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685"
 },
 ```
 
@@ -85,6 +88,8 @@ The `imageType` field is required, and must describe the format of the image. Th
 > Duffle, the reference implementation of a CNAB installer, introduces a layer of user-customizable drivers which are type-aware. Images may be delegated to drivers for installation.
 
 The `image` field must give a path-like or URI-like representation of the location of the image. The expectation is that an installer should be able to locate the image (given the image type) without additional information.
+
+The `digest` field _must_ contain a digest, in [OCI format](https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests), to be used to compute the integrity of the image. The calculation of how the image matches the digest is dependent upon image type. (OCI, for example, uses a Merkle tree while VM images are checksums.)
 
 ## The Image List
 
@@ -98,6 +103,7 @@ The following illustrates an `images` section:
         { ​
             "name": "frontend",​
             "uri": "gabrtv.azurecr.io/gabrtv/vote-frontend:a5ff67...",​
+            "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685",
             "refs": [​
                 {​
                     "path": "./charts/azure-voting-app/values.yaml",​
@@ -107,6 +113,7 @@ The following illustrates an `images` section:
         },​
         { ​
             "name": "backend",​
+            "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685",
             "uri": "gabrtv.azurecr.io/gabrtv/vote-backend:a5ff67...",​
             "refs": [​
                 {​
@@ -124,6 +131,7 @@ Fields:
 - images: The list of dependent images
     - name: The image name
     - URI: The image reference (REGISTRY/NAME:TAG). Note that _should_ be a CAS SHA, not a version tag as in the example above.
+    - digest: the cryptographically hashed digest of the image. The implementation of hash verification depends on image type.
     - refs: An array listing the locations which refer to this image, and whose values should be replaced by the value specified in URI. Each entry contains the following properties:
         - path: the path of the file where the value should be replaced
         - field:a selector specifying a location (or locations) within that file where the value should be replaced
