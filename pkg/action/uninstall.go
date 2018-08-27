@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/deis/duffle/pkg/claim"
+	"github.com/deis/duffle/pkg/credentials"
 	"github.com/deis/duffle/pkg/driver"
 )
 
@@ -13,8 +14,8 @@ type Uninstall struct {
 }
 
 // Run performs the uninstall steps and updates the Claim
-func (u *Uninstall) Run(c *claim.Claim) error {
-	op := opFromClaim(claim.ActionUninstall, c)
+func (u *Uninstall) Run(c *claim.Claim, creds credentials.Set) error {
+	op := opFromClaim(claim.ActionUninstall, c, creds)
 	if !u.Driver.Handles(op.ImageType) {
 		return fmt.Errorf("driver does not handle image type %s", op.ImageType)
 	}
