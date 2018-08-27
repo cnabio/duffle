@@ -21,7 +21,7 @@ func TestUninstall_Run(t *testing.T) {
 	}
 
 	uninst := &Uninstall{Driver: &driver.DebugDriver{}}
-	assert.NoError(t, uninst.Run(c))
+	assert.NoError(t, uninst.Run(c, mockSet))
 	if c.Created == c.Modified {
 		t.Error("Claim was not updated with modified time stamp during uninstallafter uninstall action")
 	}
@@ -34,10 +34,10 @@ func TestUninstall_Run(t *testing.T) {
 	}
 
 	uninst = &Uninstall{Driver: &mockFailingDriver{}}
-	assert.Error(t, uninst.Run(c))
+	assert.Error(t, uninst.Run(c, mockSet))
 
 	uninst = &Uninstall{Driver: &mockFailingDriver{shouldHandle: true}}
-	assert.Error(t, uninst.Run(c))
+	assert.Error(t, uninst.Run(c, mockSet))
 	if c.Result.Message == "" {
 		t.Error("Expected error message in claim result message")
 	}
