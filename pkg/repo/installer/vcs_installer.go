@@ -65,11 +65,7 @@ func (i *VCSInstaller) Install() error {
 		}
 	}
 
-	if !isRepo(repo.LocalPath()) {
-		return dufflerepo.ErrDoesNotExist
-	}
-
-	return nil
+	return isRepo(repo.LocalPath())
 }
 
 // Update updates a remote repository
@@ -85,10 +81,7 @@ func (i *VCSInstaller) Update() error {
 	if err := repo.Update(); err != nil {
 		return err
 	}
-	if !isRepo(repo.LocalPath()) {
-		return dufflerepo.ErrDoesNotExist
-	}
-	return nil
+	return isRepo(repo.LocalPath())
 }
 
 func existingVCSRepo(location string, home home.Home) (Installer, error) {

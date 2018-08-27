@@ -5,7 +5,6 @@ import (
 
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/osutil"
-	"github.com/deis/duffle/pkg/repo"
 )
 
 // LocalInstaller installs rigs from the filesystem
@@ -32,8 +31,8 @@ func NewLocalInstaller(source string, name string, home home.Home) (*LocalInstal
 
 // Install creates a symlink to the rig directory
 func (i *LocalInstaller) Install() error {
-	if !isRepo(i.Source) {
-		return repo.ErrDoesNotExist
+	if err := isRepo(i.Source); err != nil {
+		return err
 	}
 
 	src, err := filepath.Abs(i.Source)
