@@ -1,8 +1,8 @@
 # Claims: Tracking an Installation
 
-> This is a proposal for a change in the spec. The original spec does not define how an installation is tracked over time, though it suggests that there are two paths. One is to run the container for the duration of a revision (e.g. the container is the "release record"). The second is to store some sort of release record. This proposal suggests a possible solution for the second method.
-
 A _claim_ (or _claim receipt_) is a record of a CNAB installation. This document describes how the claim system works.
+
+Systems _may_ implement claims as an external storage mechanism. However, they _must_ inject information into an invocation image as explained in this document.
 
 ## Concepts of Package Management
 
@@ -18,11 +18,11 @@ There are three core feature categories of a package manager system:
 
 Package managers provide a wealth of other features, but those three are standard across all package managers. (For example, most package managers also provide a way to query what packages are available for installation.)
 
-This proposal explains how CNAB records are generated such that continuity can be established across applications.
+This proposal explains how CNAB records are generated such that continuity can be established across applications. In other words, this describes how CNAB bundles can be treated analogously to traditional packages.
 
 ## Managing State
 
-Fundamentally, package managers provide a state management layer to keep records of what was installed. For example, [homebrew](http://homebrew.sh), a popular macOS package manager, stores records for all installed software in `/usr/local/Cellar`. Helm, the package manager for Kubernetes, stores state records in Kubernetes ConfigMaps located in the system namespace. The Debian Apt system stores state in `/var/run` _WHERE?_. In all of these cases, the stored state allows the package managing system to be able to answer (quickly) the question of whether a given package is installed.
+Fundamentally, package managers provide a state management layer to keep records of what was installed. For example, [homebrew](http://homebrew.sh), a popular macOS package manager, stores records for all installed software in `/usr/local/Cellar`. Helm, the package manager for Kubernetes, stores state records in Kubernetes ConfigMaps located in the system namespace. The Debian Apt system stores state in `/var/run`. In all of these cases, the stored state allows the package managing system to be able to answer (quickly) the question of whether a given package is installed.
 
 ```console
 $ brew info cscope
@@ -34,11 +34,13 @@ https://cscope.sourceforge.io/
 From: https://github.com/Homebrew/homebrew-core/blob/master/Formula/cscope.rb
 ```
 
-CNAB does not define where or how records are stored, nor how these records may be used by an implementation. However, it does describe how a CNAB-based system must emit the record to an implementing system.
+CNAB does not define where or how records are stored, nor how these records may be used by an implementation. However, it does describe how a CNAB-based system must emit the record to an invocation image, and provides some guidance on maintaining integrity of the system.
 
 This is done so that implementors can standardize on a way of relating a release claim (the record of a release) to release operations like `install`, `upgrade`, or `delete`. This, in turn, is necessary if CNAB bundles are expected to be executable by different implementations.
 
 ### Anatomy of a Claim
+
+While implementors are not required to implement claims, this is that standard format for claims-supporting systems.
 
 The CNAB claim is defined as a JSON document.
 
@@ -60,9 +62,9 @@ The CNAB claim is defined as a JSON document.
 }
 ```
 
-- name: The name of the _installation_. This can be automatically generated, though humans may need to interact with it. It must be unique within the installation environment, though that constraint must be imposed externally.
+- name: The name of the _installation_. This can be automatically generated, though humans may need to interact with it. It must be unique within the installation environment, though that constraint must be imposed externally. Elsewhere, this field is referenced as the _installation name_.
 - revision: An [ULID](https://github.com/ulid/spec) that must change each time the release is modified.
-- bundle: The resource name (e.g. `technosophos.azurecr.io/cnab/example:0.1.0`)
+- bundle: The bundle identifier (e.g. `technosophos.azurecr.io/cnab/example:0.1.0`). Typically, the bundle identifier is the location inside of a bundle repository where the bundle may be recovered
 - created: A timestamp indicating when this release claim was first created. This must not be changed after initial creation.
 - updated: A timestamp indicating the last time this release claim was modified
 - result: The outcome of the bundle's action (e.g. if action is install, this indicates the outcome of the installation.). It is an object with the following fields:
@@ -90,7 +92,17 @@ ULIDs have two properties that are desirable:
 - High probability of [uniqueness](https://github.com/ulid/javascript)
 - Sortable by time. The first 48 bits contain a timestamp
 
-Compared to a monotonic increment, this has strong advantages when it cannot be assumed that only one actor will be acting upon the CNAB claim record.
+Compared to a monotonic increment, this has strong advantages when it cannot be assumed that only one actor will be acting upon the CNAB claim record. While other unique IDs are not meaningfully sortable, ULIDs are.
+
+### Parameters
+
+The parameter data stored in a claim data is _the resolved key/value pairs_ that result from the following transformation"
+
+- The values supplied by the user are validated by the rules specified in the `bundle.json` file
+- The output of this operation is a set of key/value pairs in which:
+  - Valid user-supplied values are presented
+  - Default values are supplied for all parameters where `defaultValue` is provided and no user-supplied value overrides this
+
 
 ### How is the Claim Used?
 
@@ -100,7 +112,7 @@ The claim is used to inform any CNAB tooling about how to address a particular i
 - Given an installation's _name_, return the _bundle info_ that is installed under that name
 - Given an installation _name_ and a _bundle_, generate a _bundle info_.
     - This is accompanied by running the `install` path in the bundle
-- Given an installation's _name_, replace the _bundle info_ with new _bundle info_, and updated the revision with a new ULID, and the modified timestamp with the current time. This is an upgrade operation.
+- Given an installation's _name_, replace the _bundle info_ with updated _bundle info_, and update the revision with a new ULID, and the modified timestamp with the current time. This is an upgrade operation.
     - This is accompanied by running the `upgrade` path in the bundle
 - Given an installation's name, mark the claim as deleted.
     - This is accompanied by running the `uninstall` path in the bundle
@@ -108,7 +120,7 @@ The claim is used to inform any CNAB tooling about how to address a particular i
 
 To satisfy these requirements, implementations of a CNAB package manager are expected to be able to store and retrieve state information. However, note that nothing in the CNAB specification tells _how or where_ this state information is to be stored. It is _not a requirement_ to store that state information inside of the invocation image. (In fact, this is discouraged.)
 
-## Producing a Claim
+## Injecting Claim Data into an Invocation Image
 
 The claim is produced outside of the CNAB package. The following claim data is injected
 into the invocation container at runtime:
@@ -118,11 +130,15 @@ into the invocation container at runtime:
 - `$CNAB_ACTION`: The action to be performed (install, upgrade, ...)
 - `$CNAB_REVISION`: The ULID for the present release revision. (On upgrade, this is the _new_ revision)
 
+> Credential data, which is also injected into the invocation image, is _not_ managed by the claim system.
+
 The parameters passed in by the user are vetted against `parameters.json` outside of the container, and then injected into the container as environment variables of the form: `$CNAB_P_{parameterName.toUpper}="{parameterValue}"`.
+
+For example, the parameter `hello_world` in the claim is presented to the invocation image as the environment variables `CNAB_P_HELLO_WORLD`.
 
 ## Calculating the Result
 
-The result object is populated by the result of the invocation image's action. For example, consider the case where an invocation image executes an installation action. The action is represented by the following shell script, and `$CNAB_INSTALLATION_NAME` is set to `my_first_install`:
+The `result` object is populated by the result of the invocation image's action. For example, consider the case where an invocation image executes an installation action. The action is represented by the following shell script, and `$CNAB_INSTALLATION_NAME` is set to `my_first_install`:
 
 ```bash
 #!/bin/bash
@@ -157,7 +173,9 @@ If both commands exit with 0, then the resulting claim will look like this:
 }
 ```
 
+Tools that implement claims may then present result info to end users to show the result of running an invocation image.
+
 ## TODO
 
-- Define downgrade
+- Define downgrade, or remove it
 - Define how action is determined, as this is beyond merely running an executable
