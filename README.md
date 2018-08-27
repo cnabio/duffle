@@ -14,11 +14,3 @@ $ duffle install foo -f examples/helloworld/cnab/bundle.json
 
 
 For more information, see the [docs](docs/).
-
-## Add a Repo
-
-To test against a CNAB repository:
-
-```console
-$ duffle repo add ssh://git@github.com/deis/bundles.git
-```
