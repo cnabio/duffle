@@ -9,7 +9,7 @@ import (
 func TestLocalLoader(t *testing.T) {
 	is := assert.New(t)
 
-	l := LocalLoader{source: "../../tests/testdata/home/repositories/github.com/deis/duffle-bundles/bundles/foo.json"}
+	l := LocalLoader{source: "../../tests/testdata/home/repositories/github.com/deis/bundles.git/bundles/foo.json"}
 	bundle, err := l.Load()
 	if err != nil {
 		t.Fatalf("cannot load bundle: %v", err)

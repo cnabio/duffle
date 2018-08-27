@@ -31,7 +31,7 @@ func TestReadTopLevelProperties(t *testing.T) {
 }
 
 func TestReadImageProperties(t *testing.T) {
-	data, err := ioutil.ReadFile("../../tests/testdata/home/repositories/github.com/deis/duffle-bundles/bundles/foo.json")
+	data, err := ioutil.ReadFile("../../tests/testdata/home/repositories/github.com/deis/bundles.git/bundles/foo.json")
 	if err != nil {
 		t.Errorf("cannot read bundle file: %v", err)
 	}
@@ -56,7 +56,7 @@ func TestReadImageProperties(t *testing.T) {
 }
 
 func TestReadCredentialProperties(t *testing.T) {
-	data, err := ioutil.ReadFile("../../tests/testdata/home/repositories/github.com/deis/duffle-bundles/bundles/foo.json")
+	data, err := ioutil.ReadFile("../../tests/testdata/home/repositories/github.com/deis/bundles.git/bundles/foo.json")
 	if err != nil {
 		t.Errorf("cannot read bundle file: %v", err)
 	}

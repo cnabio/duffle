@@ -37,7 +37,7 @@ func (h Home) Repositories() string {
 
 // DefaultRepository returns the name of the default repository.
 func (h Home) DefaultRepository() string {
-	return path.Join("github.com", "deis", "duffle-bundles")
+	return path.Join("github.com", "deis", "bundles.git")
 }
 
 // Logs returns the path to the Duffle logs.
