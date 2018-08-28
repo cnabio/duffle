@@ -31,7 +31,7 @@ func (b Builder) BuildComponents(ctx context.Context, app *bbuilder.AppContext, 
 		wg.Add(len(app.Ctx.Components))
 		for _, c := range app.Ctx.Components {
 
-			dc, ok := c.(Component)
+			dc, ok := c.(*Component)
 			if !ok {
 				errc <- fmt.Errorf("cannot convert component to Docker component")
 			}
@@ -65,7 +65,7 @@ func (b Builder) BuildComponents(ctx context.Context, app *bbuilder.AppContext, 
 					errc <- fmt.Errorf("ImageInspectWithRaw error: %v", err)
 					return
 				}
-			}(&dc)
+			}(dc)
 		}
 		wg.Wait()
 	}()

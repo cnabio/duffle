@@ -59,8 +59,6 @@ func (dc Component) Digest() string {
 // Builder contains information about the Docker build environment
 type Builder struct {
 	DockerClient command.Cli
-
-	components []*Component
 }
 
 // PrepareBuild prepares state carried across the various duffle stage boundaries.
@@ -71,10 +69,8 @@ func (d Builder) PrepareBuild(bldr *bbuilder.Builder, appDir string) (*bbuilder.
 		return nil, fmt.Errorf("cannot load app context: %v", err)
 	}
 
-	var components []*Component
-
 	for _, c := range ctx.Components {
-		dc, ok := c.(Component)
+		dc, ok := c.(*Component)
 		if !ok {
 			return nil, fmt.Errorf("cannot convert component to Docker component in prepare")
 		}
@@ -97,8 +93,7 @@ func (d Builder) PrepareBuild(bldr *bbuilder.Builder, appDir string) (*bbuilder.
 		dc.Image = fmt.Sprintf("%s:%s", imageRepository, imgtag)
 
 		dc.BuildContext = ioutil.NopCloser(buf)
-		components = append(components, &dc)
-
+		ctx.Components = append(ctx.Components, dc)
 	}
 
 	if err := osutil.EnsureDirectory(filepath.Dir(bldr.Logs(ctx.Manifest.Name))); err != nil {
