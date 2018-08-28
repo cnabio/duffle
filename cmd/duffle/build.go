@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/deis/duffle/pkg/duffle/manifest"
-
-	"github.com/deis/duffle/pkg/builder/docker"
-
 	"github.com/deis/duffle/pkg/builder"
+	"github.com/deis/duffle/pkg/builder/docker"
+	"github.com/deis/duffle/pkg/cmdline"
+	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/duffle/manifest"
 
 	"github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
@@ -19,12 +19,11 @@ import (
 	dockerflags "github.com/docker/cli/cli/flags"
 	"github.com/docker/cli/opts"
 	"github.com/docker/go-connections/tlsconfig"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/net/context"
 
-	"github.com/deis/duffle/pkg/cmdline"
-	"github.com/deis/duffle/pkg/duffle/home"
+	"golang.org/x/net/context"
 )
 
 const buildDesc = `
@@ -131,33 +130,16 @@ func (b *buildCmd) run() (err error) {
 	)
 	bldr.LogsDir = b.home.Logs()
 
-	// setup docker
-	cli := &command.DockerCli{}
-	if err := cli.Initialize(b.dockerClientOptions); err != nil {
-		return fmt.Errorf("failed to create docker client: %v", err)
-	}
-
-	var bb builder.BundleBuilder
-
 	// TODO - manifest is loaded twice
 	mfst, err := manifest.Load(filepath.Join(b.src, "duffle.toml"))
 	if err != nil {
 		return err
 	}
 
-	// TODO - add more builders here
-	switch mfst.Builder {
-	case "docker":
-		bb = docker.Builder{
-			DockerClient: cli,
-		}
-	default:
-		bb = docker.Builder{
-			DockerClient: cli,
-		}
+	bldr.BundleBuilder, err = lookupBuilder(mfst.Builder, b)
+	if err != nil {
+		return err
 	}
-
-	bldr.BundleBuilder = bb
 
 	app, bf, err := bldr.BundleBuilder.PrepareBuild(bldr, b.src)
 	if err != nil {
@@ -177,4 +159,30 @@ func (b *buildCmd) run() (err error) {
 
 	cmdline.Display(ctx, app.Ctx.Manifest.Name, bldr.BundleBuilder.Build(ctx, app), cmdline.WithBuildID(bldr.ID))
 	return nil
+}
+
+// lookupBuilder takes a builder name and returns an appropriate builder
+func lookupBuilder(b string, cmd *buildCmd) (builder.BundleBuilder, error) {
+
+	var bb builder.BundleBuilder
+
+	// setup docker
+	cli := &command.DockerCli{}
+	if err := cli.Initialize(cmd.dockerClientOptions); err != nil {
+		return bb, fmt.Errorf("failed to create docker client: %v", err)
+	}
+
+	switch b {
+
+	case "docker":
+		bb = docker.Builder{
+			DockerClient: cli,
+		}
+	default:
+		bb = docker.Builder{
+			DockerClient: cli,
+		}
+	}
+
+	return bb, nil
 }
