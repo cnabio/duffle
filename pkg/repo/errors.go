@@ -7,6 +7,8 @@ var (
 	ErrExists = errors.New("repository already exists")
 	// ErrDoesNotExist indicates that a repository does not exist
 	ErrDoesNotExist = errors.New("repository does not exist")
+	// ErrNotARepo indicates that a repository exists, but is malformed
+	ErrNotARepo = errors.New("repository is not a valid duffle repository (missing a `bundles/` directory in the root)")
 	// ErrHomeMissing indicates that the directory expected to contain repositories does not exist
 	ErrHomeMissing = errors.New(`repository home "$(duffle home)/repositories" does not exist`)
 	// ErrMissingSource indicates that information about the source of the repository was not found

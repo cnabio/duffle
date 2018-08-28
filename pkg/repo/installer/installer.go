@@ -68,7 +68,16 @@ func isLocalReference(source string) bool {
 }
 
 // isRepo checks if the directory contains a "bundles" directory.
-func isRepo(dirname string) bool {
-	_, err := os.Stat(filepath.Join(dirname, "bundles"))
-	return err == nil
+func isRepo(dirname string) error {
+	_, err := os.Stat(filepath.Join(dirname))
+	if os.IsNotExist(err) {
+		return repo.ErrDoesNotExist
+	} else if err != nil {
+		return err
+	}
+	_, err = os.Stat(filepath.Join(dirname, "bundles"))
+	if os.IsNotExist(err) {
+		return repo.ErrNotARepo
+	}
+	return err
 }
