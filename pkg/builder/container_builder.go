@@ -36,7 +36,7 @@ type Builder struct {
 	LogsDir       string
 }
 
-// BundleBuilder defines how a bubndle is built and pushed using the supplied app context.
+// BundleBuilder defines how a bundle is built and pushed using the supplied app context.
 type BundleBuilder interface {
 	Build(ctx context.Context, app *AppContext, out chan<- *Summary) error
 }
@@ -52,12 +52,11 @@ func (b *Builder) Logs(appName string) string {
 type Context struct {
 	manifest.Manifest
 	AppDir         string
-	CustomTags     []string
-	DockerContexts []*DockerContext
+	BundleContexts []*BundleContext
 }
 
-// DockerContext contains information about how docker should build the container
-type DockerContext struct {
+// BundleContext contains information about how the builder should build the bundle components
+type BundleContext struct {
 	Name         string
 	Images       []string
 	Dockerfile   string
@@ -68,7 +67,7 @@ type DockerContext struct {
 type AppContext struct {
 	Bldr           *Builder
 	Ctx            *Context
-	DockerContexts []*DockerContext
+	BundleContexts []*BundleContext
 	Log            io.WriteCloser
 	ID             string
 }
@@ -76,25 +75,15 @@ type AppContext struct {
 // New creates a new Builder.
 func New() *Builder {
 	return &Builder{
-		ID: getulid(),
-	}
-}
-
-// Lookup takes a driver name and tries to resolve the most pertinent driver.
-func Lookup(name string) (BundleBuilder, error) {
-	switch name {
-	case "docker":
-		return DockerBuilder{}, nil
-	default:
-		return DockerBuilder{}, nil
+		ID: GetUlid(),
 	}
 }
 
 // PrepareBuild prepares state carried across the various duffle stage boundaries.
 func PrepareBuild(b *Builder, buildCtx *Context) (*AppContext, error) {
-	var buildContexts []*DockerContext
+	var buildContexts []*BundleContext
 
-	for _, dockerBuildContext := range buildCtx.DockerContexts {
+	for _, dockerBuildContext := range buildCtx.BundleContexts {
 		defer dockerBuildContext.BuildContext.Close()
 		// write each build context to a buffer so we can also write to the sha256 hash.
 		buf := new(bytes.Buffer)
@@ -111,9 +100,6 @@ func PrepareBuild(b *Builder, buildCtx *Context) (*AppContext, error) {
 		image := fmt.Sprintf("%s:%s", imageRepository, imgtag)
 
 		dockerBuildContext.Images = []string{image}
-		for _, tag := range buildCtx.CustomTags {
-			dockerBuildContext.Images = append(dockerBuildContext.Images, fmt.Sprintf("%s:%s", imageRepository, tag))
-		}
 		dockerBuildContext.BuildContext = ioutil.NopCloser(buf)
 		buildContexts = append(buildContexts, dockerBuildContext)
 	}
@@ -131,7 +117,7 @@ func PrepareBuild(b *Builder, buildCtx *Context) (*AppContext, error) {
 		ID:             b.ID,
 		Bldr:           b,
 		Ctx:            buildCtx,
-		DockerContexts: buildContexts,
+		BundleContexts: buildContexts,
 		Log:            logf,
 	}, nil
 }
@@ -162,12 +148,12 @@ func loadArchive(ctx *Context) (err error) {
 		if err != nil {
 			return err
 		}
-		ctx.DockerContexts = append(ctx.DockerContexts, dCtx)
+		ctx.BundleContexts = append(ctx.BundleContexts, dCtx)
 	}
 	return nil
 }
 
-func archiveSrc(contextPath, dockerfileName string) (*DockerContext, error) {
+func archiveSrc(contextPath, dockerfileName string) (*BundleContext, error) {
 	contextDir, relDockerfile, err := build.GetContextFromLocalDir(contextPath, dockerfileName)
 	if err != nil {
 		return nil, fmt.Errorf("unable to prepare docker context: %s", err)
@@ -217,7 +203,7 @@ func archiveSrc(contextPath, dockerfileName string) (*DockerContext, error) {
 		return nil, err
 	}
 
-	return &DockerContext{Name: filepath.Base(contextDir), BuildContext: dockerArchive, Dockerfile: relDockerfile}, nil
+	return &BundleContext{Name: filepath.Base(contextDir), BuildContext: dockerArchive, Dockerfile: relDockerfile}, nil
 }
 
 // Build handles incoming duffle build requests and returns a stream of summaries or error.

@@ -8,6 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/deis/duffle/pkg/builder"
+
+	"github.com/deis/duffle/pkg/duffle/manifest"
+
+	"github.com/deis/duffle/pkg/bbuilder/docker"
+
+	"github.com/deis/duffle/pkg/bbuilder"
+
 	"github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
 	dockerdebug "github.com/docker/cli/cli/debug"
@@ -18,7 +26,6 @@ import (
 	"github.com/spf13/pflag"
 	"golang.org/x/net/context"
 
-	"github.com/deis/duffle/pkg/builder"
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/cmdline"
 	"github.com/deis/duffle/pkg/duffle/home"
@@ -123,14 +130,10 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 
 func (b *buildCmd) run() (err error) {
 	var (
-		buildctx *builder.Context
-		ctx      = context.Background()
-		bldr     = builder.New()
+		ctx  = context.Background()
+		bldr = bbuilder.New()
 	)
 	bldr.LogsDir = b.home.Logs()
-	if buildctx, err = builder.LoadWithEnv(b.src); err != nil {
-		return fmt.Errorf("failed loading build context: %v", err)
-	}
 
 	// setup docker
 	cli := &command.DockerCli{}
@@ -138,42 +141,48 @@ func (b *buildCmd) run() (err error) {
 		return fmt.Errorf("failed to create docker client: %v", err)
 	}
 
-	var bb builder.BundleBuilder
+	var bb bbuilder.BundleBuilder
+
+	// TODO - manifest is loaded twice
+	mfst, err := manifest.Load(filepath.Join(b.src, "duffle.toml"))
+	if err != nil {
+		return err
+	}
 
 	// TODO - add more builders here
-	switch buildctx.Manifest.Builder {
+	switch mfst.Builder {
 	case "docker":
-		bb = builder.DockerBuilder{
+		bb = docker.Builder{
 			DockerClient: cli,
 		}
 	default:
-		bb = builder.DockerBuilder{
+		bb = docker.Builder{
 			DockerClient: cli,
 		}
 	}
 
 	bldr.BundleBuilder = bb
 
-	app, err := builder.PrepareBuild(bldr, buildctx)
+	app, err := bldr.BundleBuilder.PrepareBuild(bldr, b.src)
 	if err != nil {
 		return err
 	}
 
-	bf := bundle.Bundle{Name: buildctx.Name}
+	bf := bundle.Bundle{Name: app.Ctx.Manifest.Name}
 
-	for _, c := range buildctx.DockerContexts {
+	for _, c := range app.Ctx.Components {
 
 		// TODO - add invocation image as top level field in duffle.toml
-		if c.Name == "cnab" {
+		if strings.Contains(c.URI(), "cnab") {
 			bf.InvocationImage = bundle.InvocationImage{
-				Image: c.Images[0],
+				Image: c.URI(),
 				// TODO - handle image type
 				ImageType: "docker",
 			}
-			bf.Version = strings.Split(c.Images[0], ":")[1]
+			bf.Version = strings.Split(c.URI(), ":")[1]
 			continue
 		}
-		bf.Images = append(bf.Images, bundle.Image{Name: c.Name, URI: c.Images[0]})
+		bf.Images = append(bf.Images, bundle.Image{Name: strings.Split(c.URI(), ":")[0], URI: c.URI()})
 	}
 
 	f, err := os.OpenFile("cnab/bundle.json", os.O_RDWR|os.O_CREATE, 0644)
@@ -187,8 +196,9 @@ func (b *buildCmd) run() (err error) {
 		return err
 	}
 
-	progressC := bldr.Build(ctx, app, buildctx)
-	cmdline.Display(ctx, buildctx.Name, progressC, cmdline.WithBuildID(bldr.ID))
+	var progressC chan *builder.Summary
+	bldr.BundleBuilder.Build(ctx, app, progressC)
+	cmdline.Display(ctx, app.Ctx.Manifest.Name, progressC, cmdline.WithBuildID(bldr.ID))
 
 	return nil
 }

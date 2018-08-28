@@ -1,21 +1,23 @@
 {
     "name": "multi-container",
-    "version": "f2f0761a2e2b3823a02bd93f63aac9d496c9b203",
+    "version": "fee6fea4ebc5ec4a3d8a147204834bdd07188ba7",
     "invocationImage": {
         "imageType": "docker",
-        "image": "radumatei/multi-container-cnab:f2f0761a2e2b3823a02bd93f63aac9d496c9b203"
+        "image": "radumatei/multi-container-cnab:fee6fea4ebc5ec4a3d8a147204834bdd07188ba7"
     },
     "images": [
         {
             "name": "component-a",
-            "uri": "radumatei/multi-container-component-a:0e1e1c3fd7d213263bb9d84d753f6e284b0f4280",
+            "uri": "radumatei/multi-container-component-a:db126a66aac8eb0af0fd8d9dea97e998b2bd9a46",
             "refs": null
         },
         {
             "name": "component-b",
-            "uri": "radumatei/multi-container-component-b:12bd396dc897bada5d8b4c8db477399481d37b86",
+            "uri": "radumatei/multi-container-component-b:88323809e0e19b79064015bcd4e83e80b77be1af",
             "refs": null
         }
     ],
     "parameters": null
+}
+arameters": null
 }

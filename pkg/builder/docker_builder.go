@@ -32,9 +32,9 @@ func (b DockerBuilder) Build(ctx context.Context, app *AppContext, out chan<- *S
 	go func() {
 		defer close(errc)
 		var wg sync.WaitGroup
-		wg.Add(len(app.DockerContexts))
-		for _, dockerContext := range app.DockerContexts {
-			go func(buildContext *DockerContext) {
+		wg.Add(len(app.BundleContexts))
+		for _, dockerContext := range app.BundleContexts {
+			go func(buildContext *BundleContext) {
 				defer func() {
 					buildContext.BuildContext.Close()
 					wg.Done()

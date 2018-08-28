@@ -7,7 +7,8 @@ import (
 	"github.com/oklog/ulid"
 )
 
-func getulid() string { return <-ulidc }
+// GetUlid returns a new ULID
+func GetUlid() string { return <-ulidc }
 
 // A channel which returns build ulids.
 var ulidc = make(chan string)
