@@ -19,7 +19,6 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/deis/duffle/pkg/builder"
-	dockercontainerbuilder "github.com/deis/duffle/pkg/builder/docker"
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/cmdline"
 	"github.com/deis/duffle/pkg/duffle/home"
@@ -133,17 +132,27 @@ func (b *buildCmd) run() (err error) {
 		return fmt.Errorf("failed loading build context: %v", err)
 	}
 
-	var cb builder.ContainerBuilder
-
 	// setup docker
 	cli := &command.DockerCli{}
 	if err := cli.Initialize(b.dockerClientOptions); err != nil {
 		return fmt.Errorf("failed to create docker client: %v", err)
 	}
-	cb = &dockercontainerbuilder.Builder{
-		DockerClient: cli,
+
+	var bb builder.BundleBuilder
+
+	// TODO - add more builders here
+	switch buildctx.Manifest.Builder {
+	case "docker":
+		bb = builder.DockerBuilder{
+			DockerClient: cli,
+		}
+	default:
+		bb = builder.DockerBuilder{
+			DockerClient: cli,
+		}
 	}
-	bldr.ContainerBuilder = cb
+
+	bldr.BundleBuilder = bb
 
 	app, err := builder.PrepareBuild(bldr, buildctx)
 	if err != nil {

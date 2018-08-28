@@ -1,11 +1,9 @@
-package docker
+package builder
 
 import (
 	"fmt"
 	"sync"
 	"time"
-
-	"github.com/deis/duffle/pkg/builder"
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/docker/api/types"
@@ -15,20 +13,20 @@ import (
 	"golang.org/x/net/context"
 )
 
-// Builder contains information about the build environment
-type Builder struct {
+// DockerBuilder contains information about the build environment
+type DockerBuilder struct {
 	DockerClient command.Cli
 }
 
 // Build builds the docker images.
-func (b *Builder) Build(ctx context.Context, app *builder.AppContext, out chan<- *builder.Summary) (err error) {
+func (b DockerBuilder) Build(ctx context.Context, app *AppContext, out chan<- *Summary) (err error) {
 	const stageDesc = "Building Docker Images"
 
-	defer builder.Complete(app.ID, stageDesc, out, &err)
-	summary := builder.Summarize(app.ID, stageDesc, out)
+	defer Complete(app.ID, stageDesc, out, &err)
+	summary := Summarize(app.ID, stageDesc, out)
 
 	// notify that particular stage has started.
-	summary("started", builder.SummaryOngoing)
+	summary("started", SummaryOngoing)
 
 	errc := make(chan error)
 	go func() {
@@ -36,7 +34,7 @@ func (b *Builder) Build(ctx context.Context, app *builder.AppContext, out chan<-
 		var wg sync.WaitGroup
 		wg.Add(len(app.DockerContexts))
 		for _, dockerContext := range app.DockerContexts {
-			go func(buildContext *builder.DockerContext) {
+			go func(buildContext *DockerContext) {
 				defer func() {
 					buildContext.BuildContext.Close()
 					wg.Done()
@@ -78,7 +76,7 @@ func (b *Builder) Build(ctx context.Context, app *builder.AppContext, out chan<-
 			}
 			return err
 		default:
-			summary("ongoing", builder.SummaryOngoing)
+			summary("ongoing", SummaryOngoing)
 			time.Sleep(time.Second)
 		}
 	}

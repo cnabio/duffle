@@ -31,13 +31,13 @@ const (
 
 // Builder contains information about the build environment
 type Builder struct {
-	ID               string
-	ContainerBuilder ContainerBuilder
-	LogsDir          string
+	ID            string
+	BundleBuilder BundleBuilder
+	LogsDir       string
 }
 
-// ContainerBuilder defines how a container is built and pushed to a container registry using the supplied app context.
-type ContainerBuilder interface {
+// BundleBuilder defines how a bubndle is built and pushed using the supplied app context.
+type BundleBuilder interface {
 	Build(ctx context.Context, app *AppContext, out chan<- *Summary) error
 }
 
@@ -77,6 +77,16 @@ type AppContext struct {
 func New() *Builder {
 	return &Builder{
 		ID: getulid(),
+	}
+}
+
+// Lookup takes a driver name and tries to resolve the most pertinent driver.
+func Lookup(name string) (BundleBuilder, error) {
+	switch name {
+	case "docker":
+		return DockerBuilder{}, nil
+	default:
+		return DockerBuilder{}, nil
 	}
 }
 
@@ -218,7 +228,7 @@ func (b *Builder) Build(ctx context.Context, app *AppContext, bctx *Context) <-c
 	go func(app *AppContext) {
 		defer wg.Done()
 		log.SetOutput(app.Log)
-		if err := b.ContainerBuilder.Build(ctx, app, ch); err != nil {
+		if err := b.BundleBuilder.Build(ctx, app, ch); err != nil {
 			log.Printf("error while building: %v\n", err)
 			return
 		}
