@@ -84,7 +84,7 @@ func findNames() []string {
 			log.Errorln(err)
 			return nil
 		}
-		if !f.IsDir() && strings.HasSuffix(f.Name(), ".json") {
+		if isBundle(p, f) {
 			bundleName := strings.TrimSuffix(f.Name(), ".json")
 			repoName := strings.TrimPrefix(p, repoPath+string(os.PathSeparator))
 			repoName = strings.TrimSuffix(repoName, string(os.PathSeparator)+filepath.Join("bundles", f.Name()))
@@ -100,4 +100,10 @@ func findNames() []string {
 	})
 	sort.Strings(bundleNames)
 	return bundleNames
+}
+
+func isBundle(filePath string, f os.FileInfo) bool {
+	return !f.IsDir() &&
+		strings.HasSuffix(f.Name(), ".json") &&
+		filepath.Base(filepath.Dir(filePath)) == "bundles"
 }
