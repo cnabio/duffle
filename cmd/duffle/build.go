@@ -6,15 +6,12 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
-
-	"github.com/deis/duffle/pkg/builder"
 
 	"github.com/deis/duffle/pkg/duffle/manifest"
 
-	"github.com/deis/duffle/pkg/bbuilder/docker"
+	"github.com/deis/duffle/pkg/builder/docker"
 
-	"github.com/deis/duffle/pkg/bbuilder"
+	"github.com/deis/duffle/pkg/builder"
 
 	"github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
@@ -26,7 +23,6 @@ import (
 	"github.com/spf13/pflag"
 	"golang.org/x/net/context"
 
-	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/cmdline"
 	"github.com/deis/duffle/pkg/duffle/home"
 )
@@ -131,7 +127,7 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 func (b *buildCmd) run() (err error) {
 	var (
 		ctx  = context.Background()
-		bldr = bbuilder.New()
+		bldr = builder.New()
 	)
 	bldr.LogsDir = b.home.Logs()
 
@@ -141,7 +137,7 @@ func (b *buildCmd) run() (err error) {
 		return fmt.Errorf("failed to create docker client: %v", err)
 	}
 
-	var bb bbuilder.BundleBuilder
+	var bb builder.BundleBuilder
 
 	// TODO - manifest is loaded twice
 	mfst, err := manifest.Load(filepath.Join(b.src, "duffle.toml"))
@@ -163,26 +159,9 @@ func (b *buildCmd) run() (err error) {
 
 	bldr.BundleBuilder = bb
 
-	app, err := bldr.BundleBuilder.PrepareBuild(bldr, b.src)
+	app, bf, err := bldr.BundleBuilder.PrepareBuild(bldr, b.src)
 	if err != nil {
 		return err
-	}
-
-	bf := bundle.Bundle{Name: app.Ctx.Manifest.Name}
-
-	for _, c := range app.Ctx.Components {
-
-		// TODO - add invocation image as top level field in duffle.toml
-		if strings.Contains(c.URI(), "cnab") {
-			bf.InvocationImage = bundle.InvocationImage{
-				Image: c.URI(),
-				// TODO - handle image type
-				ImageType: "docker",
-			}
-			bf.Version = strings.Split(c.URI(), ":")[1]
-			continue
-		}
-		bf.Images = append(bf.Images, bundle.Image{Name: strings.Split(c.URI(), ":")[0], URI: c.URI()})
 	}
 
 	f, err := os.OpenFile("cnab/bundle.json", os.O_RDWR|os.O_CREATE, 0644)
@@ -196,9 +175,6 @@ func (b *buildCmd) run() (err error) {
 		return err
 	}
 
-	var progressC chan *builder.Summary
-	bldr.BundleBuilder.Build(ctx, app, progressC)
-	cmdline.Display(ctx, app.Ctx.Manifest.Name, progressC, cmdline.WithBuildID(bldr.ID))
-
+	cmdline.Display(ctx, app.Ctx.Manifest.Name, bldr.BundleBuilder.Build(ctx, app), cmdline.WithBuildID(bldr.ID))
 	return nil
 }

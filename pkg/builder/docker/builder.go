@@ -13,18 +13,20 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/deis/duffle/pkg/osutil"
-
-	"github.com/deis/duffle/pkg/bbuilder"
 	"github.com/deis/duffle/pkg/builder"
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/duffle"
 	"github.com/deis/duffle/pkg/duffle/manifest"
+	"github.com/deis/duffle/pkg/osutil"
+
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/docker/builder/dockerignore"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/fileutils"
+
 	"github.com/sirupsen/logrus"
+
 	"golang.org/x/net/context"
 )
 
@@ -41,8 +43,8 @@ type Component struct {
 	BuildContext io.ReadCloser
 }
 
-var _ bbuilder.Component = (*Component)(nil)
-var _ bbuilder.BundleBuilder = (*Builder)(nil)
+var _ builder.Component = (*Component)(nil)
+var _ builder.BundleBuilder = (*Builder)(nil)
 
 // URI returns the image in the format <registry>/<image>
 func (dc Component) URI() string {
@@ -62,17 +64,19 @@ type Builder struct {
 }
 
 // PrepareBuild prepares state carried across the various duffle stage boundaries.
-func (d Builder) PrepareBuild(bldr *bbuilder.Builder, appDir string) (*bbuilder.AppContext, error) {
+func (d Builder) PrepareBuild(bldr *builder.Builder, appDir string) (*builder.AppContext, *bundle.Bundle, error) {
 
 	ctx, err := loadContext(appDir)
 	if err != nil {
-		return nil, fmt.Errorf("cannot load app context: %v", err)
+		return nil, nil, fmt.Errorf("cannot load app context: %v", err)
 	}
+
+	bf := &bundle.Bundle{Name: ctx.Manifest.Name}
 
 	for _, c := range ctx.Components {
 		dc, ok := c.(*Component)
 		if !ok {
-			return nil, fmt.Errorf("cannot convert component to Docker component in prepare")
+			return nil, nil, fmt.Errorf("cannot convert component to Docker component in prepare")
 		}
 
 		defer dc.BuildContext.Close()
@@ -82,7 +86,7 @@ func (d Builder) PrepareBuild(bldr *bbuilder.Builder, appDir string) (*bbuilder.
 		h := sha256.New()
 		w := io.MultiWriter(buf, h)
 		if _, err := io.Copy(w, dc.BuildContext); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		// truncate checksum to the first 40 characters (20 bytes) this is the
@@ -93,34 +97,45 @@ func (d Builder) PrepareBuild(bldr *bbuilder.Builder, appDir string) (*bbuilder.
 		dc.Image = fmt.Sprintf("%s:%s", imageRepository, imgtag)
 
 		dc.BuildContext = ioutil.NopCloser(buf)
-		ctx.Components = append(ctx.Components, dc)
+
+		// TODO - bundle is not correctly injected into container
+		if dc.Name == "cnab" {
+			bf.InvocationImage = bundle.InvocationImage{
+				Image:     dc.Image,
+				ImageType: "docker",
+			}
+			bf.Version = strings.Split(dc.Image, ":")[1]
+			continue
+		}
+		bf.Images = append(bf.Images, bundle.Image{Name: dc.Name, URI: dc.Image})
 	}
 
 	if err := osutil.EnsureDirectory(filepath.Dir(bldr.Logs(ctx.Manifest.Name))); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	logf, err := os.OpenFile(bldr.Logs(ctx.Manifest.Name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return &bbuilder.AppContext{
+	return &builder.AppContext{
 		ID:   bldr.ID,
 		Bldr: bldr,
 		Ctx:  ctx,
 		Log:  logf,
-	}, nil
+	}, bf, nil
 }
 
 // Build builds the docker images.
-func (d Builder) Build(ctx context.Context, app *bbuilder.AppContext, out chan<- *builder.Summary) (err error) {
+func (d Builder) Build(ctx context.Context, app *builder.AppContext) chan *builder.Summary {
 	ch := make(chan *builder.Summary, 1)
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go func(app *bbuilder.AppContext) {
+	go func(app *builder.AppContext) {
 		defer wg.Done()
 		log.SetOutput(app.Log)
+		// TODO - add pluggable container builders
 		if err := d.BuildComponents(ctx, app, ch); err != nil {
 			log.Printf("error while building: %v\n", err)
 			return
@@ -131,11 +146,11 @@ func (d Builder) Build(ctx context.Context, app *bbuilder.AppContext, out chan<-
 		close(ch)
 	}()
 
-	return nil
+	return ch
 }
 
-func loadContext(appDir string) (*bbuilder.Context, error) {
-	ctx := &bbuilder.Context{AppDir: appDir}
+func loadContext(appDir string) (*builder.Context, error) {
+	ctx := &builder.Context{AppDir: appDir}
 
 	tomlFilePath := filepath.Join(appDir, duffle.DuffleTomlFilepath)
 	mfst, err := manifest.Load(tomlFilePath)
@@ -152,7 +167,7 @@ func loadContext(appDir string) (*bbuilder.Context, error) {
 }
 
 // loadArchive loads the helm chart and build archive.
-func loadArchive(ctx *bbuilder.Context) (err error) {
+func loadArchive(ctx *builder.Context) (err error) {
 	for _, component := range ctx.Manifest.Components {
 		dc, err := archiveSrc(filepath.Join(ctx.AppDir, component), "")
 		if err != nil {

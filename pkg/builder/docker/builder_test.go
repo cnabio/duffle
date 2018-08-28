@@ -1,4 +1,4 @@
-package builder
+package docker
 
 import (
 	"io/ioutil"
@@ -7,7 +7,7 @@ import (
 )
 
 func TestArchiveSrc(t *testing.T) {
-	ctx, err := archiveSrc(filepath.Join("..", "..", "tests", "testdata", "builder", "simple"), "")
+	ctx, err := archiveSrc(filepath.Join("..", "..", "..", "tests", "testdata", "builder", "simple"), "")
 	if err != nil {
 		t.Error(err)
 	}
