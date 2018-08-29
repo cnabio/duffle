@@ -75,7 +75,7 @@ func (cli *cmdline) Stop() error {
 // Display provides a UI for the duffle client. When performing a duffle 'build'
 // Display will output a measure of progress for each summary yielded by the
 // duffle state machine.
-func Display(ctx context.Context, app string, summaries <-chan *builder.Summary, opts ...Option) {
+func Display(ctx context.Context, app string, summaries chan *builder.Summary, opts ...Option) {
 	var cli cmdline
 	cli.Init(ctx, opts...)
 

@@ -1,13 +1,15 @@
-package builder
+package docker
 
 import (
 	"io/ioutil"
 	"path/filepath"
 	"testing"
+
+	"github.com/deis/duffle/pkg/builder"
 )
 
 func TestArchiveSrc(t *testing.T) {
-	ctx, err := archiveSrc(filepath.Join("..", "..", "tests", "testdata", "builder", "simple"), "")
+	ctx, err := archiveSrc(filepath.Join("..", "..", "..", "tests", "testdata", "builder", "simple"), "")
 	if err != nil {
 		t.Error(err)
 	}
@@ -22,4 +24,12 @@ func TestArchiveSrc(t *testing.T) {
 	if len(buf) != 2048 {
 		t.Errorf("expected non-zero archive length, got %d", len(buf))
 	}
+}
+
+func TestBuilder_implBuilder(t *testing.T) {
+	var _ builder.BundleBuilder = (*Builder)(nil)
+}
+
+func TestComponent_implComponent(t *testing.T) {
+	var _ builder.Component = (*Component)(nil)
 }

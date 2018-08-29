@@ -1,12 +1,20 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/deis/duffle/pkg/cmdline"
+
+	"github.com/deis/duffle/pkg/duffle/manifest"
+
+	"github.com/deis/duffle/pkg/builder"
+	"github.com/deis/duffle/pkg/builder/docker"
+	"github.com/deis/duffle/pkg/duffle/home"
 
 	"github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
@@ -14,15 +22,9 @@ import (
 	dockerflags "github.com/docker/cli/cli/flags"
 	"github.com/docker/cli/opts"
 	"github.com/docker/go-connections/tlsconfig"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/net/context"
-
-	"github.com/deis/duffle/pkg/builder"
-	dockercontainerbuilder "github.com/deis/duffle/pkg/builder/docker"
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/cmdline"
-	"github.com/deis/duffle/pkg/duffle/home"
 )
 
 const buildDesc = `
@@ -124,62 +126,63 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 
 func (b *buildCmd) run() (err error) {
 	var (
-		buildctx *builder.Context
-		ctx      = context.Background()
-		bldr     = builder.New()
+		ctx  = context.Background()
+		bldr = builder.New()
 	)
 	bldr.LogsDir = b.home.Logs()
-	if buildctx, err = builder.LoadWithEnv(b.src); err != nil {
-		return fmt.Errorf("failed loading build context: %v", err)
-	}
 
-	var cb builder.ContainerBuilder
-
-	// setup docker
-	cli := &command.DockerCli{}
-	if err := cli.Initialize(b.dockerClientOptions); err != nil {
-		return fmt.Errorf("failed to create docker client: %v", err)
-	}
-	cb = &dockercontainerbuilder.Builder{
-		DockerClient: cli,
-	}
-	bldr.ContainerBuilder = cb
-
-	app, err := builder.PrepareBuild(bldr, buildctx)
+	mfst, err := manifest.Load(filepath.Join(b.src, "duffle.toml"))
 	if err != nil {
 		return err
 	}
 
-	bf := bundle.Bundle{Name: buildctx.Name}
+	bldr.BundleBuilder, err = lookupBuilder(mfst.Builder, b)
+	if err != nil {
+		return fmt.Errorf("cannot lookup builder: %v", err)
+	}
 
-	for _, c := range buildctx.DockerContexts {
-
-		// TODO - add invocation image as top level field in duffle.toml
-		if c.Name == "cnab" {
-			bf.InvocationImage = bundle.InvocationImage{
-				Image: c.Images[0],
-				// TODO - handle image type
-				ImageType: "docker",
-			}
-			bf.Version = strings.Split(c.Images[0], ":")[1]
-			continue
-		}
-		bf.Images = append(bf.Images, bundle.Image{Name: c.Name, URI: c.Images[0]})
+	app, bf, err := bldr.BundleBuilder.PrepareBuild(bldr, mfst, b.src)
+	if err != nil {
+		return fmt.Errorf("cannot prepare build: %v", err)
 	}
 
 	f, err := os.OpenFile("cnab/bundle.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot create or open bundle file: %v", err)
 	}
 
 	enc := json.NewEncoder(f)
 	enc.SetIndent("", "    ")
 	if err := enc.Encode(bf); err != nil {
-		return err
+		return fmt.Errorf("cannot write bundle file: %v", err)
 	}
 
-	progressC := bldr.Build(ctx, app, buildctx)
-	cmdline.Display(ctx, buildctx.Name, progressC, cmdline.WithBuildID(bldr.ID))
-
+	cmdline.Display(ctx, app.Ctx.Manifest.Name, bldr.BundleBuilder.Build(ctx, app), cmdline.WithBuildID(bldr.ID))
 	return nil
+}
+
+// lookupBuilder takes a builder name and returns an appropriate builder
+func lookupBuilder(b string, cmd *buildCmd) (builder.BundleBuilder, error) {
+
+	var bb builder.BundleBuilder
+
+	// setup docker
+	cli := &command.DockerCli{}
+	if err := cli.Initialize(cmd.dockerClientOptions); err != nil {
+		return bb, fmt.Errorf("failed to create docker client: %v", err)
+	}
+
+	switch b {
+
+	case "docker":
+		bb = docker.Builder{
+			DockerClient: cli,
+		}
+	default:
+		bb = docker.Builder{
+			DockerClient: cli,
+		}
+	}
+
+	return bb, nil
 }

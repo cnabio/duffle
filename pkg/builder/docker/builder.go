@@ -1,86 +1,221 @@
 package docker
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
 	"sync"
-	"time"
 
 	"github.com/deis/duffle/pkg/builder"
+	"github.com/deis/duffle/pkg/bundle"
+	"github.com/deis/duffle/pkg/duffle/manifest"
+	"github.com/deis/duffle/pkg/osutil"
 
 	"github.com/docker/cli/cli/command"
-	"github.com/docker/docker/api/types"
-	dockerclient "github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/docker/docker/pkg/term"
+	"github.com/docker/cli/cli/command/image/build"
+	"github.com/docker/docker/builder/dockerignore"
+	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/fileutils"
+
+	"github.com/sirupsen/logrus"
+
 	"golang.org/x/net/context"
 )
 
-// Builder contains information about the build environment
+const (
+	// DockerignoreFilename is the filename for Docker's ignore file.
+	DockerignoreFilename = ".dockerignore"
+)
+
+// Component contains all information to build a container image
+type Component struct {
+	Name         string
+	Image        string
+	Dockerfile   string
+	BuildContext io.ReadCloser
+}
+
+// URI returns the image in the format <registry>/<image>
+func (dc Component) URI() string {
+	return dc.Image
+}
+
+// Digest returns the name of a Docker component, which will give the image name
+//
+// TODO - return the actual digest
+func (dc Component) Digest() string {
+	return strings.Split(dc.Image, ":")[1]
+}
+
+// Builder contains information about the Docker build environment
 type Builder struct {
 	DockerClient command.Cli
 }
 
-// Build builds the docker images.
-func (b *Builder) Build(ctx context.Context, app *builder.AppContext, out chan<- *builder.Summary) (err error) {
-	const stageDesc = "Building Docker Images"
+// PrepareBuild prepares state carried across the various duffle stage boundaries.
+func (d Builder) PrepareBuild(bldr *builder.Builder, mfst *manifest.Manifest, appDir string) (*builder.AppContext, *bundle.Bundle, error) {
+	ctx, err := loadContext(appDir, mfst)
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot load app context: %v", err)
+	}
 
-	defer builder.Complete(app.ID, stageDesc, out, &err)
-	summary := builder.Summarize(app.ID, stageDesc, out)
+	bf := &bundle.Bundle{Name: ctx.Manifest.Name}
 
-	// notify that particular stage has started.
-	summary("started", builder.SummaryOngoing)
-
-	errc := make(chan error)
-	go func() {
-		defer close(errc)
-		var wg sync.WaitGroup
-		wg.Add(len(app.DockerContexts))
-		for _, dockerContext := range app.DockerContexts {
-			go func(buildContext *builder.DockerContext) {
-				defer func() {
-					buildContext.BuildContext.Close()
-					wg.Done()
-				}()
-				buildopts := types.ImageBuildOptions{
-					Tags:       buildContext.Images,
-					Dockerfile: buildContext.Dockerfile,
-				}
-
-				resp, err := b.DockerClient.Client().ImageBuild(ctx, buildContext.BuildContext, buildopts)
-				if err != nil {
-					errc <- err
-					return
-				}
-				defer resp.Body.Close()
-				outFd, isTerm := term.GetFdInfo(buildContext.BuildContext)
-				if err := jsonmessage.DisplayJSONMessagesStream(resp.Body, app.Log, outFd, isTerm, nil); err != nil {
-					errc <- err
-					return
-				}
-				if _, _, err = b.DockerClient.Client().ImageInspectWithRaw(ctx, buildContext.Images[0]); err != nil {
-					if dockerclient.IsErrNotFound(err) {
-						errc <- fmt.Errorf("Could not locate image for %s: %v", app.Ctx.Name, err)
-						return
-					}
-					errc <- fmt.Errorf("ImageInspectWithRaw error: %v", err)
-					return
-				}
-			}(dockerContext)
+	for _, c := range ctx.Components {
+		dc, ok := c.(*Component)
+		if !ok {
+			return nil, nil, fmt.Errorf("cannot convert component to Docker component in prepare")
 		}
-		wg.Wait()
-	}()
-	for errc != nil {
-		select {
-		case err, ok := <-errc:
-			if !ok {
-				errc = nil
-				continue
+
+		defer dc.BuildContext.Close()
+
+		// write each build context to a buffer so we can also write to the sha256 hash.
+		buf := new(bytes.Buffer)
+		h := sha256.New()
+		w := io.MultiWriter(buf, h)
+		if _, err := io.Copy(w, dc.BuildContext); err != nil {
+			return nil, nil, err
+		}
+
+		// truncate checksum to the first 40 characters (20 bytes) this is the
+		// equivalent of `shasum build.tar.gz | awk '{print $1}'`.
+		ctxtID := h.Sum(nil)
+		imgtag := fmt.Sprintf("%.20x", ctxtID)
+		imageRepository := path.Join(ctx.Manifest.Registry, fmt.Sprintf("%s-%s", ctx.Manifest.Name, dc.Name))
+		dc.Image = fmt.Sprintf("%s:%s", imageRepository, imgtag)
+
+		dc.BuildContext = ioutil.NopCloser(buf)
+
+		// TODO - bundle is not correctly injected into container
+		if dc.Name == "cnab" {
+			bf.InvocationImage = bundle.InvocationImage{
+				Image:     dc.Image,
+				ImageType: "docker",
 			}
-			return err
-		default:
-			summary("ongoing", builder.SummaryOngoing)
-			time.Sleep(time.Second)
+			bf.Version = strings.Split(dc.Image, ":")[1]
+			continue
 		}
+		bf.Images = append(bf.Images, bundle.Image{Name: dc.Name, URI: dc.Image})
+	}
+
+	if err := osutil.EnsureDirectory(filepath.Dir(bldr.Logs(ctx.Manifest.Name))); err != nil {
+		return nil, nil, err
+	}
+
+	logf, err := os.OpenFile(bldr.Logs(ctx.Manifest.Name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &builder.AppContext{
+		ID:   bldr.ID,
+		Bldr: bldr,
+		Ctx:  ctx,
+		Log:  logf,
+	}, bf, nil
+}
+
+// Build builds the docker images.
+func (d Builder) Build(ctx context.Context, app *builder.AppContext) chan *builder.Summary {
+	ch := make(chan *builder.Summary, 1)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func(app *builder.AppContext) {
+		defer wg.Done()
+		log.SetOutput(app.Log)
+		// TODO - add pluggable container builders
+		if err := d.BuildComponents(ctx, app, ch); err != nil {
+			log.Printf("error while building: %v\n", err)
+			return
+		}
+	}(app)
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	return ch
+}
+
+func loadContext(appDir string, mfst *manifest.Manifest) (*builder.Context, error) {
+	ctx := &builder.Context{AppDir: appDir}
+	ctx.Manifest = mfst
+
+	if err := loadArchive(ctx); err != nil {
+		return nil, fmt.Errorf("failed to load build contexts: %v", err)
+	}
+
+	return ctx, nil
+}
+
+// loadArchive loads the helm chart and build archive.
+func loadArchive(ctx *builder.Context) (err error) {
+	for _, component := range ctx.Manifest.Components {
+		dc, err := archiveSrc(filepath.Join(ctx.AppDir, component), "")
+		if err != nil {
+			return err
+		}
+		ctx.Components = append(ctx.Components, dc)
 	}
 	return nil
+}
+
+func archiveSrc(contextPath, dockerfileName string) (*Component, error) {
+	contextDir, relDockerfile, err := build.GetContextFromLocalDir(contextPath, dockerfileName)
+	if err != nil {
+		return nil, fmt.Errorf("unable to prepare docker context: %s", err)
+	}
+	// canonicalize dockerfile name to a platform-independent one
+	relDockerfile = archive.CanonicalTarNameForPath(relDockerfile)
+
+	f, err := os.Open(filepath.Join(contextDir, DockerignoreFilename))
+	if err != nil && !os.IsNotExist(err) {
+		return nil, err
+	}
+	defer f.Close()
+
+	var excludes []string
+	if err == nil {
+		excludes, err = dockerignore.ReadAll(f)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if err := build.ValidateContextDirectory(contextDir, excludes); err != nil {
+		return nil, fmt.Errorf("error checking docker context: '%s'", err)
+	}
+
+	// If .dockerignore mentions .dockerignore or the Dockerfile
+	// then make sure we send both files over to the daemon
+	// because Dockerfile is, obviously, needed no matter what, and
+	// .dockerignore is needed to know if either one needs to be
+	// removed. The daemon will remove them for us, if needed, after it
+	// parses the Dockerfile. Ignore errors here, as they will have been
+	// caught by validateContextDirectory above.
+	var includes = []string{"."}
+	keepThem1, _ := fileutils.Matches(DockerignoreFilename, excludes)
+	keepThem2, _ := fileutils.Matches(relDockerfile, excludes)
+	if keepThem1 || keepThem2 {
+		includes = append(includes, DockerignoreFilename, relDockerfile)
+	}
+
+	logrus.Debugf("INCLUDES: %v", includes)
+	logrus.Debugf("EXCLUDES: %v", excludes)
+	dockerArchive, err := archive.TarWithOptions(contextDir, &archive.TarOptions{
+		ExcludePatterns: excludes,
+		IncludeFiles:    includes,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &Component{Name: filepath.Base(contextDir), BuildContext: dockerArchive, Dockerfile: relDockerfile}, nil
 }
