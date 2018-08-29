@@ -1,6 +1,6 @@
 # The Invocation Image
 
-The `invocationImage` section of a `bundle.json` must point to at least one image (the invocation image). This image must be formatted according to the specification laid out in the present document.
+The `invocationImage` section of a `bundle.json` must point to exactly one image (the invocation image). This image must be formatted according to the specification laid out in the present document.
 
 When a bundle is executed, the invocation image will be retrieved (if necessary) and started. Credential and parameter data is passed to it, and then its `run` tool is executed. (See [The Bundle Runtime](103-bundle-runtime.md) for details).
 
@@ -32,11 +32,11 @@ cnab/
     │       ├── templates​​
     │       │   └── ...
     │       └── values.yaml​
-    └── sfmesh​         # Example: Service Mesh definitions might go here
+    └── sfmesh​         # Example: Service Fabric definitions might go here
         └── sfmesh-deploy.json
 ```
 
-The `app/` directory contains subdirectories, each of which stores configuration for a particular target environment. The `app/run` file _must be an executable file_ that will act as the "main" installer for this CNAB bundle. [NB: Why is this not at the top level? I think it should be]
+The `app/` directory contains subdirectories, each of which stores configuration for a particular target environment. The `app/run` file _must be an executable file_ that will act as the "main" installer for this CNAB bundle.
 
 The contents beneath `/cnab/app/SUBDIRECTORY` are undefined by the spec. `run` is considered the only reserved word underneath `/cnab/app/`
 
@@ -72,7 +72,9 @@ The `bundle.json` file included inside of the CNAB image _must_ be identical to 
 
 This format is defined in the previous [bundle.json definition](101-bundle-json).
 
-## Dockerfile
+_Note:_ The `bundle.json` file that exists inside of the bundle is not a signed bundle, because signing requires calculating the hash of the `invocationImage`.
+
+## Image Construction Files
 
 Including a Dockerfile is _recommended_ for all images built with Docker. It is useful for reproducing a bundle. For other build tools, the build tool's definition may be included instead (e.g. `packer.json` for VM images built with Packer).
 
@@ -109,8 +111,6 @@ The specification does not define what language(s) the tool must be written in, 
 ```bash
 #!/bin/sh
 
-#set -eo pipefail
-
 action=$CNAB_ACTION
 name=$CNAB_INSTALLATION_NAME 
 
@@ -136,4 +136,6 @@ echo "Action $action complete for $name"
 
 The run tool above is implemented as a shell script, and merely reacts to each given `CNAB_ACTION` by printing a message.
 
-The next section, [The Bundle Runtime](103-bundle-runtime.md), describes how this tool is used.
+The [The Bundle Runtime](103-bundle-runtime.md) describes how this tool is used.
+
+Next section: [The Bundle Runtime](103-bundle-runtime.md)

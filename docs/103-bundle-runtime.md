@@ -8,6 +8,8 @@ The [Invocation Image definition](102-invocation-image.md) specifies the layout 
 
 The main entry point of a CNAB bundle is located at `/cnab/app/run`. When a compliant driver executes a CNAB bundle, it _must_ execute the `/cnab/app/run` tool. In addition, images used as invocation images _should_ also default to running `/cnab/app/run`. For example, a `Dockerfile`'s `exec` array must point to this entry point.
 
+> A fixed location for the `run` tool is mandated because not all image formats provide an equivalent method for starting an application. A client implementation of CNAB may access the image and directly execute the path `/cnab/app/run`.
+
 ### Injecting Data Into the Invocation Image
 
 CNAB allows injecting data into the invocation image in two ways:
@@ -40,7 +42,13 @@ The _action_ is one of:
 
 Actions are defined below.
 
-Optionally, `CNAB_REVISION` may be passed, where this is a _unique string_ indicating the current "version" of the _installation_. For example, if the `my_installation` installation is upgraded twice (changing only the parameters), two `CNAB_REVISIONS` should be generated. See [the Claims definition](104-claims.md) for details on revision ids.
+Optionally, `CNAB_REVISION` _may_ be passed, where this is a _unique string_ indicating the current "version" of the _installation_. For example, if the `my_installation` installation is upgraded twice (changing only the parameters), three `CNAB_REVISIONS` should be generated (1. install, 2. upgrade, 3. upgrade). See [the Claims definition](104-claims.md) for details on revision ids. That `status` action _must not_ increment the revision.
+
+### Mounting Files
+
+Credentials may be mounted as files within the image's runtime filesystem. This definition does not specify how files are to be attached to an image. However, it specifies the conditions under which the files appear.
+
+Files _must_ be attached to the invocation image before the image's `/cnab/app/run` tool is executed. Files _must not_ be attached to the image when the image is built. That is, files _must not_ be part of the image itself. This would cause a security violation. Files _should_ be destroyed immediately following the exit of the `invocationImage`, though secure at-rest encryption may be a viable alternative.
 
 ### Executing the Run Tool
 
@@ -52,7 +60,6 @@ Example:
 #!/bin/bash
 action=$CNAB_ACTION
 
-# TODO: probably do a switch here?
 if [[ action == "install" ]]; then
   helm install example-stable/wordpress -n $CNAB_INSTALLATION_NAME
 elif [[ action == "uninstall" ]]; then
@@ -60,7 +67,7 @@ elif [[ action == "uninstall" ]]; then
 fi
 ```
 
-This simple example merely executes Helm, installing the Wordpress chart with the default settings if `install` is sent, or deleting the installation if `delete` is sent.
+This simple example executes Helm, installing the Wordpress chart with the default settings if `install` is sent, or deleting the installation if `delete` is sent.
 
 None of the actions are required to be implemented. However, none of the actions may return an error if not implemented. Errors are reserved for cases where the bundle's action failed to run correctly.
 
@@ -95,4 +102,5 @@ Credentials may be supplied as files on the file system. In such cases, the foll
 The following topics must be added in the future:
 
 - Examples of installing services, along with guidance if necessary
-- Specification of how data is to be injected into the container (and when we do env vars vs when we do file mounts)
+
+Next Section: [The claims definition](104-claims.md)
