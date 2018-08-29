@@ -3,7 +3,7 @@
     "version": "1.0",
     "invocationImage": {
         "imageType": "docker",
-        "image": "technosophos/helloworld:0.1.2",
+        "image": "technosophos/helloworld:0.1.0",
         "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685"
       },
     "images": [],
