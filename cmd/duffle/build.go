@@ -167,7 +167,7 @@ func (b *buildCmd) run() (err error) {
 		bf.Images = append(bf.Images, bundle.Image{Name: c.Name, URI: c.Images[0]})
 	}
 
-	f, err := os.OpenFile("cnab/bundle.json", os.O_RDWR|os.O_CREATE, 0644)
+	f, err := os.OpenFile("cnab/bundle.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
