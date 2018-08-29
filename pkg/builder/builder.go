@@ -12,7 +12,7 @@ import (
 
 // BundleBuilder defines how a bundle is built and pushed using the supplied app context.
 type BundleBuilder interface {
-	PrepareBuild(bldr *Builder, appDir string) (*AppContext, *bundle.Bundle, error)
+	PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir string) (*AppContext, *bundle.Bundle, error)
 	Build(context.Context, *AppContext) chan *Summary
 }
 
@@ -39,7 +39,7 @@ func (b *Builder) Logs(appName string) string {
 
 // Context contains information about the application
 type Context struct {
-	Manifest   manifest.Manifest
+	Manifest   *manifest.Manifest
 	AppDir     string
 	Components []Component
 }

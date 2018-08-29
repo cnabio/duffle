@@ -1,17 +1,20 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/deis/duffle/pkg/cmdline"
+
+	"github.com/deis/duffle/pkg/duffle/manifest"
+
 	"github.com/deis/duffle/pkg/builder"
 	"github.com/deis/duffle/pkg/builder/docker"
-	"github.com/deis/duffle/pkg/cmdline"
 	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/duffle/manifest"
 
 	"github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
@@ -22,8 +25,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	"golang.org/x/net/context"
 )
 
 const buildDesc = `
@@ -130,7 +131,6 @@ func (b *buildCmd) run() (err error) {
 	)
 	bldr.LogsDir = b.home.Logs()
 
-	// TODO - manifest is loaded twice
 	mfst, err := manifest.Load(filepath.Join(b.src, "duffle.toml"))
 	if err != nil {
 		return err
@@ -138,23 +138,23 @@ func (b *buildCmd) run() (err error) {
 
 	bldr.BundleBuilder, err = lookupBuilder(mfst.Builder, b)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot lookup builder: %v", err)
 	}
 
-	app, bf, err := bldr.BundleBuilder.PrepareBuild(bldr, b.src)
+	app, bf, err := bldr.BundleBuilder.PrepareBuild(bldr, mfst, b.src)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot prepare build: %v", err)
 	}
 
 	f, err := os.OpenFile("cnab/bundle.json", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot create or open bundle file: %v", err)
 	}
 
 	enc := json.NewEncoder(f)
 	enc.SetIndent("", "    ")
 	if err := enc.Encode(bf); err != nil {
-		return err
+		return fmt.Errorf("cannot write bundle file: %v", err)
 	}
 
 	cmdline.Display(ctx, app.Ctx.Manifest.Name, bldr.BundleBuilder.Build(ctx, app), cmdline.WithBuildID(bldr.ID))

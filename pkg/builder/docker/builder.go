@@ -15,7 +15,6 @@ import (
 
 	"github.com/deis/duffle/pkg/builder"
 	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/duffle"
 	"github.com/deis/duffle/pkg/duffle/manifest"
 	"github.com/deis/duffle/pkg/osutil"
 
@@ -61,9 +60,8 @@ type Builder struct {
 }
 
 // PrepareBuild prepares state carried across the various duffle stage boundaries.
-func (d Builder) PrepareBuild(bldr *builder.Builder, appDir string) (*builder.AppContext, *bundle.Bundle, error) {
-
-	ctx, err := loadContext(appDir)
+func (d Builder) PrepareBuild(bldr *builder.Builder, mfst *manifest.Manifest, appDir string) (*builder.AppContext, *bundle.Bundle, error) {
+	ctx, err := loadContext(appDir, mfst)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot load app context: %v", err)
 	}
@@ -146,15 +144,9 @@ func (d Builder) Build(ctx context.Context, app *builder.AppContext) chan *build
 	return ch
 }
 
-func loadContext(appDir string) (*builder.Context, error) {
+func loadContext(appDir string, mfst *manifest.Manifest) (*builder.Context, error) {
 	ctx := &builder.Context{AppDir: appDir}
-
-	tomlFilePath := filepath.Join(appDir, duffle.DuffleTomlFilepath)
-	mfst, err := manifest.Load(tomlFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal %s: %v", tomlFilePath, err)
-	}
-	ctx.Manifest = *mfst
+	ctx.Manifest = mfst
 
 	if err := loadArchive(ctx); err != nil {
 		return nil, fmt.Errorf("failed to load build contexts: %v", err)
