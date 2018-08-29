@@ -1,5 +1,7 @@
 # Duffle and CNAB
 
+This document describes the Cloud Native Application Bundle (CNAB) format, together with the Duffle reference implementation of a CNAB installer.
+
 1. [CNAB Specification](./100-CNAB.md)
     1. [The bundle.json File](101-bundle-json.md)
     2. [The Invocation Image Format](102-invocation-image.md)
@@ -9,4 +11,6 @@
 2. [Duffle](./200-CNAB.md): The CNAB package manager
     1. [Credential Sets](201-credentialset.md)
     2. [Drivers](202-drivers.md)
+    3. [Duffle Build](203-duffle-build.md)
+    4. [Duffle Repositories](204-repositories.md)
 

@@ -63,11 +63,11 @@ A full `bundle.json` looks like this:
 The `name` and `version` fields are used to identify the CNAB bundle. Both fields are required.
 
 - Name should be human-readable (TODO: Define allowed format)
-- Version MUST be a SemVer2 string
+- Version MUST be a [SemVer2](https://semver.org) string
 
 Fields that do not match this specification _should_ cause failures.
 
-*TODO:* `bundle.json` probably requires a few more top-level fields, such as something about who published it, and something about the license. A decision on this is deferred until after the PoC
+*TODO:* `bundle.json` probably requires a few more top-level fields, such as something about who published it, and something about the license, as well as a bundle api version. A decision on this is deferred until after the PoC
 
 ## Invocation Image
 
@@ -86,17 +86,11 @@ The `imageType` field is required, and must describe the format of the image. Th
 
 The `image` field must give a path-like or URI-like representation of the location of the image. The expectation is that an installer should be able to locate the image (given the image type) without additional information.
 
-*TODO:* There is no reason, in principle, why only one invocation image is allowed. It would be possible to allow multiple invocation images, each with a different image type, so that installers could select the driver most applicable.
-
 ## The Image List
 
-The `bundle.json` maps container metadata (name, repository, tag) to placeholders within the bundle. This allows images to be renamed, relabeled, or replaced during the CNAB bundle build operation. It also specifies the parameters that may be overridden in this image, giving tooling the ability to expose configuration options.
+The `bundle.json` maps image metadata (name, origin, tag) to placeholders within the bundle. This allows images to be renamed, relabeled, or replaced during the CNAB bundle build operation. It also specifies the parameters that may be overridden in this image, giving tooling the ability to expose configuration options.
 
-Supported substitution formats:
-
-- JSON
-- YAML
-- XML
+The following illustrates an `images` section:
 
 ```json
 { ​
@@ -134,6 +128,11 @@ Fields:
         - path: the path of the file where the value should be replaced
         - field:a selector specifying a location (or locations) within that file where the value should be replaced
 
+Substitutions _must_ be supported for the following formats:
+
+- JSON
+- YAML
+- XML
 
 ### Field Selectors
 
@@ -152,6 +151,8 @@ TODO: How do we specify URI is a VM image (or Jar or other) instead of a Docker-
 ## Parameters
 
 The `parameters` section of the `bundle.json` defines which parameters a user (person installing a CNAB bundle) may _override_. Parameter specifications are flat (not tree-like), consisting of name/value pairs. The name is fixed, but the value may be overridden by the user. The parameter definition includes a specification on how to constrain the values submitted by the user.
+
+> The parameters definition is a subset of the ARM template laguage.
 
 ```json
 "parameters": {
@@ -184,7 +185,7 @@ Parameter names (the keys in `parameters`) ought to conform to the [Open Group B
 
 For convenience, if lowercase characters are used in parameter names, they will be automatically capitalized. This effectively makes parameter names case-insensitive.
 
-> The term _parameters_ indicates this specification of what can be provided to a bundle. The term _values_ is frequently used to indicate the user-supplied values which are tested against the parameter definitions.
+> The term _parameters_ indicates the present specification of what can be provided to a bundle. The term _values_ is frequently used to indicate the user-supplied values which are tested against the parameter definitions.
 
 ### Format of Parameter Specification
 
@@ -234,3 +235,5 @@ A `bundle.json` may optionally contain a section that describes which credential
         - `env` contains _the name of an environment variable_ that the invocation image expects to have available when executing the CNAB `run` tool (covered in the next section).
 
 When _both a path and an env_ are specified, _only one is required_ (properties are disjunctive). To require two presentations of the same material, two separate entries must be made.
+
+Next section: [The invocation image definition](102-invocation-image.md)

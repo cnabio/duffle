@@ -2,21 +2,21 @@
 
 A _claim_ (or _claim receipt_) is a record of a CNAB installation. This document describes how the claim system works.
 
-Systems _may_ implement claims as an external storage mechanism. However, they _must_ inject information into an invocation image as explained in this document.
+CNAB implementations _may_ implement claims as an external storage mechanism. However, they _must_ inject information into an invocation image as explained in this document.
 
 ## Concepts of Package Management
 
-A _package_ is a discrete data chunk that can be moved from location to location, and can be unpacked and installed onto a system. All package managers provide some explicit definition of a package and a package format.
+A _package_ is a discrete data chunk that can be moved from location to location, and can be unpacked and installed onto a system. Typically, a package contains an application or application description. All package managers provide some explicit definition of a package and a package format.
 
-When a package is installed, the contents of a package are extracted and placed into the appropriate spaces on the target system. Thus we have an _installation_ (or _instance_) of the package.
+When a package is installed, the contents of a package are extracted and placed into the appropriate spaces on the target system, thus becoming an _installation_ (or _instance_) of the package.
 
 There are three core feature categories of a package manager system:
 
 - It can _install_ packages (initially put something onto a system)
 - It can _query_ installations (to see what is installed)
-- It can _upgrade_ and _delete_ packages (in other words, it can perform additional operations on an existing installation)
+- It can _upgrade_ and _delete_ packages (in other words, it can perform additional mutations on an existing installation)
 
-Package managers provide a wealth of other features, but those three are standard across all package managers. (For example, most package managers also provide a way to query what packages are available for installation.)
+Package managers provide a wealth of other features, but the above are standard across all package managers. (For example, most package managers also provide a way to query what packages are available for installation.)
 
 This proposal explains how CNAB records are generated such that continuity can be established across applications. In other words, this describes how CNAB bundles can be treated analogously to traditional packages.
 
@@ -34,7 +34,7 @@ https://cscope.sourceforge.io/
 From: https://github.com/Homebrew/homebrew-core/blob/master/Formula/cscope.rb
 ```
 
-CNAB does not define where or how records are stored, nor how these records may be used by an implementation. However, it does describe how a CNAB-based system must emit the record to an invocation image, and provides some guidance on maintaining integrity of the system.
+CNAB does not define where or how records are stored, nor how these records may be used by an implementation. However, it does describe how a CNAB-based system _must_ emit the record to an invocation image, and provides some guidance on maintaining integrity of the system.
 
 This is done so that implementors can standardize on a way of relating a release claim (the record of a release) to release operations like `install`, `upgrade`, or `delete`. This, in turn, is necessary if CNAB bundles are expected to be executable by different implementations.
 
@@ -48,7 +48,7 @@ The CNAB claim is defined as a JSON document.
 {
     "name": "galloping-pony",
     "revision": "01CN530TF9Q095VTRYP1M8797C",
-    "bundle": "technosophos.azurecr.io/cnab/example:0.1.0"
+    "bundle": "https://technosophos.azurecr.io/cnab/example-0.1.0/bundle.json"
     "created": "TIMESTAMP",
     "modified": "TIMESTAMP",
     "result": {
@@ -57,17 +57,17 @@ The CNAB claim is defined as a JSON document.
         "status": "success"
     },
     "parameters": {
-        "SOME_KEY": "SOME_VALUE"
+        "port": ":8080"
     }
 }
 ```
 
 - name: The name of the _installation_. This can be automatically generated, though humans may need to interact with it. It must be unique within the installation environment, though that constraint must be imposed externally. Elsewhere, this field is referenced as the _installation name_.
 - revision: An [ULID](https://github.com/ulid/spec) that must change each time the release is modified.
-- bundle: The bundle identifier (e.g. `technosophos.azurecr.io/cnab/example:0.1.0`). Typically, the bundle identifier is the location inside of a bundle repository where the bundle may be recovered
+- bundle: The bundle identifier (e.g. `https://technosophos.azurecr.io/cnab/example-0.1.0/bundle.json`). Typically, the bundle identifier is the location inside of a bundle repository where the `bundle.json` may be recovered
 - created: A timestamp indicating when this release claim was first created. This must not be changed after initial creation.
 - updated: A timestamp indicating the last time this release claim was modified
-- result: The outcome of the bundle's action (e.g. if action is install, this indicates the outcome of the installation.). It is an object with the following fields:
+- result: The outcome of the bundle's last action (e.g. if action is install, this indicates the outcome of the installation.). It is an object with the following fields:
     - message: A human-readable string that communicates the outcome. Error messages may be included in `failure` conditions.
     - action: Indicates the action that the current bundle is in. Valid actions are:
         - install
@@ -79,24 +79,26 @@ The CNAB claim is defined as a JSON document.
     - status: Indicates the status of the last phase transition. Valid statuses are:
         - success: completed successfully
         - failure: failed before completion
-        - underway: in progress. This should only be used if the invocation container must exit before it can determine whether all operations are complete. Note that underway is a _long term status_ that indicates that the installation's final state cannot be determined by the system. For this reason, it should be avoided.
-        - unknown: unknown
+        - underway: in progress. This should only be used if the invocation container must exit before it can determine whether all operations are complete. Note that `underway` is a _long term status_ that indicates that the installation's final state cannot be determined by the system. For this reason, it should be avoided.
+        - unknown: the state is unknown. This is an error condition.
 - parameters: Key/value pairs that were passed in during the operation. These are stored so that the operation can be re-run. Some implementations may choose not to store these for security or portability reasons.
+
+> Note that credential data is _never_ stored in a claim. For this reason, a claim is not considered _trivially repeatable_. Credentials must be re-supplied.
 
 TODO: What is the best timestamp format to use? Does JSON have a preference?
 
-### Why ULIDs?
+### ULIDs for Revisions
 
 ULIDs have two properties that are desirable:
 
 - High probability of [uniqueness](https://github.com/ulid/javascript)
 - Sortable by time. The first 48 bits contain a timestamp
 
-Compared to a monotonic increment, this has strong advantages when it cannot be assumed that only one actor will be acting upon the CNAB claim record. While other unique IDs are not meaningfully sortable, ULIDs are.
+Compared to a monotonic increment, this has strong advantages when it cannot be assumed that only one actor will be acting upon the CNAB claim record. While other unique IDs are not meaningfully sortable, ULIDs are. Thus, even unordered claim storage records can be sorted.
 
 ### Parameters
 
-The parameter data stored in a claim data is _the resolved key/value pairs_ that result from the following transformation"
+The parameter data stored in a claim data is _the resolved key/value pairs_ that result from the following transformation:
 
 - The values supplied by the user are validated by the rules specified in the `bundle.json` file
 - The output of this operation is a set of key/value pairs in which:
@@ -122,6 +124,8 @@ To satisfy these requirements, implementations of a CNAB package manager are exp
 
 ## Injecting Claim Data into an Invocation Image
 
+Complaint CNAB implementations _must_ conform to this section.
+
 The claim is produced outside of the CNAB package. The following claim data is injected
 into the invocation container at runtime:
 
@@ -130,7 +134,7 @@ into the invocation container at runtime:
 - `$CNAB_ACTION`: The action to be performed (install, upgrade, ...)
 - `$CNAB_REVISION`: The ULID for the present release revision. (On upgrade, this is the _new_ revision)
 
-> Credential data, which is also injected into the invocation image, is _not_ managed by the claim system.
+> Credential data, which is also injected into the invocation image, is _not_ managed by the claim system. Rules for injecting credentials are found in [the bundle runtime definition](103-bundle-runtime.md).
 
 The parameters passed in by the user are vetted against `parameters.json` outside of the container, and then injected into the container as environment variables of the form: `$CNAB_P_{parameterName.toUpper}="{parameterValue}"`.
 
@@ -150,9 +154,9 @@ kubectl create pod $CNAB_INSTALLATION_NAME > /dev/null
 echo "yay!"
 ```
 
-(Note that we are redirecting data to `/dev/null` just to make the example easier. A production CNAB bundle might choose to include more verbose output.)
+(Note that the above script redirects data to `/dev/null` just to make the example easier. A production CNAB bundle might choose to include more verbose output.)
 
-If both commands exit with 0, then the resulting claim will look like this:
+If both commands exit with code `0`, then the resulting claim will look like this:
 
 ```json
 {
@@ -173,9 +177,10 @@ If both commands exit with 0, then the resulting claim will look like this:
 }
 ```
 
-Tools that implement claims may then present result info to end users to show the result of running an invocation image.
+Tools that implement claims may then present `result` info to end users to show the result of running an invocation image.
 
 ## TODO
 
-- Define downgrade, or remove it
 - Define how action is determined, as this is beyond merely running an executable
+
+Next section: [signing and verifying bundles](105-signing.md)
