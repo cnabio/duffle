@@ -65,6 +65,7 @@ func (un *uninstallCmd) uninstall(credentialsFile string) error {
 		Driver: driverImpl,
 	}
 
+	fmt.Fprintf(un.out, "Executing uninstall action...")
 	if err := uninst.Run(&claim, creds); err != nil {
 		return fmt.Errorf("could not uninstall %q: %s", un.name, err)
 	}

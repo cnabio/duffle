@@ -95,7 +95,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 		return err
 	}
 	out, err := cmd.CombinedOutput()
-	fmt.Println(string(out))
+	fmt.Println("\n" + string(out) + "\n")
 	return err
 }
 
