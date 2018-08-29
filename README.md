@@ -14,4 +14,4 @@ $ duffle install foo -f examples/helloworld/cnab/bundle.json
 ```
 
 
-For more information, see the [docs](docs/).
+For more information, see the [docs](docs/000-index.md).

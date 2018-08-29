@@ -25,10 +25,9 @@ func newUninstallCmd(w io.Writer) *cobra.Command {
 	var credentialsFile string
 
 	cmd := &cobra.Command{
-		Use:          "uninstall",
-		Short:        usage,
-		Long:         usage,
-		SilenceUsage: true,
+		Use:   "uninstall",
+		Short: usage,
+		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("This command requires exactly 1 argument: the name of the installation to uninstall")

@@ -11,9 +11,10 @@ func newRootCmd(w io.Writer) *cobra.Command {
 	const usage = `The CNAB installer`
 
 	cmd := &cobra.Command{
-		Use:   "duffle",
-		Short: usage,
-		Long:  usage,
+		Use:          "duffle",
+		Short:        usage,
+		SilenceUsage: true,
+		Long:         usage,
 	}
 
 	p := cmd.PersistentFlags()

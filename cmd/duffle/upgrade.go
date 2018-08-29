@@ -25,10 +25,9 @@ func newUpgradeCmd(w io.Writer) *cobra.Command {
 	var credentialsFile string
 
 	cmd := &cobra.Command{
-		Use:          "upgrade",
-		Short:        upgradeUsage,
-		Long:         upgradeUsage,
-		SilenceUsage: true,
+		Use:   "upgrade",
+		Short: upgradeUsage,
+		Long:  upgradeUsage,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("This command requires exactly 1 argument: the name of the installation to upgrade")
