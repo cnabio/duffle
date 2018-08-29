@@ -45,6 +45,25 @@ func (s Store) Read(name string) (Claim, error) {
 	return claim, err
 }
 
+// ReadAll retrieves all the claims
+func (s Store) ReadAll() ([]Claim, error) {
+	claims := []Claim{}
+
+	list, err := s.backingStore.List()
+	if err != nil {
+		return claims, err
+	}
+
+	for _, c := range list {
+		cl, err := s.Read(c)
+		if err != nil {
+			return claims, err
+		}
+		claims = append(claims, cl)
+	}
+	return claims, nil
+}
+
 // Delete deletes a claim from the store.
 func (s Store) Delete(name string) error {
 	return s.backingStore.Delete(name)
