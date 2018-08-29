@@ -1,10 +1,10 @@
 package installer
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/osutil"
 )
 
 // LocalInstaller installs rigs from the filesystem
@@ -66,5 +66,5 @@ func (i *LocalInstaller) link(from string) error {
 	if err != nil {
 		return err
 	}
-	return osutil.SymlinkWithFallback(origin, dest)
+	return os.Symlink(origin, dest)
 }
