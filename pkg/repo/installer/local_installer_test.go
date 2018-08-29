@@ -33,7 +33,7 @@ func TestLocalInstaller(t *testing.T) {
 		t.Error(err)
 	}
 
-	expectedPath := home.Path("repositories", "duffle-bundles")
+	expectedPath := home.Path("repositories", "bundles.git")
 	if i.Path() != expectedPath {
 		t.Errorf("expected path '%s', got %q", expectedPath, i.Path())
 	}
