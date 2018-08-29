@@ -43,9 +43,6 @@ type Component struct {
 	BuildContext io.ReadCloser
 }
 
-var _ builder.Component = (*Component)(nil)
-var _ builder.BundleBuilder = (*Builder)(nil)
-
 // URI returns the image in the format <registry>/<image>
 func (dc Component) URI() string {
 	return dc.Image
