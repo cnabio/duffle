@@ -1,0 +1,18 @@
+name = "multi-component"
+
+[components]
+    [components.component-a]
+        name = "component-a"
+        builder = "docker"
+
+    [components.component-b]
+        name = "component-b"
+        builder = "docker"
+
+    [components.mock-builder]
+        name = "mock-builder"
+        builder = "mock"
+
+    [components.cnab]
+        name = "cnab"
+        builder = "docker"

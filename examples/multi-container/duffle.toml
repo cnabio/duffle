@@ -1,3 +1,0 @@
-name = "multi-container"
-registry = "radumatei"
-components = ["component-a", "component-b", "cnab"]
