@@ -16,12 +16,6 @@ import (
 	"github.com/deis/duffle/pkg/osutil"
 )
 
-// // ComponentBuilder defines how a bundle is built and pushed using the supplied app context.
-// type ComponentBuilder interface {
-// 	PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir string) (*AppContext, *bundle.Bundle, error)
-// 	Build(context.Context, *AppContext, chan *Summary) error
-// }
-
 // Builder defines how to interact with a bundle builder
 type Builder struct {
 	ID      string

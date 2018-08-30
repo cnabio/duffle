@@ -8,15 +8,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/deis/duffle/pkg/builder/mock"
-
-	"github.com/deis/duffle/pkg/cmdline"
-
-	"github.com/deis/duffle/pkg/duffle/manifest"
-
 	"github.com/deis/duffle/pkg/builder"
 	"github.com/deis/duffle/pkg/builder/docker"
+	"github.com/deis/duffle/pkg/builder/mock"
+	"github.com/deis/duffle/pkg/cmdline"
 	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/duffle/manifest"
 
 	"github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
