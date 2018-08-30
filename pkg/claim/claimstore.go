@@ -2,9 +2,13 @@ package claim
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/deis/duffle/pkg/utils/crud"
 )
+
+// ErrClaimNotFound represents a claim not found in claim storage
+var ErrClaimNotFound = errors.New(`Claim does not exist`)
 
 // Store is a persistent store for claims.
 type Store struct {
@@ -38,6 +42,9 @@ func (s Store) Store(claim Claim) error {
 func (s Store) Read(name string) (Claim, error) {
 	bytes, err := s.backingStore.Read(name)
 	if err != nil {
+		if err == crud.ErrFileDoesNotExist {
+			return Claim{}, ErrClaimNotFound
+		}
 		return Claim{}, err
 	}
 	claim := Claim{}

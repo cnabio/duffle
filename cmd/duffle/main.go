@@ -84,7 +84,6 @@ func isPathy(name string) bool {
 
 func must(err error) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "duffle: fatal: %v\n", err)
 		os.Exit(1)
 	}
 }

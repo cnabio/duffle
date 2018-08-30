@@ -2,8 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 
+	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/action"
@@ -34,8 +36,26 @@ reason, it may need the same credentials used to install.
 			claimName := args[0]
 			c, err := loadClaim(claimName)
 			if err != nil {
+				if err == claim.ErrClaimNotFound {
+					return fmt.Errorf("Bundle installation '%s' not found", claimName)
+				}
 				return err
 			}
+
+			//display information about the bundle installation
+			table := uitable.New()
+			table.MaxColWidth = 80
+			table.Wrap = true
+
+			table.AddRow("Installation Name:", c.Name)
+			table.AddRow("Installed at:", c.Created)
+			table.AddRow("Last Modified at:", c.Modified)
+			table.AddRow("Current Revision:", c.Revision)
+			table.AddRow("Bundle:", c.Bundle)
+			table.AddRow("Last Action Performed:", c.Result.Action)
+			table.AddRow("Last Action Status:", c.Result.Status)
+			table.AddRow("Last Action Message:", c.Result.Message)
+			fmt.Println(table)
 
 			creds, err := loadCredentials(credentialsFile)
 			if err != nil {
@@ -49,6 +69,7 @@ reason, it may need the same credentials used to install.
 
 			// TODO: Do we pass new values in here? Or just from Claim?
 			action := &action.Status{Driver: driverImpl}
+			fmt.Println("Executing status action in bundle...")
 			return action.Run(&c, creds)
 		},
 	}

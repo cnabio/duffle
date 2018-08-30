@@ -9,13 +9,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/loader"
-
 	"github.com/gosuri/uitable"
 	"github.com/renstrom/fuzzysearch/fuzzy"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
+	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/loader"
 )
 
 func newSearchCmd(w io.Writer) *cobra.Command {

@@ -149,6 +149,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 			inst := &action.Install{
 				Driver: driverImpl,
 			}
+			fmt.Println("Executing install action...")
 			err = inst.Run(c, creds)
 
 			// Even if the action fails, we want to store a claim. This is because
@@ -156,7 +157,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 			// created. So we want to suggest that the user take investigative action.
 			err2 := claimStorage().Store(*c)
 			if err != nil {
-				return err
+				return fmt.Errorf("Install step failed: %v", err)
 			}
 			return err2
 		},
