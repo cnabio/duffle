@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/deis/duffle/pkg/builder/mock"
+
 	"github.com/deis/duffle/pkg/cmdline"
 
 	"github.com/deis/duffle/pkg/duffle/manifest"
@@ -136,12 +138,12 @@ func (b *buildCmd) run() (err error) {
 		return err
 	}
 
-	bldr.BundleBuilder, err = lookupBuilder(mfst.Builder, b)
+	c, err := lookupComponents(mfst, b)
 	if err != nil {
-		return fmt.Errorf("cannot lookup builder: %v", err)
+		return fmt.Errorf("cannot lookup components: %v", err)
 	}
 
-	app, bf, err := bldr.BundleBuilder.PrepareBuild(bldr, mfst, b.src)
+	app, bf, err := bldr.PrepareBuild(bldr, mfst, b.src, c)
 	if err != nil {
 		return fmt.Errorf("cannot prepare build: %v", err)
 	}
@@ -157,32 +159,27 @@ func (b *buildCmd) run() (err error) {
 		return fmt.Errorf("cannot write bundle file: %v", err)
 	}
 
-	cmdline.Display(ctx, app.Ctx.Manifest.Name, bldr.BundleBuilder.Build(ctx, app), cmdline.WithBuildID(bldr.ID))
+	cmdline.Display(ctx, app.Ctx.Manifest.Name, bldr.Build(ctx, app), cmdline.WithBuildID(bldr.ID))
 	return nil
 }
 
-// lookupBuilder takes a builder name and returns an appropriate builder
-func lookupBuilder(b string, cmd *buildCmd) (builder.BundleBuilder, error) {
+// lookupComponent returns a builder component given its builder type
+func lookupComponents(mfst *manifest.Manifest, cmd *buildCmd) ([]builder.Component, error) {
 
-	var bb builder.BundleBuilder
+	var components []builder.Component
+	for _, c := range mfst.Components {
+		switch c.Builder {
+		case "docker":
+			// setup docker
+			cli := &command.DockerCli{}
+			if err := cli.Initialize(cmd.dockerClientOptions); err != nil {
+				return components, fmt.Errorf("failed to create docker client: %v", err)
+			}
+			components = append(components, docker.NewComponent(c, cli))
 
-	// setup docker
-	cli := &command.DockerCli{}
-	if err := cli.Initialize(cmd.dockerClientOptions); err != nil {
-		return bb, fmt.Errorf("failed to create docker client: %v", err)
-	}
-
-	switch b {
-
-	case "docker":
-		bb = docker.Builder{
-			DockerClient: cli,
-		}
-	default:
-		bb = docker.Builder{
-			DockerClient: cli,
+		case "mock":
+			components = append(components, mock.NewComponent(c))
 		}
 	}
-
-	return bb, nil
+	return components, nil
 }
