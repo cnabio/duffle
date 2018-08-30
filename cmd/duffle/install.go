@@ -68,12 +68,16 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
+			if len(args) < 1 {
+				return errors.New("This command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
+			}
+
 			if len(args) == 2 && bundleFile != "" {
 				return errors.New("please use either -f or specify a BUNDLE, but not both")
 			}
 
 			if len(args) < 2 && bundleFile == "" {
-				return errors.New("required arguments are NAME (name of the instllation) and BUNDLE (CNAB bundle name) or file")
+				return errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 			}
 
 			if len(args) == 2 {
