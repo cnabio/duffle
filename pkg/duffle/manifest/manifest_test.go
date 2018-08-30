@@ -7,7 +7,7 @@ import (
 
 func TestNew(t *testing.T) {
 	m := New()
-	expected := "&{manifest   []}"
+	expected := "&{manifest map[]}"
 	actual := fmt.Sprintf("%v", m)
 	if expected != actual {
 		t.Errorf("wanted %s, got %s", expected, actual)
