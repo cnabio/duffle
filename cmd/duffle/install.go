@@ -139,7 +139,10 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 
 			// Because this is an install, we create a new claim. For upgrades, we'd
 			// load the claim based on installationName
-			c := claim.New(installationName)
+			c, err := claim.New(installationName)
+			if err != nil {
+				return err
+			}
 			c.Bundle = bundle.InvocationImage.Image
 			c.ImageType = bundle.InvocationImage.ImageType
 			if valuesFile != "" {
