@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 
@@ -18,9 +19,9 @@ func New(bundleFile string) (Loader, error) {
 		return LocalLoader{source: bundleFile}, nil
 	}
 
-	_, err := url.ParseRequestURI(bundleFile)
-	if err != nil {
-		return nil, err
+	if _, err := url.ParseRequestURI(bundleFile); err != nil {
+		// The error emited by ParseRequestURI is icky.
+		return nil, fmt.Errorf("bundle %q not found", bundleFile)
 	}
 	return RemoteLoader{source: bundleFile}, nil
 }
