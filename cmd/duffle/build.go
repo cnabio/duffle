@@ -160,7 +160,7 @@ func (b *buildCmd) run() (err error) {
 	return nil
 }
 
-// lookupComponent returns a builder component given its builder type
+// lookupComponents returns a builder component given its builder type
 func lookupComponents(mfst *manifest.Manifest, cmd *buildCmd) ([]builder.Component, error) {
 
 	var components []builder.Component

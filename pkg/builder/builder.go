@@ -80,6 +80,8 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 	}
 
 	var wg sync.WaitGroup
+	mutex := &sync.Mutex{}
+
 	wg.Add(len(ctx.Components))
 	bf := &bundle.Bundle{Name: ctx.Manifest.Name}
 
@@ -92,7 +94,6 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 				fmt.Printf("ERROR: %v", err)
 			}
 
-			// TODO - concurrency in appending to a slice in a goroutine?
 			if c.Name() == "cnab" {
 				bf.InvocationImage = bundle.InvocationImage{
 					Image:     c.URI(),
@@ -101,7 +102,11 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 				bf.Version = strings.Split(c.URI(), ":")[1]
 				return
 			}
+
+			// synchronized access to bundle images across goroutines
+			mutex.Lock()
 			bf.Images = append(bf.Images, bundle.Image{Name: c.Name(), URI: c.URI()})
+			mutex.Unlock()
 		}(c)
 	}
 

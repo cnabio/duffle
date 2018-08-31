@@ -1,9 +1,9 @@
 {
     "name": "multi-component",
-    "version": "fc8c55773a9e7e07263e4563f54d4410cd3b22f2",
+    "version": "c9c7ead1be702d8fffc370701deb270c9607772c",
     "invocationImage": {
         "imageType": "docker",
-        "image": "multi-component-cnab:fc8c55773a9e7e07263e4563f54d4410cd3b22f2"
+        "image": "microsoft/multi-component-cnab:c9c7ead1be702d8fffc370701deb270c9607772c"
     },
     "images": [
         {
@@ -13,12 +13,12 @@
         },
         {
             "name": "component-b",
-            "uri": "multi-component-component-b:88323809e0e19b79064015bcd4e83e80b77be1af",
+            "uri": "microsoft/multi-component-component-b:88323809e0e19b79064015bcd4e83e80b77be1af",
             "refs": null
         },
         {
             "name": "component-a",
-            "uri": "multi-component-component-a:cb88a00e29e6c8ce42e18184735ed1ec2cede038",
+            "uri": "microsoft/multi-component-component-a:cb88a00e29e6c8ce42e18184735ed1ec2cede038",
             "refs": null
         }
     ],
