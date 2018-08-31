@@ -1,7 +1,9 @@
 package claim
 
 import (
+	"fmt"
 	"math/rand"
+	"regexp"
 	"time"
 
 	"github.com/oklog/ulid"
@@ -41,8 +43,16 @@ type Claim struct {
 	ImageType  string                 `json:"image_type"`
 }
 
+// ValidName is a regular expression that indicates whether a name is a valid claim name.
+var ValidName = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
+
 // New creates a new Claim initialized for an installation operation.
-func New(name string) *Claim {
+func New(name string) (*Claim, error) {
+
+	if !ValidName.MatchString(name) {
+		return nil, fmt.Errorf("illegal claim name %q. Claims must be [a-zA-Z0-9-_]+", name)
+	}
+
 	now := time.Now()
 	return &Claim{
 		Name:     name,
@@ -54,7 +64,7 @@ func New(name string) *Claim {
 			Status: StatusUnknown,
 		},
 		Parameters: map[string]interface{}{},
-	}
+	}, nil
 }
 
 // Update is a convenience for modifying the necessary fields on a Claim.

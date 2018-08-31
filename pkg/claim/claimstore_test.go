@@ -8,10 +8,12 @@ import (
 	"time"
 
 	"github.com/deis/duffle/pkg/utils/crud"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCanSaveReadAndDelete(t *testing.T) {
-	claim := New("foo")
+	claim, err := New("foo")
+	assert.NoError(t, err)
 	claim.Bundle = "foobundle"
 
 	tempDir, err := ioutil.TempDir("", "duffletest")
@@ -61,7 +63,9 @@ func TestCanSaveReadAndDelete(t *testing.T) {
 }
 
 func TestCanUpdate(t *testing.T) {
-	claim := New("foo")
+	claim, err := New("foo")
+	assert.NoError(t, err)
+
 	claim.Bundle = "foobundle"
 	rev := claim.Revision
 
