@@ -9,10 +9,15 @@ import (
 
 // Manifest represents a duffle.toml
 type Manifest struct {
-	Name       string   `toml:"name,omitempty"`
-	Registry   string   `toml:"registry,omitempty"`
-	Builder    string   `toml:"driver,omitempty"`
-	Components []string `toml:"components,omitempty"`
+	Name       string                `toml:"name,omitempty"`
+	Components map[string]*Component `toml:"components,omitempty"`
+}
+
+// Component represents a component of a CNAB bundle
+type Component struct {
+	Name          string            `toml:"name,omitempty"`
+	Builder       string            `toml:"builder,omitempty"`
+	Configuration map[string]string `toml:"configuration,omitempty"`
 }
 
 // New creates a new manifest with the Environments intialized.

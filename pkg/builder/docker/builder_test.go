@@ -9,13 +9,14 @@ import (
 )
 
 func TestArchiveSrc(t *testing.T) {
-	ctx, err := archiveSrc(filepath.Join("..", "..", "..", "tests", "testdata", "builder", "simple"), "")
+	c := &Component{}
+	err := archiveSrc(filepath.Join("..", "..", "..", "tests", "testdata", "builder", "simple"), c)
 	if err != nil {
 		t.Error(err)
 	}
-	defer ctx.BuildContext.Close()
+	defer c.BuildContext.Close()
 
-	buf, err := ioutil.ReadAll(ctx.BuildContext)
+	buf, err := ioutil.ReadAll(c.BuildContext)
 	if err != nil {
 		t.Error(err)
 	}
@@ -24,10 +25,6 @@ func TestArchiveSrc(t *testing.T) {
 	if len(buf) != 2048 {
 		t.Errorf("expected non-zero archive length, got %d", len(buf))
 	}
-}
-
-func TestBuilder_implBuilder(t *testing.T) {
-	var _ builder.BundleBuilder = (*Builder)(nil)
 }
 
 func TestComponent_implComponent(t *testing.T) {
