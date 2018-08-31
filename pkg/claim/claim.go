@@ -50,7 +50,7 @@ var ValidName = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
 func New(name string) (*Claim, error) {
 
 	if !ValidName.MatchString(name) {
-		return nil, fmt.Errorf("illegal claim name %q. Claims must be [a-zA-Z0-9-_]+", name)
+		return nil, fmt.Errorf("invalid name %q. Names must be [a-zA-Z0-9-_]+", name)
 	}
 
 	now := time.Now()
