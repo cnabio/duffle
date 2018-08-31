@@ -57,7 +57,7 @@ reason, it may need the same credentials used to install.
 			table.AddRow("Last Action Message:", c.Result.Message)
 			fmt.Println(table)
 
-			creds, err := loadCredentials(credentialsFile)
+			creds, err := loadCredentials(credentialsFile, c.Bundle)
 			if err != nil {
 				return err
 			}

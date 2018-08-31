@@ -72,7 +72,7 @@ func (un *uninstallCmd) uninstall(credentialsFile string) error {
 		return err
 	}
 
-	creds, err := loadCredentials(credentialsFile)
+	creds, err := loadCredentials(credentialsFile, claim.Bundle)
 	if err != nil {
 		return err
 	}

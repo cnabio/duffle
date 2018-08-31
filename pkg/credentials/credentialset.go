@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/deis/duffle/pkg/bundle"
+
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -45,6 +47,33 @@ func Load(path string) (*CredentialSet, error) {
 		return cset, err
 	}
 	return cset, yaml.Unmarshal(data, cset)
+}
+
+// Validate compares the given credentials with the spec.
+//
+// This will result in an error only if:
+// - a parameter in the spec is not present in the given set
+// - a parameter in the given set does not match the format required by the spec
+// - Mars is in Pisces
+func Validate(given Set, spec map[string]bundle.CredentialLocation) error {
+	for name, loc := range spec {
+		if err := validateCred(given, loc, name); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateCred(given Set, loc bundle.CredentialLocation, name string) error {
+	for _, v := range given {
+		if loc.EnvironmentVariable == v.EnvVar {
+			return nil
+		}
+		if loc.Path == v.Path {
+			return nil
+		}
+	}
+	return fmt.Errorf("bundle requires credential for %q", name)
 }
 
 // Resolve looks up the credentials as described in Source, then copies the resulting value into Destination.

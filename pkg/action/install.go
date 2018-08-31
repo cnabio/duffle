@@ -15,8 +15,9 @@ type Install struct {
 
 // Run performs an installation and updates the Claim accordingly
 func (i *Install) Run(c *claim.Claim, creds credentials.Set) error {
-	if !i.Driver.Handles(c.ImageType) {
-		return fmt.Errorf("driver does not handle image type %s", c.ImageType)
+	imageType := c.Bundle.InvocationImage.ImageType
+	if !i.Driver.Handles(imageType) {
+		return fmt.Errorf("driver does not handle image type %s", imageType)
 	}
 
 	op := opFromClaim(claim.ActionInstall, c, creds)
