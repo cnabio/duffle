@@ -67,27 +67,13 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		Short: "install a CNAB bundle",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			switch {
-			case len(args) < 1:
-				return errors.New("This command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
-			case len(args) == 2 && bundleFile != "":
-				return errors.New("please use either -f or specify a BUNDLE, but not both")
-			case len(args) < 2 && bundleFile == "":
-				return errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
-			case len(args) == 2:
-				var err error
-				bundleFile, err = findBundleJS(args[1], w)
-				if err != nil {
-					return err
-				}
-			}
-
-			l, err := loader.New(bundleFile)
+			bundleFile, err := bundleFileOrArg2(args, bundleFile, w)
 			if err != nil {
 				return err
 			}
+			installationName = args[0]
 
-			bundle, err = l.Load()
+			bundle, err = loadBundle(bundleFile)
 			if err != nil {
 				return err
 			}
@@ -144,6 +130,24 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 	cmd.Flags().StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	cmd.Flags().StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
 	return cmd
+}
+
+func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+	switch {
+	case len(args) < 1:
+		return "", errors.New("This command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
+	case len(args) == 2 && bundleFile != "":
+		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
+	case len(args) < 2 && bundleFile == "":
+		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
+	case len(args) == 2:
+		var err error
+		bundleFile, err = findBundleJS(args[1], w)
+		if err != nil {
+			return "", err
+		}
+	}
+	return bundleFile, nil
 }
 
 func validateImage(img bundle.InvocationImage) error {
@@ -233,4 +237,13 @@ func findBundleJS(bundleName string, w io.Writer) (string, error) {
 	}
 	fmt.Fprintf(w, "loaded %s from repository %s\n", filePath, repo)
 	return filePath, nil
+}
+
+func loadBundle(bundleFile string) (bundle.Bundle, error) {
+	l, err := loader.New(bundleFile)
+	if err != nil {
+		return bundle.Bundle{}, err
+	}
+
+	return l.Load()
 }
