@@ -67,56 +67,25 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		Short: "install a CNAB bundle",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			if len(args) < 1 {
+			switch {
+			case len(args) < 1:
 				return errors.New("This command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
-			}
-
-			if len(args) == 2 && bundleFile != "" {
+			case len(args) == 2 && bundleFile != "":
 				return errors.New("please use either -f or specify a BUNDLE, but not both")
-			}
-
-			if len(args) < 2 && bundleFile == "" {
+			case len(args) < 2 && bundleFile == "":
 				return errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
-			}
-
-			if len(args) == 2 {
-				// load bundleFile from a repository
-				bundleName := args[1]
-				relevantBundles := search([]string{bundleName})
-				switch len(relevantBundles) {
-				case 0:
-					return fmt.Errorf("no bundles with the name '%s' was found", bundleName)
-				case 1:
-					bundleName = relevantBundles[0]
-				default:
-					var match bool
-					// check if we have an exact match
-					for _, f := range relevantBundles {
-						if strings.Compare(f, bundleName) == 0 {
-							bundleName = f
-							match = true
-						}
-					}
-					if !match {
-						return fmt.Errorf("%d bundles with the name '%s' was found: %v", len(relevantBundles), bundleName, relevantBundles)
-					}
-				}
-				filePath, repo, err := getBundleFile(bundleName)
+			case len(args) == 2:
+				var err error
+				bundleFile, err = findBundleJS(args[1], w)
 				if err != nil {
 					return err
 				}
-				bundleFile = filePath
-
-				fmt.Fprintf(w, "loaded %s from repository %s\n", bundleFile, repo)
 			}
 
 			l, err := loader.New(bundleFile)
 			if err != nil {
 				return err
 			}
-
-			installationName = args[0]
 
 			bundle, err = l.Load()
 			if err != nil {
@@ -235,4 +204,33 @@ func getBundleFile(bundleName string) (string, string, error) {
 	}
 
 	return filepath.Join(home.Repositories(), repo, "bundles", fmt.Sprintf("%s.json", name)), repo, nil
+}
+
+// findBundleJS tries to find the JS file by search the repo index
+func findBundleJS(bundleName string, w io.Writer) (string, error) {
+	relevantBundles := search([]string{bundleName})
+	switch len(relevantBundles) {
+	case 0:
+		return bundleName, fmt.Errorf("no bundles with the name '%s' was found", bundleName)
+	case 1:
+		bundleName = relevantBundles[0]
+	default:
+		var match bool
+		// check if we have an exact match
+		for _, f := range relevantBundles {
+			if strings.Compare(f, bundleName) == 0 {
+				bundleName = f
+				match = true
+			}
+		}
+		if !match {
+			return bundleName, fmt.Errorf("%d bundles with the name '%s' were found: %v", len(relevantBundles), bundleName, relevantBundles)
+		}
+	}
+	filePath, repo, err := getBundleFile(bundleName)
+	if err != nil {
+		return "", err
+	}
+	fmt.Fprintf(w, "loaded %s from repository %s\n", filePath, repo)
+	return filePath, nil
 }
