@@ -11,7 +11,7 @@ function checkRequested(e, p) {
   const env = {
     CHECK_PAYLOAD: e.payload,
     CHECK_NAME: "MyService",
-    CHECK_TITLE: "Echo Test",
+    CHECK_TITLE: "Echo Testing",
   }
 
   // This will represent our build job. For us, it's just an empty thinger.
