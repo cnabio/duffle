@@ -15,7 +15,7 @@ function checkRequested(e, p) {
   }
 
   // This will represent our build job. For us, it's just an empty thinger.
-  const build = new Job("build", "alpine:3.7", ["sleep 60", "echo pls work bro"])
+  const build = new Job("build", "alpine:3.7", ["sleep 60", "echo hey"])
 
   // For convenience, we'll create three jobs: one for each GitHub Check
   // stage.
