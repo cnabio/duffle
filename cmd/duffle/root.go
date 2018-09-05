@@ -32,6 +32,7 @@ func newRootCmd(w io.Writer) *cobra.Command {
 	cmd.AddCommand(newStatusCmd(w))
 	cmd.AddCommand(newUninstallCmd(w))
 	cmd.AddCommand(newUpgradeCmd(w))
+	cmd.AddCommand(newCredentialsCmd(w))
 
 	return cmd
 }
