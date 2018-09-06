@@ -135,7 +135,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:22aa1b2fbbf1499d4761d45095c6b1f8c302f9905cd6a3c0df4ec4b4dfeca4c4"
+  digest = "1:4c46e320126b52e396741aa6286d73e42a64255d0b7f7cfeb51a3b7941ad801d"
   name = "github.com/docker/docker"
   packages = [
     "api",
@@ -235,6 +235,14 @@
   pruneopts = ""
   revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
   version = "v1.7.0"
+
+[[projects]]
+  digest = "1:b13707423743d41665fd23f0c36b2f37bb49c30e94adb813319c44188a51ba22"
+  name = "github.com/ghodss/yaml"
+  packages = ["."]
+  pruneopts = ""
+  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:6e73003ecd35f4487a5e88270d3ca0a81bc80dc88053ac7e4dcfec5fba30d918"
@@ -538,10 +546,10 @@
   revision = "fbb02b2291d28baffd63558aa44b4b56f178d650"
 
 [[projects]]
-  digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
+  digest = "1:f0620375dd1f6251d9973b5f2596228cc8042e887cd7f827e4220bc1ce8c30e2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  pruneopts = "UT"
+  pruneopts = ""
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
   version = "v2.2.1"
 
@@ -567,6 +575,7 @@
     "github.com/docker/docker/pkg/term",
     "github.com/docker/go-connections/tlsconfig",
     "github.com/fatih/color",
+    "github.com/ghodss/yaml",
     "github.com/gosuri/uitable",
     "github.com/oklog/ulid",
     "github.com/renstrom/fuzzysearch/fuzzy",
@@ -576,6 +585,7 @@
     "github.com/stretchr/testify/assert",
     "github.com/technosophos/moniker",
     "golang.org/x/net/context",
+    "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
