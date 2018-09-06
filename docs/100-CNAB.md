@@ -36,7 +36,7 @@ _Actions_ are sent to the `run` command via environment variable. Actions determ
 
 The key data required to bootstrap a CNAB bundle is contained in a `bundle.json` file, which provides name and version information, along with instructions on how to obtain and run the invocation image.
 
-### Key Terms:
+### Key Terms
 
 - Application: The functional unit composed by the components described in a bundle. This may be comprised of a mixture of cloud services, including containers, VMs, IaaS and PaaS definitions, and other services, as well as instructions for orchestrators and service frameworks.
 - Bundle: the collection of CNAB data and metadata necessary for installing an application on the designated cloud services.

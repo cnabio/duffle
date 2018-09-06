@@ -13,4 +13,3 @@ This document describes the Cloud Native Application Bundle (CNAB) format, toget
     2. [Drivers](202-drivers.md)
     3. [Duffle Build](203-duffle-build.md)
     4. [Duffle Repositories](204-repositories.md)
-

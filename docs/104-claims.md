@@ -48,7 +48,7 @@ The CNAB claim is defined as a JSON document.
 {
     "name": "galloping-pony",
     "revision": "01CN530TF9Q095VTRYP1M8797C",
-    "bundle": "https://technosophos.azurecr.io/cnab/example-0.1.0/bundle.json"
+    "bundle": "https://technosophos.azurecr.io/cnab/example-0.1.0/bundle.json",
     "created": "TIMESTAMP",
     "modified": "TIMESTAMP",
     "result": {
@@ -68,19 +68,19 @@ The CNAB claim is defined as a JSON document.
 - created: A timestamp indicating when this release claim was first created. This must not be changed after initial creation.
 - updated: A timestamp indicating the last time this release claim was modified
 - result: The outcome of the bundle's last action (e.g. if action is install, this indicates the outcome of the installation.). It is an object with the following fields:
-    - message: A human-readable string that communicates the outcome. Error messages may be included in `failure` conditions.
-    - action: Indicates the action that the current bundle is in. Valid actions are:
-        - install
-        - upgrade
-        - delete
-        - downgrade
-        - status
-        - unknown
-    - status: Indicates the status of the last phase transition. Valid statuses are:
-        - success: completed successfully
-        - failure: failed before completion
-        - underway: in progress. This should only be used if the invocation container must exit before it can determine whether all operations are complete. Note that `underway` is a _long term status_ that indicates that the installation's final state cannot be determined by the system. For this reason, it should be avoided.
-        - unknown: the state is unknown. This is an error condition.
+  - message: A human-readable string that communicates the outcome. Error messages may be included in `failure` conditions.
+  - action: Indicates the action that the current bundle is in. Valid actions are:
+    - install
+    - upgrade
+    - delete
+    - downgrade
+    - status
+    - unknown
+  - status: Indicates the status of the last phase transition. Valid statuses are:
+    - success: completed successfully
+    - failure: failed before completion
+    - underway: in progress. This should only be used if the invocation container must exit before it can determine whether all operations are complete. Note that `underway` is a _long term status_ that indicates that the installation's final state cannot be determined by the system. For this reason, it should be avoided.
+    - unknown: the state is unknown. This is an error condition.
 - parameters: Key/value pairs that were passed in during the operation. These are stored so that the operation can be re-run. Some implementations may choose not to store these for security or portability reasons.
 
 > Note that credential data is _never_ stored in a claim. For this reason, a claim is not considered _trivially repeatable_. Credentials must be re-supplied.
@@ -105,20 +105,19 @@ The parameter data stored in a claim data is _the resolved key/value pairs_ that
   - Valid user-supplied values are presented
   - Default values are supplied for all parameters where `defaultValue` is provided and no user-supplied value overrides this
 
-
-### How is the Claim Used?
+### How is the Claim Used
 
 The claim is used to inform any CNAB tooling about how to address a particular installation. For example, given the claim record, a package manager that implements CNAB should be able to:
 
 - List the _names_ of the installations, given a _bundle name_
 - Given an installation's _name_, return the _bundle info_ that is installed under that name
 - Given an installation _name_ and a _bundle_, generate a _bundle info_.
-    - This is accompanied by running the `install` path in the bundle
+  - This is accompanied by running the `install` path in the bundle
 - Given an installation's _name_, replace the _bundle info_ with updated _bundle info_, and update the revision with a new ULID, and the modified timestamp with the current time. This is an upgrade operation.
-    - This is accompanied by running the `upgrade` path in the bundle
+  - This is accompanied by running the `upgrade` path in the bundle
 - Given an installation's name, mark the claim as deleted.
-    - This is accompanied by running the `uninstall` path in the bundle
-    - XXX: Do we want to allow the implementing system to remove the claim from its database (e.g. helm delete --purge) or remain silent on this matter?
+  - This is accompanied by running the `uninstall` path in the bundle
+  - XXX: Do we want to allow the implementing system to remove the claim from its database (e.g. helm delete --purge) or remain silent on this matter?
 
 To satisfy these requirements, implementations of a CNAB package manager are expected to be able to store and retrieve state information. However, note that nothing in the CNAB specification tells _how or where_ this state information is to be stored. It is _not a requirement_ to store that state information inside of the invocation image. (In fact, this is discouraged.)
 

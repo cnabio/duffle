@@ -104,13 +104,13 @@ Plugin: The action is "install"
 Note that when it comes to execution order, it will be invoked as follows:
 
 - When Duffle loads, it will look for an internal driver named `foo`.
-    - If Duffle finds an internal driver named `foo` (which it won't), it will execute the internal version
-    - If Duffle does not find an internal driver named `foo`, it will create a stub command executor for `duffle-foo`.
+  - If Duffle finds an internal driver named `foo` (which it won't), it will execute the internal version
+  - If Duffle does not find an internal driver named `foo`, it will create a stub command executor for `duffle-foo`.
 - When Duffle determines what image type the `bundle.json`, it will run `duffle-foo --handles`.
-    - If the declared image type is not in the returned list, Duffle will return an error and quit.
+  - If the declared image type is not in the returned list, Duffle will return an error and quit.
 - When the operation is ready, Duffle will run `duffle-foo` and pipe the JSON data into `duffle-foo`'s standard input.
-    - if `duffle-foo` returns with an exit code > 1, Duffle will generate an error and exit
-    - if `duffle-foo` returns an exit code 0, Duffle will mark this as a successful operation
+  - if `duffle-foo` returns with an exit code > 1, Duffle will generate an error and exit
+  - if `duffle-foo` returns an exit code 0, Duffle will mark this as a successful operation
 
 ### Parameters and Credentials for Custom Drivers
 
