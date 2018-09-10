@@ -7,18 +7,18 @@ import (
 // ParameterDefinition defines a single parameter for a CNAB bundle
 type ParameterDefinition struct {
 	DataType      string            `json:"type"`
-	DefaultValue  interface{}       `json:"defaultValue"`
-	AllowedValues []interface{}     `json:"allowedValues"`
-	MinValue      *int              `json:"minValue"`
-	MaxValue      *int              `json:"maxValue"`
-	MinLength     *int              `json:"minLength"`
-	MaxLength     *int              `json:"maxLength"`
-	Metadata      ParameterMetadata `json:"metadata"`
+	DefaultValue  interface{}       `json:"defaultValue,omitempty"`
+	AllowedValues []interface{}     `json:"allowedValues,omitempty"`
+	MinValue      *int              `json:"minValue,omitempty"`
+	MaxValue      *int              `json:"maxValue,omitempty"`
+	MinLength     *int              `json:"minLength,omitempty"`
+	MaxLength     *int              `json:"maxLength,omitempty"`
+	Metadata      ParameterMetadata `json:"metadata,omitempty"`
 }
 
 // ParameterMetadata contains metadata for a parameter definition.
 type ParameterMetadata struct {
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
 }
 
 // ValidateParameterValue checks whether a value is valid as the value of
