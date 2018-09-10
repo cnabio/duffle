@@ -1,6 +1,7 @@
 BINDIR    := $(CURDIR)/bin
 GOFLAGS   :=
 LDFLAGS   := -w -s
+TESTFLAGS :=
 
 ifeq ($(OS),Windows_NT)
 	TARGET = duffle.exe
@@ -22,7 +23,7 @@ build:
 
 .PHONY: test
 test:
-	go test ./...
+	go test $(TESTFLAGS) ./...
 
 .PHONY: lint
 lint:
