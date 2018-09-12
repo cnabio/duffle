@@ -158,3 +158,6 @@ Note that because we have _clear signed_ the `bundle.json`, there is no longer a
 
 - Do we want to allow encrypted `bundle.json` files? This is actually trivially easy (it's another option on Open PGP)
 - There's a "chicken and egg" problem if we try to store the signed bundle.json inside of the CNAB invocation image. My preference is to always require the signed bundle to be external of the image. It's basically useless if it is inside the image anyway, because the image must be transmitted and extracted before the signature can be verified, which invalidates the verification step.
+- We need to specify this format for dense bundles
+
+Next section: [declarative images](106-declarative-images.md)
