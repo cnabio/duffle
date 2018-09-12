@@ -20,7 +20,7 @@ func New(bundleFile string) (Loader, error) {
 	}
 
 	if _, err := url.ParseRequestURI(bundleFile); err != nil {
-		// The error emited by ParseRequestURI is icky.
+		// The error emitted by ParseRequestURI is icky.
 		return nil, fmt.Errorf("bundle %q not found", bundleFile)
 	}
 	return RemoteLoader{source: bundleFile}, nil

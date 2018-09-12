@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/deis/duffle/pkg/utils/crud"
+
 	"github.com/stretchr/testify/assert"
 )
 

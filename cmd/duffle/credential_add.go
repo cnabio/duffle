@@ -17,7 +17,7 @@ import (
 const credentialAddDesc = `
 This command takes a path to a file, validates that the file contains a valid credential set, and adds the credential sets to duffle.
 
-It is also possible to pass in multiple paths to this command to convienently add multiple credential sets.
+It is also possible to pass in multiple paths to this command to conveniently add multiple credential sets.
 `
 
 type credentialAddCmd struct {
@@ -115,9 +115,6 @@ func copyCredentialSetFile(dest, path string) error {
 	}
 	defer to.Close()
 
-	if _, err = io.Copy(to, from); err != nil {
-		return err
-	}
-
-	return nil
+	_, err = io.Copy(to, from)
+	return err
 }
