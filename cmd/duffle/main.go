@@ -106,3 +106,10 @@ func prepareDriver(driverName string) (driver.Driver, error) {
 
 	return driverImpl, err
 }
+
+func verbosePrint(format string, args ...interface{}) {
+	if verbose {
+		format = fmt.Sprintf("[VERBOSE] %s\n", format)
+		fmt.Printf(format, args...)
+	}
+}

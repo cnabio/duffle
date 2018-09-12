@@ -6,7 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO
+var verbose bool
+
 func newRootCmd(w io.Writer) *cobra.Command {
 	const usage = `The CNAB installer`
 
@@ -19,6 +20,7 @@ func newRootCmd(w io.Writer) *cobra.Command {
 
 	p := cmd.PersistentFlags()
 	p.StringVar(&duffleHome, "home", defaultDuffleHome(), "location of your Duffle config. Overrides $DUFFLE_HOME")
+	p.BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
 
 	cmd.AddCommand(newBuildCmd(w))
 	cmd.AddCommand(newInitCmd(w))
