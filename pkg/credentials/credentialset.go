@@ -54,26 +54,28 @@ func Load(path string) (*CredentialSet, error) {
 // This will result in an error only if:
 // - a parameter in the spec is not present in the given set
 // - a parameter in the given set does not match the format required by the spec
-// - Mars is in Pisces
+//
+// It is allowed for spec to specify both an env var and a file. In such case, if
+// the givn set provides either, it will be considered valid.
 func Validate(given Set, spec map[string]bundle.CredentialLocation) error {
 	for name, loc := range spec {
-		if err := validateCred(given, loc, name); err != nil {
-			return err
+		if isValidCred(given, loc) {
+			return fmt.Errorf("bundle requires credential for %s", name)
 		}
 	}
 	return nil
 }
 
-func validateCred(given Set, loc bundle.CredentialLocation, name string) error {
+func isValidCred(given Set, loc bundle.CredentialLocation) bool {
 	for _, v := range given {
 		if loc.EnvironmentVariable == v.EnvVar {
-			return nil
+			return true
 		}
 		if loc.Path == v.Path {
-			return nil
+			return true
 		}
 	}
-	return fmt.Errorf("bundle requires credential for %q", name)
+	return false
 }
 
 // Resolve looks up the credentials as described in Source, then copies the resulting value into Destination.
