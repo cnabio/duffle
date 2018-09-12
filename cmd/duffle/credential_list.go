@@ -37,7 +37,7 @@ func (ls *credentialListCmd) run() error {
 	credentialPath := ls.home.Credentials()
 	creds := findCredentialSets(credentialPath)
 
-	for name, _ := range creds {
+	for name := range creds {
 		fmt.Fprintln(ls.out, name)
 	}
 	return nil

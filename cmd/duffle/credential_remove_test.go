@@ -77,8 +77,5 @@ func setupCredentialsDir(credentialsDir string) error {
 	}
 
 	dest = filepath.Join(credentialsDir, "another.yaml")
-	if err := copyCredentialSetFile(dest, "testdata/dufflehome/credentials/another.yaml"); err != nil {
-		return err
-	}
-	return nil
+	return copyCredentialSetFile(dest, "testdata/dufflehome/credentials/another.yaml")
 }

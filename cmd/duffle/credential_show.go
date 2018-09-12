@@ -29,6 +29,7 @@ func newCredentialShowCmd(w io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show [NAME]",
 		Short: "show credential set",
+		Long:  credentialShowDesc,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			show.home = home.Home(homePath())
 			show.name = args[0]

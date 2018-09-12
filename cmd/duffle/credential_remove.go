@@ -67,9 +67,5 @@ func (rm *credentialRemoveCmd) run() error {
 }
 
 func removeCredentialSet(path string) error {
-	if err := os.Remove(path); err != nil {
-		return err
-	}
-
-	return nil
+	return os.Remove(path)
 }
