@@ -142,7 +142,7 @@ func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, er
 		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
 		var err error
-		bundleFile, err = findBundleJS(args[1], w)
+		bundleFile, err = findBundleJSON(args[1], w)
 		if err != nil {
 			return "", err
 		}
@@ -210,8 +210,8 @@ func getBundleFile(bundleName string) (string, string, error) {
 	return filepath.Join(home.Repositories(), repo, "bundles", fmt.Sprintf("%s.json", name)), repo, nil
 }
 
-// findBundleJS tries to find the JS file by search the repo index
-func findBundleJS(bundleName string, w io.Writer) (string, error) {
+// findBundleJSON tries to find the JS file by search the repo index
+func findBundleJSON(bundleName string, w io.Writer) (string, error) {
 	relevantBundles := search([]string{bundleName})
 	switch len(relevantBundles) {
 	case 0:
