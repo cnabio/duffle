@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/utils/crud"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCanSaveReadAndDelete(t *testing.T) {

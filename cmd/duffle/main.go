@@ -7,10 +7,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/deis/duffle/pkg/bundle"
-
 	"github.com/spf13/cobra"
 
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/credentials"
 	"github.com/deis/duffle/pkg/driver"
