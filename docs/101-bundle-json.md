@@ -129,12 +129,12 @@ The following illustrates an `images` section:
 Fields:
 
 - images: The list of dependent images
-    - name: The image name
-    - URI: The image reference (REGISTRY/NAME:TAG). Note that _should_ be a CAS SHA, not a version tag as in the example above.
-    - digest: the cryptographically hashed digest of the image. The implementation of hash verification depends on image type.
-    - refs: An array listing the locations which refer to this image, and whose values should be replaced by the value specified in URI. Each entry contains the following properties:
-        - path: the path of the file where the value should be replaced
-        - field:a selector specifying a location (or locations) within that file where the value should be replaced
+  - name: The image name
+  - URI: The image reference (REGISTRY/NAME:TAG). Note that _should_ be a CAS SHA, not a version tag as in the example above.
+  - digest: the cryptographically hashed digest of the image. The implementation of hash verification depends on image type.
+  - refs: An array listing the locations which refer to this image, and whose values should be replaced by the value specified in URI. Each entry contains the following properties:
+    - path: the path of the file where the value should be replaced
+    - field:a selector specifying a location (or locations) within that file where the value should be replaced
 
 Substitutions _must_ be supported for the following formats:
 
@@ -177,7 +177,7 @@ The `parameters` section of the `bundle.json` defines which parameters a user (p
 ```
 
 - parameters: name/value pairs describing a user-overridable parameter
-  - <name>: The name of the parameter. In the example above, this is `backend_port`. This
+  - `<name>`: The name of the parameter. In the example above, this is `backend_port`. This
     is mapped to a value definition, which contains the following fields:
     - type: one of string, int, boolean
     - defaultValue: The default value (optional)
@@ -210,7 +210,7 @@ The structure of a parameters section looks like this:
         "minLength": <minimum-length-for-string-or-array>,
         "maxLength": <maximum-length-for-string-or-array-parameters>,
         "metadata": {
-            "description": "<description-of-the parameter>" 
+            "description": "<description-of-the parameter>"
         }
     }
 }
@@ -238,9 +238,9 @@ A `bundle.json` may optionally contain a section that describes which credential
 ```
 
 - The `credentials` container is a map of human-friendly credential names to a description of where the invocation image expects to find them.
-    - The name key must be human-readable
-        - `path` describes the _absolute path within the invocation image_ where the invocation image expects to find the credential
-        - `env` contains _the name of an environment variable_ that the invocation image expects to have available when executing the CNAB `run` tool (covered in the next section).
+  - The name key must be human-readable
+    - `path` describes the _absolute path within the invocation image_ where the invocation image expects to find the credential
+    - `env` contains _the name of an environment variable_ that the invocation image expects to have available when executing the CNAB `run` tool (covered in the next section).
 
 When _both a path and an env_ are specified, _only one is required_ (properties are disjunctive). To require two presentations of the same material, two separate entries must be made.
 

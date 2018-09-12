@@ -21,7 +21,7 @@ A frequently used tool for validating that a file has not been changed between t
 
 The OCI specification contains a [standard for representing digests](https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests). In its simplest case, it looks like this:
 
-```
+```text
 ALGO:DIGEST
 ```
 
@@ -31,7 +31,7 @@ Where `ALGO` is the name of the cryptographic hashing function (`sha512`, `md5`,
 
 For example:
 
-```
+```text
 sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b
 ```
 
@@ -88,7 +88,7 @@ The _package recipient_ (the consumer of the package) may then retrieve the publ
 
 An Open PGP signature follows [the format in Section 7 of the specification](https://tools.ietf.org/html/rfc4880#section-7):
 
-```
+```text
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA512
 
@@ -122,7 +122,7 @@ For example, here is a `bundle.json`:
 
 This is signed using the technique called _clear signing_ (OpenPGP, Section 7), which preserves the input along with the cryptographic signature:
 
-```
+```text
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA512
 

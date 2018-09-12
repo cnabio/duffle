@@ -76,7 +76,6 @@ CNAB includes a method for declaring user-facing parameters that can be changed 
 - During startup of the image, Duffle will inject each parameter as an environment variable, following the conversion method determined by CNAB:
   - The variable name will be: `CNAB_P_` plus the uppercased variable name (e.g. `CNAB_P_SERVER_PORT`), and the value will be a string representation of the value.
 
-
 ## The Invocation Image Lifecycle
 
 For operations that execute this installation image (install, upgrade, etc), this is the lifecycle:

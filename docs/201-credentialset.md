@@ -32,7 +32,7 @@ A *credential set* is a named set of credentials (or credential generators) that
 
 The `$HOME/.duffle/` directory is where user-specific Duffle configuration files are placed. Inside of this directory, Duffle stores credential information in its own subdirectory:
 
-```
+```bash
 $HOME/.duffle/
   |- credentials/
           |- production.yaml
