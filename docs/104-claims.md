@@ -46,27 +46,6 @@ The CNAB claim is defined as a JSON document.
 
 ```json
 {
-<<<<<<< HEAD
-    "name": "galloping-pony",
-    "revision": "01CN530TF9Q095VTRYP1M8797C",
-    "bundle": "https://technosophos.azurecr.io/cnab/example-0.1.0/bundle.json",
-    "created": "TIMESTAMP",
-    "modified": "TIMESTAMP",
-    "result": {
-        "message": "installed vote 0.1.0",
-        "action": "install",
-        "status": "success"
-||||||| merged common ancestors
-    "name": "galloping-pony",
-    "revision": "01CN530TF9Q095VTRYP1M8797C",
-    "bundle": "https://technosophos.azurecr.io/cnab/example-0.1.0/bundle.json"
-    "created": "TIMESTAMP",
-    "modified": "TIMESTAMP",
-    "result": {
-        "message": "installed vote 0.1.0",
-        "action": "install",
-        "status": "success"
-=======
   "name": "hellohelm",
   "revision": "01CP6XM0KVB9V1BQDZ9NK8VP29",
   "created": "2018-08-30T20:39:55.549002887-06:00",
@@ -77,7 +56,6 @@ The CNAB claim is defined as a JSON document.
     "invocationImage": {
       "imageType": "docker",
       "image": "technosophos/demo2:0.2.0"
->>>>>>> Update claim example with bundle
     },
     "images": [],
     "parameters": {},
