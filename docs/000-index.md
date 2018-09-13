@@ -9,7 +9,7 @@ This document describes the Cloud Native Application Bundle (CNAB) format, toget
     4. [The Claims System](104-claims.md)
     5. [Signing and Provenance](105-signing.md)
     6. [Declarative Invocation Images](106-declarative-images.md)
-2. [Duffle](./200-CNAB.md): The CNAB package manager
+2. [Duffle](./200-duffle.md): The CNAB package manager
     1. [Credential Sets](201-credentialset.md)
     2. [Drivers](202-drivers.md)
     3. [Duffle Build](203-duffle-build.md)
