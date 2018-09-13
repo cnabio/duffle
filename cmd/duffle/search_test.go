@@ -16,8 +16,8 @@ func TestSearch(t *testing.T) {
 	duffleHome = filepath.Join(cwd, "..", "..", "tests", "testdata", "home")
 
 	expectedBundleList := []string{
-		"foo",
 		"github.com/customorg/duffle-bundles/foo",
+		"github.com/deis/bundles.git/foo",
 	}
 
 	bundleList := search([]string{})

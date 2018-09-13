@@ -90,10 +90,7 @@ func findNames() []string {
 			repoName = strings.TrimSuffix(repoName, string(os.PathSeparator)+filepath.Join("bundles", f.Name()))
 			// for Windows clients, we need to replace the path separator with forward slashes
 			repoName = strings.Replace(repoName, "\\", "/", -1)
-			name := bundleName
-			if repoName != home.DefaultRepository() {
-				name = path.Join(repoName, bundleName)
-			}
+			name := path.Join(repoName, bundleName)
 			bundleNames = append(bundleNames, name)
 		}
 		return nil
