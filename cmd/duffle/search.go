@@ -3,104 +3,112 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
-	"path"
-	"path/filepath"
-	"sort"
-	"strings"
+	"net/http"
+	"net/url"
+
+	"github.com/deis/duffle/pkg/bundle"
 
 	"github.com/gosuri/uitable"
 	"github.com/renstrom/fuzzysearch/fuzzy"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/loader"
+	"github.com/deis/duffle/pkg/repo"
 )
 
 func newSearchCmd(w io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "search",
 		Short: "perform a fuzzy search on available bundles",
-		Run: func(cmd *cobra.Command, args []string) {
-			found := search(args)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			found, err := search(args)
+			if err != nil {
+				return err
+			}
 			table := uitable.New()
-			table.AddRow("NAME", "REPOSITORY", "VERSION")
+			table.AddRow("NAME", "VERSION")
 			for _, bundle := range found {
-				bundleFile, repo, err := getBundleFile(bundle)
-				if err != nil {
-					log.Debugf("bundle %s failed to load. skipping, %s", bundle, err)
-					continue
-				}
-
-				l, err := loader.New(bundleFile)
-				if err != nil {
-					log.Debugf("failed to determine the correct loader for %s: %v", bundleFile, err)
-					continue
-				}
-				bundle, err := l.Load()
-				if err != nil {
-					log.Debugf("failed to load %s: %v", bundleFile, err)
-					log.Debugln(err)
-					continue
-				}
-				table.AddRow(bundle.Name, repo, bundle.Version)
+				table.AddRow(bundle.Name, bundle.Version)
 			}
 			fmt.Fprintln(w, table)
+			return nil
 		},
 	}
+
 	return cmd
 }
 
-func search(keywords []string) []string {
-	var names = findNames()
-	var found = make(map[string]bool)
+func search(keywords []string) ([]*bundle.Bundle, error) {
+	home := home.Home(homePath())
+	foundBundles := []*bundle.Bundle{}
 	// if no keywords are given, display all available bundles
 	if len(keywords) == 0 {
-		for _, foundName := range names {
+		url := &url.URL{
+			Scheme: "https",
+			Host:   home.DefaultRepository(),
+			Path:   repo.IndexPath,
+		}
+		return searchRepo(url)
+	}
+	for _, keyword := range keywords {
+		url, err := getBundleRepoURL(keyword, home)
+		if err != nil {
+			return nil, err
+		}
+		url.Path = repo.IndexPath
+		resp, err := http.Get(url.String())
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("request to %s responded with a non-200 status code: %d", url.String(), resp.StatusCode)
+		}
+
+		index, err := repo.LoadIndexReader(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		var found = make(map[string]bool)
+		names := make([]string, 0, len(index.Entries))
+		for name := range index.Entries {
+			names = append(names, name)
+		}
+		for _, foundName := range fuzzy.Find(keyword, names) {
 			found[foundName] = true
 		}
-	} else {
-		for _, keyword := range keywords {
-			for _, foundName := range fuzzy.Find(keyword, names) {
-				found[foundName] = true
+		for n := range found {
+			for name := range index.Entries {
+				if n == name {
+					foundBundles = append(foundBundles, index.Entries[name][0])
+				}
 			}
 		}
 	}
-	foundNames := []string{}
-	for n := range found {
-		foundNames = append(foundNames, n)
+	return foundBundles, nil
+}
+
+func searchRepo(url *url.URL) ([]*bundle.Bundle, error) {
+	resp, err := http.Get(url.String())
+	if err != nil {
+		return nil, err
 	}
-	sort.Strings(foundNames)
-	return foundNames
-}
+	defer resp.Body.Close()
 
-func findNames() []string {
-	home := home.Home(homePath())
-	repoPath := home.Repositories()
-	var bundleNames []string
-	filepath.Walk(repoPath, func(p string, f os.FileInfo, err error) error {
-		if err != nil {
-			log.Errorln(err)
-			return nil
-		}
-		if isBundle(p, f) {
-			bundleName := strings.TrimSuffix(f.Name(), ".json")
-			repoName := strings.TrimPrefix(p, repoPath+string(os.PathSeparator))
-			repoName = strings.TrimSuffix(repoName, string(os.PathSeparator)+filepath.Join("bundles", f.Name()))
-			// for Windows clients, we need to replace the path separator with forward slashes
-			repoName = strings.Replace(repoName, "\\", "/", -1)
-			name := path.Join(repoName, bundleName)
-			bundleNames = append(bundleNames, name)
-		}
-		return nil
-	})
-	sort.Strings(bundleNames)
-	return bundleNames
-}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("request to %s responded with a non-200 status code: %d", url.String(), resp.StatusCode)
+	}
 
-func isBundle(filePath string, f os.FileInfo) bool {
-	return !f.IsDir() &&
-		strings.HasSuffix(f.Name(), ".json") &&
-		filepath.Base(filepath.Dir(filePath)) == "bundles"
+	index, err := repo.LoadIndexReader(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	bundles := make([]*bundle.Bundle, 0, len(index.Entries))
+	for _, entry := range index.Entries {
+		bundles = append(bundles, entry[0])
+	}
+	return bundles, nil
 }

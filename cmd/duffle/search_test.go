@@ -15,12 +15,20 @@ func TestSearch(t *testing.T) {
 	}
 	duffleHome = filepath.Join(cwd, "..", "..", "tests", "testdata", "home")
 
-	expectedBundleList := []string{
-		"github.com/customorg/duffle-bundles/foo",
-		"github.com/deis/bundles.git/foo",
+	if _, err := search([]string{}); err != nil {
+		t.Error(err)
 	}
 
-	bundleList := search([]string{})
+	expectedBundleList := []string{
+		"helloazure",
+		"helloworld",
+	}
+
+	bundleList, err := search([]string{"hello"})
+	if err != nil {
+		t.Error(err)
+	}
+
 	if !reflect.DeepEqual(bundleList, expectedBundleList) {
 		t.Errorf("expected bundle lists to be equal; got '%v', wanted '%v'", bundleList, expectedBundleList)
 	}

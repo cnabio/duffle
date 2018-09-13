@@ -2,7 +2,6 @@ package home
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 )
@@ -25,19 +24,19 @@ func (h Home) Path(elem ...string) string {
 	return filepath.Join(p...)
 }
 
+// Cache returns the path to the Duffle cache.
+func (h Home) Cache() string {
+	return h.Path("cache")
+}
+
 // Config returns the path to the Duffle config file.
 func (h Home) Config() string {
 	return h.Path("config.toml")
 }
 
-// Repositories returns the path to the Duffle repositories.
-func (h Home) Repositories() string {
-	return h.Path("repositories")
-}
-
 // DefaultRepository returns the name of the default repository.
 func (h Home) DefaultRepository() string {
-	return path.Join("github.com", "deis", "bundles.git")
+	return "hub.cnlabs.io"
 }
 
 // Logs returns the path to the Duffle logs.
