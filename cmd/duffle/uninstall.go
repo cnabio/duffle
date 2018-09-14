@@ -28,8 +28,8 @@ func newUninstallCmd(w io.Writer) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "uninstall",
-		Short: usage,
+		Use:   "uninstall [NAME]",
+		Short: "uninstall CNAB installation",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			uc.name = args[0]

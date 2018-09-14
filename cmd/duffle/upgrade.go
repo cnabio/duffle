@@ -25,8 +25,8 @@ func newUpgradeCmd(w io.Writer) *cobra.Command {
 	var credentialsFile string
 
 	cmd := &cobra.Command{
-		Use:   "upgrade",
-		Short: upgradeUsage,
+		Use:   "upgrade [NAME]",
+		Short: "upgrade CNAB installation",
 		Long:  upgradeUsage,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
