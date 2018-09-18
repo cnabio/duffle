@@ -1,35 +1,52 @@
-# Go
-# Build your Go application.
-# Add steps that test, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/vsts/pipelines/languages/go
-
-pool:
-  vmImage: 'Ubuntu 16.04'
-
-variables:
-  GOBIN:  '$(GOPATH)/bin' # Go binaries path
-  GOROOT: '/usr/local/go1.11' # Go installation path
-  GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
-  modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
-
-steps:
-- script: |
-    mkdir -p '$(GOBIN)'
-    mkdir -p '$(GOPATH)/pkg'
-    mkdir -p '$(modulePath)'
-    shopt -s extglob
-    mv !(gopath) '$(modulePath)'
-    echo '##vso[task.prependpath]$(GOBIN)'
-    echo '##vso[task.prependpath]$(GOROOT)/bin'
-  displayName: 'Set up the Go workspace'
-
-- script: |
-    go version
-    go get -v -t -d ./...
-    if [ -f Gopkg.toml ]; then
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-        dep ensure
-    fi
-    make bootstrap build test
-  workingDirectory: '$(modulePath)'
-  displayName: 'Get dependencies, build, test'
+jobs:
+- job: linux
+  displayName: Run on Linux
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  variables:
+    GOPATH: '$(system.defaultWorkingDirectory)'
+    modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)'
+  steps:
+  - script: |
+      apt update && apt install -yq git make
+      curl -fsSL https://raw.githubusercontent.com/fishworks/gofish/master/scripts/install.sh | bash
+      gofish init
+      gofish install dep
+      gofish install go
+    displayName: 'install dependencies'
+  - script: |
+      mkdir -p '$(modulePath)'
+      mv '$(system.defaultWorkingDirectory)/*' '$(modulePath)'
+    displayName: 'setup workspace'
+  - script: make build
+    workingDirectory: '$(modulePath)'
+    displayName: 'build'
+  - script: make test
+    workingDirectory: '$(modulePath)'
+    displayName: 'run unit tests'
+- job: windows
+  displayName: Run on Windows
+  pool:
+    vmImage: 'vs2017-win2016'
+  variables:
+    PATH: 'C:\ProgramData\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\'
+    GOPATH: '$(system.defaultWorkingDirectory)'
+    modulePath: '$(GOPATH)\src\github.com\$(build.repository.name)'
+  steps:
+  - powershell: |
+      choco install git make
+      iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/fishworks/gofish/master/scripts/install.ps1'))
+      gofish init
+      gofish install dep
+      gofish install go
+    displayName: 'install dependencies'
+  - script: |
+      mkdir '$(modulePath)'
+      mv '$(system.defaultWorkingDirectory)/*' '$(modulePath)'
+    displayName: 'setup workspace'
+  - powershell: make build
+    workingDirectory: '$(modulePath)'
+    displayName: 'build'
+  - powershell: make test
+    workingDirectory: '$(modulePath)'
+    displayName: 'run unit tests'
