@@ -6,19 +6,19 @@ import (
 
 // ParameterDefinition defines a single parameter for a CNAB bundle
 type ParameterDefinition struct {
-	DataType      string            `json:"type"`
-	DefaultValue  interface{}       `json:"defaultValue,omitempty"`
-	AllowedValues []interface{}     `json:"allowedValues,omitempty"`
-	MinValue      *int              `json:"minValue,omitempty"`
-	MaxValue      *int              `json:"maxValue,omitempty"`
-	MinLength     *int              `json:"minLength,omitempty"`
-	MaxLength     *int              `json:"maxLength,omitempty"`
-	Metadata      ParameterMetadata `json:"metadata,omitempty"`
+	DataType      string            `json:"type" toml:"type"`
+	DefaultValue  interface{}       `json:"defaultValue,omitempty" toml:"defaultValue,omitempty"`
+	AllowedValues []interface{}     `json:"allowedValues,omitempty" toml:"allowedValues,omitempty"`
+	MinValue      *int              `json:"minValue,omitempty" toml:"minValue,omitempty"`
+	MaxValue      *int              `json:"maxValue,omitempty" toml:"maxValue,omitempty"`
+	MinLength     *int              `json:"minLength,omitempty" toml:"minLength,omitempty"`
+	MaxLength     *int              `json:"maxLength,omitempty" toml:"maxLength,omitempty"`
+	Metadata      ParameterMetadata `json:"metadata,omitempty" toml:"metadata,omitempty"`
 }
 
 // ParameterMetadata contains metadata for a parameter definition.
 type ParameterMetadata struct {
-	Description string `json:"description,omitempty"`
+	Description string `json:"description,omitempty" toml:"description,omitempty"`
 }
 
 // ValidateParameterValue checks whether a value is valid as the value of

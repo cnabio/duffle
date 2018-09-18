@@ -4,13 +4,17 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/deis/duffle/pkg/bundle"
+
 	"github.com/technosophos/moniker"
 )
 
 // Manifest represents a duffle.toml
 type Manifest struct {
-	Name       string                `toml:"name,omitempty"`
-	Components map[string]*Component `toml:"components,omitempty"`
+	Name        string                                `toml:"name,omitempty"`
+	Components  map[string]*Component                 `toml:"components,omitempty"`
+	Parameters  map[string]bundle.ParameterDefinition `toml:"parameters,omitempty"`
+	Credentials map[string]bundle.CredentialLocation  `toml:"credentials,omitempty"`
 }
 
 // Component represents a component of a CNAB bundle
