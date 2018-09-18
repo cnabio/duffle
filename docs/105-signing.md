@@ -10,7 +10,7 @@ This document outlines how CNAB bundles use a multi-layered fingerprinting and s
 - Digests are computed in accordance with the underlying image type (e.g. OCI bundles are validated by computing the top hash of a Merkle tree, VM images are computed by digest of the image)
 - Signed bundles are clear-signed `bundle.json` files according to the Open PGP specification. When present, these are used in lieu of the unsigned `bundle.json` file.
 - Authority is granted by the signed bundle, and integrity is granted via the image digests embedded in the bundle.json
-- Attestations provide a mechanism for making additional guarantees about a bundle. Attesting a bundle may indicate that a release has been certified, or passed tests, or manual checked. It is a method to add addition cryptographically based assurances to a bundle
+- Attestations provide a mechanism for making additional guarantees about a bundle. Attesting a bundle may indicate that a release has been certified, or passed tests, or manual checked. It is a method to add additional cryptographically based assurances to a bundle
 
 ## Image Integrity with Digests
 
