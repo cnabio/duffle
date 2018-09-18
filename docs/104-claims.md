@@ -46,25 +46,33 @@ The CNAB claim is defined as a JSON document.
 
 ```json
 {
-    "name": "galloping-pony",
-    "revision": "01CN530TF9Q095VTRYP1M8797C",
-    "bundle": "https://technosophos.azurecr.io/cnab/example-0.1.0/bundle.json",
-    "created": "TIMESTAMP",
-    "modified": "TIMESTAMP",
-    "result": {
-        "message": "installed vote 0.1.0",
-        "action": "install",
-        "status": "success"
+  "name": "hellohelm",
+  "revision": "01CP6XM0KVB9V1BQDZ9NK8VP29",
+  "created": "2018-08-30T20:39:55.549002887-06:00",
+  "modified": "2018-08-30T20:39:59.611068556-06:00",
+  "bundle": {
+    "name": "hellohelm",
+    "version": "0.1.0",
+    "invocationImage": {
+      "imageType": "docker",
+      "image": "technosophos/demo2:0.2.0"
     },
-    "parameters": {
-        "port": ":8080"
-    }
+    "images": [],
+    "parameters": {},
+    "credentials": {}
+  },
+  "result": {
+    "message": "",
+    "action": "install",
+    "status": "success"
+  },
+  "parameters": {}
 }
 ```
 
 - name: The name of the _installation_. This can be automatically generated, though humans may need to interact with it. It must be unique within the installation environment, though that constraint must be imposed externally. Elsewhere, this field is referenced as the _installation name_.
 - revision: An [ULID](https://github.com/ulid/spec) that must change each time the release is modified.
-- bundle: The bundle identifier (e.g. `https://technosophos.azurecr.io/cnab/example-0.1.0/bundle.json`). Typically, the bundle identifier is the location inside of a bundle repository where the `bundle.json` may be recovered
+- bundle: The bundle, as defined in [the Bundle Definition](101-bundle-json.md)
 - created: A timestamp indicating when this release claim was first created. This must not be changed after initial creation.
 - updated: A timestamp indicating the last time this release claim was modified
 - result: The outcome of the bundle's last action (e.g. if action is install, this indicates the outcome of the installation.). It is an object with the following fields:

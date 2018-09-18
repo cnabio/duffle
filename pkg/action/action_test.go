@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/credentials"
 	"github.com/deis/duffle/pkg/driver"
@@ -34,6 +35,15 @@ func (d *mockFailingDriver) Run(op *driver.Operation) error {
 	return errors.New("I always fail")
 }
 
+func mockBundle() *bundle.Bundle {
+	return &bundle.Bundle{
+		Name:            "bar",
+		Version:         "0.1.0",
+		InvocationImage: bundle.InvocationImage{Image: "foo/bar:0.1.0", ImageType: "docker"},
+	}
+
+}
+
 func TestOpFromClaim(t *testing.T) {
 	now := time.Now()
 	c := &claim.Claim{
@@ -41,9 +51,8 @@ func TestOpFromClaim(t *testing.T) {
 		Modified:   now,
 		Name:       "name",
 		Revision:   "revision",
-		Bundle:     "foo/bar:0.1.0",
+		Bundle:     mockBundle(),
 		Parameters: map[string]interface{}{"duff": "beer"},
-		ImageType:  driver.ImageTypeDocker,
 	}
 
 	op := opFromClaim(claim.ActionInstall, c, mockSet)
@@ -52,7 +61,7 @@ func TestOpFromClaim(t *testing.T) {
 
 	is.Equal(c.Name, op.Installation)
 	is.Equal(c.Revision, op.Revision)
-	is.Equal(c.Bundle, op.Image)
+	is.Equal(c.Bundle.InvocationImage.Image, op.Image)
 	is.Equal(driver.ImageTypeDocker, op.ImageType)
 	is.Equal(op.Environment["SECRET_ONE"], "I'm a secret")
 	is.Equal(op.Files["secret_two"], "I'm also a secret")

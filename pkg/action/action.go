@@ -28,8 +28,8 @@ func opFromClaim(action string, c *claim.Claim, creds credentials.Set) *driver.O
 		Action:       action,
 		Installation: c.Name,
 		Parameters:   c.Parameters,
-		Image:        c.Bundle,
-		ImageType:    c.ImageType,
+		Image:        c.Bundle.InvocationImage.Image,
+		ImageType:    c.Bundle.InvocationImage.ImageType,
 		Revision:     c.Revision,
 		Environment:  conflateEnv(action, c, env),
 		Files:        files,
@@ -41,7 +41,8 @@ func opFromClaim(action string, c *claim.Claim, creds credentials.Set) *driver.O
 func conflateEnv(action string, c *claim.Claim, env map[string]string) map[string]string {
 	env["CNAB_INSTALLATION_NAME"] = c.Name
 	env["CNAB_ACTION"] = action
-	env["CNAB_BUNDLE_NAME"] = c.Bundle
+	env["CNAB_BUNDLE_NAME"] = c.Bundle.Name
+	env["CNAB_BUNDLE_VERSION"] = c.Bundle.Version
 
 	for k, v := range c.Parameters {
 		// TODO: Vet against bundle's parameters.json

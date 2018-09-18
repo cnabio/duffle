@@ -11,6 +11,13 @@ import (
 )
 
 const upgradeUsage = `This command will perform the upgrade action in the CNAB bundle`
+const upgradeLong = `Upgrade an existing app to a newer version.
+
+An upgrade can do the following:
+
+	- Upgrade a current release to a newer bundle (optionally with parameters)
+	- Upgrade a current release using the same bundle but different parameters
+`
 
 var upgradeDriver string
 
@@ -25,9 +32,9 @@ func newUpgradeCmd(w io.Writer) *cobra.Command {
 	var credentialsFile string
 
 	cmd := &cobra.Command{
-		Use:   "upgrade [NAME]",
-		Short: "upgrade CNAB installation",
-		Long:  upgradeUsage,
+		Use:   "upgrade NAME [BUNDLE]",
+		Short: upgradeUsage,
+		Long:  upgradeLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("This command requires exactly 1 argument: the name of the installation to upgrade")
@@ -55,8 +62,8 @@ func (up *upgradeCmd) upgrade(credentialsFile string) error {
 	if err != nil {
 		return err
 	}
-
-	creds, err := loadCredentials(credentialsFile)
+	// FIXME: This needs the version of creds in the new bundle.
+	creds, err := loadCredentials(credentialsFile, claim.Bundle)
 	if err != nil {
 		return err
 	}

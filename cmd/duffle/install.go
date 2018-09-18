@@ -87,7 +87,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 				return err
 			}
 
-			creds, err := loadCredentials(credentialsFile)
+			creds, err := loadCredentials(credentialsFile, &bundle)
 			if err != nil {
 				return err
 			}
@@ -98,8 +98,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 			if err != nil {
 				return err
 			}
-			c.Bundle = bundle.InvocationImage.Image
-			c.ImageType = bundle.InvocationImage.ImageType
+			c.Bundle = &bundle
 			if valuesFile != "" {
 				vals, err := parseValues(valuesFile)
 				if err != nil {

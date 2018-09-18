@@ -16,7 +16,7 @@ func TestUninstall_Run(t *testing.T) {
 		Modified:   time.Time{},
 		Name:       "name",
 		Revision:   "revision",
-		Bundle:     "fake/bundle:0.1.0",
+		Bundle:     mockBundle(),
 		Parameters: map[string]interface{}{},
 	}
 

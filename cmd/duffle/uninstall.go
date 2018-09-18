@@ -63,8 +63,7 @@ func (un *uninstallCmd) uninstall(credentialsFile string) error {
 		if err != nil {
 			return err
 		}
-		claim.Bundle = b.InvocationImage.Image
-		claim.ImageType = b.InvocationImage.ImageType
+		claim.Bundle = &b
 	}
 
 	driverImpl, err := prepareDriver(uninstallDriver)
@@ -72,7 +71,7 @@ func (un *uninstallCmd) uninstall(credentialsFile string) error {
 		return err
 	}
 
-	creds, err := loadCredentials(credentialsFile)
+	creds, err := loadCredentials(credentialsFile, claim.Bundle)
 	if err != nil {
 		return err
 	}
