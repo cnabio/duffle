@@ -15,6 +15,7 @@ import (
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
@@ -67,7 +68,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		Short: "install a CNAB bundle",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bundleFile, err := bundleFileOrArg2(args, bundleFile, w)
+			bundleFile, err := bundleFileOrArg2(args, bundleFile)
 			if err != nil {
 				return err
 			}
@@ -131,7 +132,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 	return cmd
 }
 
-func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+func bundleFileOrArg2(args []string, bundleFile string) (string, error) {
 	switch {
 	case len(args) < 1:
 		return "", errors.New("This command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
@@ -141,7 +142,7 @@ func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, er
 		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
 		var err error
-		bundleFile, err = findBundleJSON(args[1], w)
+		bundleFile, err = findBundleJSON(args[1])
 		if err != nil {
 			return "", err
 		}
@@ -209,8 +210,8 @@ func getBundleFile(bundleName string) (string, string, error) {
 	return filepath.Join(home.Repositories(), repo, "bundles", fmt.Sprintf("%s.json", name)), repo, nil
 }
 
-// findBundleJSON tries to find the JS file by search the repo index
-func findBundleJSON(bundleName string, w io.Writer) (string, error) {
+// findBundleJSON tries to find the JS file by searching the repo index
+func findBundleJSON(bundleName string) (string, error) {
 	relevantBundles := search([]string{bundleName})
 	switch len(relevantBundles) {
 	case 0:
@@ -234,7 +235,7 @@ func findBundleJSON(bundleName string, w io.Writer) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Fprintf(w, "loaded %s from repository %s\n", filePath, repo)
+	log.Debugf("loaded %s from repository %s\n", filePath, repo)
 	return filePath, nil
 }
 

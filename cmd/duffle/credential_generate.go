@@ -38,7 +38,7 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 		Short:   "generate a credentialset from a bundle",
 		Long:    credentialGenerateHelp,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bf, err := bundleFileOrArg2(args, bundleFile, out)
+			bf, err := bundleFileOrArg2(args, bundleFile)
 			if err != nil {
 				return err
 			}
