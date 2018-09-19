@@ -4,16 +4,17 @@ import (
 	"testing"
 
 	"github.com/deis/duffle/pkg/bundle"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGenCredentialSet(t *testing.T) {
 	name := "zed"
 	credlocs := map[string]bundle.CredentialLocation{
-		"first": bundle.CredentialLocation{
+		"first": {
 			EnvironmentVariable: "FIRST_VAR",
 		},
-		"second": bundle.CredentialLocation{
+		"second": {
 			EnvironmentVariable: "SECOND_VAR",
 			Path:                "/second/path",
 		},
