@@ -4,7 +4,7 @@ jobs:
   pool:
     vmImage: 'Ubuntu 16.04'
   variables:
-    GOPATH: '$(system.defaultWorkingDirectory)'
+    GOPATH: '$(system.defaultWorkingDirectory)/gopath'
     modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)'
   steps:
   - script: |
@@ -30,7 +30,7 @@ jobs:
     vmImage: 'vs2017-win2016'
   variables:
     PATH: 'C:\ProgramData\bin;C:\ProgramData\Chocolatey\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\'
-    GOPATH: '$(system.defaultWorkingDirectory)'
+    GOPATH: '$(system.defaultWorkingDirectory)\gopath'
     modulePath: '$(GOPATH)\src\github.com\$(build.repository.name)'
   steps:
   - powershell: |
@@ -42,12 +42,13 @@ jobs:
       gofish install go
     displayName: 'install dependencies'
   - script: |
-      mkdir '$(modulePath)'
-      mv '$(system.defaultWorkingDirectory)/*' '$(modulePath)'
+      shopt -s extglob
+      mkdir -p '$(modulePath)'
+      mv !(gopath) '$(modulePath)'
     displayName: 'setup workspace'
-  - powershell: make build
+  - script: make build
     workingDirectory: '$(modulePath)'
     displayName: 'build'
-  - powershell: make test
+  - script: make test
     workingDirectory: '$(modulePath)'
     displayName: 'run unit tests'
