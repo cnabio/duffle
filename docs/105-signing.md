@@ -153,7 +153,7 @@ ANjudClHNUNQFojriAX8YAO4V2yGVg==
 -----END PGP SIGNATURE-----
 ```
 
-Note that because we have _clear signed_ the `bundle.json`, there is no longer any need to transmit the `bundle.json` separately from the signed bundle. In fact, due to encoding differences, it is _preferable to use the signed bundle in lieu of the unsigned bundle_.
+Note that because we have _clear signed_ the `bundle.json`, there is no longer any need to transmit the `bundle.json` separately from the signed bundle. In fact, due to encoding differences, it is _preferable to use the signed bundle in lieu of the unsigned bundle_. 
 
 ## Attestations
 
@@ -187,6 +187,13 @@ UkmNdIkOChvHv42XkWnF1t1Hyi51ig==
 =sQ9B
 -----END PGP SIGNATURE-----
 ```
+
+## Key Revocation and Expiration
+
+When public keys are expired or revoked, bundles signed with those keys become invalid.
+They must be re-signed with a valid key.
+
+CNAB verification tools _should_ handle the key revocation case.
 
 ## TODO
 
