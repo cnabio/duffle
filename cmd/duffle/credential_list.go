@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/credentials"
@@ -46,7 +47,7 @@ func (ls *credentialListCmd) run() error {
 func findCredentialSets(dir string) map[string]string {
 	creds := map[string]string{} // name: path
 
-	verbosePrint("Traversing credentials directory (%s) for credential sets", dir)
+	log.Debugf("Traversing credentials directory (%s) for credential sets", dir)
 
 	filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
 		if err != nil {
@@ -54,14 +55,14 @@ func findCredentialSets(dir string) map[string]string {
 		}
 
 		if !f.IsDir() {
-			verbosePrint("Loading credential set from %s", path)
+			log.Debugf("Loading credential set from %s", path)
 			credSet, err := credentials.Load(path)
 			if err != nil {
-				verbosePrint("Unable to load credential set from %s:\n%s", path, err)
+				log.Debugf("Unable to load credential set from %s:\n%s", path, err)
 				return nil
 			}
 
-			verbosePrint("Successfully loaded credential set %s from %s", credSet.Name, path)
+			log.Debugf("Successfully loaded credential set %s from %s", credSet.Name, path)
 			creds[credSet.Name] = path
 		}
 		return nil
