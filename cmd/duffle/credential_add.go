@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/credentials"
@@ -97,7 +98,7 @@ func addCredentialSet(dest, path string) error {
 	if err := copyCredentialSetFile(dest, path); err != nil {
 		return err
 	}
-	verbosePrint("Successfully added credential set: %s", cs.Name)
+	log.Debugf("Successfully added credential set: %s", cs.Name)
 	return nil
 }
 

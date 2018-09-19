@@ -7,7 +7,6 @@ import (
 	"runtime"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/bundle"
@@ -111,8 +110,4 @@ func prepareDriver(driverName string) (driver.Driver, error) {
 	}
 
 	return driverImpl, err
-}
-
-func verbosePrint(format string, args ...interface{}) {
-	log.Debugf(format, args...)
 }
