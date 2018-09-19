@@ -21,6 +21,11 @@ LDFLAGS  += -X github.com/deis/duffle/pkg/version.Version=$(VERSION)
 build:
 	go build $(GOFLAGS) -o $(BINDIR)/$(TARGET) -ldflags '$(LDFLAGS)' github.com/deis/duffle/cmd/...
 
+.PHONY: debug
+debug:
+	go build $(GOFLAGS) -o $(BINDIR)/$(TARGET) github.com/deis/duffle/cmd/...
+
+
 .PHONY: test
 test:
 	go test $(TESTFLAGS) ./...

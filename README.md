@@ -54,3 +54,6 @@ helloworld	github.com/deis/bundles.git	1.0
 ```
 $ duffle install foo -f examples/helloworld/cnab/bundle.json
 ```
+
+# Debugging using VS Code
+For instructions on using VS Code to debug the Duffle binary, see [the debugging document][docs/001-debugging.md].

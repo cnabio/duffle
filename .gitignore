@@ -2,5 +2,4 @@ bin/
 vendor/
 .vimrc
 *.exe
-.vscode/
 __pycache__/
