@@ -29,11 +29,12 @@ jobs:
   pool:
     vmImage: 'vs2017-win2016'
   variables:
-    PATH: 'C:\ProgramData\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\'
+    PATH: 'C:\ProgramData\bin;C:\ProgramData\Chocolatey\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\'
     GOPATH: '$(system.defaultWorkingDirectory)'
     modulePath: '$(GOPATH)\src\github.com\$(build.repository.name)'
   steps:
   - powershell: |
+      Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
       choco install git make
       iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/fishworks/gofish/master/scripts/install.ps1'))
       gofish init
