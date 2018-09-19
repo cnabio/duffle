@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/bundle"
@@ -113,8 +114,5 @@ func prepareDriver(driverName string) (driver.Driver, error) {
 }
 
 func verbosePrint(format string, args ...interface{}) {
-	if verbose {
-		format = fmt.Sprintf("[VERBOSE] %s\n", format)
-		fmt.Printf(format, args...)
-	}
+	log.Debugf(format, args...)
 }

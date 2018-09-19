@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +17,11 @@ func newRootCmd(w io.Writer) *cobra.Command {
 		Short:        usage,
 		SilenceUsage: true,
 		Long:         usage,
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			if verbose {
+				log.SetLevel(log.DebugLevel)
+			}
+		},
 	}
 
 	p := cmd.PersistentFlags()
