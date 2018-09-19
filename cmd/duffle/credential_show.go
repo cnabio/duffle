@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 
 	"github.com/ghodss/yaml"
@@ -58,21 +57,5 @@ func (sh *credentialShowCmd) run() error {
 }
 
 func findCredentialSet(dir, name string) (*credentials.CredentialSet, error) {
-	var cs *credentials.CredentialSet
-	filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !f.IsDir() {
-			credSet, err := credentials.Load(path)
-			if err != nil {
-				return err
-			}
-			cs = credSet
-			return nil
-		}
-		return nil
-	})
-	return cs, nil
+	return credentials.Load(filepath.Join(dir, fmt.Sprintf("%s.yaml", name)))
 }
