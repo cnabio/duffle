@@ -59,7 +59,7 @@ func Load(path string) (*CredentialSet, error) {
 // the givn set provides either, it will be considered valid.
 func Validate(given Set, spec map[string]bundle.CredentialLocation) error {
 	for name, loc := range spec {
-		if isValidCred(given, loc) {
+		if !isValidCred(given, loc) {
 			return fmt.Errorf("bundle requires credential for %s", name)
 		}
 	}
