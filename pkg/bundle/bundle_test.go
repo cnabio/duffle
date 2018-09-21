@@ -3,6 +3,8 @@ package bundle
 import (
 	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestReadTopLevelProperties(t *testing.T) {
@@ -89,4 +91,46 @@ func TestReadCredentialProperties(t *testing.T) {
 	if q.EnvironmentVariable != "equux" {
 		t.Errorf("Expected env 'equux', got '%s'", q.EnvironmentVariable)
 	}
+}
+
+func TestValuesOrDefaults(t *testing.T) {
+	is := assert.New(t)
+	vals := map[string]interface{}{
+		"port":    8080,
+		"host":    "localhost",
+		"enabled": true,
+	}
+	b := &Bundle{
+		Parameters: map[string]ParameterDefinition{
+			"port": {
+				DataType:     "int",
+				DefaultValue: 1234,
+			},
+			"host": {
+				DataType:     "string",
+				DefaultValue: "localhost.localdomain",
+			},
+			"enabled": {
+				DataType:     "bool",
+				DefaultValue: false,
+			},
+			"replicaCount": {
+				DataType:     "int",
+				DefaultValue: 3,
+			},
+		},
+	}
+
+	vod, err := ValuesOrDefaults(vals, b)
+
+	is.NoError(err)
+	is.True(vod["enabled"].(bool))
+	is.Equal(vod["host"].(string), "localhost")
+	is.Equal(vod["port"].(int), 8080)
+	is.Equal(vod["replicaCount"].(int), 3)
+
+	// This should err out because of type problem
+	vals["replicaCount"] = "banana"
+	_, err = ValuesOrDefaults(vals, b)
+	is.Error(err)
 }

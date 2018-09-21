@@ -57,9 +57,10 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		credentialsFile string
 		valuesFile      string
 		bundleFile      string
+		setParams       []string
 
 		installationName string
-		bundle           bundle.Bundle
+		bun              bundle.Bundle
 	)
 
 	cmd := &cobra.Command{
@@ -73,12 +74,12 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 			}
 			installationName = args[0]
 
-			bundle, err = loadBundle(bundleFile)
+			bun, err = loadBundle(bundleFile)
 			if err != nil {
 				return err
 			}
 
-			if err = validateImage(bundle.InvocationImage); err != nil {
+			if err = validateImage(bun.InvocationImage); err != nil {
 				return err
 			}
 
@@ -87,7 +88,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 				return err
 			}
 
-			creds, err := loadCredentials(credentialsFile, &bundle)
+			creds, err := loadCredentials(credentialsFile, &bun)
 			if err != nil {
 				return err
 			}
@@ -98,13 +99,11 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 			if err != nil {
 				return err
 			}
-			c.Bundle = &bundle
-			if valuesFile != "" {
-				vals, err := parseValues(valuesFile)
-				if err != nil {
-					return err
-				}
-				c.Parameters = vals
+
+			c.Bundle = &bun
+			c.Parameters, err = calculateParamValues(&bun, valuesFile, setParams)
+			if err != nil {
+				return err
 			}
 
 			inst := &action.Install{
@@ -124,10 +123,12 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		},
 	}
 
-	cmd.Flags().StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
-	cmd.Flags().StringVarP(&installDriver, "driver", "d", "docker", "Specify a driver name")
-	cmd.Flags().StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
-	cmd.Flags().StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
+	flags := cmd.Flags()
+	flags.StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
+	flags.StringVarP(&installDriver, "driver", "d", "docker", "Specify a driver name")
+	flags.StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
+	flags.StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
+	flags.StringArrayVarP(&setParams, "set", "s", []string{}, "set individual parameters as NAME=VALUE pairs")
 	return cmd
 }
 
@@ -163,6 +164,30 @@ func validateDockerish(s string) error {
 		return errors.New("version is required")
 	}
 	return nil
+}
+
+// overrides parses the --set data and returns values that should override other params.
+func overrides(overrides []string, paramDefs map[string]bundle.ParameterDefinition) (map[string]interface{}, error) {
+	res := map[string]interface{}{}
+	for _, p := range overrides {
+		pair := strings.SplitN(p, "=", 2)
+		if len(pair) != 2 {
+			// For now, I guess we skip cases where someone does --set foo or --set foo=
+			// We could set this to an explicit nil and then use it as a trigger to unset
+			// a parameter in the file.
+			continue
+		}
+		def, ok := paramDefs[pair[0]]
+		if !ok {
+			return res, fmt.Errorf("parameter %s not defined in bundle", pair[0])
+		}
+		var err error
+		res[pair[0]], err = def.ConvertValue(pair[1])
+		if err != nil {
+			return res, err
+		}
+	}
+	return res, nil
 }
 
 func parseValues(file string) (map[string]interface{}, error) {
@@ -245,4 +270,24 @@ func loadBundle(bundleFile string) (bundle.Bundle, error) {
 	}
 
 	return l.Load()
+}
+
+func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams []string) (map[string]interface{}, error) {
+	vals := map[string]interface{}{}
+	if valuesFile != "" {
+		var err error
+		vals, err = parseValues(valuesFile)
+		if err != nil {
+			return vals, err
+		}
+
+	}
+	overridden, err := overrides(setParams, bun.Parameters)
+	if err != nil {
+		return vals, err
+	}
+	for k, v := range overridden {
+		vals[k] = v
+	}
+	return bundle.ValuesOrDefaults(vals, bun)
 }
