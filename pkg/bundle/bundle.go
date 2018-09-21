@@ -51,3 +51,19 @@ type Bundle struct {
 	Parameters      map[string]ParameterDefinition `json:"parameters" toml:"parameters"`
 	Credentials     map[string]CredentialLocation  `json:"credentials" toml:"credentials"`
 }
+
+// ValuesOrDefaults returns parameter values or the default parameter values
+func ValuesOrDefaults(vals map[string]interface{}, b *Bundle) (map[string]interface{}, error) {
+	res := map[string]interface{}{}
+	for name, def := range b.Parameters {
+		if val, ok := vals[name]; ok {
+			if err := def.ValidateParameterValue(val); err != nil {
+				return res, err
+			}
+			res[name] = val
+			continue
+		}
+		res[name] = def.DefaultValue
+	}
+	return res, nil
+}

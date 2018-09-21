@@ -45,6 +45,7 @@ func newUpgradeCmd(w io.Writer) *cobra.Command {
 		},
 	}
 
+	// TODO: Don't we need to allow new parameters?
 	cmd.Flags().StringVarP(&upgradeDriver, "driver", "d", "docker", "Specify a driver name")
 	cmd.Flags().StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
 

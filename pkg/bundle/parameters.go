@@ -1,7 +1,10 @@
 package bundle
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 // ParameterDefinition defines a single parameter for a CNAB bundle
@@ -38,7 +41,26 @@ func (pd ParameterDefinition) ValidateParameterValue(value interface{}) error {
 	case "bool":
 		return pd.validateBoolParameterValue(value)
 	default:
-		return fmt.Errorf("Invalid parameter definition")
+		return fmt.Errorf("invalid parameter definition")
+	}
+}
+
+// ConvertValue tries to convert the given value to the definition's DataType
+//
+// It will return an error if it cannot be converted
+func (pd ParameterDefinition) ConvertValue(val string) (interface{}, error) {
+	switch pd.DataType {
+	case "string":
+		return val, nil
+	case "int":
+		return strconv.Atoi(val)
+	case "bool":
+		if strings.ToLower(val) == "true" {
+			return true, nil
+		}
+		return false, nil
+	default:
+		return nil, errors.New("invalid parameter definition")
 	}
 }
 
