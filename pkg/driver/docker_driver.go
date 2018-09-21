@@ -72,6 +72,12 @@ func (d *DockerDriver) exec(op *Operation) error {
 		args = append(args, "--volume", fmt.Sprintf("%s:%s", tmp, dir))
 	}
 
+	// TODO: For now, we mount the docker socket to alllow things like Compose
+	// to run inside of a CNAB bundle. This should be configurable.
+	// See https://github.com/docker/compose/blob/master/script/run/run.sh
+	// Also https://media.giphy.com/media/RIECDaCdxqKha/giphy.gif
+	args = append(args, "--volume", "/var/run/docker.sock:/var/run/docker.sock")
+
 	// TODO: Should we hard code in the call to run? This might actually make it possible
 	// for CNAB devs to create a default command that is perhaps user-oriented (like setting
 	// the default command to help text).
