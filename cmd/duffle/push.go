@@ -5,17 +5,16 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/spf13/cobra"
 )
 
 type pushCmd struct {
-	out  io.Writer
-	src  string
-	home home.Home
+	out        io.Writer
+	bundleFile string
+	repo       string
+	home       home.Home
 }
 
 func newPushCmd(out io.Writer) *cobra.Command {
@@ -28,34 +27,29 @@ func newPushCmd(out io.Writer) *cobra.Command {
 		Short: usage,
 		Long:  usage,
 		RunE: func(_ *cobra.Command, args []string) error {
-			if len(args) > 0 {
-				push.src = args[0]
-			}
 			push.home = home.Home(homePath())
 			return push.run()
 		},
 	}
 
+	cmd.Flags().StringVarP(&push.bundleFile, "file", "f", "", "bundle file to push")
+	cmd.Flags().StringVarP(&push.repo, "repo", "", "", "repo to push to")
+
 	return cmd
 }
 
 func (p *pushCmd) run() error {
-	bundlePath := filepath.Join(p.src, "cnab", "bundle.json")
-	b, err := loadBundle(bundlePath)
+	b, err := loadBundle(p.bundleFile)
 	if err != nil {
 		return err
 	}
 
-	bundleParts := strings.Split(b.Name, "/")
-	repo := bundleParts[0]
-	name := bundleParts[1]
-
 	// TODO - decide on the api here - bundles vs. repositories
 	//
 	// this is the case of a thin bundle, where only the bundle file is pushed
-	url := fmt.Sprintf("https://%s/bundles/%s.json", repo, name)
+	url := fmt.Sprintf("https://%s/bundles/%s.json", p.repo, b.Name)
 
-	body, err := os.Open(bundlePath)
+	body, err := os.Open(p.bundleFile)
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
 		return err
