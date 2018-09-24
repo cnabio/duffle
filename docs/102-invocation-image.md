@@ -70,7 +70,7 @@ The example above is simply intended to show how by reserving the `/cnab` direct
 
 The `bundle.json` file included inside of the CNAB image _must_ be identical to the version stored outside of the bundle. The `bundle.json` is require to make the image format portable.
 
-This format is defined in the previous [bundle.json definition](101-bundle-json).
+This format is defined in the previous [bundle.json definition](101-bundle-json.md).
 
 _Note:_ The `bundle.json` file that exists inside of the bundle is not a signed bundle, because signing requires calculating the hash of the `invocationImage`.
 
