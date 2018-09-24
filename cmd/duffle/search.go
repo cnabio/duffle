@@ -79,6 +79,14 @@ func search(keywords []string) ([]*bundle.Bundle, error) {
 		for _, foundName := range fuzzy.Find(keyword, names) {
 			found[foundName] = true
 		}
+		// also check if the latest version of each bundle has a matching keyword
+		for _, name := range names {
+			for _, bundleKeyword := range index.Entries[name][0].Keywords {
+				if bundleKeyword == keyword {
+					found[name] = true
+				}
+			}
+		}
 		for n := range found {
 			for name := range index.Entries {
 				if n == name {
