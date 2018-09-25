@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/ohai"
 
 	"github.com/spf13/cobra"
 )
@@ -48,34 +47,12 @@ func (i *initCmd) run() error {
 		home.String(),
 		home.Logs(),
 		home.Plugins(),
-		home.Repositories(),
+		home.Cache(),
 		home.Claims(),
 		home.Credentials(),
 	}
 
-	if err := i.ensureDirectories(dirs); err != nil {
-		return err
-	}
-	return i.ensureRepositories()
-}
-
-// ensureRepositories checks to see if the default repositories exists.
-//
-// If the repo does not exist, this function will create it.
-func (i *initCmd) ensureRepositories() error {
-	ohai.Fohailn(i.w, "Installing default repositories...")
-
-	// TODO: add repos here
-	addArgs := []string{"ssh://git@github.com/deis/bundles.git"}
-
-	repoCmd, _, err := rootCmd.Find([]string{"repo", "add"})
-	if err != nil {
-		return err
-	}
-	if i.dryRun {
-		return nil
-	}
-	return repoCmd.RunE(repoCmd, addArgs)
+	return i.ensureDirectories(dirs)
 }
 
 func (i *initCmd) ensureDirectories(dirs []string) error {

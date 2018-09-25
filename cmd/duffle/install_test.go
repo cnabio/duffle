@@ -20,20 +20,16 @@ func TestGetBundleFile(t *testing.T) {
 	duffleHome = filepath.Join(cwd, "..", "..", "tests", "testdata", "home")
 	testHome := home.Home(duffleHome)
 
-	filePath, repo, err := getBundleFile("foo")
+	filePath, err := getBundleFile("https://hub.cnlabs.io/helloazure:0.1.0")
 	if err != nil {
 		t.Error(err)
 	}
+	defer os.Remove(filePath)
 
-	expectedFilepath := filepath.Join(testHome.Repositories(), testHome.DefaultRepository(), "bundles", "foo.json")
-	expectedRepo := testHome.DefaultRepository()
+	expectedFilepath := filepath.Join(testHome.Cache(), "helloazure-0.1.0.json")
 
 	if filePath != expectedFilepath {
 		t.Errorf("got '%v', wanted '%v'", filePath, expectedFilepath)
-	}
-
-	if repo != expectedRepo {
-		t.Errorf("got '%v', wanted '%v'", repo, expectedRepo)
 	}
 }
 
