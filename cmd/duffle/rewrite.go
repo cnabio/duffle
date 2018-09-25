@@ -81,23 +81,26 @@ func validateArgs(args []string, bundleFile string) (string, error) {
 func tagImages(ctx context.Context, w io.Writer, rewriter rewriter.Rewriter, bun *bundle.Bundle, repo string) error {
 
 	fmt.Fprintln(w, "Retagging images...")
-	newInvocationImage, err := rewriter.ReplaceRepository(bun.InvocationImage.Image, repo)
-	if err != nil {
-		return err
+	for i, image := range bun.InvocationImages {
+		newInvocationImage, err := rewriter.ReplaceRepository(image.Image, repo)
+		if err != nil {
+			return err
+		}
+		err = rewriter.TagImage(ctx, image.Image, newInvocationImage)
+		if err != nil {
+			return fmt.Errorf("unable to tag invocation image: %s", err)
+		}
+		fmt.Fprintf(w, "retagged '%s' to '%s'\n", image.Image, newInvocationImage)
+		image.Image = newInvocationImage
+		bun.InvocationImages[i] = image
 	}
-	err = rewriter.TagImage(ctx, bun.InvocationImage.Image, newInvocationImage)
-	if err != nil {
-		return fmt.Errorf("unable to tag invocation image: %s", err)
-	}
-	fmt.Fprintf(w, "retagged '%s' to '%s'\n", bun.InvocationImage.Image, newInvocationImage)
-	bun.InvocationImage.Image = newInvocationImage
-	var newImage string
+
 	for i, image := range bun.Images {
-		newImage, err = rewriter.ReplaceRepository(image.URI, repo)
+		newImage, err := rewriter.ReplaceRepository(image.URI, repo)
 		if err != nil {
 			return fmt.Errorf("unable to update image %s: %s", image.URI, err)
 		}
-		err := rewriter.TagImage(ctx, image.URI, newImage)
+		err = rewriter.TagImage(ctx, image.URI, newImage)
 		if err != nil {
 			return fmt.Errorf("unable to retag image %s: %s", image.URI, err)
 		}

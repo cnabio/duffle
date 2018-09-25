@@ -201,7 +201,51 @@ Fields:
   - refs: An array listing the locations which refer to this image, and whose values should be replaced by the value specified in URI. Each entry contains the following properties:
     - path: the path of the file where the value should be replaced
     - field:a selector specifying a location (or locations) within that file where the value should be replaced
-    - template: optional field specify a replacement format, using format {{ .Repo }}, {{ .Image}} and {{ .Tag }} to identify portions of image. Can be combined, for example "{{ .Image}}:{{ .Tag }}
+    - template: optional field specify a replacement format, using format {{ .Repo }}, {{ .Image}} and {{ .Tag }} to identify portions of image. Can be combined. 
+
+For example, an image reference could be specified as a template with the following JSON:
+
+```json
+{ ​
+"images": [​
+        { ​
+            "name": "frontend",​
+            "uri": "gabrtv.azurecr.io/gabrtv/vote-frontend:a5ff67...",​
+            "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685",
+            "refs": [​
+                {​
+                    "path": "./charts/azure-voting-app/values.yaml",​
+                    "field": "AzureVoteFront.deployment.image"​,
+                    "template": "{{ .Repo}}/{{ .Image }}:{{ .Tag }}"
+                }​
+            ]​
+        }
+    ]
+}
+```
+
+If only the tag portion of a image was referenced, it could be specified with the following JSON:
+
+For example, an image reference could be specified as a template with the following JSON:
+
+```json
+{ ​
+"images": [​
+        { ​
+            "name": "frontend",​
+            "uri": "gabrtv.azurecr.io/gabrtv/vote-frontend:a5ff67...",​
+            "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685",
+            "refs": [​
+                {​
+                    "path": "./charts/azure-voting-app/values.yaml",​
+                    "field": "AzureVoteFront.deployment.tag"​,
+                    "template": "{{ .Tag }}"
+                }​
+            ]​
+        }
+    ]
+}
+```
 
 Substitutions _must_ be supported for the following formats:
 

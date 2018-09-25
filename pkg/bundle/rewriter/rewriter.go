@@ -50,7 +50,7 @@ func getReplacementValue(image string, value string, templateVal string) (string
 		}
 		return replacement.String(), nil
 	}
-	// This is the fallback behavior of no template is specified
+	// This is the fallback behavior if no template is specified
 	// If a tag is not present, just include the repo / image portion of the reference
 	r, err := getDockerReference(value)
 	if err != nil {
