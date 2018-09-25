@@ -58,8 +58,7 @@ func ValuesOrDefaults(vals map[string]interface{}, b *Bundle) (map[string]interf
 	res := map[string]interface{}{}
 	for name, def := range b.Parameters {
 		if val, ok := vals[name]; ok {
-			err := def.ValidateParameterValue(val)
-			if err != nil {
+			if err := def.ValidateParameterValue(val); err != nil {
 				return res, fmt.Errorf("can't use %v as value of %s: %s", val, name, err)
 			}
 			typedVal := def.CoerceValue(val)

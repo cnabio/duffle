@@ -27,8 +27,7 @@ type ParameterMetadata struct {
 // ValidateParameterValue checks whether a value is valid as the value of
 // the specified parameter.
 func (pd ParameterDefinition) ValidateParameterValue(value interface{}) error {
-	err := pd.validateByType(value)
-	if err != nil {
+	if err := pd.validateByType(value); err != nil {
 		return err
 	}
 
