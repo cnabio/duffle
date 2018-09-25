@@ -19,8 +19,9 @@ func Parse(text string) (Bundle, error) {
 
 // LocationRef specifies a location within the invocation package
 type LocationRef struct {
-	Path  string `json:"path" toml:"path"`
-	Field string `json:"field" toml:"field"`
+	Path     string `json:"path" toml:"path"`
+	Field    string `json:"field" toml:"field"`
+	Template string `json:"template,omitempty" toml:"template"`
 }
 
 // Image describes a container image in the bundle

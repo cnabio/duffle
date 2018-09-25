@@ -201,6 +201,7 @@ Fields:
   - refs: An array listing the locations which refer to this image, and whose values should be replaced by the value specified in URI. Each entry contains the following properties:
     - path: the path of the file where the value should be replaced
     - field:a selector specifying a location (or locations) within that file where the value should be replaced
+    - template: optional field specify a replacement format, using format {{ .Repo }}, {{ .Image}} and {{ .Tag }} to identify portions of image. Can be combined, for example "{{ .Image}}:{{ .Tag }}
 
 Substitutions _must_ be supported for the following formats:
 

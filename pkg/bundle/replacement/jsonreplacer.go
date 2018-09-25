@@ -53,3 +53,7 @@ func (m jsonDocMap) asInstance(value interface{}) (docmap, bool) {
 	}
 	return jsonDocMap{}, false
 }
+
+func (r jsonReplacer) Retrieve(source string, selector string) (string, error) {
+	return "", nil
+}

@@ -67,6 +67,10 @@ For thick images, it will load the images into the local registry.
 
 For thin images, it will (if necessary) pull the dependent images from a registry and load them into the local Docker/Moby daemon.
 
+## Rewriting repository references with `duffle rewrite`
+
+The `duffle rewrite` command will update image repository references within a bundle.
+
 ## Passing Parameters into the Invocation Image
 
 CNAB includes a method for declaring user-facing parameters that can be changed during certain operations (like installation). Parameters are specified in the `bundle.json` file. Duffle processes these as follows:
