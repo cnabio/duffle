@@ -69,7 +69,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 		if err := ioutil.WriteFile(localFile, []byte(content), 0755); err != nil {
 			fmt.Println(err)
 		}
-		args = append(args, "--volume", fmt.Sprintf("%s:%s", tmp, dir))
+		args = append(args, "--volume", fmt.Sprintf("%s:%s", localFile, fmt.Sprintf("%s/%s", dir, base)))
 	}
 
 	// TODO: For now, we mount the docker socket to alllow things like Compose
