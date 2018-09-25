@@ -68,7 +68,7 @@ The example above is simply intended to show how by reserving the `/cnab` direct
 
 ## The bundle.json File
 
-The `bundle.json` file included inside of the CNAB image _must_ be identical to the version stored outside of the bundle. The `bundle.json` is require to make the image format portable.
+The `bundle.json` file included inside of the CNAB image _must_ be identical to the version stored outside of the bundle. The `bundle.json` is required to make the image format portable.
 
 This format is defined in the previous [bundle.json definition](101-bundle-json.md).
 
@@ -136,6 +136,6 @@ echo "Action $action complete for $name"
 
 The run tool above is implemented as a shell script, and merely reacts to each given `CNAB_ACTION` by printing a message.
 
-The [The Bundle Runtime](103-bundle-runtime.md) describes how this tool is used.
+See [The Bundle Runtime](103-bundle-runtime.md) for a description on how this tool is used.
 
 Next section: [The Bundle Runtime](103-bundle-runtime.md)

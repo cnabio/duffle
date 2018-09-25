@@ -123,3 +123,5 @@ Credentials will be loaded and converted to their `destination` format.
 A driver MAY withhold some credentials from the underlying system it represents, but it MUST inform the user if doing so.
 
 A driver MUST NOT remove any of the parameters, and must inject them into the image in the format specified by the CNAB specification.
+
+Next Section: [duffle build](203-duffle-build.md)

@@ -78,7 +78,7 @@ CNAB includes a method for declaring user-facing parameters that can be changed 
 
 ## The Invocation Image Lifecycle
 
-For operations that execute this installation image (install, upgrade, etc), this is the lifecycle:
+For operations that execute this installation image (install, upgrade, etc.), this is the lifecycle:
 
 - Load the parameters and credential set definitions
 - Load the claim (if necessary)
@@ -100,9 +100,10 @@ The following items remain to be specified:
 - Whether Duffle will support multi-runtimes in a single image.
 
 | Method | Description |
+| --- | --- |
 | naive | A CNAB bundle can have only configurational runtime |
 | intentional | A CNAB bundle can expose toggle switches for which runtimes (e.g. Mesos vs Kubernetes), and user chooses |
 | automatic | A CNAB bundle may expose multiple runtimes, but automatically choose which applies to the current config |
 
-
+Next section: [credential set](201-credentialset.md)
 

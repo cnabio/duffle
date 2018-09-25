@@ -9,3 +9,5 @@ This section defines how Duffle interacts with repositories of CNAB bundles.
 - `duffle repo list` lists available repositories
 - `duffle repo remove` remotes a repository reference from the list of available repositories
 - `duffle repo update` updates the locally cached copy of the repository index
+
+Next Section: [repositories](204-repositories.md)

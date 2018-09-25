@@ -32,7 +32,7 @@ The core concept of CNAB is that a bundle is comprised of description file calle
 
 The invocation image contains a standardized filesystem layout where metadata and installation data is stored in predictable places. A _run_ script or tool contains top-layer instructions. Parameterization and credentialing allow injection of configuration data into the main image.
 
-_Actions_ are sent to the `run` command via environment variable. Actions determine whether a bundle is to be installed, upgraded, downgraded, uninstalled, or merely queried for status.
+_Actions_ are sent to the `run` command via environment variables. Actions determine whether a bundle is to be installed, upgraded, downgraded, uninstalled, or merely queried for status.
 
 The key data required to bootstrap a CNAB bundle is contained in a `bundle.json` file, which provides name and version information, along with instructions on how to obtain and run the invocation image.
 

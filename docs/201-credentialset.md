@@ -8,7 +8,7 @@ This document covers how credentials are passed into Duffle from the environment
 
 Consider the case where a CNAB bundle named `example/myapp:1.0.0` connects to both ARM (Azure IaaS API service) and Kubernetes. Each has its own API surface which is secured by a separate set of credentials. ARM requires a periodically expiring token managed via `az`. Kubernetes stores credentialing information in a `KUBECONFIG` YAML file.
 
-When the user runs `duffle run example/myapp:1.0.0`, the operations in the invocation image need to be executed with a specific set of credentials from the user.
+When the user runs `duffle install my_example example/myapp:1.0.0`, the operations in the invocation image need to be executed with a specific set of credentials from the user.
 
 Those values must be injected from `duffle` into the invocation image.
 
@@ -101,7 +101,7 @@ Note that both `env` and `path` can be specified, which will result in the data 
 Credential sets are specified when needed:
 
 ```console
-$ duffle run --credentials=staging example/myapp:1.0.0
+$ duffle install --credentials=staging my_example example/myapp:1.0.0
 > loading credentials from $HOME/.duffle/credentials/staging.yaml
 > running example/myapp:1.0.0
 ```
@@ -125,3 +125,5 @@ Other:
 - We might be able to put all credentials in one large YAML file. Credentials may include x509 certs or other large things
 - There is no way to specify in a CNAB bundle what credentials are required on the host system, other than by documentation. We might have to figure that out at some point
 - We don't address how a credential might be injected into a file on the image. The assumption is that such a thing would be scripted
+
+Next Section: [drivers](202-drivers.md)
