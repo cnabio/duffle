@@ -2,6 +2,7 @@ package bundle
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // ParseBuffer reads CNAB metadata out of a JSON byte stream
@@ -58,9 +59,10 @@ func ValuesOrDefaults(vals map[string]interface{}, b *Bundle) (map[string]interf
 	for name, def := range b.Parameters {
 		if val, ok := vals[name]; ok {
 			if err := def.ValidateParameterValue(val); err != nil {
-				return res, err
+				return res, fmt.Errorf("can't use %v as value of %s: %s", val, name, err)
 			}
-			res[name] = val
+			typedVal := def.CoerceValue(val)
+			res[name] = typedVal
 			continue
 		}
 		res[name] = def.DefaultValue

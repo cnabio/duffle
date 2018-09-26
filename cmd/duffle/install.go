@@ -184,7 +184,7 @@ func overrides(overrides []string, paramDefs map[string]bundle.ParameterDefiniti
 		var err error
 		res[pair[0]], err = def.ConvertValue(pair[1])
 		if err != nil {
-			return res, err
+			return res, fmt.Errorf("can't use %s as value of %s: %s", pair[1], pair[0], err)
 		}
 	}
 	return res, nil

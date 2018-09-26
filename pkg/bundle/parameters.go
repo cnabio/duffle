@@ -27,12 +27,14 @@ type ParameterMetadata struct {
 // ValidateParameterValue checks whether a value is valid as the value of
 // the specified parameter.
 func (pd ParameterDefinition) ValidateParameterValue(value interface{}) error {
-	if len(pd.AllowedValues) > 0 {
-		if !isInCollection(value, pd.AllowedValues) {
-			return fmt.Errorf("Value is not in the set of allowed values for this parameter")
-		}
+	if err := pd.validateByType(value); err != nil {
+		return err
 	}
 
+	return pd.validateAllowedValue(value)
+}
+
+func (pd ParameterDefinition) validateByType(value interface{}) error {
 	switch pd.DataType {
 	case "string":
 		return pd.validateStringParameterValue(value)
@@ -43,6 +45,55 @@ func (pd ParameterDefinition) ValidateParameterValue(value interface{}) error {
 	default:
 		return fmt.Errorf("invalid parameter definition")
 	}
+}
+
+func (pd ParameterDefinition) validateAllowedValue(value interface{}) error {
+	if len(pd.AllowedValues) > 0 {
+		val := pd.CoerceValue(value)
+		if !isInCollection(val, pd.allowedValues()) {
+			return fmt.Errorf("value is not in the set of allowed values for this parameter")
+		}
+	}
+	return nil
+}
+
+func (pd ParameterDefinition) allowedValues() []interface{} {
+	if pd.DataType == "int" {
+		return intify(pd.AllowedValues)
+	}
+	return pd.AllowedValues
+}
+
+// "Allowed value" numeric collections loaded from JSON will be materialised
+// by Go as float64.  We support only ints and so want to treat them as such.
+func intify(values []interface{}) []interface{} {
+	result := []interface{}{}
+	for _, v := range values {
+		f, ok := v.(float64)
+		if ok {
+			result = append(result, int(f))
+		} else {
+			result = append(result, v)
+		}
+	}
+	return result
+}
+
+// CoerceValue coerces the given value to the definition's DataType;
+// unlike ConvertValue, which performs string parsing, it assumes the
+// value is already of a suitable type (and validated)
+func (pd ParameterDefinition) CoerceValue(value interface{}) interface{} {
+	if pd.DataType == "int" {
+		f, ok := value.(float64)
+		if ok {
+			i, ok := asInt(f)
+			if !ok {
+				return f
+			}
+			return i
+		}
+	}
+	return value
 }
 
 // ConvertValue tries to convert the given value to the definition's DataType
@@ -57,8 +108,11 @@ func (pd ParameterDefinition) ConvertValue(val string) (interface{}, error) {
 	case "bool":
 		if strings.ToLower(val) == "true" {
 			return true, nil
+		} else if strings.ToLower(val) == "false" {
+			return false, nil
+		} else {
+			return false, fmt.Errorf("%s is not a valid boolean", val)
 		}
-		return false, nil
 	default:
 		return nil, errors.New("invalid parameter definition")
 	}
@@ -102,7 +156,7 @@ func (pd ParameterDefinition) validateIntParameterValue(value interface{}) error
 func (pd ParameterDefinition) validateBoolParameterValue(value interface{}) error {
 	_, ok := value.(bool)
 	if !ok {
-		return fmt.Errorf("Value is not a string")
+		return fmt.Errorf("Value is not a boolean")
 	}
 	return nil
 }
