@@ -108,6 +108,30 @@ func TestCredentialAddMalformedFile(t *testing.T) {
 	}
 }
 
+func TestCredentialAddInvalidFileName(t *testing.T) {
+	duffleHome, err := ioutil.TempDir("", "dufflehome")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer os.Remove(duffleHome)
+	if err := os.MkdirAll(filepath.Join(duffleHome, "credentials"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	out := bytes.NewBuffer(nil)
+	cmd := &credentialAddCmd{
+		home:  home.Home(duffleHome),
+		out:   out,
+		paths: []string{"testdata/malformedhome/credentials/invalid.yaml"},
+	}
+
+	err = cmd.run()
+	if err == nil {
+		t.Error("Expected error but got none")
+	}
+}
+
 func TestCredentialAddDuplicate(t *testing.T) {
 	//setup
 	duffleHome, err := ioutil.TempDir("", "dufflehome")

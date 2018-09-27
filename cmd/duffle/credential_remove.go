@@ -22,8 +22,9 @@ func newCredentialRemoveCmd(w io.Writer) *cobra.Command {
 	rm := &credentialRemoveCmd{out: w}
 
 	cmd := &cobra.Command{
-		Use:   "remove [NAME]",
-		Short: "remove one or more credential set",
+		Use:     "remove [NAME]",
+		Short:   "remove one or more credential set",
+		Aliases: []string{"rm"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
 				return errors.New("This command requires at least 1 argument: name of credential set")

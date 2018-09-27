@@ -90,6 +90,10 @@ func addCredentialSet(dest, path string) error {
 		return fmt.Errorf("%s is not a valid credential set", path)
 	}
 
+	if err := fileNameMatchesSetName(path, cs.Name); err != nil {
+		return err
+	}
+
 	// check if it already exists
 	if _, err := os.Stat(dest); !os.IsNotExist(err) {
 		return fmt.Errorf("Credential set (%s) already exists. Run `$ duffle creds remove %s` and try again", cs.Name, cs.Name)
@@ -118,4 +122,23 @@ func copyCredentialSetFile(dest, path string) error {
 
 	_, err = io.Copy(to, from)
 	return err
+}
+
+func fileNameMatchesSetName(path, name string) error {
+	base := filepath.Base(path)
+	parts := strings.Split(base, ".")
+	computedName := ""
+	len := len(parts)
+	if len > 1 {
+		computedName = strings.Join(parts[0:len-1], ".")
+
+	} else {
+		return fmt.Errorf("%s does not have valid .yaml/.yml file extension", path)
+	}
+
+	if computedName != name {
+		return fmt.Errorf("file name (%s) does not match credential set name (%s)", computedName, name)
+	}
+
+	return nil
 }
