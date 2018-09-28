@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/spf13/cobra"
 
@@ -14,13 +13,13 @@ const usage = `This command will uninstall an installation of a CNAB bundle`
 var uninstallDriver string
 
 type uninstallCmd struct {
-	out        io.Writer
+	duffleCmd
 	name       string
 	bundleFile string
 }
 
-func newUninstallCmd(w io.Writer) *cobra.Command {
-	uc := &uninstallCmd{out: w}
+func newUninstallCmd() *cobra.Command {
+	uc := &uninstallCmd{}
 
 	var (
 		credentialsFile string
@@ -28,12 +27,13 @@ func newUninstallCmd(w io.Writer) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "uninstall [NAME]",
-		Short: "uninstall CNAB installation",
-		Long:  usage,
+		Use:     "uninstall [NAME]",
+		Short:   "uninstall CNAB installation",
+		Long:    usage,
+		PreRunE: uc.Prepare(),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			uc.name = args[0]
-			bundleFile, err := bundleFileOrArg2(args, bundleFile, w)
+			bundleFile, err := bundleFileOrArg2(args, bundleFile, uc.Out)
 			// If no bundle was found, we just wait for the claim system
 			// to load its bundleFile
 			if err == nil {
@@ -80,8 +80,8 @@ func (un *uninstallCmd) uninstall(credentialsFile string) error {
 		Driver: driverImpl,
 	}
 
-	fmt.Fprintf(un.out, "Executing uninstall action...")
-	if err := uninst.Run(&claim, creds); err != nil {
+	fmt.Fprintf(un.Out, "Executing uninstall action...")
+	if err := uninst.Run(&claim, creds, un.Out); err != nil {
 		return fmt.Errorf("could not uninstall %q: %s", un.name, err)
 	}
 	return claimStorage().Delete(un.name)
