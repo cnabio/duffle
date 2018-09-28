@@ -72,10 +72,13 @@ func (up *upgradeCmd) upgrade(credentialsFile string) error {
 	upgr := &action.Upgrade{
 		Driver: driverImpl,
 	}
+	err = upgr.Run(&claim, creds, up.Out)
 
-	if err := upgr.Run(&claim, creds, up.Out); err != nil {
+	// persist the claim, regardless of the success of the upgrade action
+	persistErr := claimStorage().Store(claim)
+
+	if err != nil {
 		return fmt.Errorf("could not upgrade %q: %s", up.name, err)
 	}
-
-	return nil
+	return persistErr
 }
