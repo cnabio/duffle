@@ -2,6 +2,7 @@ package action
 
 import (
 	"errors"
+	"os"
 	"testing"
 	"time"
 
@@ -55,7 +56,7 @@ func TestOpFromClaim(t *testing.T) {
 		Parameters: map[string]interface{}{"duff": "beer"},
 	}
 
-	op := opFromClaim(claim.ActionInstall, c, mockSet)
+	op := opFromClaim(claim.ActionInstall, c, mockSet, os.Stdout)
 
 	is := assert.New(t)
 
@@ -66,4 +67,5 @@ func TestOpFromClaim(t *testing.T) {
 	is.Equal(op.Environment["SECRET_ONE"], "I'm a secret")
 	is.Equal(op.Files["secret_two"], "I'm also a secret")
 	is.Len(op.Parameters, 1)
+	is.Equal(os.Stdout, op.Out)
 }
