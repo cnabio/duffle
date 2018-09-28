@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/deis/duffle/pkg/bundle"
-
 	"github.com/deis/duffle/pkg/claim"
 )
 
