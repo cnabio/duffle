@@ -78,7 +78,7 @@ func (s *Signer) Attest(signedBlock []byte) ([]byte, error) {
 		return empty, ErrNoSignature
 	}
 
-	pk, err := s.leastPrivKey(s.key.entity)
+	pk, err := s.key.bestPrivateKey()
 	if err != nil {
 		return empty, err
 	}
@@ -117,28 +117,12 @@ func (s *Signer) Attest(signedBlock []byte) ([]byte, error) {
 	return out.Bytes(), err
 }
 
-// listPrivKey gets the least privileged key.
-//
-// This returns a subkey if possible, and the master key only if no subkey can
-// be found.
-func (s *Signer) leastPrivKey(e *openpgp.Entity) (*packet.PrivateKey, error) {
-	for _, sk := range e.Subkeys {
-		if sk.PrivateKey.CanSign() {
-			return sk.PrivateKey, nil
-		}
-	}
-	if e.PrivateKey != nil && e.PrivateKey.CanSign() {
-		return e.PrivateKey, nil
-	}
-	return nil, errors.New("no signing key found")
-}
-
 // prepareSign does work to prepare the bundle for signing.
 func (s *Signer) prepareSign(b *bundle.Bundle) (*packet.PrivateKey, []byte, error) {
 	res := []byte{}
 
 	// We only proceed if we find at least one key that can be used to sign.
-	pk, err := s.leastPrivKey(s.key.entity)
+	pk, err := s.key.bestPrivateKey()
 	if err != nil {
 		return pk, res, err
 	}
@@ -156,12 +140,14 @@ func (s *Signer) prepareSign(b *bundle.Bundle) (*packet.PrivateKey, []byte, erro
 func (s *Signer) sign(data []byte, key *packet.PrivateKey) ([]byte, error) {
 	res := []byte{}
 	buf, dest := bytes.NewBuffer(data), bytes.NewBuffer(nil)
-	out, err := clearsign.Encode(buf, key, s.Config)
+	out, err := clearsign.Encode(dest, key, s.Config)
 	if err != nil {
 		return res, err
 	}
-	if _, err := io.Copy(out, dest); err != nil {
+	if _, err := io.Copy(out, buf); err != nil {
+		out.Close()
 		return res, err
 	}
+	out.Close()
 	return dest.Bytes(), nil
 }
