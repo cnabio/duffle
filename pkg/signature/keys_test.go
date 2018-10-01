@@ -1,6 +1,9 @@
 package signature
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,6 +15,7 @@ const (
 	fullKeyID   = "Test One (Signer) <test1@example.com>"
 	keyEmail    = "test1@example.com"
 	key2Email   = "test2@example.com"
+	fullExtraID = "Extra Key (Signer) <extra1@example.com>"
 )
 
 func TestLoadKeyRing(t *testing.T) {
@@ -58,8 +62,46 @@ func TestKeyring_KeyByID(t *testing.T) {
 	is.Equal(key.entity.Identities[key2Email].Name, key2Email)
 }
 
-func testPassphraseFetch(name string) ([]byte, error) {
-	return []byte(test1pw), nil
+func TestKeyRing_Add(t *testing.T) {
+	is := assert.New(t)
+	extras, err := os.Open("testdata/extra.gpg")
+	is.NoError(err)
+	kr, err := LoadKeyRing(keyringFile)
+	is.NoError(err)
+	is.NoError(kr.Add(extras))
+
+	k, err := kr.Key("extra1@example.com")
+	is.NoError(err)
+	is.Equal(k.entity.Identities[fullExtraID].Name, fullExtraID)
+}
+
+func TestKeyRing_Save(t *testing.T) {
+	is := assert.New(t)
+	kr, err := LoadKeyRingFetcher(keyringFile, testPassphraseFetch)
+	is.NoError(err)
+
+	is.Error(kr.Save("testdata/noclobber.empty", false))
+
+	dirname, err := ioutil.TempDir("", "signature-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		is.NoError(os.RemoveAll(dirname))
+	}()
+
+	newfile := filepath.Join(dirname, "save.gpg")
+	is.NoError(kr.Save(newfile, true))
+
+	// Finally, we test loading the newly saved keyring
+	kr2, err := LoadKeyRing(newfile)
+	is.NoError(err)
+	is.Len(kr2.entities, len(kr.entities))
+
+	// Test that a known key exists.
+	kk, err := kr2.Key("123A4002462DC23B")
+	is.NoError(err)
+	is.Equal(kk.entity.Identities[key2Email].Name, key2Email)
 }
 
 func TestKey(t *testing.T) {
@@ -104,4 +146,8 @@ func TestKey_NoPassphrase(t *testing.T) {
 	pk, err = key.bestPrivateKey()
 	is.NoError(err)
 	is.NotNil(pk)
+}
+
+func testPassphraseFetch(name string) ([]byte, error) {
+	return []byte(test1pw), nil
 }
