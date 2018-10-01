@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -12,7 +11,7 @@ import (
 )
 
 func TestUpgradePersistsClaim(t *testing.T) {
-	out := bytes.NewBuffer(nil)
+	out := ioutil.Discard
 
 	// Setup a temporary duffle home with dummy credentials
 	tmpDuffleHome, err := ioutil.TempDir("", "dufflehome")
@@ -46,9 +45,9 @@ func TestUpgradePersistsClaim(t *testing.T) {
 
 	// Upgrade ALL THE THINGS!
 	up := &upgradeCmd{
-		out:  out,
 		name: instClaim.Name,
 	}
+	up.Out = out
 	err = up.upgrade("")
 	if err != nil {
 		t.Fatal(err)
