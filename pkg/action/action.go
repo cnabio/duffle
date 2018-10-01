@@ -2,6 +2,7 @@ package action
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/deis/duffle/pkg/claim"
@@ -22,7 +23,7 @@ type Action interface {
 	Run(*claim.Claim, credentials.Set) error
 }
 
-func opFromClaim(action string, c *claim.Claim, creds credentials.Set) *driver.Operation {
+func opFromClaim(action string, c *claim.Claim, creds credentials.Set, w io.Writer) *driver.Operation {
 	env, files := creds.Flatten()
 	return &driver.Operation{
 		Action:       action,
@@ -33,6 +34,7 @@ func opFromClaim(action string, c *claim.Claim, creds credentials.Set) *driver.O
 		Revision:     c.Revision,
 		Environment:  conflateEnv(action, c, env),
 		Files:        files,
+		Out:          w,
 	}
 }
 

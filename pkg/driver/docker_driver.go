@@ -67,7 +67,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 		tmpdirs[dir] = tmp
 		localFile := filepath.Join(tmp, base)
 		if err := ioutil.WriteFile(localFile, []byte(content), 0755); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(op.Out, err)
 		}
 		args = append(args, "--volume", fmt.Sprintf("%s:%s", localFile, fmt.Sprintf("%s/%s", dir, base)))
 	}
@@ -84,11 +84,11 @@ func (d *DockerDriver) exec(op *Operation) error {
 	args = append(args, img, "/cnab/app/run")
 
 	if isTrue(d.config["VERBOSE"]) {
-		fmt.Println("--------> args")
+		fmt.Fprintln(op.Out, "--------> args")
 		for _, arg := range args {
-			fmt.Println(arg)
+			fmt.Fprintln(op.Out, arg)
 		}
-		fmt.Println("<-------- args")
+		fmt.Fprintln(op.Out, "<-------- args")
 	}
 
 	if d.Simulate {
@@ -101,7 +101,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 		return err
 	}
 	out, err := cmd.CombinedOutput()
-	fmt.Println("\n" + string(out) + "\n")
+	fmt.Fprintln(op.Out, "\n"+string(out)+"\n")
 	return err
 }
 

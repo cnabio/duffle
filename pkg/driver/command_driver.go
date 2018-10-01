@@ -70,6 +70,6 @@ func (d *CommandDriver) exec(op *Operation) error {
 	cmd.Env = pairs
 	cmd.Stdin = bytes.NewBuffer(data)
 	out, err := cmd.CombinedOutput()
-	fmt.Println(string(out))
+	fmt.Fprintln(op.Out, string(out))
 	return err
 }

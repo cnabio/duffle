@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,6 +36,7 @@ func TestDebugDriver_Run(t *testing.T) {
 		Installation: "test",
 		Image:        "test:1.2.3",
 		ImageType:    "oci",
+		Out:          ioutil.Discard,
 	}
 	is.NoError(d.Run(op))
 }
@@ -65,6 +67,7 @@ func TestDockerDriver_Run(t *testing.T) {
 		ImageType:    "oci",
 		Environment:  map[string]string{},
 		Files:        map[string]string{},
+		Out:          ioutil.Discard,
 	}
 	is.NoError(d.Run(op))
 }

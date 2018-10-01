@@ -23,6 +23,7 @@ func newRootCmd(w io.Writer) *cobra.Command {
 			}
 		},
 	}
+	cmd.SetOutput(w)
 
 	p := cmd.PersistentFlags()
 	p.StringVar(&duffleHome, "home", defaultDuffleHome(), "location of your Duffle config. Overrides $DUFFLE_HOME")
@@ -36,10 +37,10 @@ func newRootCmd(w io.Writer) *cobra.Command {
 	cmd.AddCommand(newRepoCmd(w))
 	cmd.AddCommand(newSearchCmd(w))
 	cmd.AddCommand(newVersionCmd(w))
-	cmd.AddCommand(newInstallCmd(w))
+	cmd.AddCommand(newInstallCmd())
 	cmd.AddCommand(newStatusCmd(w))
-	cmd.AddCommand(newUninstallCmd(w))
-	cmd.AddCommand(newUpgradeCmd(w))
+	cmd.AddCommand(newUninstallCmd())
+	cmd.AddCommand(newUpgradeCmd())
 	cmd.AddCommand(newCredentialsCmd(w))
 
 	return cmd

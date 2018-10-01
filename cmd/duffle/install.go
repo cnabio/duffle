@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newInstallCmd(w io.Writer) *cobra.Command {
+func newInstallCmd() *cobra.Command {
 	const usage = `Install a CNAB bundle
 
 This installs a CNAB bundle with a specific installation name. Once the install is complete,
@@ -68,7 +68,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		Short: "install a CNAB bundle",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bundleFile, err := bundleFileOrArg2(args, bundleFile, w)
+			bundleFile, err := bundleFileOrArg2(args, bundleFile, cmd.OutOrStdout())
 			if err != nil {
 				return err
 			}
@@ -110,7 +110,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 				Driver: driverImpl,
 			}
 			fmt.Println("Executing install action...")
-			err = inst.Run(c, creds)
+			err = inst.Run(c, creds, cmd.OutOrStdout())
 
 			// Even if the action fails, we want to store a claim. This is because
 			// we cannot know, based on a failure, whether or not any resources were

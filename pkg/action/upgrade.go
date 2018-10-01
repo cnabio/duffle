@@ -2,6 +2,7 @@ package action
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/credentials"
@@ -14,8 +15,8 @@ type Upgrade struct {
 }
 
 // Run performs the upgrade steps and updates the Claim
-func (u *Upgrade) Run(c *claim.Claim, creds credentials.Set) error {
-	op := opFromClaim(claim.ActionUpgrade, c, creds)
+func (u *Upgrade) Run(c *claim.Claim, creds credentials.Set, w io.Writer) error {
+	op := opFromClaim(claim.ActionUpgrade, c, creds, w)
 	if !u.Driver.Handles(op.ImageType) {
 		return fmt.Errorf("driver does not handle image type %s", op.ImageType)
 	}

@@ -3,6 +3,7 @@ package driver
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 )
 
@@ -44,6 +45,8 @@ type Operation struct {
 	Environment map[string]string `json:"environment"`
 	// Files contains files that should be injected into the invocation image.
 	Files map[string]string `json:"files"`
+	// Output stream for log messages from the driver
+	Out io.Writer
 }
 
 // ResolvedCred is a credential that has been resolved and is ready for injection into the runtime.
@@ -65,7 +68,7 @@ type Driver interface {
 type Configurable interface {
 	// Config returns a map of configuration names and values that can be set via environment variable
 	Config() map[string]string
-	// SetConfig allows setting configuration, where name correspends to the key in Config, and value is
+	// SetConfig allows setting configuration, where name corresponds to the key in Config, and value is
 	// the value to be set.
 	SetConfig(map[string]string)
 }
@@ -83,7 +86,7 @@ func (d *DebugDriver) Run(op *Operation) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(data))
+	fmt.Fprintln(op.Out, string(data))
 	return nil
 }
 

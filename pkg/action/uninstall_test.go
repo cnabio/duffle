@@ -1,6 +1,7 @@
 package action
 
 import (
+	"io/ioutil"
 	"testing"
 	"time"
 
@@ -11,6 +12,8 @@ import (
 )
 
 func TestUninstall_Run(t *testing.T) {
+	out := ioutil.Discard
+
 	c := &claim.Claim{
 		Created:    time.Time{},
 		Modified:   time.Time{},
@@ -21,7 +24,7 @@ func TestUninstall_Run(t *testing.T) {
 	}
 
 	uninst := &Uninstall{Driver: &driver.DebugDriver{}}
-	assert.NoError(t, uninst.Run(c, mockSet))
+	assert.NoError(t, uninst.Run(c, mockSet, out))
 	if c.Created == c.Modified {
 		t.Error("Claim was not updated with modified time stamp during uninstallafter uninstall action")
 	}
@@ -34,10 +37,10 @@ func TestUninstall_Run(t *testing.T) {
 	}
 
 	uninst = &Uninstall{Driver: &mockFailingDriver{}}
-	assert.Error(t, uninst.Run(c, mockSet))
+	assert.Error(t, uninst.Run(c, mockSet, out))
 
 	uninst = &Uninstall{Driver: &mockFailingDriver{shouldHandle: true}}
-	assert.Error(t, uninst.Run(c, mockSet))
+	assert.Error(t, uninst.Run(c, mockSet, out))
 	if c.Result.Message == "" {
 		t.Error("Expected error message in claim result message")
 	}

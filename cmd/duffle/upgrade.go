@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/spf13/cobra"
 
@@ -22,19 +21,20 @@ An upgrade can do the following:
 var upgradeDriver string
 
 type upgradeCmd struct {
-	out  io.Writer
+	duffleCmd
 	name string
 }
 
-func newUpgradeCmd(w io.Writer) *cobra.Command {
-	uc := &upgradeCmd{out: w}
+func newUpgradeCmd() *cobra.Command {
+	uc := &upgradeCmd{}
 
 	var credentialsFile string
 
 	cmd := &cobra.Command{
-		Use:   "upgrade NAME [BUNDLE]",
-		Short: upgradeUsage,
-		Long:  upgradeLong,
+		Use:     "upgrade NAME [BUNDLE]",
+		Short:   upgradeUsage,
+		Long:    upgradeLong,
+		PreRunE: uc.Prepare(),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("This command requires exactly 1 argument: the name of the installation to upgrade")
@@ -73,7 +73,7 @@ func (up *upgradeCmd) upgrade(credentialsFile string) error {
 		Driver: driverImpl,
 	}
 
-	if err := upgr.Run(&claim, creds); err != nil {
+	if err := upgr.Run(&claim, creds, up.Out); err != nil {
 		return fmt.Errorf("could not upgrade %q: %s", up.name, err)
 	}
 
