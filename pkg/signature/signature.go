@@ -20,7 +20,7 @@ var ErrNoSignature = errors.New("no signature block in data")
 
 // Signer can sign bundles
 //
-// Signatures are OpenPGP Section 7 clear signed blocks represented as ASCII-armored.
+// Signatures are OpenPGP Section 7 clearsigned blocks represented as ASCII-armored.
 // To sign a bundle, the signer must be provided with the keys with which to sign.
 //
 // Signing is sensitive to whitespace. Thus, this package also takes on the responsibility
@@ -62,7 +62,7 @@ func (s *Signer) Clearsign(b *bundle.Bundle) ([]byte, error) {
 
 // Attest generates an attestation (detached signature) for a signed bundle.
 //
-// This ONLY works on signed bundle files, and it rerequires the signed bundle
+// This ONLY works on signed bundle files, and it requires the signed bundle
 // as a []byte. It does not verify the signature on the signed block, nor does
 // it parse the payload of the clearsigned block. Instead, it extracts the bytes
 // from inside the block, and then re-signs that block, but with a detached
@@ -85,7 +85,7 @@ func (s *Signer) Attest(signedBlock []byte) ([]byte, error) {
 
 	// We clearsign instead of using the openpgp.ArmoredDetachedSignText because the
 	// later does not handle subkeys at all. It ONLY allows using the private key on
-	// the main entity. Yet all the helper methods for that are unexported. This it
+	// the main entity. Yet all the helper methods for that are unexported. Thus it
 	// is more expedient to use the clearsign package and then extract the detached
 	// signature from the block.
 	signature, err := s.sign(block.Plaintext, pk)

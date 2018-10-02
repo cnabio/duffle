@@ -91,6 +91,8 @@ func TestKeyRing_Save(t *testing.T) {
 	}()
 
 	newfile := filepath.Join(dirname, "save.gpg")
+	// We do this to verify that the clobber flag is working.
+	is.NoError(ioutil.WriteFile(newfile, []byte(" "), 0755))
 	is.NoError(kr.Save(newfile, true))
 
 	// Finally, we test loading the newly saved keyring

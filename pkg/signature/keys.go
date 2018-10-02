@@ -13,7 +13,7 @@ import (
 	"golang.org/x/crypto/openpgp/packet"
 )
 
-// PassphraseFetcher recieves a keyname, and is responsible for returning the associated passphrase
+// PassphraseFetcher receives a keyname, and is responsible for returning the associated passphrase
 type PassphraseFetcher func(name string) ([]byte, error)
 
 // Key represents an individual signing key
@@ -105,7 +105,7 @@ func (r *KeyRing) Add(armoredKeys io.Reader) error {
 
 // Key returns the key with the given ID.
 //
-// ID is a hex ID or (conventionally) and email address.
+// ID is a hex ID or (conventionally) an email address.
 //
 // If no such key exists, this will return an error.
 func (r *KeyRing) Key(id string) (*Key, error) {
@@ -169,7 +169,7 @@ func (r *KeyRing) Key(id string) (*Key, error) {
 	return nil, errors.New("multiple matching keys found")
 }
 
-// Save writes a keycring to disk as a binary entity list.
+// Save writes a keyring to disk as a binary entity list.
 //
 // This is the standard format described by the OpenPGP specification. The file will thus be
 // importable to any OpenPGP compliant app that can read entity lists (that is, a list of
