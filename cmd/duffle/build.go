@@ -12,7 +12,6 @@ import (
 	"github.com/deis/duffle/pkg/builder/docker"
 	"github.com/deis/duffle/pkg/builder/mock"
 	"github.com/deis/duffle/pkg/cmdline"
-	"github.com/deis/duffle/pkg/duffle"
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/duffle/manifest"
 
@@ -111,7 +110,7 @@ func (b *buildCmd) run() (err error) {
 	)
 	bldr.LogsDir = b.home.Logs()
 
-	mfst, err := manifest.Load(filepath.Join(b.src, duffle.DuffleFilepath))
+	mfst, err := manifest.Load("", b.src)
 	if err != nil {
 		return err
 	}
