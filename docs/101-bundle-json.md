@@ -4,18 +4,29 @@ This section describes the format and function of the `bundle.json` document.
 
 A `bundle.json` is broken down into the following categories of information:
 
+- The schema version of the bundle
+- The type of bundle: known as a "thin" or a "thick" bundle (described by `mediaType`)
 - The top-level package information (`name` and `version`)
 - Information on the invocation image
 - A list of images included with this bundle
 - A specification of which parameters may be overridden, and how those are to be validated
 - A list of credentials (by location) that the application needs
 
-A full `bundle.json` looks like this:
+There are two types of bundles available:
+
+- `application/cnab.manifest.v1alpha+json` defines a "thin" bundle, or a bundle that requires only the bundle.json to be downloaded quickly. Installing these bundles will require a machine with an internet connection to fetch the invocation images at install time. This is the most common type of bundle.
+- `application/cnab.bundle.v1alpha+json` defines a "thick" bundle, or a complete installation bundle that contain the bundle.json as well as its dependent images, making it easier to install onto machines without an internet connection at the cost of additional storage space/bandwidth required when fetching. This is useful in cases where we want to export the bundle for archival purposes.
+
+For the rest of the documentation, by default we'll be refererring bundles using the "thin" type, but when "thick" bundles become relevant we'll make note that it's a "thick" bundle type.
+
+Here's how a "thin" bundle looks:
 
 ```json
 {
+    "schemaVersion": 1,
     "name": "helloworld",
     "version": "0.1.2",
+    "description": "An example 'thin' helloworld Cloud-Native Application Bundle",
     "invocationImage": {
         "imageType": "docker",
         "image": "technosophos/helloworld:0.1.0",
@@ -41,7 +52,62 @@ A full `bundle.json` looks like this:
             "minValue": 10,
             "maxValue": 10240,
             "metadata": {
-               "description": "The port that the backend will listen on" 
+               "description": "The port that the backend will listen on"
+            }
+        }
+    },
+    "credentials": {
+        "kubeconfig": {
+            "path": "/home/.kube/config",
+        },
+        "image_token": {
+            "env": "AZ_IMAGE_TOKEN",
+        },
+        "hostkey": {
+            "path": "/etc/hostkey.txt",
+            "env": "HOST_KEY"
+        }
+    }
+}
+```
+
+And here is how a "thick" bundle looks. Notice how the `invocationImage` and `images` fields reference the underlying docker image manifest (`application/vnd.docker.distribution.manifest.v2+json`), which in turn references the underlying images:
+
+```json
+{
+    "schemaVersion": 1,
+    "name": "helloworld",
+    "version": "1.0.0",
+    "description": "An example 'thick' helloworld Cloud-Native Application Bundle",
+    "mediaType": "application/cnab.bundle.v1alpha+json",
+    "invocationImage": {
+        "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+        "size": 1337,
+        "digest": "sha256:aaaaaaaaaaaa...",
+        "platform": {
+            "architecture": "amd64",
+            "os": "linux"
+        }
+    },
+    "images": [
+        {
+            "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+            "size": 1337,
+            "digest": "sha256:bbbbbbbbbbbb...",
+            "platform": {
+                "architecture": "amd64",
+                "os": "linux"
+            }
+        }
+    ],
+    "parameters": {
+        "backend_port" : {
+            "type" : "int",
+            "defaultValue": 80,
+            "minValue": 10,
+            "maxValue": 10240,
+            "metadata": {
+               "description": "The port that the backend will listen on"
             }
         }
     },
