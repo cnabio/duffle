@@ -85,6 +85,7 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 	wg.Add(len(ctx.Components))
 	bf := &bundle.Bundle{
 		Name:        ctx.Manifest.Name,
+		Images:      []bundle.Image{},
 		Parameters:  ctx.Manifest.Parameters,
 		Credentials: ctx.Manifest.Credentials,
 	}
