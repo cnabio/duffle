@@ -1,10 +1,12 @@
 {
     "name": "multi-component",
     "version": "c9c7ead1be702d8fffc370701deb270c9607772c",
-    "invocationImage": {
-        "imageType": "docker",
-        "image": "microsoft/multi-component-cnab:c9c7ead1be702d8fffc370701deb270c9607772c"
-    },
+    "invocationImages": [
+        {
+            "imageType": "docker",
+            "image": "microsoft/multi-component-cnab:c9c7ead1be702d8fffc370701deb270c9607772c"
+        }
+    ],
     "images": [
         {
             "name": "mock-name",
