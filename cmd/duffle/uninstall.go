@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -8,7 +9,13 @@ import (
 	"github.com/deis/duffle/pkg/action"
 )
 
-const usage = `This command will uninstall an installation of a CNAB bundle`
+const usage = `This command will uninstall an installation of a CNAB bundle.
+
+When using '--parameters' or '--set', the uninstall command will replace the old
+parameters with the new ones supplied (even if the new set is an empty set). If neither
+'--parameters' nor '--set' is passed, then the parameters used for 'duffle install' will
+be re-used.
+`
 
 var uninstallDriver string
 
@@ -16,6 +23,8 @@ type uninstallCmd struct {
 	duffleCmd
 	name       string
 	bundleFile string
+	valuesFile string
+	setParams  []string
 }
 
 func newUninstallCmd() *cobra.Command {
@@ -33,6 +42,7 @@ func newUninstallCmd() *cobra.Command {
 		PreRunE: uc.Prepare(),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			uc.name = args[0]
+			uc.Out = cmd.OutOrStdout()
 			bundleFile, err := bundleFileOrArg2(args, bundleFile, uc.Out)
 			// If no bundle was found, we just wait for the claim system
 			// to load its bundleFile
@@ -44,9 +54,12 @@ func newUninstallCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&uninstallDriver, "driver", "d", "docker", "Specify a driver name")
-	cmd.Flags().StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
-	cmd.Flags().StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
+	flags := cmd.Flags()
+	flags.StringVarP(&uninstallDriver, "driver", "d", "docker", "Specify a driver name")
+	flags.StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
+	flags.StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
+	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
+	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "set individual parameters as NAME=VALUE pairs")
 
 	return cmd
 }
@@ -66,21 +79,34 @@ func (un *uninstallCmd) uninstall(credentialsFile string) error {
 		claim.Bundle = &b
 	}
 
+	// If no params are specified, allow re-use. But if params are set -- even if empty --
+	// replace the existing params.
+	if len(un.setParams) > 0 || un.valuesFile != "" {
+		if claim.Bundle == nil {
+			return errors.New("parameters can only be set if a bundle is provided")
+		}
+		params, err := calculateParamValues(claim.Bundle, un.valuesFile, un.setParams)
+		if err != nil {
+			return err
+		}
+		claim.Parameters = params
+	}
+
 	driverImpl, err := prepareDriver(uninstallDriver)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not prepare driver: %s", err)
 	}
 
 	creds, err := loadCredentials(credentialsFile, claim.Bundle)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not load credentials: %s", err)
 	}
 
 	uninst := &action.Uninstall{
 		Driver: driverImpl,
 	}
 
-	fmt.Fprintf(un.Out, "Executing uninstall action...")
+	fmt.Fprintln(un.Out, "Executing uninstall action...")
 	if err := uninst.Run(&claim, creds, un.Out); err != nil {
 		return fmt.Errorf("could not uninstall %q: %s", un.name, err)
 	}

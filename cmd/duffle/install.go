@@ -150,6 +150,28 @@ func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, er
 	return bundleFile, nil
 }
 
+// optBundleFileOrArg2 optionally gets a bundle file.
+// Returning an empty string with no error is a possible outcome.
+func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+	switch {
+	case len(args) < 1:
+		// No bundle provided
+		return "", nil
+	case len(args) == 2 && bundleFile != "":
+		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
+	case len(args) < 2 && bundleFile == "":
+		// No bundle provided
+		return "", nil
+	case len(args) == 2:
+		var err error
+		bundleFile, err = findBundleJSON(args[1], w)
+		if err != nil {
+			return "", err
+		}
+	}
+	return bundleFile, nil
+}
+
 func validateImage(img bundle.InvocationImage) error {
 	switch img.ImageType {
 	case "docker", "oci":
