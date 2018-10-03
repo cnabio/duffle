@@ -53,6 +53,7 @@ func TestSigner_Attest(t *testing.T) {
 	// Sign the bundle twice and make sure the sigs are the same.
 	s := NewSigner(k)
 	sig, err := s.Clearsign(b)
+	is.NoError(err)
 	attestation, err := s.Attest(sig)
 	is.NoError(err)
 	is.Contains(string(sig), string(attestation))

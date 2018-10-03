@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/deis/duffle/pkg/bundle"
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/clearsign"
+
+	"github.com/deis/duffle/pkg/bundle"
 )
 
 // Verifier provides tools to verify a signed bundle.
