@@ -25,11 +25,6 @@ func (h Home) Path(elem ...string) string {
 	return filepath.Join(p...)
 }
 
-// Config returns the path to the Duffle config file.
-func (h Home) Config() string {
-	return h.Path("config.toml")
-}
-
 // Repositories returns the path to the Duffle repositories.
 func (h Home) Repositories() string {
 	return h.Path("repositories")

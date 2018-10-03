@@ -1,13 +1,19 @@
 package manifest
 
 import (
-	"github.com/BurntSushi/toml"
+	"encoding/json"
+	"os"
 )
 
 // Load opens the named file for reading. If successful, the manifest is returned.
 func Load(name string) (*Manifest, error) {
 	mfst := New()
-	if _, err := toml.DecodeFile(name, mfst); err != nil {
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	if err := json.NewDecoder(f).Decode(&mfst); err != nil {
 		return nil, err
 	}
 	return mfst, nil
