@@ -100,7 +100,7 @@ func (img InvocationImage) Validate() error {
 
 func validateDockerish(s string) error {
 	if !strings.Contains(s, ":") {
-		return errors.New("version is required")
+		return errors.New("tag is required")
 	}
 	return nil
 }
