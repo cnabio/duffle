@@ -1,9 +1,12 @@
 package action
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/deis/duffle/pkg/bundle"
 
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/credentials"
@@ -23,14 +26,28 @@ type Action interface {
 	Run(*claim.Claim, credentials.Set) error
 }
 
-func opFromClaim(action string, c *claim.Claim, creds credentials.Set, w io.Writer) *driver.Operation {
+func selectInvocationImage(d driver.Driver, c *claim.Claim) (bundle.InvocationImage, error) {
+	if len(c.Bundle.InvocationImages) == 0 {
+		return bundle.InvocationImage{}, errors.New("no invocationImages are defined in the bundle")
+	}
+
+	for _, ii := range c.Bundle.InvocationImages {
+		if d.Handles(ii.ImageType) {
+			return ii, nil
+		}
+	}
+
+	return bundle.InvocationImage{}, errors.New("driver is not compatible with any of the invocation images in the bundle")
+}
+
+func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) *driver.Operation {
 	env, files := creds.Flatten()
 	return &driver.Operation{
 		Action:       action,
 		Installation: c.Name,
 		Parameters:   c.Parameters,
-		Image:        c.Bundle.InvocationImage.Image,
-		ImageType:    c.Bundle.InvocationImage.ImageType,
+		Image:        ii.Image,
+		ImageType:    ii.ImageType,
 		Revision:     c.Revision,
 		Environment:  conflateEnv(action, c, env),
 		Files:        files,
