@@ -352,7 +352,7 @@ func TestConvertValue(t *testing.T) {
 	is.NoError(err)
 	is.Equal(123, out.(int))
 
-	out, err = pd.ConvertValue("onetwothree")
+	_, err = pd.ConvertValue("onetwothree")
 	is.Error(err)
 }
 

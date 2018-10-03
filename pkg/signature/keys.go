@@ -83,10 +83,6 @@ func (k *Key) findPrivateKey() (*packet.PrivateKey, error) {
 	return nil, errors.New("no signing key found")
 }
 
-func canSign(k *openpgp.Key) bool {
-	return k.SelfSignature.FlagSign
-}
-
 // KeyRing represents a collection of keys as specified by OpenPGP
 type KeyRing struct {
 	entities          openpgp.EntityList

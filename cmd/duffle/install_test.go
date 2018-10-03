@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deis/duffle/pkg/bundle"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/duffle/home"
 )
 
