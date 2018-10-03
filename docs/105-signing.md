@@ -40,17 +40,19 @@ sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b
 
 CNAB is composed of a `bundle.json` and a number of supporting images. Those images are referenced by the `bundle.json`. Thus, digesting those artifacts and including their digest in the `bundle.json` provides a convenient way to store (and locate) digests.
 
-To that end, anything that shows up in the `invocationImage` or `images` section of the `bundle.json` _must_ have a `digest`:
+To that end, anything that shows up in the `invocationImages` or `images` section of the `bundle.json` _must_ have a `digest`:
 
 ```json
 {
     "name": "helloworld",
     "version": "0.1.2",
-    "invocationImage": {
-        "imageType": "docker",
-        "image": "technosophos/helloworld:0.1.0",
-        "digest": "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b"
-    },
+    "invocationImages": [
+        {
+            "imageType": "docker",
+            "image": "technosophos/helloworld:0.1.0",
+            "digest": "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b"
+        }
+    ],
     "images": [
         {
             "name": "image1",
@@ -77,7 +79,7 @@ Drivers may choose to accept the digesting by another trusted agent in lieu of p
 
 ## Signing the `bundle.json`
 
-The `bundle.json` file will contain the digests of all executable objects. That is, everything in the `invocationImage` and `images` sections will have digests that will make it possible to ensure that their content has not been tampered with.
+The `bundle.json` file will contain the digests of all executable objects. That is, everything in the `invocationImages` and `images` sections will have digests that will make it possible to ensure that their content has not been tampered with.
 
 Consequently, the `bundle.json` acts as an authoritative resource for image integrity. To act as an authoritative source, however, it must provide an additional assertion: The `bundle.json` must assert the intention of the bundle creator, in marking this as a _verified bundle_.
 
@@ -110,11 +112,13 @@ For example, here is a `bundle.json`:
 {
     "name": "foo",
     "version": "1.0",
-    "invocationImage": {
-        "imageType": "docker",
-        "image": "technosophos/helloworld:0.1.2",
-        "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685"
-      },
+    "invocationImages": [
+        {
+            "imageType": "docker",
+            "image": "technosophos/helloworld:0.1.2",
+            "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685"
+        }
+    ],
     "images": [],
     "parameters": {},
     "credentials": {}
@@ -130,11 +134,13 @@ Hash: SHA512
 {
     "name": "foo",
     "version": "1.0",
-    "invocationImage": {
-        "imageType": "docker",
-        "image": "technosophos/helloworld:0.1.2",
-        "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685"
-      },
+    "invocationImages": [
+        {
+            "imageType": "docker",
+            "image": "technosophos/helloworld:0.1.2",
+            "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685"
+        }
+    ],
     "images": [],
     "parameters": {},
     "credentials": {}
