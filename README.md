@@ -50,10 +50,41 @@ helloworld	github.com/deis/bundles.git	1.0
 * Learn more about what a bundle is and its components [here](https://github.com/deis/duffle/blob/master/docs/100-CNAB.md).
 * Get a feel for what CNAB bundles look like by referencing the [examples](examples/) directory.
 
-6. Install your first bundle:
-```
-$ duffle install foo -f examples/helloworld/cnab/bundle.json
-```
+    ```console
+    $ duffle search
+    NAME      	REPOSITORY                 	VERSION
+    helloazure	github.com/deis/bundles.git	0.1.0
+    hellohelm 	github.com/deis/bundles.git	0.1.0
+    helloworld	github.com/deis/bundles.git	1.0
+    ```
+    
+    *Notes:*
+    * These bundles are hosted in the [bundles repo](https://github.com/deis/bundles) on github. There is ongoing work on the bundle repository design and to support http based repositories much of which you can see via [this pull request](https://github.com/deis/duffle/pull/184).
+    * Learn more about what a bundle is and its components [here](https://github.com/deis/duffle/blob/master/docs/100-CNAB.md).
+    * Get a feel for what CNAB bundles look like by referencing the [examples](examples/) directory.
+
+6. Build and install your first bundle:
+
+    ```console 
+    $ duffle build ./examples/helloworld/
+    Duffle Build Started: 'helloworld': 01CS02FNS3FTM9907V83GAQQMT
+    helloworld: Building CNAB components: SUCCESS ⚓  (1.0090s)
+    
+    $ duffle credentials generate helloworld-creds -f examples/helloworld/cnab/bundle.json
+    name: helloworld-creds
+    credentials:
+    - name: quux
+      source:
+        value: EMPTY
+      destination:
+        path: pquux
+    
+    $ duffle install helloworld-demo -c helloworld-creds -f examples/helloworld/cnab/bundle.json
+    Executing install action...
+    
+    Install action
+    Action install complete for helloworld-demo
+    ```
 
 # Debugging using VS Code
 For instructions on using VS Code to debug the Duffle binary, see [the debugging document][docs/001-debugging.md].
