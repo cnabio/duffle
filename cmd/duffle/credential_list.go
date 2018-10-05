@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gosuri/uitable"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
@@ -16,6 +17,7 @@ import (
 type credentialListCmd struct {
 	out  io.Writer
 	home home.Home
+	long bool
 }
 
 func newCredentialListCmd(w io.Writer) *cobra.Command {
@@ -31,6 +33,10 @@ func newCredentialListCmd(w io.Writer) *cobra.Command {
 			return list.run()
 		},
 	}
+
+	f := cmd.Flags()
+	f.BoolVarP(&list.long, "long", "l", false, "output longer listing format")
+
 	return cmd
 }
 
@@ -38,14 +44,33 @@ func (ls *credentialListCmd) run() error {
 	credentialPath := ls.home.Credentials()
 	creds := findCredentialSets(credentialPath)
 
-	for name := range creds {
-		fmt.Fprintln(ls.out, name)
+	if ls.long {
+		table := uitable.New()
+		table.MaxColWidth = 80
+		table.Wrap = true
+
+		table.AddRow("NAME", "PATH")
+		for _, cred := range creds {
+			table.AddRow(cred.name, cred.path)
+		}
+
+		fmt.Fprintln(ls.out, table)
+		return nil
+	}
+
+	for _, item := range creds {
+		fmt.Fprintln(ls.out, item.name)
 	}
 	return nil
 }
 
-func findCredentialSets(dir string) map[string]string {
-	creds := map[string]string{} // name: path
+type credListItem struct {
+	name string
+	path string
+}
+
+func findCredentialSets(dir string) []credListItem {
+	creds := []credListItem{}
 
 	log.Debugf("Traversing credentials directory (%s) for credential sets", dir)
 
@@ -63,7 +88,7 @@ func findCredentialSets(dir string) map[string]string {
 			}
 
 			log.Debugf("Successfully loaded credential set %s from %s", credSet.Name, path)
-			creds[credSet.Name] = path
+			creds = append(creds, credListItem{name: credSet.Name, path: path})
 		}
 		return nil
 	})
