@@ -47,7 +47,7 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
     ```
     
     *Notes:*
-    * These bundles are hosted in the [bundles repo](https://github.com/deis/bundles) on github. There is ongoing work on the bundle repository design and to support http based repositories much of which you can see via [this pull request](https://github.com/deis/duffle/pull/184).
+    * The source code for these bundles are in the [bundles repo](https://github.com/deis/bundles) on github, and are built and hosted by <https://hub.cnlabs.io>.
     * Learn more about what a bundle is and its components [here](https://github.com/deis/duffle/blob/master/docs/100-CNAB.md).
     * Get a feel for what CNAB bundles look like by referencing the [examples](examples/) directory.
 
