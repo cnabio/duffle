@@ -48,7 +48,7 @@ func TestUpgradePersistsClaim(t *testing.T) {
 		name: instClaim.Name,
 	}
 	up.Out = out
-	err = up.upgrade("")
+	err = up.upgrade("", "")
 	if err != nil {
 		t.Fatal(err)
 	}
