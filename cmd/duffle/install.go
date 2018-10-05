@@ -1,11 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"path"
 	"path/filepath"
 	"strings"
@@ -15,9 +13,8 @@ import (
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
-
-	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func newInstallCmd() *cobra.Command {
@@ -191,26 +188,13 @@ func overrides(overrides []string, paramDefs map[string]bundle.ParameterDefiniti
 }
 
 func parseValues(file string) (map[string]interface{}, error) {
-	vals := map[string]interface{}{}
-	ext := filepath.Ext(file)
-	switch ext {
-	case ".toml":
-		data, err := ioutil.ReadFile(file)
-		if err != nil {
-			return vals, err
-		}
-		err = toml.Unmarshal(data, &vals)
-		return vals, err
-	case ".json":
-		data, err := ioutil.ReadFile(file)
-		if err != nil {
-			return vals, err
-		}
-		err = json.Unmarshal(data, &vals)
-		return vals, err
-	default:
-		return vals, errors.New("no decoder for " + ext)
+	v := viper.New()
+	v.SetConfigFile(file)
+	err := v.ReadInConfig()
+	if err != nil {
+		return nil, err
 	}
+	return v.AllSettings(), nil
 }
 
 func getBundleFile(bundleName string) (string, string, error) {
