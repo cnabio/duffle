@@ -1,3 +1,0 @@
-name = "testbundle"
-registry = "testregistry"
-components = ["cnab"]

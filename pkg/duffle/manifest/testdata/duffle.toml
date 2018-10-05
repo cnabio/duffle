@@ -1,0 +1,6 @@
+name = "testbundle"
+[components]
+    [components.cnab]
+        name = "cnab"
+        builder = "docker"
+        configuration = { registry = "microsoft" }

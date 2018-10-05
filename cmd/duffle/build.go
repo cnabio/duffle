@@ -110,7 +110,7 @@ func (b *buildCmd) run() (err error) {
 	)
 	bldr.LogsDir = b.home.Logs()
 
-	mfst, err := manifest.Load(filepath.Join(b.src, "duffle.toml"))
+	mfst, err := manifest.Load("", b.src)
 	if err != nil {
 		return err
 	}

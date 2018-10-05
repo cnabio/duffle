@@ -27,12 +27,12 @@ func TestBuild(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(testBundlePath, "cnab"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	from, err := os.Open(filepath.Join("testdata", "testbundle", "duffle.toml"))
+	from, err := os.Open(filepath.Join("testdata", "testbundle", "duffle.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer from.Close()
-	dest := filepath.Join(testBundlePath, "duffle.toml")
+	dest := filepath.Join(testBundlePath, "duffle.json")
 	to, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		t.Fatal(err)
