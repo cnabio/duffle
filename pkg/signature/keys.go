@@ -1,13 +1,7 @@
 package signature
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
-	"io"
-	"os"
-	"strconv"
-	"strings"
 
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/packet"
@@ -27,6 +21,46 @@ type Key struct {
 	// set a specific private key instead of looking through the entity
 	// to load the key. This is necessary when choosing subkeys.
 	selectedPrivateKey *packet.PrivateKey
+}
+
+var keyCreationConfig = packet.Config{
+	RSABits: 3072, // Default keylength is only 2048. Following NIST recommendation for 3072.
+}
+
+// CreateKey creates a new key for the given user ID
+//
+// User ID should be in the form "NAME (COMMENT) <EMAIL>"
+func CreateKey(user UserID) (*Key, error) {
+	e, err := openpgp.NewEntity(user.Name, user.Comment, user.Email, &keyCreationConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// Okay, this is a little weird, but what we are doing is using SerializePrivate to
+	// do all of the key/subkey signing.
+	/*
+		var buf bytes.Buffer
+		if err := e.SerializePrivate(&buf, &keyCreationConfig); err != nil {
+			return nil, err
+		}
+	*/
+
+	return &Key{entity: e}, nil
+}
+
+// UserID returns the UserID for this key
+//
+// For OpenPGP insiders: This returns the FIRST identity that appears to have a valid name.
+func (k *Key) UserID() UserID {
+	for i := range k.entity.Identities {
+		id, err := ParseUserID(i)
+		if err != nil {
+			// Skip this one. No point in erroring out.
+			continue
+		}
+		return id
+	}
+	return UserID{Name: "UNKNOWN", Email: "UNKNOWN@UNKNOWN"}
 }
 
 // bestPrivateKey will find a private key and decrypt it if necessary.
@@ -81,174 +115,4 @@ func (k *Key) findPrivateKey() (*packet.PrivateKey, error) {
 	}
 
 	return nil, errors.New("no signing key found")
-}
-
-// KeyRing represents a collection of keys as specified by OpenPGP
-type KeyRing struct {
-	entities          openpgp.EntityList
-	PassphraseFetcher PassphraseFetcher
-}
-
-// Add adds new keys to the keyring.
-func (r *KeyRing) Add(armoredKeys io.Reader) error {
-	entities, err := openpgp.ReadArmoredKeyRing(armoredKeys)
-	if err != nil {
-		return err
-	}
-	r.entities = append(r.entities, entities...)
-	return nil
-}
-
-// Key returns the key with the given ID.
-//
-// ID is a hex ID or (conventionally) an email address.
-//
-// If no such key exists, this will return an error.
-func (r *KeyRing) Key(id string) (*Key, error) {
-	// NB: GnuPG allows any of the following to be used:
-	// - Hex ID (we support)
-	// - Email (we support)
-	// - Substring match on OpenPGP User Name (we support if first two fail)
-	// - Fingerprint
-	// - OpenPGP User Name ("Name (Comment) <email>")
-	// - Partial email
-	// - Subject DN (x509)
-	// - Issuer DN (x509)
-	// - Keygrip (40 hex digits)
-
-	hexID, err := strconv.ParseInt(id, 16, 64)
-	println("looking for", hexID)
-	if err == nil {
-		k := r.entities.KeysById(uint64(hexID))
-		l := len(k)
-		if l > 1 {
-			return nil, fmt.Errorf("required one key, got %d", l)
-		}
-		if l == 1 {
-			return &Key{entity: k[0].Entity, PassphraseFetcher: r.PassphraseFetcher}, nil
-		}
-		// Else fallthrough and try a string-based lookup
-	}
-
-	// If we get here, there was no key found when looking by hex ID.
-	// So we try again by string name in the email field. We also do weak matching
-	// at the same time.
-	weak := map[[20]byte]*openpgp.Entity{}
-	for _, e := range r.entities {
-		for _, ident := range e.Identities {
-			// XXX Leave this commented section
-			// It is not clear whether we should skip identities that were not self-signed
-			// with the Sign flag on. Since the entity is at a higher level than the identity,
-			// it seems like we are more interested in the entity's capability than the
-			// identity the user requested, and we can always walk the subkeys to see if
-			// any of those are allowed to sign. So I am leaving this commented.
-			//if !ident.SelfSignature.FlagSign {
-			//	continue
-			//}
-			if ident.UserId.Email == id {
-				return &Key{entity: e, PassphraseFetcher: r.PassphraseFetcher}, nil
-			}
-			if strings.Contains(ident.Name, id) {
-				weak[e.PrimaryKey.Fingerprint] = e
-			}
-		}
-	}
-
-	switch len(weak) {
-	case 0:
-		return nil, errors.New("key not found")
-	case 1:
-		for _, first := range weak {
-			return &Key{entity: first, PassphraseFetcher: r.PassphraseFetcher}, nil
-		}
-	}
-	return nil, errors.New("multiple matching keys found")
-}
-
-// Save writes a keyring to disk as a binary entity list.
-//
-// This is the standard format described by the OpenPGP specification. The file will thus be
-// importable to any OpenPGP compliant app that can read entity lists (that is, a list of
-// OpenPGP packets).
-//
-// Note that if the keyring contains encrypted keys, the saving process will need to
-// decrypt every single key. Make sure the *KeyRing has a PassphraseFetcher before calling
-// Save.
-func (r *KeyRing) Save(filepath string, clobber bool) error {
-	if !clobber {
-		if _, err := os.Stat(filepath); err == nil {
-			return errors.New("keyring file exists")
-		}
-	}
-
-	f, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	// Write to a buffer so we don't nuke a keychain.
-	temp := bytes.NewBuffer(nil)
-	for _, e := range r.entities {
-
-		// The serializer has no decryption, so we have to do this manually before saving.
-		// Yes, this is a major pain. But apparently encrypted keys cannot be serialized.
-		if e.PrivateKey.Encrypted {
-			if err := decryptPassphrase(e.PrimaryKey.KeyIdShortString(), e.PrivateKey, r.PassphraseFetcher); err != nil {
-				return err
-			}
-		}
-
-		for _, sk := range e.Subkeys {
-			if sk.PrivateKey.Encrypted {
-				if err := decryptPassphrase(e.PrimaryKey.KeyIdShortString()+" subkey", sk.PrivateKey, r.PassphraseFetcher); err != nil {
-					return err
-				}
-			}
-		}
-
-		// According to the godocs, when we call this, we lose "signatures from other entities", but preserve public and private keys.
-		if err := e.SerializePrivate(temp, nil); err != nil {
-			return err
-		}
-	}
-	_, err = io.Copy(f, temp)
-	return err
-}
-
-func decryptPassphrase(msg string, pk *packet.PrivateKey, fetcher PassphraseFetcher) error {
-	if fetcher == nil {
-		return errors.New("unable to decrypt key")
-	}
-	pass, err := fetcher(msg)
-	if err != nil {
-		return err
-	}
-
-	return pk.Decrypt(pass)
-}
-
-// LoadKeyRing loads a keyring from a path.
-func LoadKeyRing(path string) (*KeyRing, error) {
-	// TODO: Should we create a default passphrase fetcher?
-	return LoadKeyRingFetcher(path, nil)
-}
-
-// LoadKeyRingFetcher loads a keyring from a path.
-//
-// If PassphraseFetcher is non-nil, it will be called whenever an encrypted key needs to be decrypted.
-// If left nil, this will cause the keyring to emit an error whenever an encrypted key needs to be decrypted.
-func LoadKeyRingFetcher(path string, fetcher PassphraseFetcher) (*KeyRing, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	entities, err := openpgp.ReadKeyRing(f)
-	if err != nil {
-		return nil, err
-	}
-	return &KeyRing{
-		entities:          entities,
-		PassphraseFetcher: fetcher,
-	}, nil
 }
