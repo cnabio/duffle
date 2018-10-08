@@ -191,7 +191,13 @@ func (i *initCmd) loadOrCreateSecretKeyRing(dest string) (*signature.KeyRing, er
 		}
 		ring.AddKey(k)
 	}
-	return ring, ring.SavePrivate(dest, false)
+	err := ring.SavePrivate(dest, false)
+	if err != nil {
+		return ring, err
+	}
+
+	return ring, os.Chmod(dest, 0600)
+
 }
 
 // loadOrCreatePublicKeyRing creates a ring of public keys.
