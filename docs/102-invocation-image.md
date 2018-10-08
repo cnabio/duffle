@@ -1,6 +1,7 @@
-# The Invocation Image
+# The Invocation Images
 
-The `invocationImage` section of a `bundle.json` must point to exactly one image (the invocation image). This image must be formatted according to the specification laid out in the present document.
+The `invocationImages` section of a `bundle.json` must contain at least one image (the invocation image). This image must be formatted according to the specification laid out in the present document.
+The appropriate invocation image is selected using the current driver.
 
 When a bundle is executed, the invocation image will be retrieved (if necessary) and started. Credential and parameter data is passed to it, and then its `run` tool is executed. (See [The Bundle Runtime](103-bundle-runtime.md) for details).
 
@@ -72,7 +73,7 @@ The `bundle.json` file included inside of the CNAB image _must_ be identical to 
 
 This format is defined in the previous [bundle.json definition](101-bundle-json.md).
 
-_Note:_ The `bundle.json` file that exists inside of the bundle is not a signed bundle, because signing requires calculating the hash of the `invocationImage`.
+_Note:_ The `bundle.json` file that exists inside of the bundle is not a signed bundle, because signing requires calculating the hash of the `invocationImages`.
 
 ## Image Construction Files
 

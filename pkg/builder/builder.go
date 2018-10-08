@@ -100,10 +100,11 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 			}
 
 			if c.Name() == "cnab" {
-				bf.InvocationImage = bundle.InvocationImage{
-					Image:     c.URI(),
-					ImageType: c.Type(),
-				}
+				bf.InvocationImages = []bundle.InvocationImage{
+					{
+						Image:     c.URI(),
+						ImageType: c.Type(),
+					}}
 				bf.Version = strings.Split(c.URI(), ":")[1]
 				return
 			}

@@ -76,7 +76,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 				return err
 			}
 
-			if err = validateImage(bun.InvocationImage); err != nil {
+			if err = bun.Validate(); err != nil {
 				return err
 			}
 
@@ -167,22 +167,6 @@ func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string,
 		}
 	}
 	return bundleFile, nil
-}
-
-func validateImage(img bundle.InvocationImage) error {
-	switch img.ImageType {
-	case "docker", "oci":
-		return validateDockerish(img.Image)
-	default:
-		return nil
-	}
-}
-
-func validateDockerish(s string) error {
-	if !strings.Contains(s, ":") {
-		return errors.New("version is required")
-	}
-	return nil
 }
 
 // overrides parses the --set data and returns values that should override other params.

@@ -2,7 +2,9 @@ package bundle
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 )
 
 // ParseBuffer reads CNAB metadata out of a JSON byte stream
@@ -45,12 +47,12 @@ type CredentialLocation struct {
 
 // Bundle is a CNAB metadata document
 type Bundle struct {
-	Name            string                         `json:"name" toml:"name"`
-	Version         string                         `json:"version" toml:"version"`
-	InvocationImage InvocationImage                `json:"invocationImage" toml:"invocationImage"`
-	Images          []Image                        `json:"images" toml:"images"`
-	Parameters      map[string]ParameterDefinition `json:"parameters" toml:"parameters"`
-	Credentials     map[string]CredentialLocation  `json:"credentials" toml:"credentials"`
+	Name             string                         `json:"name" toml:"name"`
+	Version          string                         `json:"version" toml:"version"`
+	InvocationImages []InvocationImage              `json:"invocationImages" toml:"invocationImages"`
+	Images           []Image                        `json:"images" toml:"images"`
+	Parameters       map[string]ParameterDefinition `json:"parameters" toml:"parameters"`
+	Credentials      map[string]CredentialLocation  `json:"credentials" toml:"credentials"`
 }
 
 // ValuesOrDefaults returns parameter values or the default parameter values
@@ -68,4 +70,37 @@ func ValuesOrDefaults(vals map[string]interface{}, b *Bundle) (map[string]interf
 		res[name] = def.DefaultValue
 	}
 	return res, nil
+}
+
+// Validate the bundle contents.
+func (b Bundle) Validate() error {
+	if len(b.InvocationImages) == 0 {
+		return errors.New("at least one invocation image must be defined in the bundle")
+	}
+
+	for _, img := range b.InvocationImages {
+		err := img.Validate()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Validate the image contents.
+func (img InvocationImage) Validate() error {
+	switch img.ImageType {
+	case "docker", "oci":
+		return validateDockerish(img.Image)
+	default:
+		return nil
+	}
+}
+
+func validateDockerish(s string) error {
+	if !strings.Contains(s, ":") {
+		return errors.New("tag is required")
+	}
+	return nil
 }

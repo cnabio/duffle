@@ -17,17 +17,19 @@ Currently this only works on UNIXy operating systems.
 
 ## Image Management and Bundle.json
 
-Your CNAB `bundle.json` should define an invocationImage like this:
+Your CNAB `bundle.json` should define an at least one invocation image like this:
 
 ```json
 {
     "name": "helloworld",
     "version": "0.1.0",
     "parameters": {},
-    "invocationImage": {
-        "imageType": "azure-image",
-        "image": "duffle-dev/duffle-vm-example-0.1.1"
-    }
+    "invocationImages": [
+        {
+            "imageType": "azure-image",
+            "image": "duffle-dev/duffle-vm-example-0.1.1"
+        }
+    ]
 }
 ```
 

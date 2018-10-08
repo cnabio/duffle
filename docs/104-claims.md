@@ -53,10 +53,12 @@ The CNAB claim is defined as a JSON document.
   "bundle": {
     "name": "hellohelm",
     "version": "0.1.0",
-    "invocationImage": {
-      "imageType": "docker",
-      "image": "technosophos/demo2:0.2.0"
-    },
+    "invocationImages": [
+      {
+        "imageType": "docker",
+        "image": "technosophos/demo2:0.2.0"
+      }
+    ],
     "images": [],
     "parameters": {},
     "credentials": {}

@@ -48,7 +48,7 @@ Optionally, `CNAB_REVISION` _may_ be passed, where this is a _unique string_ ind
 
 Credentials may be mounted as files within the image's runtime filesystem. This definition does not specify how files are to be attached to an image. However, it specifies the conditions under which the files appear.
 
-Files _must_ be attached to the invocation image before the image's `/cnab/app/run` tool is executed. Files _must not_ be attached to the image when the image is built. That is, files _must not_ be part of the image itself. This would cause a security violation. Files _should_ be destroyed immediately following the exit of the `invocationImage`, though secure at-rest encryption may be a viable alternative.
+Files _must_ be attached to the invocation image before the image's `/cnab/app/run` tool is executed. Files _must not_ be attached to the image when the image is built. That is, files _must not_ be part of the image itself. This would cause a security violation. Files _should_ be destroyed immediately following the exit of the invocation image, though secure at-rest encryption may be a viable alternative.
 
 ### Executing the Run Tool
 
