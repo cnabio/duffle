@@ -133,12 +133,6 @@ func (r *KeyRing) SavePrivate(filepath string, clobber bool) error {
 		}
 	}
 
-	f, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
 	// Write to a buffer so we don't nuke a keychain.
 	temp := bytes.NewBuffer(nil)
 	for _, e := range r.entities {
@@ -164,6 +158,12 @@ func (r *KeyRing) SavePrivate(filepath string, clobber bool) error {
 			return err
 		}
 	}
+
+	f, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 	_, err = io.Copy(f, temp)
 	return err
 }
