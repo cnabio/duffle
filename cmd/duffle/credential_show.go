@@ -5,11 +5,10 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/ghodss/yaml"
-	"github.com/spf13/cobra"
-
 	"github.com/deis/duffle/pkg/credentials"
 	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/ghodss/yaml"
+	"github.com/spf13/cobra"
 )
 
 const credentialShowDesc = `
@@ -17,9 +16,10 @@ This command will fetch the credential set with the given name and prints the co
 `
 
 type credentialShowCmd struct {
-	name string
-	home home.Home
-	out  io.Writer
+	name       string
+	home       home.Home
+	out        io.Writer
+	unredacted bool
 }
 
 func newCredentialShowCmd(w io.Writer) *cobra.Command {
@@ -35,6 +35,7 @@ func newCredentialShowCmd(w io.Writer) *cobra.Command {
 			return show.run()
 		},
 	}
+	cmd.Flags().BoolVar(&show.unredacted, "unredacted", false, "Print the secret values without redacting them")
 	return cmd
 }
 
@@ -43,16 +44,36 @@ func (sh *credentialShowCmd) run() error {
 	if err != nil {
 		return err
 	}
+	return sh.printCredentials(*cs)
+}
+
+func (sh *credentialShowCmd) printCredentials(cs credentials.CredentialSet) error {
+	if !sh.unredacted {
+		// Do not modify the passed credentials
+		creds := make([]credentials.CredentialStrategy, len(cs.Credentials))
+		for i, cred := range cs.Credentials {
+			if cred.Source.Value != "" {
+				cred.Source.Value = "REDACTED"
+			}
+			if cred.Destination.Value != "" {
+				cred.Destination.Value = "REDACTED"
+			}
+			creds[i] = cred
+		}
+		cs.Credentials = creds
+	}
+
 	b, err := yaml.Marshal(cs.Name)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("name: %s", string(b))
+	fmt.Fprintf(sh.out, "name: %s", string(b))
 	b, err = yaml.Marshal(cs.Credentials)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("credentials:\n%s", string(b))
+	fmt.Fprintf(sh.out, "credentials:\n%s", string(b))
+
 	return nil
 }
 
