@@ -100,6 +100,10 @@ func (r *KeyRing) Key(id string) (*Key, error) {
 	return nil, errors.New("multiple matching keys found")
 }
 
+// PrivateKeys returns all of the private keys on this keyring.
+//
+// A private key is any key that has material in the private key packet. Note that
+// this neither tests that the key is valid, nor decrypts an encrypted key.
 func (r *KeyRing) PrivateKeys() []*Key {
 	pks := []*Key{}
 	for _, e := range r.entities {
@@ -122,7 +126,7 @@ func (r *KeyRing) PrivateKeys() []*Key {
 // Note that if the keyring contains encrypted keys, the saving process will need to
 // decrypt every single key. Make sure the *KeyRing has a PassphraseFetcher before calling
 // Save.
-func (r *KeyRing) Save(filepath string, clobber bool) error {
+func (r *KeyRing) SavePrivate(filepath string, clobber bool) error {
 	if !clobber {
 		if _, err := os.Stat(filepath); err == nil {
 			return errors.New("keyring file exists")
@@ -157,6 +161,34 @@ func (r *KeyRing) Save(filepath string, clobber bool) error {
 
 		// According to the godocs, when we call this, we lose "signatures from other entities", but preserve public and private keys.
 		if err := e.SerializePrivate(temp, nil); err != nil {
+			return err
+		}
+	}
+	_, err = io.Copy(f, temp)
+	return err
+}
+
+// SavePublic saves the public keys into a file.
+//
+// Private key material is ignored.
+func (r *KeyRing) SavePublic(filepath string, clobber bool) error {
+	if !clobber {
+		if _, err := os.Stat(filepath); err == nil {
+			return errors.New("keyring file exists")
+		}
+	}
+
+	f, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	// Write to a buffer so we don't nuke a keychain.
+	temp := bytes.NewBuffer(nil)
+	for _, e := range r.entities {
+		// According to the godocs, when we call this, we lose "signatures from other entities", but preserve public and private keys.
+		if err := e.Serialize(temp); err != nil {
 			return err
 		}
 	}

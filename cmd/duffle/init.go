@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -21,16 +22,21 @@ Initializes duffle with configuration required to start installing CNAB bundles.
 
 This command will create a subdirectory in your home directory, and use that directory for storing
 configuration, preferences, and persistent data. Duffle uses OpenPGP-style keys for signing and
-verification. If you do not provide a keyring to import, the init phase will generate a keyring for
+verification. If you do not provide a secret key to import, the init phase will generate a keyring for
 you, and create a signing key.
+
+During initialization, you may use '--public-keys' to import a keyring of public keys. These keys will
+then be used by other commands (such as 'duffle install') to verify the integrity of a package. If
+you do not supply keys during initialization, you will need to provide them later.
 `
 )
 
 type initCmd struct {
-	dryRun   bool
-	keyFile  string
-	username string
-	w        io.Writer
+	dryRun     bool
+	keyFile    string
+	username   string
+	w          io.Writer
+	pubkeyFile string
 }
 
 func newInitCmd(w io.Writer) *cobra.Command {
@@ -42,6 +48,9 @@ func newInitCmd(w io.Writer) *cobra.Command {
 		Long:  initDesc,
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if i.keyFile != "" && i.username != "" {
+				fmt.Fprintln(os.Stderr, "WARNING: 'user' and 'signing-key' were both provided. Ignoring 'user'.")
+			}
 			return i.run()
 		},
 	}
@@ -49,7 +58,8 @@ func newInitCmd(w io.Writer) *cobra.Command {
 	f := cmd.Flags()
 	f.BoolVar(&i.dryRun, "dry-run", false, "go through all the steps without actually installing anything")
 	f.StringVarP(&i.keyFile, "signing-key", "k", "", "Armored OpenPGP key to be used for signing. If not specified, one will be generated for you")
-	f.StringVarP(&i.username, "user", "u", os.ExpandEnv("$USER <$USER@localhost>"), "User identity for the OpenPGP key. It is best to set this to your email address.")
+	f.StringVarP(&i.pubkeyFile, "public-keys", "p", "", "Armored OpenPGP key containing trusted public keys. If not specified, no public keys will be trusted by default")
+	f.StringVarP(&i.username, "user", "u", "", "User identity for the OpenPGP key. The format is 'NAME (OPTIONAL COMMENT) <EMAIL@ADDRESS>'.")
 
 	return cmd
 }
@@ -71,10 +81,11 @@ func (i *initCmd) run() error {
 	if err := i.ensureRepositories(); err != nil {
 		return err
 	}
-	if _, err := i.loadOrCreateSecretKeyRing(home.SecretKeyRing()); err != nil {
+	pkr, err := i.loadOrCreateSecretKeyRing(home.SecretKeyRing())
+	if err != nil {
 		return err
 	}
-	_, err := i.loadOrCreatePublicKeyRing(home.PublicKeyRing())
+	_, err = i.loadOrCreatePublicKeyRing(home.PublicKeyRing(), pkr)
 	return err
 }
 
@@ -145,8 +156,20 @@ func (i *initCmd) loadOrCreateSecretKeyRing(dest string) (*signature.KeyRing, er
 		if err != nil {
 			return ring, err
 		}
+
+		if all := ring.PrivateKeys(); len(all) == 0 {
+			// If we have no private keys, this is probably an error condition, since
+			// signing will be broken.
+			return ring, errors.New("no private keys were found in the key file")
+		}
+
 		for _, k := range ring.PrivateKeys() {
-			fmt.Fprintf(i.w, "==> Importing %q\n", k.UserID())
+			uid, err := k.UserID()
+			if err != nil {
+				fmt.Fprintln(i.w, "==> Importing anonymous key")
+				continue
+			}
+			fmt.Fprintf(i.w, "==> Importing %q\n", uid)
 		}
 	} else {
 		var user signature.UserID
@@ -168,10 +191,14 @@ func (i *initCmd) loadOrCreateSecretKeyRing(dest string) (*signature.KeyRing, er
 		}
 		ring.AddKey(k)
 	}
-	return ring, ring.Save(dest, false)
+	return ring, ring.SavePrivate(dest, false)
 }
 
-func (i *initCmd) loadOrCreatePublicKeyRing(dest string) (*signature.KeyRing, error) {
+// loadOrCreatePublicKeyRing creates a ring of public keys.
+// If the privateKeys are passed in, the public keys for each is then saved in the public keyring.
+// This is useful if you need to verify things that were signed via one of the private keys on
+// the secret ring.
+func (i *initCmd) loadOrCreatePublicKeyRing(dest string, privateKeys *signature.KeyRing) (*signature.KeyRing, error) {
 	if _, err := os.Stat(dest); err == nil {
 		// Since this is non-mutating, we can do this in a dry-run.
 		return signature.LoadKeyRing(dest)
@@ -187,7 +214,24 @@ func (i *initCmd) loadOrCreatePublicKeyRing(dest string) (*signature.KeyRing, er
 		return &signature.KeyRing{}, nil
 	}
 	ring := signature.CreateKeyRing(passwordFetcher)
-	return ring, ring.Save(dest, false)
+
+	if i.pubkeyFile != "" {
+		keys, err := os.Open(i.pubkeyFile)
+		if err != nil {
+			return ring, err
+		}
+		err = ring.Add(keys)
+		keys.Close()
+		if err != nil {
+			return ring, err
+		}
+	}
+
+	for _, pk := range privateKeys.PrivateKeys() {
+		ring.AddKey(pk)
+	}
+
+	return ring, ring.SavePublic(dest, false)
 }
 
 func passwordFetcher(prompt string) ([]byte, error) {

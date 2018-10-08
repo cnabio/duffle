@@ -13,7 +13,7 @@ import (
 func TestDuffleHome(t *testing.T) {
 	is := assert.New(t)
 	ph := Home("/r")
-	runtime := fmt.Sprintf("runtimee %s", runtime.GOOS)
+	runtime := fmt.Sprintf("runtime %s", runtime.GOOS)
 	is.Equal(ph.String(), "/r", runtime)
 	is.Equal(ph.Repositories(), "/r/repositories", runtime)
 	is.Equal(ph.Plugins(), "/r/plugins", runtime)

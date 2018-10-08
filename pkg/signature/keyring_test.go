@@ -97,12 +97,12 @@ func TestCreateKeyRing(t *testing.T) {
 	is.Equal(k.entity.Identities[fullExtraID].Name, fullExtraID)
 }
 
-func TestKeyRing_Save(t *testing.T) {
+func TestKeyRing_SavePrivate(t *testing.T) {
 	is := assert.New(t)
 	kr, err := LoadKeyRingFetcher(keyringFile, testPassphraseFetch)
 	is.NoError(err)
 
-	is.Error(kr.Save("testdata/noclobber.empty", false))
+	is.Error(kr.SavePrivate("testdata/noclobber.empty", false))
 
 	dirname, err := ioutil.TempDir("", "signature-")
 	if err != nil {
@@ -115,7 +115,7 @@ func TestKeyRing_Save(t *testing.T) {
 	newfile := filepath.Join(dirname, "save.gpg")
 	// We do this to verify that the clobber flag is working.
 	is.NoError(ioutil.WriteFile(newfile, []byte(" "), 0755))
-	is.NoError(kr.Save(newfile, true))
+	is.NoError(kr.SavePrivate(newfile, true))
 
 	// Finally, we test loading the newly saved keyring
 	kr2, err := LoadKeyRing(newfile)
@@ -126,6 +126,41 @@ func TestKeyRing_Save(t *testing.T) {
 	kk, err := kr2.Key("123A4002462DC23B")
 	is.NoError(err)
 	is.Equal(kk.entity.Identities[key2Email].Name, key2Email)
+}
+
+func TestKeyRing_SavePublic(t *testing.T) {
+	is := assert.New(t)
+	kr, err := LoadKeyRingFetcher(keyringFile, testPassphraseFetch)
+	is.NoError(err)
+
+	is.Error(kr.SavePublic("testdata/noclobber.empty", false))
+
+	dirname, err := ioutil.TempDir("", "signature-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		is.NoError(os.RemoveAll(dirname))
+	}()
+
+	newfile := filepath.Join(dirname, "save.gpg")
+	// We do this to verify that the clobber flag is working.
+	is.NoError(ioutil.WriteFile(newfile, []byte(" "), 0755))
+	is.NoError(kr.SavePublic(newfile, true))
+
+	// Finally, we test loading the newly saved keyring
+	kr2, err := LoadKeyRing(newfile)
+	is.NoError(err)
+	is.Len(kr2.entities, len(kr.entities))
+
+	// Test that a known key exists.
+	kk, err := kr2.Key("123A4002462DC23B")
+	is.NoError(err)
+	is.Equal(kk.entity.Identities[key2Email].Name, key2Email)
+
+	// Test that the key does NOT have a private component
+	_, err = kk.bestPrivateKey()
+	is.Error(err)
 }
 
 func TestKeyRing_PrivateKeys(t *testing.T) {

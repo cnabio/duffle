@@ -39,7 +39,7 @@ func TestCreateKey(t *testing.T) {
 	k, err := CreateKey(u)
 	is.NoError(err)
 	is.NotNil(k.entity.PrimaryKey)
-	is.NotNil(k.entity.PrimaryKey)
+	is.NotNil(k.entity.PrivateKey)
 	kk, err := k.bestPrivateKey()
 	is.NoError(err)
 	is.NotNil(kk)
@@ -82,13 +82,15 @@ func TestKey_UserID(t *testing.T) {
 	key, err := k.Key("test2@example.com")
 	is.NoError(err)
 
-	u := key.UserID()
+	u, err := key.UserID()
+	is.NoError(err)
 	is.Equal(u.String(), "test2@example.com <test2@example.com>")
 
 	key, err = k.Key(fullKeyID)
 	is.NoError(err)
 
-	u = key.UserID()
+	u, err = key.UserID()
+	is.NoError(err)
 	is.Equal(u.String(), fullKeyID)
 }
 

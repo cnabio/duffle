@@ -36,8 +36,9 @@ func CreateKey(user UserID) (*Key, error) {
 		return nil, err
 	}
 
-	// Okay, this is a little weird, but what we are doing is using SerializePrivate to
-	// do all of the key/subkey signing.
+	// Okay, this is a little weird, but certain self-signing operations must be done before
+	// a private key can be used. If we need to use this key before writing it to disk,
+	// we'll need to do something like this:
 	/*
 		var buf bytes.Buffer
 		if err := e.SerializePrivate(&buf, &keyCreationConfig); err != nil {
@@ -51,16 +52,18 @@ func CreateKey(user UserID) (*Key, error) {
 // UserID returns the UserID for this key
 //
 // For OpenPGP insiders: This returns the FIRST identity that appears to have a valid name.
-func (k *Key) UserID() UserID {
+//
+// An error is returned if no parseable user ID can be found.
+func (k *Key) UserID() (UserID, error) {
 	for i := range k.entity.Identities {
 		id, err := ParseUserID(i)
 		if err != nil {
 			// Skip this one. No point in erroring out.
 			continue
 		}
-		return id
+		return id, nil
 	}
-	return UserID{Name: "UNKNOWN", Email: "UNKNOWN@UNKNOWN"}
+	return UserID{}, errors.New("no parseable user identity attached to key")
 }
 
 // bestPrivateKey will find a private key and decrypt it if necessary.
