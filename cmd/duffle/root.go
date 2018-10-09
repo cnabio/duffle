@@ -9,7 +9,9 @@ import (
 
 var verbose bool
 
-func newRootCmd(w io.Writer) *cobra.Command {
+// newRootCmd builds the root duffle command
+// - outputRedirect: Optional, specify to capture all command output (stderr and stdout)
+func newRootCmd(outputRedirect io.Writer) *cobra.Command {
 	const usage = `The CNAB installer`
 
 	cmd := &cobra.Command{
@@ -23,25 +25,26 @@ func newRootCmd(w io.Writer) *cobra.Command {
 			}
 		},
 	}
-	cmd.SetOutput(w)
+	cmd.SetOutput(outputRedirect)
+	outLog := cmd.OutOrStdout()
 
 	p := cmd.PersistentFlags()
 	p.StringVar(&duffleHome, "home", defaultDuffleHome(), "location of your Duffle config. Overrides $DUFFLE_HOME")
 	p.BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
 
-	cmd.AddCommand(newBuildCmd(w))
-	cmd.AddCommand(newInitCmd(w))
-	cmd.AddCommand(newListCmd(w))
-	cmd.AddCommand(newPullCmd(w))
-	cmd.AddCommand(newPushCmd(w))
-	cmd.AddCommand(newRepoCmd(w))
-	cmd.AddCommand(newSearchCmd(w))
-	cmd.AddCommand(newVersionCmd(w))
+	cmd.AddCommand(newBuildCmd(outLog))
+	cmd.AddCommand(newInitCmd(outLog))
+	cmd.AddCommand(newListCmd(outLog))
+	cmd.AddCommand(newPullCmd(outLog))
+	cmd.AddCommand(newPushCmd(outLog))
+	cmd.AddCommand(newRepoCmd(outLog))
+	cmd.AddCommand(newSearchCmd(outLog))
+	cmd.AddCommand(newVersionCmd(outLog))
 	cmd.AddCommand(newInstallCmd())
-	cmd.AddCommand(newStatusCmd(w))
+	cmd.AddCommand(newStatusCmd(outLog))
 	cmd.AddCommand(newUninstallCmd())
 	cmd.AddCommand(newUpgradeCmd())
-	cmd.AddCommand(newCredentialsCmd(w))
+	cmd.AddCommand(newCredentialsCmd(outLog))
 
 	return cmd
 }
