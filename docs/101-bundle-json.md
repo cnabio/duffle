@@ -23,7 +23,7 @@ Here's how a "thin" bundle looks:
 
 ```json
 {
-    "schemaVersion": 1,
+    "schemaVersion": "v1",
     "name": "helloworld",
     "version": "0.1.2",
     "description": "An example 'thin' helloworld Cloud-Native Application Bundle",
@@ -142,7 +142,7 @@ Fields that do not match this specification _should_ cause failures.
 ## Invocation Images
 
 The `invocationImages` section describes the images that contains the bootstrapping for the image. The appropriate invocation
-image is selected using the current driver.                  
+image is selected using the current driver.
 
 ```json
 "invocationImages": [
@@ -241,7 +241,7 @@ The `parameters` section of the `bundle.json` defines which parameters a user (p
         "minValue": 10,
         "maxValue": 10240,
         "metadata": {
-            "description": "The port that the backend will listen on" 
+            "description": "The port that the backend will listen on"
         }
     }
 }
