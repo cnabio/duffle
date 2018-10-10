@@ -31,7 +31,7 @@ func main() {
 			}
 		}
 	}()
-	rootCmd = newRootCmd(os.Stdout)
+	rootCmd = newRootCmd(nil)
 	must(rootCmd.Execute())
 }
 
