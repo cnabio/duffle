@@ -101,7 +101,6 @@ Here is an example of an index file:
                         "path": ""
                     }
                 },
-                "deprecated": false,
                 "description": "",
                 "images": null,
                 "invocationImage": {

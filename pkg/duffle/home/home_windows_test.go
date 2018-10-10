@@ -12,7 +12,7 @@ func TestDuffleHome(t *testing.T) {
 	is := assert.New(t)
 	ph := Home("r:\\")
 	is.Equal(ph.String(), "r:\\")
-	is.Equal(ph.Repositories(), "r:\\repositories")
+	is.Equal(ph.Cache(), "r:\\cache")
 	is.Equal(ph.Plugins(), "r:\\plugins")
 	is.Equal(ph.Claims(), "r:\\claims")
 	is.Equal(ph.Credentials(), "r:\\credentials")
