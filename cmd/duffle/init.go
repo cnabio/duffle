@@ -248,6 +248,7 @@ func (i *initCmd) printUserID(k *signature.Key) {
 	uid, err := k.UserID()
 	if err != nil {
 		fmt.Fprintln(i.w, "==> Importing anonymous key")
+		return
 	}
 	fmt.Fprintf(i.w, "==> Importing %q\n", uid)
 }
