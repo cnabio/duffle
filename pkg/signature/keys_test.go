@@ -1,110 +1,20 @@
 package signature
 
 import (
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 const (
-	test1pw     = "password"
-	keyringFile = "testdata/keyring.gpg"
-	fullKeyID   = "Test One (Signer) <test1@example.com>"
-	keyEmail    = "test1@example.com"
-	key2Email   = "test2@example.com"
-	fullExtraID = "Extra Key (Signer) <extra1@example.com>"
+	test1pw       = "password"
+	keyringFile   = "testdata/keyring.gpg"
+	fullKeyID     = "Test One (Signer) <test1@example.com>"
+	keyEmail      = "test1@example.com"
+	key2Email     = "test2@example.com"
+	fullExtraID   = "Extra Key (Signer) <extra1@example.com>"
+	publicKeyFile = "testdata/public.gpg"
 )
-
-func TestLoadKeyRing(t *testing.T) {
-	is := assert.New(t)
-	k, err := LoadKeyRing(keyringFile)
-	is.NoError(err)
-	is.Len(k.entities, 2)
-	is.Equal(k.entities[0].Identities[fullKeyID].UserId.Email, keyEmail)
-	is.NotNil(k.entities[0].PrivateKey)
-}
-
-func TestKeyring_Key(t *testing.T) {
-	is := assert.New(t)
-	k, err := LoadKeyRing(keyringFile)
-	is.NoError(err)
-
-	key, err := k.Key("test1@example.com")
-	is.NoError(err)
-
-	is.Equal(key.entity.Identities[fullKeyID].UserId.Email, keyEmail)
-}
-
-func TestKeyring_MultipleKeys(t *testing.T) {
-	is := assert.New(t)
-	k, err := LoadKeyRing(keyringFile)
-	is.NoError(err)
-
-	_, err = k.Key("test")
-	is.Error(err)
-	is.Contains(err.Error(), "multiple matching keys found")
-}
-
-func TestKeyring_KeyByID(t *testing.T) {
-	is := assert.New(t)
-	k, err := LoadKeyRing(keyringFile)
-	is.NoError(err)
-
-	key, err := k.Key("6EFB02A2F77D9682")
-	is.NoError(err)
-	is.Equal(key.entity.Identities[fullKeyID].UserId.Email, keyEmail)
-
-	key, err = k.Key("123A4002462DC23B")
-	is.NoError(err)
-	is.Equal(key.entity.Identities[key2Email].Name, key2Email)
-}
-
-func TestKeyRing_Add(t *testing.T) {
-	is := assert.New(t)
-	extras, err := os.Open("testdata/extra.gpg")
-	is.NoError(err)
-	kr, err := LoadKeyRing(keyringFile)
-	is.NoError(err)
-	is.NoError(kr.Add(extras))
-
-	k, err := kr.Key("extra1@example.com")
-	is.NoError(err)
-	is.Equal(k.entity.Identities[fullExtraID].Name, fullExtraID)
-}
-
-func TestKeyRing_Save(t *testing.T) {
-	is := assert.New(t)
-	kr, err := LoadKeyRingFetcher(keyringFile, testPassphraseFetch)
-	is.NoError(err)
-
-	is.Error(kr.Save("testdata/noclobber.empty", false))
-
-	dirname, err := ioutil.TempDir("", "signature-")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		is.NoError(os.RemoveAll(dirname))
-	}()
-
-	newfile := filepath.Join(dirname, "save.gpg")
-	// We do this to verify that the clobber flag is working.
-	is.NoError(ioutil.WriteFile(newfile, []byte(" "), 0755))
-	is.NoError(kr.Save(newfile, true))
-
-	// Finally, we test loading the newly saved keyring
-	kr2, err := LoadKeyRing(newfile)
-	is.NoError(err)
-	is.Len(kr2.entities, len(kr.entities))
-
-	// Test that a known key exists.
-	kk, err := kr2.Key("123A4002462DC23B")
-	is.NoError(err)
-	is.Equal(kk.entity.Identities[key2Email].Name, key2Email)
-}
 
 func TestKey(t *testing.T) {
 	is := assert.New(t)
@@ -118,6 +28,22 @@ func TestKey(t *testing.T) {
 	pk, err := key.bestPrivateKey()
 	is.NoError(err)
 	is.NotNil(pk)
+}
+
+func TestCreateKey(t *testing.T) {
+	is := assert.New(t)
+	u := UserID{
+		Name:    "User Name",
+		Comment: "Comment",
+		Email:   "email@example.com",
+	}
+	k, err := CreateKey(u)
+	is.NoError(err)
+	is.NotNil(k.entity.PrimaryKey)
+	is.NotNil(k.entity.PrivateKey)
+	kk, err := k.bestPrivateKey()
+	is.NoError(err)
+	is.NotNil(kk)
 }
 
 func TestKey_NoKeyFound(t *testing.T) {
@@ -148,6 +74,37 @@ func TestKey_NoPassphrase(t *testing.T) {
 	pk, err = key.bestPrivateKey()
 	is.NoError(err)
 	is.NotNil(pk)
+}
+
+func TestKey_UserID(t *testing.T) {
+	is := assert.New(t)
+	k, err := LoadKeyRing(keyringFile)
+	is.NoError(err)
+	key, err := k.Key("test2@example.com")
+	is.NoError(err)
+
+	u, err := key.UserID()
+	is.NoError(err)
+	is.Equal(u.String(), "test2@example.com <test2@example.com>")
+
+	key, err = k.Key(fullKeyID)
+	is.NoError(err)
+
+	u, err = key.UserID()
+	is.NoError(err)
+	is.Equal(u.String(), fullKeyID)
+}
+
+func TestKey_Fingerprint(t *testing.T) {
+	expect := "5D76 712C E625 988A 272A 7E28 9B79 91DD 4037 8340"
+
+	is := assert.New(t)
+	k, err := LoadKeyRing(keyringFile)
+	is.NoError(err)
+	key, err := k.Key("test2@example.com")
+	is.NoError(err)
+
+	is.Equal(key.Fingerprint(), expect)
 }
 
 func testPassphraseFetch(name string) ([]byte, error) {

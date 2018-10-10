@@ -1,3 +1,4 @@
+// Package home provides tools for working with the files in a Duffle user's home directory.
 package home
 
 import (
@@ -48,6 +49,16 @@ func (h Home) Claims() string {
 // Credentials are where credentialsets are stored.
 func (h Home) Credentials() string {
 	return h.Path("credentials")
+}
+
+// SecretKeyRing returns the path to the keyring containing private keys.
+func (h Home) SecretKeyRing() string {
+	return h.Path("secret.ring")
+}
+
+// PublicKeyRing returns the path to the keyring containing public keys.
+func (h Home) PublicKeyRing() string {
+	return h.Path("public.ring")
 }
 
 // Plugins returns the path to the Duffle plugins.
