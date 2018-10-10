@@ -4,3 +4,4 @@ vendor/
 *.exe
 __pycache__/
 /duffle
+.vscode/settings.json

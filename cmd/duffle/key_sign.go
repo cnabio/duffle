@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -23,6 +24,7 @@ If no key name is supplied, this uses the first signing key in the secret keyrin
 
 func newKeySignCmd(w io.Writer) *cobra.Command {
 	var identity string
+	var noValidate bool
 	cmd := &cobra.Command{
 		Use:   "sign FILE",
 		Short: "clear-sign a bundle.json file",
@@ -31,21 +33,38 @@ func newKeySignCmd(w io.Writer) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h := home.Home(homePath())
 			secring := h.SecretKeyRing()
-			return signFile(args[0], secring, identity)
+			return signFile(args[0], secring, identity, noValidate)
 		},
 	}
 	cmd.Flags().StringVarP(&identity, "user", "u", "", "the user ID of the key to use. Format is either email address or 'NAME (COMMENT) <EMAIL>'")
+	cmd.Flags().BoolVar(&noValidate, "no-validate", false, "do not validate the JSON before marshaling it.")
 
 	return cmd
 }
 
-func signFile(filepath, keyring, identity string) error {
+func signFile(filepath, keyring, identity string, skipValidation bool) error {
 	// Verify that file exists
 	if fi, err := os.Stat(filepath); err != nil {
 		return err
 	} else if fi.IsDir() {
 		return errors.New("cannot sign a directory")
 	}
+
+	bdata, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return err
+	}
+	b, err := bundle.Parse(string(bdata))
+	if err != nil {
+		return err
+	}
+
+	if !skipValidation {
+		if err := b.Validate(); err != nil {
+			return err
+		}
+	}
+
 	// Load keyring
 	kr, err := signature.LoadKeyRing(keyring)
 	if err != nil {
@@ -65,9 +84,10 @@ func signFile(filepath, keyring, identity string) error {
 		}
 		k = all[0]
 	}
+
 	// Sign the file
 	s := signature.NewSigner(k)
-	data, err := s.Clearsign(&bundle.Bundle{Name: "test"})
+	data, err := s.Clearsign(&b)
 	fmt.Println(string(data))
 	return err
 }

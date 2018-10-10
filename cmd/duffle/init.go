@@ -27,7 +27,8 @@ you, and create a signing key.
 
 During initialization, you may use '--public-keys' to import a keyring of public keys. These keys will
 then be used by other commands (such as 'duffle install') to verify the integrity of a package. If
-you do not supply keys during initialization, you will need to provide them later.
+you do not supply keys during initialization, you will need to provide them later. WARNING: You should
+not import private keys with the '--public-keys' flag, or they may be placed in your public keyring.
 `
 )
 
