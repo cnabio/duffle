@@ -170,4 +170,20 @@ func TestKeyRing_PrivateKeys(t *testing.T) {
 
 	keys := k.PrivateKeys()
 	is.Len(keys, 2)
+
+	// Make sure we are not loading public keys
+	k, err = LoadKeyRing(publicKeyFile)
+	is.NoError(err)
+
+	keys = k.PrivateKeys()
+	is.Len(keys, 0)
+}
+
+func TestKeyRing_Keys(t *testing.T) {
+	is := assert.New(t)
+	k, err := LoadKeyRing(publicKeyFile)
+	is.NoError(err)
+
+	keys := k.Keys()
+	is.Len(keys, 2)
 }

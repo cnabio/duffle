@@ -52,7 +52,6 @@ func (r *KeyRing) Key(id string) (*Key, error) {
 	// - Keygrip (40 hex digits)
 
 	hexID, err := strconv.ParseInt(id, 16, 64)
-	println("looking for", hexID)
 	if err == nil {
 		k := r.entities.KeysById(uint64(hexID))
 		l := len(k)
@@ -107,7 +106,13 @@ func (r *KeyRing) Key(id string) (*Key, error) {
 func (r *KeyRing) PrivateKeys() []*Key {
 	pks := []*Key{}
 	for _, e := range r.entities {
-		if e.PrivateKey != nil {
+		// This is the best test for a private key that I have been able to figure out.
+		// It tests _if_ there is a PrivateKey on the entity. But that alone is insufficient,
+		// since public keys sometimes have the public key data tacked on here. So then
+		// we test for whether the private key has private key material OR whether it is
+		// an encrypted key (which means it is private, but the data is not in the material
+		// section until it has been decrypted).
+		if e.PrivateKey != nil && (e.PrivateKey.PrivateKey != nil || e.PrivateKey.Encrypted) {
 			pks = append(pks, &Key{
 				entity:            e,
 				PassphraseFetcher: r.PassphraseFetcher,
@@ -117,7 +122,19 @@ func (r *KeyRing) PrivateKeys() []*Key {
 	return pks
 }
 
-// Save writes a keyring to disk as a binary entity list.
+// Keys returns all keys (public and private).
+func (r *KeyRing) Keys() []*Key {
+	pks := []*Key{}
+	for _, e := range r.entities {
+		pks = append(pks, &Key{
+			entity:            e,
+			PassphraseFetcher: r.PassphraseFetcher,
+		})
+	}
+	return pks
+}
+
+// SavePrivate writes a keyring to disk as a binary entity list.
 //
 // This is the standard format described by the OpenPGP specification. The file will thus be
 // importable to any OpenPGP compliant app that can read entity lists (that is, a list of
@@ -126,7 +143,7 @@ func (r *KeyRing) PrivateKeys() []*Key {
 // Note that if the keyring contains encrypted keys, the saving process will need to
 // decrypt every single key. Make sure the *KeyRing has a PassphraseFetcher before calling
 // Save.
-func (r *KeyRing) SavePrivate(filepath string, clobber bool) error {
+func (r *KeyRing) SavePrivate /*Ryan*/ (filepath string, clobber bool) error {
 	if !clobber {
 		if _, err := os.Stat(filepath); err == nil {
 			return errors.New("keyring file exists")
@@ -187,7 +204,7 @@ func (r *KeyRing) SavePublic(filepath string, clobber bool) error {
 	// Write to a buffer so we don't nuke a keychain.
 	temp := bytes.NewBuffer(nil)
 	for _, e := range r.entities {
-		// According to the godocs, when we call this, we lose "signatures from other entities", but preserve public and private keys.
+		// According to the godocs, when we call this, we lose private keys, but keep public and signatures
 		if err := e.Serialize(temp); err != nil {
 			return err
 		}

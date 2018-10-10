@@ -7,12 +7,13 @@ import (
 )
 
 const (
-	test1pw     = "password"
-	keyringFile = "testdata/keyring.gpg"
-	fullKeyID   = "Test One (Signer) <test1@example.com>"
-	keyEmail    = "test1@example.com"
-	key2Email   = "test2@example.com"
-	fullExtraID = "Extra Key (Signer) <extra1@example.com>"
+	test1pw       = "password"
+	keyringFile   = "testdata/keyring.gpg"
+	fullKeyID     = "Test One (Signer) <test1@example.com>"
+	keyEmail      = "test1@example.com"
+	key2Email     = "test2@example.com"
+	fullExtraID   = "Extra Key (Signer) <extra1@example.com>"
+	publicKeyFile = "testdata/public.gpg"
 )
 
 func TestKey(t *testing.T) {
@@ -92,6 +93,18 @@ func TestKey_UserID(t *testing.T) {
 	u, err = key.UserID()
 	is.NoError(err)
 	is.Equal(u.String(), fullKeyID)
+}
+
+func TestKey_Fingerprint(t *testing.T) {
+	expect := "5D76 712C E625 988A 272A 7E28 9B79 91DD 4037 8340"
+
+	is := assert.New(t)
+	k, err := LoadKeyRing(keyringFile)
+	is.NoError(err)
+	key, err := k.Key("test2@example.com")
+	is.NoError(err)
+
+	is.Equal(key.Fingerprint(), expect)
 }
 
 func testPassphraseFetch(name string) ([]byte, error) {

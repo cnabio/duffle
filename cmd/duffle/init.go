@@ -164,12 +164,7 @@ func (i *initCmd) loadOrCreateSecretKeyRing(dest string) (*signature.KeyRing, er
 		}
 
 		for _, k := range ring.PrivateKeys() {
-			uid, err := k.UserID()
-			if err != nil {
-				fmt.Fprintln(i.w, "==> Importing anonymous key")
-				continue
-			}
-			fmt.Fprintf(i.w, "==> Importing %q\n", uid)
+			i.printUserID(k)
 		}
 	} else {
 		var user signature.UserID
@@ -233,13 +228,30 @@ func (i *initCmd) loadOrCreatePublicKeyRing(dest string, privateKeys *signature.
 		}
 	}
 
-	for _, pk := range privateKeys.PrivateKeys() {
+	// While Keys() returns public and private, the SavePublic call tosses
+	// the private keys material, and only serializes the public part of
+	// the private key. This is desirable if we want to be able to
+	// verify the signatures that were signed with a private key.
+	for _, pk := range privateKeys.Keys() {
 		ring.AddKey(pk)
+	}
+
+	for _, k := range ring.Keys() {
+		i.printUserID(k)
 	}
 
 	return ring, ring.SavePublic(dest, false)
 }
 
+func (i *initCmd) printUserID(k *signature.Key) {
+	uid, err := k.UserID()
+	if err != nil {
+		fmt.Fprintln(i.w, "==> Importing anonymous key")
+	}
+	fmt.Fprintf(i.w, "==> Importing %q\n", uid)
+}
+
+// passwordFetcher is a simple prompt-based no-echo password input.
 func passwordFetcher(prompt string) ([]byte, error) {
 	fmt.Printf("Passphrase for key %q >  ", prompt)
 	pp, err := terminal.ReadPassword(int(syscall.Stdin))

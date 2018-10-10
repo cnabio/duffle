@@ -1,7 +1,9 @@
 package signature
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/packet"
@@ -64,6 +66,20 @@ func (k *Key) UserID() (UserID, error) {
 		return id, nil
 	}
 	return UserID{}, errors.New("no parseable user identity attached to key")
+}
+
+// Fingerprint returns a string representation of the fingerprint.
+func (k *Key) Fingerprint() string {
+	fields := k.entity.PrimaryKey.Fingerprint
+	var buf bytes.Buffer
+	for i, b := range fields {
+		if i > 0 && i%2 == 0 {
+			buf.WriteString(" ")
+		}
+		buf.WriteString(fmt.Sprintf("%0X", b))
+
+	}
+	return buf.String()
 }
 
 // bestPrivateKey will find a private key and decrypt it if necessary.
