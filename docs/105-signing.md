@@ -194,6 +194,66 @@ UkmNdIkOChvHv42XkWnF1t1Hyi51ig==
 -----END PGP SIGNATURE-----
 ```
 
+## JSON encoding of Signatures
+
+An alternative format for signatures and attestations allows encoding the objects entirely in JSON:
+
+```json
+{
+    "name": "foo",
+    "version": "1.0",
+    "invocationImages": [
+        {
+            "imageType": "docker",
+            "image": "technosophos/helloworld:0.1.2",
+            "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685"
+        }
+    ],
+    "images": [],
+    "parameters": {},
+    "credentials": {},
+    "verification": {
+        "payload": "ewogICAgIm5hbWUiOiAiZm9vIiwKICAgICJ2ZXJzaW9uIjogIjEuMCIsCiAgICAiaW52b2NhdGlvbkltYWdlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJpbWFnZVR5cGUiOiAiZG9ja2VyIiwKICAgICAgICAgICAgImltYWdlIjogInRlY2hub3NvcGhvcy9oZWxsb3dvcmxkOjAuMS4yIiwKICAgICAgICAgICAgImRpZ2VzdCI6ICJzaGEyNTY6YWNhNDYwYWZhMjcwZDRjNTI3OTgxZWY5Y2E0OTg5MzQ2YzU2Y2Y5YjIwMjE3ZGNlYTM3ZGYxZWNlODEyMDY4NSIKICAgICAgICB9CiAgICBdLAogICAgImltYWdlcyI6IFtdLAogICAgInBhcmFtZXRlcnMiOiB7fSwKICAgICJjcmVkZW50aWFscyI6IHt9Cn0=",
+        "signature": "iQEzBAEBCgAdFiEE+yumTPTtBoSSRd/j3NX15e8yw0UFAluEHv0ACgkQ3NX15e8yw0UyKQf/Tb/mURLiHWmw68q7cjAHx7wVgjClo34oB07uY1RCvjMiK4sXaoKC+0KOpQOC/15HY9f2aazPHig//aqNpFyyHcpX9XjvH51CbXiNcFvIv7JgmFwr7WIUY7cSFsaFSCS53Z5HqCQ/SYB9OU4R+uwBW/gKmP7vBGieNkEhqHQklQG9vc9zUQjuTlYpKIW9cGd0rKWzs8wwiW9FytIM43x54sHmtXRnWxu6zNReXr32u6ZFPrfVA0yoAJQ47iDhcM/VqL4j0xxfFmZuqkRCtsbgD6iUmL8VzINODGsF4lHFQrl2sKXAqMoIXyCwANjudClHNUNQFojriAX8YAO4V2yGVg==\n=OoBW",
+        "comments": "Duffle 0.1.0-ralph.1+appletini"
+    }
+}
+```
+
+In this example, the `payload` is a base64-encoded version of the original `bundle.json` file, and the `signature` field is OpenPGP signature.
+
+The outer JSON is _informative only_, and ought to be used only for non-security sensitive review.
+
+> The advantage of this format is that it offers a future-proofing way of eventually allowing non-signed data to reside in the payload,
+> while signed data is contained only in the payload. However, it is unclear what value is to be had in leaving _any_ data unsigned.
+
+When the contents of the payload are (and ought to be) identical to the out JSON reprsentation (_sans_ `verification`), the content _may_ be reduced to eliminate duplicate data.
+
+```json
+{
+    "verification": {
+        "payload": "ewogICAgIm5hbWUiOiAiZm9vIiwKICAgICJ2ZXJzaW9uIjogIjEuMCIsCiAgICAiaW52b2NhdGlvbkltYWdlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJpbWFnZVR5cGUiOiAiZG9ja2VyIiwKICAgICAgICAgICAgImltYWdlIjogInRlY2hub3NvcGhvcy9oZWxsb3dvcmxkOjAuMS4yIiwKICAgICAgICAgICAgImRpZ2VzdCI6ICJzaGEyNTY6YWNhNDYwYWZhMjcwZDRjNTI3OTgxZWY5Y2E0OTg5MzQ2YzU2Y2Y5YjIwMjE3ZGNlYTM3ZGYxZWNlODEyMDY4NSIKICAgICAgICB9CiAgICBdLAogICAgImltYWdlcyI6IFtdLAogICAgInBhcmFtZXRlcnMiOiB7fSwKICAgICJjcmVkZW50aWFscyI6IHt9Cn0=",
+        "signature": "iQEzBAEBCgAdFiEE+yumTPTtBoSSRd/j3NX15e8yw0UFAluEHv0ACgkQ3NX15e8yw0UyKQf/Tb/mURLiHWmw68q7cjAHx7wVgjClo34oB07uY1RCvjMiK4sXaoKC+0KOpQOC/15HY9f2aazPHig//aqNpFyyHcpX9XjvH51CbXiNcFvIv7JgmFwr7WIUY7cSFsaFSCS53Z5HqCQ/SYB9OU4R+uwBW/gKmP7vBGieNkEhqHQklQG9vc9zUQjuTlYpKIW9cGd0rKWzs8wwiW9FytIM43x54sHmtXRnWxu6zNReXr32u6ZFPrfVA0yoAJQ47iDhcM/VqL4j0xxfFmZuqkRCtsbgD6iUmL8VzINODGsF4lHFQrl2sKXAqMoIXyCwANjudClHNUNQFojriAX8YAO4V2yGVg==\n=OoBW"
+    }
+}
+```
+
+All original data, in this case, may still be retrieved simply by extracting the original JSON object from the Base64 `payload`.
+
+### Verifying a JSON encoded signature
+
+The following steps are to be done to verify the JSON-style signature:
+
+- Parse the outter JSON
+- Read the payload field
+- Read the signature field, converting `\n` charaters into newlines
+- Decode the Base64 data into a its raw byte content. Application MUST NOT parse this as JSON data until after verification
+- Perform an OpenPGP signature verification on the payload by passing the `signature` contents as a packet, and the decoded payload as the data
+
+If the OpenPGP validation is successful, the application may consider the decoded contents of `payload` to be verified, and may then treat that data as a `bundle.json`.
+
+Regarding the outer JSON object, _all data other than the `signature` and `payload` MUST be treated as untrusted_.
+
 ## Key Revocation and Expiration
 
 When public keys are expired or revoked, bundles signed with those keys become invalid.
