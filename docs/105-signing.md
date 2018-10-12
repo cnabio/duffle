@@ -201,10 +201,95 @@ They must be re-signed with a valid key.
 
 CNAB verification tools _should_ handle the key revocation case.
 
-## TODO
+## Bundle Retractions
 
-- Do we want to allow encrypted `bundle.json` files? This is actually trivially easy (it's another option on Open PGP)
-- There's a "chicken and egg" problem if we try to store the signed bundle.json inside of the CNAB invocation image. My preference is to always require the signed bundle to be external of the image. It's basically useless if it is inside the image anyway, because the image must be transmitted and extracted before the signature can be verified, which invalidates the verification step.
-- We need to specify this format for dense bundles
+Cases may arise where a particular version (or versions) of a bundle should no longer be used. For example, if a version of a bundle is discovered to be insecure in significant ways, bundle authors may wish to _explicitly mark_ that bundle as insecure. This process must be done in a way that retains the integrity of the bundle.
+
+> This definition does not preclude the mere deletion of problematic bundles. Operators of a bundle repository, for instance, _may_ opt to merely remove insecure bundles from their servers rather than mark them and leave them. However, there are cases where historic (while insecure) packages may be retained and still made available for installation.
+
+Reusing a release version to replace an insecure release with a secure one is _expressly prohibited_. For example, if release 2.3.1 of a bundle is deemed insecure, operators _must not_ re-release a modified bundle as 2.3.1. The fixed version _must_ modify a semantic component of the version number. For example, `2.3.2`, `2.4.0`, `3.0.0`, and even `2.3.2-alpha.1` are all acceptable increments. `2.3.1` and `2.3.1+1` are examples of forbidden version increments. Likewise, release `2.3.1` _must not_ be renamed by semantic component. (e.g. 2.3.1-insecure is illegal, while 2.3.1+insecure is legal). For clarification on this policy, see the [SemVer 2 specification](https://semver.org).
+
+Instead, the prefered pattern is to retain the insecure release at its given release number, but issue a _retraction_.
+
+A *retraction* is a cryptographically signed indicator that a bundle _ought not_ be installed.
+
+```
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+[
+    {
+    "bundle": "petstore",
+    "version": "2.3.1",
+    "signature": "wsBcBAEBCAAQBQJbvomsCRD4pCbFUsuABgAAC/IIAI3LD89Fn9aJu/+eNsJnTyJ17T9KQFkekAe681eMkVMUY1NDjYfcQjaw0BZqSxOrs7Tunjwxxxm4pG1ua3sDp99aNiB2tJN6AOKWXfs6zg3d8igskANv1ArmKqEiUyL69O8eBO0fz2dfUw67JazWu6HE+MYpurRph8w5Sz9Ay3STntsFngGEgB87P/UMFFioY1KebJpBNMhuGa6SrT8kxNifERQachtjnsZiPQddPo2AJYFuN4XxbHpRvi+N8F8T2gQIjP9Ux7muegUI3qU9q9PUVaefYa8rHJpw3VIt+1qf0RoiW53zJD+dYhSwTH4MBeagyDOjmQiLbXRI4Ofbc1s=\n=JinU"
+    }
+]
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - https://gpgtools.org
+
+iQEzBAEBCgAdFiEE+yumTPTtBoSSRd/j3NX15e8yw0UFAlvBKt8ACgkQ3NX15e8y
+w0WlpQgAnf8UGUuW8c63M3HN/oYGC+glOww5xqPPkJVj5k/BWqpYnVYcUzLlHG4x
+wGTO1qb/RewctKJweU4VC3ACiIKKeQzxLiUuFvkhhIWpoq8qY0xDLlwM7Ccc/7Vc
+q5CwbQZ6apwoouZH/Yw0e/LedRspifQ+qxt0lyTnZQXV51o2/ubXchbgdwP2fzQs
+m4NWTqL6US0C+SEVysesdPCydUIPC/oj8zo+M/aN4MTFmqHlMhvEMPeAa0O+wbIt
+FBwmPYfhWfIogk9b63htdJMJxmCvkQWqGKHm8Y8IwFCkoTunvZEygidv5VkdJa9t
+IMrgnkGly/iibIz2oagOfJhtAnthnQ==
+=6DUE
+-----END PGP SIGNATURE-----
+```
+
+A retraction is a clear signed JSON array.
+
+- The top field is an array of individual retractions
+- A retraction object has the following fields:
+    - bundle: The name of the bundle being retracted
+    - version: The version being retracted
+    - signature: The signature of the specific bundle being retracted
+
+The `signature` field is optional, but provides a content-specific test on the content retracted. It is only applicable to cases where a specific version is being retracted.
+
+The `version` field is optional. If omitted, the entire Bundle is considerered retracted. When `version` is omitted, `signature` _must_ be omitted.
+
+To specify a range of versions, a _SemVer range_ may be provided in the `version` field. In this case, a `signature` _must_ be omitted.
+
+The following examples shows all three methods of specifying a retraction:
+
+```
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+[
+    {
+        "bundle": "petstore",
+        "version": "2.3.1",
+        "signature": "wsBcBAEBCAAQBQJbvomsCRD4pCbFUsuABgAAC/IIAI3LD89Fn9aJu/+eNsJnTyJ17T9KQFkekAe681eMkVMUY1NDjYfcQjaw0BZqSxOrs7Tunjwxxxm4pG1ua3sDp99aNiB2tJN6AOKWXfs6zg3d8igskANv1ArmKqEiUyL69O8eBO0fz2dfUw67JazWu6HE+MYpurRph8w5Sz9Ay3STntsFngGEgB87P/UMFFioY1KebJpBNMhuGa6SrT8kxNifERQachtjnsZiPQddPo2AJYFuN4XxbHpRvi+N8F8T2gQIjP9Ux7muegUI3qU9q9PUVaefYa8rHJpw3VIt+1qf0RoiW53zJD+dYhSwTH4MBeagyDOjmQiLbXRI4Ofbc1s=\n=JinU"
+    },
+    {
+        "bundle": "helloseattle"
+    },
+    {
+        "bundle": "fireflies",
+        "version": "<=2.3.1"
+    }
+]
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - https://gpgtools.org
+
+iQEzBAEBCgAdFiEE+yumTPTtBoSSRd/j3NX15e8yw0UFAlvBLI8ACgkQ3NX15e8y
+w0VqqQf/fm3u48QLpa576pJISh/whopjjnnQm1vuCHfatyumC67W802ZEMCNu+pQ
+5G6Ffsli5fifG7E8vsmFS9gxOTAYcsnrFvwDTD35zdPpctlFd+mUGSumgtXEHAWm
+O5xDIlri6xntoJI/4MBYStzdCg0/Sj+qQRn/w8fGJyrViCczjGiZKwWldKNkKDRn
+svIlu4itPHrwBnLOBMv1NulAkClGxDzD1VgTnHqgY8rPV+8dWj1VZOkhDZvDB7yR
+iIO3klY4RNsy5EfKpWkrhyiY5LW680qZHDbC+Lvtv0J9HW4K0lFqcrzTRJEKiVDK
+h3sGAYdx5fA5PfmweTCvc34qUvPVnw==
+=dEXV
+-----END PGP SIGNATURE-----
+```
+
+- Only one specific version of `petstore` is retracted
+- All versions of `helloseattle` are retracted
+- Versions of `fireflies` that are less than or equal to `2.3.1` are retracted
+
+When an agent has access to a retractions list or lists, it _ought_ to evaluate the retractions for each request that would require loading the bundle. An agent _must not_ install or upgrade a bundle it knows to be retracted without the express consent of the user.
 
 Next section: [declarative images](106-declarative-images.md)
