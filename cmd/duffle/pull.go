@@ -18,7 +18,7 @@ Example:
 
 	cmd := &cobra.Command{
 		Use:   "pull",
-		Short: usage,
+		Short: "pulls a CNAB bundle from a repository",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path, err := getBundleFile(args[0])
