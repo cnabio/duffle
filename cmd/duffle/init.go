@@ -71,47 +71,24 @@ func (i *initCmd) run() error {
 		home.String(),
 		home.Logs(),
 		home.Plugins(),
-		home.Repositories(),
+		home.Cache(),
 		home.Claims(),
 		home.Credentials(),
 	}
 
-	if err := i.ensureDirectories(dirs); err != nil {
-		return err
-	}
-	if err := i.ensureRepositories(); err != nil {
-		return err
-	}
 	pkr, err := i.loadOrCreateSecretKeyRing(home.SecretKeyRing())
 	if err != nil {
 		return err
 	}
-	_, err = i.loadOrCreatePublicKeyRing(home.PublicKeyRing(), pkr)
-	return err
-}
-
-// ensureRepositories checks to see if the default repositories exists.
-//
-// If the repo does not exist, this function will create it.
-func (i *initCmd) ensureRepositories() error {
-	ohai.Fohailn(i.w, "Installing default repositories...")
-
-	// TODO: add repos here
-	addArgs := []string{"ssh://git@github.com/deis/bundles.git"}
-
-	repoCmd, _, err := rootCmd.Find([]string{"repo", "add"})
-	if err != nil {
+	if _, err := i.loadOrCreatePublicKeyRing(home.PublicKeyRing(), pkr); err != nil {
 		return err
 	}
-	if i.dryRun {
-		return nil
-	}
-	return repoCmd.RunE(repoCmd, addArgs)
+	return i.ensureDirectories(dirs)
 }
 
 func (i *initCmd) ensureDirectories(dirs []string) error {
-	fmt.Fprintln(i.w, "The following new directories will be created:")
-	fmt.Fprintln(i.w, strings.Join(dirs, "\n"))
+	ohai.Fohailn(i.w, "The following new directories will be created:")
+	ohai.Fohailn(i.w, strings.Join(dirs, "\n"))
 	for _, dir := range dirs {
 		if fi, err := os.Stat(dir); err != nil {
 			if !i.dryRun {

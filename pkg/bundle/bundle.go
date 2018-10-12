@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -17,6 +20,22 @@ func ParseBuffer(data []byte) (Bundle, error) {
 // Parse reads CNAB metadata from a JSON string
 func Parse(text string) (Bundle, error) {
 	return ParseBuffer([]byte(text))
+}
+
+// ParseReader reads CNAB metadata from a JSON string
+func ParseReader(r io.Reader) (Bundle, error) {
+	b := Bundle{}
+	err := json.NewDecoder(r).Decode(&b)
+	return b, err
+}
+
+// WriteFile serializes the bundle and writes it to a file as JSON.
+func (b Bundle) WriteFile(dest string, mode os.FileMode) error {
+	d, err := json.Marshal(b)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(dest, d, mode)
 }
 
 // LocationRef specifies a location within the invocation package
@@ -45,10 +64,23 @@ type CredentialLocation struct {
 	EnvironmentVariable string `json:"env" toml:"env"`
 }
 
+// Maintainer describes a code maintainer of a bundle
+type Maintainer struct {
+	// Name is a user name or organization name
+	Name string `json:"name" toml:"name"`
+	// Email is an optional email address to contact the named maintainer
+	Email string `json:"email" toml:"email"`
+	// Url is an optional URL to an address for the named maintainer
+	URL string `json:"url" toml:"url"`
+}
+
 // Bundle is a CNAB metadata document
 type Bundle struct {
 	Name             string                         `json:"name" toml:"name"`
 	Version          string                         `json:"version" toml:"version"`
+	Description      string                         `json:"description" toml:"description"`
+	Keywords         []string                       `json:"keywords" toml:"keywords"`
+	Maintainers      []Maintainer                   `json:"maintainers" toml:"maintainers"`
 	InvocationImages []InvocationImage              `json:"invocationImages" toml:"invocationImages"`
 	Images           []Image                        `json:"images" toml:"images"`
 	Parameters       map[string]ParameterDefinition `json:"parameters" toml:"parameters"`

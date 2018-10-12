@@ -15,7 +15,7 @@ func TestDuffleHome(t *testing.T) {
 	ph := Home("/r")
 	runtime := fmt.Sprintf("runtime %s", runtime.GOOS)
 	is.Equal(ph.String(), "/r", runtime)
-	is.Equal(ph.Repositories(), "/r/repositories", runtime)
+	is.Equal(ph.Cache(), "/r/cache", runtime)
 	is.Equal(ph.Plugins(), "/r/plugins", runtime)
 	is.Equal(ph.Claims(), "/r/claims", runtime)
 	is.Equal(ph.Credentials(), "/r/credentials", runtime)
