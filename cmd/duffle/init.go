@@ -76,14 +76,15 @@ func (i *initCmd) run() error {
 		home.Credentials(),
 	}
 
+	if err := i.ensureDirectories(dirs); err != nil {
+		return err
+	}
 	pkr, err := i.loadOrCreateSecretKeyRing(home.SecretKeyRing())
 	if err != nil {
 		return err
 	}
-	if _, err := i.loadOrCreatePublicKeyRing(home.PublicKeyRing(), pkr); err != nil {
-		return err
-	}
-	return i.ensureDirectories(dirs)
+	_, err = i.loadOrCreatePublicKeyRing(home.PublicKeyRing(), pkr)
+	return err
 }
 
 func (i *initCmd) ensureDirectories(dirs []string) error {
