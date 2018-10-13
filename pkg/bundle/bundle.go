@@ -44,8 +44,24 @@ type LocationRef struct {
 	Field string `json:"field" toml:"field"`
 }
 
+// BaseImage contains fields shared across image types
+type BaseImage struct {
+	Digest    string `json:"digest,omitempty" toml:"digest"`
+	Size      int    `json:"size,omitempty" toml:"size"`
+	Platform  string `json:"platform,omitempty" toml:"platform"`
+	MediaType string `json:"mediaType,omitempty" toml:"mediaType"`
+}
+
+// ImagePlatform indicates what type of platform an image is built for
+type ImagePlatform struct {
+	Architecture string `json:"architecture,omitempty" toml:"architecture"`
+	OS           string `json:"os,omitempty" toml:"os"`
+}
+
 // Image describes a container image in the bundle
 type Image struct {
+	BaseImage
+	// FIXME: Is this the same as "image" on InvocationImage? Which do we prefer?
 	Name string        `json:"name" toml:"name"`
 	URI  string        `json:"uri" toml:"uri"`
 	Refs []LocationRef `json:"refs" toml:"refs"`
@@ -53,6 +69,7 @@ type Image struct {
 
 // InvocationImage contains the image type and location for the installation of a bundle
 type InvocationImage struct {
+	BaseImage
 	ImageType string `json:"imageType" toml:"imageType"`
 	Image     string `json:"image" toml:"image"`
 }

@@ -5,21 +5,25 @@ This section describes the format and function of the `bundle.json` document.
 A `bundle.json` is broken down into the following categories of information:
 
 - The schema version of the bundle
-- The type of bundle: known as a "thin" or a "thick" bundle (described by `mediaType`)
 - The top-level package information (`name` and `version`)
-- Information on the invocation image
-- A list of images included with this bundle
+    - name: The bundle name
+    - version: Semantic version of the bundle
+    - description: Short description of the bundle
+- Information on the invocation images, as an array
+- A list of images included with this bundle, as an array
 - A specification of which parameters may be overridden, and how those are to be validated
-- A list of credentials (by location) that the application needs
+- A list of credentials (name and desired location) that the application needs
 
-There are two types of bundles available:
+There are two formats for a bundle (thin and thick formats). Certain data in the `bundle.json` file is represented differently depending on which format is used:
 
-- `application/cnab.manifest.v1alpha+json` defines a "thin" bundle, or a bundle that requires only the bundle.json to be downloaded quickly. Installing these bundles will require a machine with an internet connection to fetch the invocation images at install time. This is the most common type of bundle.
-- `application/cnab.bundle.v1alpha+json` defines a "thick" bundle, or a complete installation bundle that contain the bundle.json as well as its dependent images, making it easier to install onto machines without an internet connection at the cost of additional storage space/bandwidth required when fetching. This is useful in cases where we want to export the bundle for archival purposes.
+- *Thin*: `application/cnab.manifest.v1alpha+json` defines a "thin" bundle, or a bundle that requires only the bundle.json to be downloaded quickly. Installing these bundles will require a machine with an internet connection to fetch the invocation images at install time. This is the most common type of bundle.
+- *Thick:* `application/cnab.bundle.v1alpha+json` defines a "thick" bundle, or a complete installation bundle that contain the bundle.json as well as its dependent images, making it easier to install onto machines without an internet connection at the cost of additional storage space/bandwidth required when fetching. This is useful in cases where we want to export the bundle for archival purposes.
+
+*XXX: I am not comfortable with calling one a `manifest` and another a `bundle`, and particularly not comfortable with calling the thin one a `manifest`, since manifests are attached to their contents. Can we do something less oblique here? Maybe `cnab.thin` and `cnab.thick`?*
 
 For the rest of the documentation, by default we'll be refererring bundles using the "thin" type, but when "thick" bundles become relevant we'll make note that it's a "thick" bundle type.
 
-Here's how a "thin" bundle looks:
+The following is an example of a `bundle.json` for a bundled distributed as a _thin_ bundle:
 
 ```json
 {
@@ -83,6 +87,8 @@ And here is how a "thick" bundle looks. Notice how the `invocationImage` and `im
     "description": "An example 'thick' helloworld Cloud-Native Application Bundle",
     "mediaType": "application/cnab.bundle.v1alpha+json",
     "invocationImage": {
+        "imageType": "docker",
+        "image": "technosophos/helloworld:1.2.3",
         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
         "size": 1337,
         "digest": "sha256:aaaaaaaaaaaa...",
@@ -128,7 +134,7 @@ And here is how a "thick" bundle looks. Notice how the `invocationImage` and `im
 }
 ```
 
-## Name and Version
+## Name and Version: Identifying Metadata
 
 The `name` and `version` fields are used to identify the CNAB bundle. Both fields are required.
 
@@ -136,6 +142,17 @@ The `name` and `version` fields are used to identify the CNAB bundle. Both field
 - Version MUST be a [SemVer2](https://semver.org) string
 
 Fields that do not match this specification _should_ cause failures.
+
+## Informational Metadata
+
+The following fields are informational pieces of metadata designed to convey additional information about a bundle, but not to be used as identification for a bundle:
+
+- `description`: A short description of a bundle
+- `keywords`: A list of keywords
+- `maintainers`: A list of maintainers, where each maintainer may have the following:
+  - `name`: Maintainer name
+  - `email`: Matainer's email
+  - `url`: URL to relevant maintainer information
 
 *TODO:* `bundle.json` probably requires a few more top-level fields, such as something about who published it, and something about the license, as well as a bundle api version. A decision on this is deferred until after the PoC
 
@@ -161,6 +178,14 @@ The `imageType` field is required, and must describe the format of the image. Th
 The `image` field must give a path-like or URI-like representation of the location of the image. The expectation is that an installer should be able to locate the image (given the image type) without additional information.
 
 The `digest` field _must_ contain a digest, in [OCI format](https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests), to be used to compute the integrity of the image. The calculation of how the image matches the digest is dependent upon image type. (OCI, for example, uses a Merkle tree while VM images are checksums.)
+
+The following optional fields may be attached to an invocation image:
+
+- `size`: The image size in bytes
+- `platform`: The target platform, as an object with two fields:
+  - `architecture`: The architecture of the image (`i386`, `amd64`, `arm32`...)
+  - `os`: The operating system of the image
+- `mediaType`: The media type of the image
 
 ## The Image List
 
@@ -206,6 +231,11 @@ Fields:
   - refs: An array listing the locations which refer to this image, and whose values should be replaced by the value specified in URI. Each entry contains the following properties:
     - path: the path of the file where the value should be replaced
     - field:a selector specifying a location (or locations) within that file where the value should be replaced
+  - `size`: The image size in bytes
+  - `platform`: The target platform, as an object with two fields:
+    - `architecture`: The architecture of the image (`i386`, `amd64`, `arm32`...)
+    - `os`: The operating system of the image
+  - `mediaType`: The media type of the image
 
 Substitutions _must_ be supported for the following formats:
 
