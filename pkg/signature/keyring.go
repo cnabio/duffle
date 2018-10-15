@@ -19,19 +19,67 @@ type KeyRing struct {
 	PassphraseFetcher PassphraseFetcher
 }
 
+// Len returns the length of this keyring
+//
+// Length is the number of entitites stored in this ring.
+func (r *KeyRing) Len() int {
+	return len(r.entities)
+}
+
 // Add adds new keys to the keyring.
+//
+// Add is idempotent. If provided keys already exist, they will be
+// silently ignored. This makes it easier to do bulk imports.
 func (r *KeyRing) Add(armoredKeys io.Reader) error {
 	entities, err := openpgp.ReadArmoredKeyRing(armoredKeys)
 	if err != nil {
 		return err
 	}
-	r.entities = append(r.entities, entities...)
+
+	r.entities = append(r.entities, r.removeDuplicates(entities)...)
 	return nil
 }
 
 // AddKey adds a *Key to the keyring.
+//
+// AddKey is idempotent. If a key exists already, it will be silently ignored.
 func (r *KeyRing) AddKey(k *Key) {
+	if r.isDuplicate(k.entity) {
+		return
+	}
 	r.entities = append(r.entities, k.entity)
+}
+
+// removeDulicates filters out duplicate keys
+func (r *KeyRing) removeDuplicates(entities []*openpgp.Entity) []*openpgp.Entity {
+	remove := map[int]bool{}
+	for i, e := range entities {
+		if r.isDuplicate(e) {
+			remove[i] = true
+		}
+	}
+
+	if len(remove) == 0 {
+		return entities
+	}
+	filtered := []*openpgp.Entity{}
+	for i, e := range entities {
+		if _, ok := remove[i]; !ok {
+			filtered = append(filtered, e)
+		}
+	}
+	return filtered
+}
+
+// isDuplicate compares the fingerprint of the given entity to all of the existing fingerprints
+// If the fingerprint exists in the keyring, this returns true. Otherwise it returns false.
+func (r *KeyRing) isDuplicate(e *openpgp.Entity) bool {
+	for _, re := range r.entities {
+		if re.PrimaryKey.Fingerprint == e.PrimaryKey.Fingerprint {
+			return true
+		}
+	}
+	return false
 }
 
 // Key returns the key with the given ID.
