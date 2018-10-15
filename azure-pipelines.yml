@@ -30,6 +30,6 @@ steps:
         curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
         dep ensure
     fi
-    make bootstrap build test
+    make bootstrap build test lint
   workingDirectory: '$(modulePath)'
   displayName: 'Get dependencies, build, test'

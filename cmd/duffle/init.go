@@ -11,6 +11,7 @@ import (
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/ohai"
 	"github.com/deis/duffle/pkg/signature"
+
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/spf13/cobra"
