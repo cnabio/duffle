@@ -31,12 +31,18 @@ func newKeyAddCmd(w io.Writer) *cobra.Command {
 			h := home.Home(homePath())
 			var ring string
 			if secret {
+				// If secret, add one to the secret keyring as well as the public
+				// eyring. When added to the public keyring, private material will
+				// be stripped by `SavePublic`. By doing this, we make sure that
+				// any key added to the secret ring can be used to verify a
+				// bundle.
 				ring = h.SecretKeyRing()
-			} else {
-				ring = h.PublicKeyRing()
+				if err := addKeys(args[0], ring, secret); err != nil {
+					return err
+				}
 			}
-
-			return addKeys(args[0], ring, secret)
+			ring = h.PublicKeyRing()
+			return addKeys(args[0], ring, false)
 		},
 	}
 	cmd.Flags().BoolVarP(&secret, "secret", "s", false, "add a secret (private) key")

@@ -13,25 +13,27 @@ import (
 
 const keyListDesc = `List key IDs for either the public or private keychain.
 
-By default, this lists all of the IDs in the private keychain (the ones you use to sign or attest).
+By default, this lists all of the IDs in the public keychain (the ones you
+use to verify bundles). Use '--private' to see the secret keys that you can
+use to sign or attest bundles.
 `
 
 func newKeyListCmd(w io.Writer) *cobra.Command {
-	var public bool
+	var private bool
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list key IDs",
 		Long:  keyListDesc,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h := home.Home(homePath())
-			ring := h.SecretKeyRing()
-			if public {
-				ring = h.PublicKeyRing()
+			ring := h.PublicKeyRing()
+			if private {
+				ring = h.SecretKeyRing()
 			}
 			return listKeys(cmd.OutOrStdout(), ring)
 		},
 	}
-	cmd.Flags().BoolVarP(&public, "public", "p", false, "show public key IDs instead of private key IDs")
+	cmd.Flags().BoolVarP(&private, "secret", "s", false, "show private keys instead of public keys")
 
 	return cmd
 }
