@@ -17,7 +17,7 @@ A `bundle.json` is broken down into the following categories of information:
 There are two formats for a bundle (thin and thick formats). Certain data in the `bundle.json` file is represented differently depending on which format is used:
 
 - *Thin*: `application/cnab.manifest.v1alpha+json` defines a "thin" bundle, or a bundle that requires only the bundle.json to be downloaded quickly. Installing these bundles will require a machine with an internet connection to fetch the invocation images at install time. This is the most common type of bundle.
-- *Thick:* `application/cnab.bundle.v1alpha+json` defines a "thick" bundle, or a complete installation bundle that contain the bundle.json as well as its dependent images, making it easier to install onto machines without an internet connection at the cost of additional storage space/bandwidth required when fetching. This is useful in cases where we want to export the bundle for archival purposes.
+- *Thick:* `application/cnab.bundle.v1alpha+json` defines a "thick" bundle, or a complete installation bundle that contain the bundle.json, the invocation image(s), and its dependent images, making it easier to install onto machines without an internet connection at the cost of additional storage space/bandwidth required when fetching. This is useful in cases where we want to export the bundle for archival purposes.
 
 *XXX: I am not comfortable with calling one a `manifest` and another a `bundle`, and particularly not comfortable with calling the thin one a `manifest`, since manifests are attached to their contents. Can we do something less oblique here? Maybe `cnab.thin` and `cnab.thick`?*
 
@@ -86,17 +86,19 @@ And here is how a "thick" bundle looks. Notice how the `invocationImage` and `im
     "version": "1.0.0",
     "description": "An example 'thick' helloworld Cloud-Native Application Bundle",
     "mediaType": "application/cnab.bundle.v1alpha+json",
-    "invocationImage": {
-        "imageType": "docker",
-        "image": "technosophos/helloworld:1.2.3",
-        "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-        "size": 1337,
-        "digest": "sha256:aaaaaaaaaaaa...",
-        "platform": {
-            "architecture": "amd64",
-            "os": "linux"
+    "invocationImages": [
+        {
+            "imageType": "docker",
+            "image": "technosophos/helloworld:1.2.3",
+            "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+            "size": 1337,
+            "digest": "sha256:aaaaaaaaaaaa...",
+            "platform": {
+                "architecture": "amd64",
+                "os": "linux"
+            }
         }
-    },
+    ],
     "images": [
         {
             "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
@@ -181,7 +183,7 @@ The `digest` field _must_ contain a digest, in [OCI format](https://github.com/o
 
 The following optional fields may be attached to an invocation image:
 
-- `size`: The image size in bytes
+- `size`: The image size in bytes. Implementations _should_ verify this when a bundle is packaged as a _thick_ bundle, and _may_ verify it when the image is part of a thin bundle.
 - `platform`: The target platform, as an object with two fields:
   - `architecture`: The architecture of the image (`i386`, `amd64`, `arm32`...)
   - `os`: The operating system of the image

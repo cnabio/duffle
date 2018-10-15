@@ -47,7 +47,7 @@ type LocationRef struct {
 // BaseImage contains fields shared across image types
 type BaseImage struct {
 	Digest    string `json:"digest,omitempty" toml:"digest"`
-	Size      int    `json:"size,omitempty" toml:"size"`
+	Size      uint64 `json:"size,omitempty" toml:"size"`
 	Platform  string `json:"platform,omitempty" toml:"platform"`
 	MediaType string `json:"mediaType,omitempty" toml:"mediaType"`
 }
