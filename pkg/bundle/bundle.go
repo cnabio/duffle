@@ -10,18 +10,28 @@ import (
 	"strings"
 )
 
-// ParseBuffer reads CNAB metadata out of a JSON byte stream
-func ParseBuffer(data []byte) (Bundle, error) {
-	b := Bundle{}
-	err := json.Unmarshal(data, &b)
-	return b, err
+/*
+// Unmarshal decodes a signed bundle.
+//
+// This will produce an error if the signature fails, or if the bundle
+// cannot be unmarshaled.
+func Unmarshal(data []byte, ring *signature.KeyRing) (*Bundle, error) {
+	b := &Bundle{}
+	verifier := signature.NewVerifier(ring)
+	if _, err := verifier.Verify(data); err != nil {
+		return b, err
+	}
+	return b, json.Unmarshal(data, b)
 }
 
-// Parse reads CNAB metadata from a JSON string
-func Parse(text string) (Bundle, error) {
-	return ParseBuffer([]byte(text))
+//UnmarshalInsecure unmarshals a Bundle that was not signed.
+func UnmarshalInsecure(data []byte) (*Bundle, error) {
+	b := &Bundle{}
+	return b, json.Unmarshal(data)
 }
 
+func Marshal(data []byte, key signature.Key)
+*/
 // ParseReader reads CNAB metadata from a JSON string
 func ParseReader(r io.Reader) (Bundle, error) {
 	b := Bundle{}

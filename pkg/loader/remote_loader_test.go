@@ -24,7 +24,7 @@ func TestRmoteLoader(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	l := RemoteLoader{source: ts.URL}
+	l := RemoteLoader(ts.URL)
 
 	bundle, err := l.Load()
 	if err != nil {
