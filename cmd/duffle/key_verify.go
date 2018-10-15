@@ -5,9 +5,9 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/signature"
 
-	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ func newKeyVerifyCmd(w io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "verify FILE",
 		Short: "verify the signature on a signed bundle",
-		Long:  keyListDesc,
+		Long:  keyVerifyDesc,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h := home.Home(homePath())

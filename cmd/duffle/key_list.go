@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/signature"
 
 	"github.com/spf13/cobra"
-
-	"github.com/deis/duffle/pkg/duffle/home"
 )
 
 const keyListDesc = `List key IDs for either the public or private keychain.
