@@ -10,28 +10,12 @@ import (
 	"strings"
 )
 
-/*
-// Unmarshal decodes a signed bundle.
-//
-// This will produce an error if the signature fails, or if the bundle
-// cannot be unmarshaled.
-func Unmarshal(data []byte, ring *signature.KeyRing) (*Bundle, error) {
+//Unmarshal unmarshals a Bundle that was not signed.
+func Unmarshal(data []byte) (*Bundle, error) {
 	b := &Bundle{}
-	verifier := signature.NewVerifier(ring)
-	if _, err := verifier.Verify(data); err != nil {
-		return b, err
-	}
 	return b, json.Unmarshal(data, b)
 }
 
-//UnmarshalInsecure unmarshals a Bundle that was not signed.
-func UnmarshalInsecure(data []byte) (*Bundle, error) {
-	b := &Bundle{}
-	return b, json.Unmarshal(data)
-}
-
-func Marshal(data []byte, key signature.Key)
-*/
 // ParseReader reads CNAB metadata from a JSON string
 func ParseReader(r io.Reader) (Bundle, error) {
 	b := Bundle{}
@@ -41,6 +25,7 @@ func ParseReader(r io.Reader) (Bundle, error) {
 
 // WriteFile serializes the bundle and writes it to a file as JSON.
 func (b Bundle) WriteFile(dest string, mode os.FileMode) error {
+	// FIXME: The marshal here should exactly match the Marshal in the signature code.
 	d, err := json.Marshal(b)
 	if err != nil {
 		return err

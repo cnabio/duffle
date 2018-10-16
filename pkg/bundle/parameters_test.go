@@ -14,7 +14,7 @@ func TestCanReadParameterNames(t *testing.T) {
 			"bar": { }
 		}
 	}`
-	definitions, err := Parse(json)
+	definitions, err := Unmarshal([]byte(json))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func TestCanReadParameterDefinition(t *testing.T) {
 		dataType, defaultValue, allowedValues0, allowedValues1,
 		minValue, maxValue, minLength, maxLength, description)
 
-	definitions, err := Parse(json)
+	definitions, err := Unmarshal([]byte(json))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,15 +96,15 @@ func TestCanReadParameterDefinition(t *testing.T) {
 	}
 }
 
-func valueTestJSON(jsonRepresentation string) string {
-	return fmt.Sprintf(`{
+func valueTestJSON(jsonRepresentation string) []byte {
+	return []byte(fmt.Sprintf(`{
 		"parameters": {
 			"test": {
 				"defaultValue": %s,
 				"allowedValues": [ %s ]
 			}
 		}
-	}`, jsonRepresentation, jsonRepresentation)
+	}`, jsonRepresentation, jsonRepresentation))
 }
 
 func expectString(desc string, expected string, o interface{}, t *testing.T) {
@@ -142,21 +142,21 @@ func TestCanReadValues(t *testing.T) {
 	intValue := "123"
 	boolValue := "true"
 
-	strDef, err := Parse(valueTestJSON(strValue))
+	strDef, err := Unmarshal(valueTestJSON(strValue))
 	if err != nil {
 		t.Fatal(err)
 	}
 	expectString("default value", "some string", strDef.Parameters["test"].DefaultValue, t)
 	expectString("allowed value", "some string", strDef.Parameters["test"].AllowedValues[0], t)
 
-	intDef, err := Parse(valueTestJSON(intValue))
+	intDef, err := Unmarshal(valueTestJSON(intValue))
 	if err != nil {
 		t.Fatal(err)
 	}
 	expectInt("default value", 123, intDef.Parameters["test"].DefaultValue, t)
 	expectInt("allowed value", 123, intDef.Parameters["test"].AllowedValues[0], t)
 
-	boolDef, err := Parse(valueTestJSON(boolValue))
+	boolDef, err := Unmarshal(valueTestJSON(boolValue))
 	if err != nil {
 		t.Fatal(err)
 	}
