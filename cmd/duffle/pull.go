@@ -8,9 +8,7 @@ import (
 )
 
 func newPullCmd(w io.Writer) *cobra.Command {
-	const usage = `pulls a CNAB bundle from a repository
-
-This command pulls a CNAB bundle into the cache without installing it.
+	const usage = `Pulls a CNAB bundle into the cache without installing it.
 
 Example:
 	$ duffle pull duffle/example:0.1.0
@@ -18,7 +16,7 @@ Example:
 
 	cmd := &cobra.Command{
 		Use:   "pull",
-		Short: "pulls a CNAB bundle from a repository",
+		Short: "pull a CNAB bundle from a repository",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path, err := getBundleFile(args[0])

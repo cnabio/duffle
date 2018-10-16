@@ -7,7 +7,7 @@ import (
 )
 
 const keyDesc = `
-Manage OpenPGP keys, signatures, and attestations.
+Manages OpenPGP keys, signatures, and attestations.
 `
 
 // TODO
