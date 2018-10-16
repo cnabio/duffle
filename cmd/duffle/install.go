@@ -1,11 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"net/http"
+	"net/url"
 	"path"
 	"path/filepath"
 	"strings"
@@ -15,9 +15,10 @@ import (
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
+	"github.com/deis/duffle/pkg/reference"
 
-	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func newInstallCmd() *cobra.Command {
@@ -79,7 +80,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 				return err
 			}
 
-			if err = validateImage(bun.InvocationImage); err != nil {
+			if err = bun.Validate(); err != nil {
 				return err
 			}
 
@@ -141,29 +142,31 @@ func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, er
 	case len(args) < 2 && bundleFile == "":
 		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
+		return getBundleFile(args[1])
+	}
+	return bundleFile, nil
+}
+
+// optBundleFileOrArg2 optionally gets a bundle file.
+// Returning an empty string with no error is a possible outcome.
+func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+	switch {
+	case len(args) < 1:
+		// No bundle provided
+		return "", nil
+	case len(args) == 2 && bundleFile != "":
+		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
+	case len(args) < 2 && bundleFile == "":
+		// No bundle provided
+		return "", nil
+	case len(args) == 2:
 		var err error
-		bundleFile, err = findBundleJSON(args[1], w)
+		bundleFile, err = getBundleFile(args[1])
 		if err != nil {
 			return "", err
 		}
 	}
 	return bundleFile, nil
-}
-
-func validateImage(img bundle.InvocationImage) error {
-	switch img.ImageType {
-	case "docker", "oci":
-		return validateDockerish(img.Image)
-	default:
-		return nil
-	}
-}
-
-func validateDockerish(s string) error {
-	if !strings.Contains(s, ":") {
-		return errors.New("version is required")
-	}
-	return nil
 }
 
 // overrides parses the --set data and returns values that should override other params.
@@ -191,76 +194,102 @@ func overrides(overrides []string, paramDefs map[string]bundle.ParameterDefiniti
 }
 
 func parseValues(file string) (map[string]interface{}, error) {
-	vals := map[string]interface{}{}
-	ext := filepath.Ext(file)
-	switch ext {
-	case ".toml":
-		data, err := ioutil.ReadFile(file)
-		if err != nil {
-			return vals, err
-		}
-		err = toml.Unmarshal(data, &vals)
-		return vals, err
-	case ".json":
-		data, err := ioutil.ReadFile(file)
-		if err != nil {
-			return vals, err
-		}
-		err = json.Unmarshal(data, &vals)
-		return vals, err
-	default:
-		return vals, errors.New("no decoder for " + ext)
+	v := viper.New()
+	v.SetConfigFile(file)
+	err := v.ReadInConfig()
+	if err != nil {
+		return nil, err
 	}
+	return v.AllSettings(), nil
 }
 
-func getBundleFile(bundleName string) (string, string, error) {
+func getReference(bundleName string) (reference.NamedTagged, error) {
 	var (
 		name string
-		repo string
+		ref  reference.NamedTagged
 	)
-	home := home.Home(homePath())
-	bundleInfo := strings.Split(bundleName, "/")
-	if len(bundleInfo) == 1 {
-		name = bundleInfo[0]
-		repo = home.DefaultRepository()
+
+	parts := strings.SplitN(bundleName, "://", 2)
+	if len(parts) == 2 {
+		name = parts[1]
 	} else {
-		name = bundleInfo[len(bundleInfo)-1]
-		repo = path.Dir(bundleName)
+		name = parts[0]
 	}
-	if strings.Contains(name, "./\\") {
-		return "", "", fmt.Errorf("bundle name '%s' is invalid. Bundle names cannot include the following characters: './\\'", name)
+	normalizedRef, err := reference.ParseNormalizedNamed(name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse image name: %s: %v", name, err)
+	}
+	if reference.IsNameOnly(normalizedRef) {
+		ref, err = reference.WithTag(normalizedRef, "latest")
+		if err != nil {
+			// NOTE(bacongobbler): Using the default tag *must* be valid.
+			// To create a NamedTagged type with non-validated
+			// input, the WithTag function should be used instead.
+			panic(err)
+		}
+	} else {
+		if taggedRef, ok := normalizedRef.(reference.NamedTagged); ok {
+			ref = taggedRef
+		} else {
+			return nil, fmt.Errorf("unsupported image name: %s", normalizedRef.String())
+		}
 	}
 
-	return filepath.Join(home.Repositories(), repo, "bundles", fmt.Sprintf("%s.json", name)), repo, nil
+	return ref, nil
 }
 
-// findBundleJSON tries to find the JS file by search the repo index
-func findBundleJSON(bundleName string, w io.Writer) (string, error) {
-	relevantBundles := search([]string{bundleName})
-	switch len(relevantBundles) {
-	case 0:
-		return bundleName, fmt.Errorf("no bundles with the name '%s' was found", bundleName)
-	case 1:
-		bundleName = relevantBundles[0]
-	default:
-		var match bool
-		// check if we have an exact match
-		for _, f := range relevantBundles {
-			if strings.Compare(f, bundleName) == 0 {
-				bundleName = f
-				match = true
-			}
-		}
-		if !match {
-			return bundleName, fmt.Errorf("%d bundles with the name '%s' were found: %v", len(relevantBundles), bundleName, relevantBundles)
-		}
+func getBundleRepoURL(bundleName string, home home.Home) (*url.URL, error) {
+	ref, err := getReference(bundleName)
+	if err != nil {
+		return nil, err
 	}
-	filePath, repo, err := getBundleFile(bundleName)
+
+	proto := "https"
+	parts := strings.Split(bundleName, "://")
+	if len(parts) == 2 {
+		proto = parts[0]
+	}
+
+	refPath := reference.Path(ref)
+	if len(strings.Split(refPath, "/")) == 1 {
+		// this should go into the default library
+		refPath = path.Join("library", refPath)
+	}
+
+	url := &url.URL{
+		Scheme: proto,
+		Host:   reference.Domain(ref),
+		Path:   fmt.Sprintf("repositories/%s/tags/%s", refPath, ref.Tag()),
+	}
+	return url, nil
+}
+
+func getBundleFile(bundleName string) (string, error) {
+	home := home.Home(homePath())
+	url, err := getBundleRepoURL(bundleName, home)
 	if err != nil {
 		return "", err
 	}
-	fmt.Fprintf(w, "loaded %s from repository %s\n", filePath, repo)
-	return filePath, nil
+	resp, err := http.Get(url.String())
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("request to %s responded with a non-200 status code: %d", url, resp.StatusCode)
+	}
+
+	bundle, err := bundle.ParseReader(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	bundleFilepath := filepath.Join(home.Cache(), fmt.Sprintf("%s-%s.json", strings.Replace(bundle.Name, "/", "-", -1), bundle.Version))
+	if err := bundle.WriteFile(bundleFilepath, 0644); err != nil {
+		return "", err
+	}
+
+	return bundleFilepath, nil
 }
 
 func loadBundle(bundleFile string) (bundle.Bundle, error) {

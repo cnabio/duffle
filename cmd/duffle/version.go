@@ -17,9 +17,13 @@ func newVersionCmd(w io.Writer) *cobra.Command {
 		Short: usage,
 		Long:  usage,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(version.Version)
+			showVersion(cmd.OutOrStdout())
 		},
 	}
 
 	return cmd
+}
+
+func showVersion(out io.Writer) {
+	fmt.Fprintln(out, version.Version)
 }

@@ -27,11 +27,13 @@ Here's how a "thin" bundle looks:
     "name": "helloworld",
     "version": "0.1.2",
     "description": "An example 'thin' helloworld Cloud-Native Application Bundle",
-    "invocationImage": {
-        "imageType": "docker",
-        "image": "technosophos/helloworld:0.1.0",
-        "digest": "sha256:aaaaaaa..."
-    },
+    "invocationImages": [
+        {
+            "imageType": "docker",
+            "image": "technosophos/helloworld:0.1.0",
+            "digest": "sha256:aaaaaaa..."
+        }
+    ],
     "images": [
         {
             "name": "image1",
@@ -137,16 +139,19 @@ Fields that do not match this specification _should_ cause failures.
 
 *TODO:* `bundle.json` probably requires a few more top-level fields, such as something about who published it, and something about the license, as well as a bundle api version. A decision on this is deferred until after the PoC
 
-## Invocation Image
+## Invocation Images
 
-The `invocationImage` section describes the image that contains the bootstrapping for the image.
+The `invocationImages` section describes the images that contains the bootstrapping for the image. The appropriate invocation
+image is selected using the current driver.                  
 
 ```json
-"invocationImage": {
-    "imageType": "docker",
-    "image": "technosophos/helloworld:0.1.0",
-    "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685"
-},
+"invocationImages": [
+    {
+        "imageType": "docker",
+        "image": "technosophos/helloworld:0.1.0",
+        "digest": "sha256:aca460afa270d4c527981ef9ca4989346c56cf9b20217dcea37df1ece8120685"
+    }
+]
 ```
 
 The `imageType` field is required, and must describe the format of the image. The list of formats is open-ended, but any CNAB-compliant system MUST implement `docker` and `oci`.

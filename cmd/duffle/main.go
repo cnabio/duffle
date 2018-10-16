@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -31,12 +30,8 @@ func main() {
 			}
 		}
 	}()
-	rootCmd = newRootCmd(os.Stdout)
+	rootCmd = newRootCmd(nil)
 	must(rootCmd.Execute())
-}
-
-func unimplemented(msg string) {
-	panic(fmt.Errorf("unimplemented: %s", msg))
 }
 
 func homePath() string {

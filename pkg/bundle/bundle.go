@@ -2,7 +2,12 @@ package bundle
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"strings"
 )
 
 // ParseBuffer reads CNAB metadata out of a JSON byte stream
@@ -15,6 +20,22 @@ func ParseBuffer(data []byte) (Bundle, error) {
 // Parse reads CNAB metadata from a JSON string
 func Parse(text string) (Bundle, error) {
 	return ParseBuffer([]byte(text))
+}
+
+// ParseReader reads CNAB metadata from a JSON string
+func ParseReader(r io.Reader) (Bundle, error) {
+	b := Bundle{}
+	err := json.NewDecoder(r).Decode(&b)
+	return b, err
+}
+
+// WriteFile serializes the bundle and writes it to a file as JSON.
+func (b Bundle) WriteFile(dest string, mode os.FileMode) error {
+	d, err := json.Marshal(b)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(dest, d, mode)
 }
 
 // LocationRef specifies a location within the invocation package
@@ -44,14 +65,27 @@ type CredentialLocation struct {
 	EnvironmentVariable string `json:"env" toml:"env"`
 }
 
+// Maintainer describes a code maintainer of a bundle
+type Maintainer struct {
+	// Name is a user name or organization name
+	Name string `json:"name" toml:"name"`
+	// Email is an optional email address to contact the named maintainer
+	Email string `json:"email" toml:"email"`
+	// Url is an optional URL to an address for the named maintainer
+	URL string `json:"url" toml:"url"`
+}
+
 // Bundle is a CNAB metadata document
 type Bundle struct {
-	Name            string                         `json:"name" toml:"name"`
-	Version         string                         `json:"version" toml:"version"`
-	InvocationImage InvocationImage                `json:"invocationImage" toml:"invocationImage"`
-	Images          []Image                        `json:"images" toml:"images"`
-	Parameters      map[string]ParameterDefinition `json:"parameters" toml:"parameters"`
-	Credentials     map[string]CredentialLocation  `json:"credentials" toml:"credentials"`
+	Name             string                         `json:"name" toml:"name"`
+	Version          string                         `json:"version" toml:"version"`
+	Description      string                         `json:"description" toml:"description"`
+	Keywords         []string                       `json:"keywords" toml:"keywords"`
+	Maintainers      []Maintainer                   `json:"maintainers" toml:"maintainers"`
+	InvocationImages []InvocationImage              `json:"invocationImages" toml:"invocationImages"`
+	Images           []Image                        `json:"images" toml:"images"`
+	Parameters       map[string]ParameterDefinition `json:"parameters" toml:"parameters"`
+	Credentials      map[string]CredentialLocation  `json:"credentials" toml:"credentials"`
 }
 
 // ValuesOrDefaults returns parameter values or the default parameter values
@@ -69,4 +103,37 @@ func ValuesOrDefaults(vals map[string]interface{}, b *Bundle) (map[string]interf
 		res[name] = def.DefaultValue
 	}
 	return res, nil
+}
+
+// Validate the bundle contents.
+func (b Bundle) Validate() error {
+	if len(b.InvocationImages) == 0 {
+		return errors.New("at least one invocation image must be defined in the bundle")
+	}
+
+	for _, img := range b.InvocationImages {
+		err := img.Validate()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Validate the image contents.
+func (img InvocationImage) Validate() error {
+	switch img.ImageType {
+	case "docker", "oci":
+		return validateDockerish(img.Image)
+	default:
+		return nil
+	}
+}
+
+func validateDockerish(s string) error {
+	if !strings.Contains(s, ":") {
+		return errors.New("tag is required")
+	}
+	return nil
 }

@@ -3,6 +3,7 @@ package action
 import (
 	"errors"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -38,9 +39,11 @@ func (d *mockFailingDriver) Run(op *driver.Operation) error {
 
 func mockBundle() *bundle.Bundle {
 	return &bundle.Bundle{
-		Name:            "bar",
-		Version:         "0.1.0",
-		InvocationImage: bundle.InvocationImage{Image: "foo/bar:0.1.0", ImageType: "docker"},
+		Name:    "bar",
+		Version: "0.1.0",
+		InvocationImages: []bundle.InvocationImage{
+			{Image: "foo/bar:0.1.0", ImageType: "docker"},
+		},
 	}
 
 }
@@ -55,17 +58,48 @@ func TestOpFromClaim(t *testing.T) {
 		Bundle:     mockBundle(),
 		Parameters: map[string]interface{}{"duff": "beer"},
 	}
+	invocImage := c.Bundle.InvocationImages[0]
 
-	op := opFromClaim(claim.ActionInstall, c, mockSet, os.Stdout)
+	op := opFromClaim(claim.ActionInstall, c, invocImage, mockSet, os.Stdout)
 
 	is := assert.New(t)
 
 	is.Equal(c.Name, op.Installation)
 	is.Equal(c.Revision, op.Revision)
-	is.Equal(c.Bundle.InvocationImage.Image, op.Image)
+	is.Equal(invocImage.Image, op.Image)
 	is.Equal(driver.ImageTypeDocker, op.ImageType)
 	is.Equal(op.Environment["SECRET_ONE"], "I'm a secret")
 	is.Equal(op.Files["secret_two"], "I'm also a secret")
 	is.Len(op.Parameters, 1)
 	is.Equal(os.Stdout, op.Out)
+}
+
+func TestSelectInvocationImage_EmptyInvocationImages(t *testing.T) {
+	c := &claim.Claim{
+		Bundle: &bundle.Bundle{},
+	}
+	_, err := selectInvocationImage(&driver.DebugDriver{}, c)
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	want := "no invocationImages are defined"
+	got := err.Error()
+	if !strings.Contains(got, want) {
+		t.Fatalf("expected an error containing %q but got %q", want, got)
+	}
+}
+
+func TestSelectInvocationImage_DriverIncompatible(t *testing.T) {
+	c := &claim.Claim{
+		Bundle: mockBundle(),
+	}
+	_, err := selectInvocationImage(&mockFailingDriver{}, c)
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	want := "driver is not compatible"
+	got := err.Error()
+	if !strings.Contains(got, want) {
+		t.Fatalf("expected an error containing %q but got %q", want, got)
+	}
 }

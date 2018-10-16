@@ -1,10 +1,12 @@
 {
     "name": "helloworld",
     "version": "aa2370d945960f8cdbc086c89702ae5215106c5c",
-    "invocationImage": {
-        "imageType": "docker",
-        "image": "microsoft/helloworld-cnab:aa2370d945960f8cdbc086c89702ae5215106c5c"
-    },
+    "invocationImages": [
+        {
+            "imageType": "docker",
+            "image": "microsoft/helloworld-cnab:aa2370d945960f8cdbc086c89702ae5215106c5c"
+        }
+    ],
     "images": [],
     "parameters": {
         "hello": {

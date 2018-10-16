@@ -43,8 +43,14 @@ func (rm *credentialRemoveCmd) run() error {
 	var notFound []string
 	credentialSets := findCredentialSets(rm.home.Credentials())
 
+	// Put this in a map to minimize lookup time.
+	pathMap := map[string]string{}
+	for _, cred := range credentialSets {
+		pathMap[cred.name] = cred.path
+	}
+
 	for _, name := range rm.names {
-		if path, ok := credentialSets[name]; ok {
+		if path, ok := pathMap[name]; ok {
 			if err := removeCredentialSet(path); err != nil {
 				removeErrors = append(removeErrors, fmt.Sprintf("Failed to remove credential set %s: %v", name, err))
 			} else {

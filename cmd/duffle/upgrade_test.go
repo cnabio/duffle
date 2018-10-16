@@ -34,7 +34,13 @@ func TestUpgradePersistsClaim(t *testing.T) {
 
 	// Store a dummy claim
 	instClaim, err := claim.New("foo")
-	instClaim.Bundle = &bundle.Bundle{Name: "mybuns"}
+	instClaim.Bundle = &bundle.Bundle{
+		Name:    "bar",
+		Version: "0.1.0",
+		InvocationImages: []bundle.InvocationImage{
+			{Image: "foo/bar:0.1.0", ImageType: "docker"},
+		},
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +54,7 @@ func TestUpgradePersistsClaim(t *testing.T) {
 		name: instClaim.Name,
 	}
 	up.Out = out
-	err = up.upgrade("")
+	err = up.upgrade("", "")
 	if err != nil {
 		t.Fatal(err)
 	}

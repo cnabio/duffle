@@ -22,7 +22,7 @@ The behavior of `duffle build` is described in [Duffle Build](203-duffle-build.m
 
 ## Duffle Install, Upgrade, Uninstall, and Status
 
-The following commands run a CNAB's `invocationImage`, each passing a different `CNAB_ACTION`:
+The following commands run a CNAB's applicable invocation image, each passing a different `CNAB_ACTION`:
 
 - `duffle install` captures the intent to install a bundle, and sets `CNAB_ACTION=install`.
 - `duffle upgrade` captures the intent to upgrade an existing installation with a bundle, and sets `CNAB_ACTION=upgrade`.

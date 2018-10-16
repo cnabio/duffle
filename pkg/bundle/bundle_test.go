@@ -33,7 +33,7 @@ func TestReadTopLevelProperties(t *testing.T) {
 }
 
 func TestReadImageProperties(t *testing.T) {
-	data, err := ioutil.ReadFile("../../tests/testdata/home/repositories/github.com/deis/bundles.git/bundles/foo.json")
+	data, err := ioutil.ReadFile("../../tests/testdata/bundles/foo.json")
 	if err != nil {
 		t.Errorf("cannot read bundle file: %v", err)
 	}
@@ -58,7 +58,7 @@ func TestReadImageProperties(t *testing.T) {
 }
 
 func TestReadCredentialProperties(t *testing.T) {
-	data, err := ioutil.ReadFile("../../tests/testdata/home/repositories/github.com/deis/bundles.git/bundles/foo.json")
+	data, err := ioutil.ReadFile("../../tests/testdata/bundles/foo.json")
 	if err != nil {
 		t.Errorf("cannot read bundle file: %v", err)
 	}
@@ -133,4 +133,23 @@ func TestValuesOrDefaults(t *testing.T) {
 	vals["replicaCount"] = "banana"
 	_, err = ValuesOrDefaults(vals, b)
 	is.Error(err)
+}
+
+func TestValidateBundle_RequiresInvocationImage(t *testing.T) {
+	b := Bundle{
+		Name:    "bar",
+		Version: "0.1.0",
+	}
+
+	err := b.Validate()
+	if err == nil {
+		t.Fatal("Validate should have failed because the bundle has no invocation images")
+	}
+
+	b.InvocationImages = append(b.InvocationImages, InvocationImage{})
+
+	err = b.Validate()
+	if err != nil {
+		t.Fatal(err)
+	}
 }

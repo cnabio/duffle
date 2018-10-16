@@ -1,8 +1,8 @@
+// Package home provides tools for working with the files in a Duffle user's home directory.
 package home
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 )
@@ -25,14 +25,14 @@ func (h Home) Path(elem ...string) string {
 	return filepath.Join(p...)
 }
 
-// Repositories returns the path to the Duffle repositories.
-func (h Home) Repositories() string {
-	return h.Path("repositories")
+// Cache returns the path to the Duffle cache.
+func (h Home) Cache() string {
+	return h.Path("cache")
 }
 
 // DefaultRepository returns the name of the default repository.
 func (h Home) DefaultRepository() string {
-	return path.Join("github.com", "deis", "bundles.git")
+	return "hub.cnlabs.io"
 }
 
 // Logs returns the path to the Duffle logs.
@@ -48,6 +48,16 @@ func (h Home) Claims() string {
 // Credentials are where credentialsets are stored.
 func (h Home) Credentials() string {
 	return h.Path("credentials")
+}
+
+// SecretKeyRing returns the path to the keyring containing private keys.
+func (h Home) SecretKeyRing() string {
+	return h.Path("secret.ring")
+}
+
+// PublicKeyRing returns the path to the keyring containing public keys.
+func (h Home) PublicKeyRing() string {
+	return h.Path("public.ring")
 }
 
 // Plugins returns the path to the Duffle plugins.

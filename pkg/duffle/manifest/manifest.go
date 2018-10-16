@@ -11,17 +11,20 @@ import (
 
 // Manifest represents a duffle manifest.
 type Manifest struct {
-	Name        string                                `json:"name,omitempty"`
-	Components  map[string]*Component                 `json:"components,omitempty"`
-	Parameters  map[string]bundle.ParameterDefinition `json:"parameters,omitempty"`
-	Credentials map[string]bundle.CredentialLocation  `json:"credentials,omitempty"`
+	Name        string                                `mapstructure:"name"`
+	Description string                                `mapstructure:"description"`
+	Keywords    []string                              `mapstructure:"keywords"`
+	Maintainers []bundle.Maintainer                   `mapstructure:"maintainers"`
+	Components  map[string]*Component                 `mapstructure:"components"`
+	Parameters  map[string]bundle.ParameterDefinition `mapstructure:"parameters"`
+	Credentials map[string]bundle.CredentialLocation  `mapstructure:"credentials"`
 }
 
 // Component represents a component of a CNAB bundle
 type Component struct {
-	Name          string            `json:"name,omitempty"`
-	Builder       string            `json:"builder,omitempty"`
-	Configuration map[string]string `json:"configuration,omitempty"`
+	Name          string            `mapstructure:"name"`
+	Builder       string            `mapstructure:"builder"`
+	Configuration map[string]string `mapstructure:"configuration"`
 }
 
 // New creates a new manifest with the Environments intialized.
