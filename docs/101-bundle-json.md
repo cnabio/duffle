@@ -14,17 +14,7 @@ A `bundle.json` is broken down into the following categories of information:
 - A specification of which parameters may be overridden, and how those are to be validated
 - A list of credentials (name and desired location) that the application needs
 
-There are two formats for a bundle (thin and thick formats). Certain data in the `bundle.json` file is represented differently depending on which format is used:
-
-- *Thin*: `application/vnd.cnab.thin.v1alpha` defines a "thin" bundle, or a bundle that requires only the bundle.json to be downloaded quickly. Installing these bundles will require a machine with an internet connection to fetch the invocation images at install time. This is the most common type of bundle.
-- *Thick:* `application/vnd.cnab.thick.v1alpha` defines a "thick" bundle, or a complete installation bundle that contain the bundle.json, the invocation image(s), and its dependent images, making it easier to install onto machines without an internet connection at the cost of additional storage space/bandwidth required when fetching. This is useful in cases where we want to export the bundle for archival purposes.
-
-It is conceivable that a bundle may not be signed. The MIME type for an unsigned bundle should include two elements:
-
-- The word `.unsigned` after the bundle type (`thick` or `thin`)
-- The `+json` suffix
-
- The `+json` is added only to this MIME type because it can be directly parsed by a JSON parser. For example, for an unsigned thin bundle, the MIME type should be `application/vnd.cnab.thin.unsigned.v1alpha+json`. 
+There are two formats for a bundle (thin and thick formats). The primary way in which the `bundle.json` file differs is the presence or absence of information in a thick bundle that helps it validate the contents of an image. In a thick bundle, `mediaType` and `size` attributes may assiste the reconstitution of images from the thick format to a runtime format.
 
 For the rest of the documentation, by default we'll be refererring bundles using the "thin" type, but when "thick" bundles become relevant we'll make note that it's a "thick" bundle type.
 
@@ -90,7 +80,6 @@ And here is how a "thick" bundle looks. Notice how the `invocationImage` and `im
     "name": "helloworld",
     "version": "1.0.0",
     "description": "An example 'thick' helloworld Cloud-Native Application Bundle",
-    "mediaType": "application/vnd.cnab.thick.v1alpha",
     "invocationImages": [
         {
             "imageType": "docker",
