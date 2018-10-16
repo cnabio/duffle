@@ -12,9 +12,8 @@ import (
 	"github.com/deis/duffle/pkg/ohai"
 	"github.com/deis/duffle/pkg/signature"
 
-	"golang.org/x/crypto/ssh/terminal"
-
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const (
@@ -206,14 +205,6 @@ func (i *initCmd) loadOrCreatePublicKeyRing(dest string, privateKeys *signature.
 		if err != nil {
 			return ring, err
 		}
-	}
-
-	// While Keys() returns public and private, the SavePublic call tosses
-	// the private keys material, and only serializes the public part of
-	// the private key. This is desirable if we want to be able to
-	// verify the signatures that were signed with a private key.
-	for _, pk := range privateKeys.Keys() {
-		ring.AddKey(pk)
 	}
 
 	for _, k := range ring.Keys() {

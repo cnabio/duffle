@@ -18,6 +18,13 @@ func TestLoadKeyRing(t *testing.T) {
 	is.NotNil(k.entities[0].PrivateKey)
 }
 
+func TestKeyRing_Len(t *testing.T) {
+	is := assert.New(t)
+	k, err := LoadKeyRing(keyringFile)
+	is.NoError(err)
+	is.Equal(k.Len(), 2)
+}
+
 func TestKeyring_Key(t *testing.T) {
 	is := assert.New(t)
 	k, err := LoadKeyRing(keyringFile)
@@ -64,6 +71,20 @@ func TestKeyRing_Add(t *testing.T) {
 	k, err := kr.Key("extra1@example.com")
 	is.NoError(err)
 	is.Equal(k.entity.Identities[fullExtraID].Name, fullExtraID)
+
+	// Test that we can add the same keys again, and have it silently skip
+	// duplicates.
+	l := kr.Len()
+	is.True(l > 0)
+	extras, err = os.Open("testdata/extra.gpg")
+	is.NoError(err)
+
+	// Re-add extras
+	is.NoError(kr.Add(extras))
+	k2, err := kr.Key("extra1@example.com")
+	is.NoError(err)
+	is.Equal(k2.entity.Identities[fullExtraID].Name, fullExtraID)
+	is.Equal(l, kr.Len())
 }
 
 func TestKeyRing_AddKey(t *testing.T) {
@@ -82,6 +103,11 @@ func TestKeyRing_AddKey(t *testing.T) {
 	pk, err := k2.bestPrivateKey()
 	is.NoError(err)
 	is.NotNil(pk)
+
+	// Test that if we re-add the same key it will be ignored.
+	l := kr.Len()
+	kr.AddKey(k)
+	is.Equal(l, kr.Len())
 }
 
 func TestCreateKeyRing(t *testing.T) {
