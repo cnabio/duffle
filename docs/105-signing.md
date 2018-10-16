@@ -221,7 +221,8 @@ Hash: SHA512
     {
     "bundle": "petstore",
     "version": "2.3.1",
-    "signature": "wsBcBAEBCAAQBQJbvomsCRD4pCbFUsuABgAAC/IIAI3LD89Fn9aJu/+eNsJnTyJ17T9KQFkekAe681eMkVMUY1NDjYfcQjaw0BZqSxOrs7Tunjwxxxm4pG1ua3sDp99aNiB2tJN6AOKWXfs6zg3d8igskANv1ArmKqEiUyL69O8eBO0fz2dfUw67JazWu6HE+MYpurRph8w5Sz9Ay3STntsFngGEgB87P/UMFFioY1KebJpBNMhuGa6SrT8kxNifERQachtjnsZiPQddPo2AJYFuN4XxbHpRvi+N8F8T2gQIjP9Ux7muegUI3qU9q9PUVaefYa8rHJpw3VIt+1qf0RoiW53zJD+dYhSwTH4MBeagyDOjmQiLbXRI4Ofbc1s=\n=JinU"
+    "signature": "wsBcBAEBCAAQBQJbvomsCRD4pCbFUsuABgAAC/IIAI3LD89Fn9aJu/+eNsJnTyJ17T9KQFkekAe681eMkVMUY1NDjYfcQjaw0BZqSxOrs7Tunjwxxxm4pG1ua3sDp99aNiB2tJN6AOKWXfs6zg3d8igskANv1ArmKqEiUyL69O8eBO0fz2dfUw67JazWu6HE+MYpurRph8w5Sz9Ay3STntsFngGEgB87P/UMFFioY1KebJpBNMhuGa6SrT8kxNifERQachtjnsZiPQddPo2AJYFuN4XxbHpRvi+N8F8T2gQIjP9Ux7muegUI3qU9q9PUVaefYa8rHJpw3VIt+1qf0RoiW53zJD+dYhSwTH4MBeagyDOjmQiLbXRI4Ofbc1s=\n=JinU",
+    "reason": "A remove execution vulnerability was found in the sanitization function emptyCatBox()."
     }
 ]
 -----BEGIN PGP SIGNATURE-----
@@ -245,12 +246,15 @@ A retraction is a clear signed JSON array.
     - bundle: The name of the bundle being retracted
     - version: The version being retracted
     - signature: The signature of the specific bundle being retracted
+    - reason: A human-oriented text description of why the bundle was retracted.
 
 The `signature` field is optional, but provides a content-specific test on the content retracted. It is only applicable to cases where a specific version is being retracted.
 
 The `version` field is optional. If omitted, the entire Bundle is considerered retracted. When `version` is omitted, `signature` _must_ be omitted.
 
 To specify a range of versions, a _SemVer range_ may be provided in the `version` field. In this case, a `signature` _must_ be omitted.
+
+The `reason` field is optional, though a retraction _ought_ to have one. This may be used by a user agent to explain the reason for the retraction.
 
 The following examples shows all three methods of specifying a retraction:
 
@@ -265,7 +269,8 @@ Hash: SHA512
         "signature": "wsBcBAEBCAAQBQJbvomsCRD4pCbFUsuABgAAC/IIAI3LD89Fn9aJu/+eNsJnTyJ17T9KQFkekAe681eMkVMUY1NDjYfcQjaw0BZqSxOrs7Tunjwxxxm4pG1ua3sDp99aNiB2tJN6AOKWXfs6zg3d8igskANv1ArmKqEiUyL69O8eBO0fz2dfUw67JazWu6HE+MYpurRph8w5Sz9Ay3STntsFngGEgB87P/UMFFioY1KebJpBNMhuGa6SrT8kxNifERQachtjnsZiPQddPo2AJYFuN4XxbHpRvi+N8F8T2gQIjP9Ux7muegUI3qU9q9PUVaefYa8rHJpw3VIt+1qf0RoiW53zJD+dYhSwTH4MBeagyDOjmQiLbXRI4Ofbc1s=\n=JinU"
     },
     {
-        "bundle": "helloseattle"
+        "bundle": "helloseattle",
+        "reason": "the helloseattle tool has been removed do to licensing restrictions"
     },
     {
         "bundle": "fireflies",
