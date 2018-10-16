@@ -76,6 +76,13 @@ type CredentialLocation struct {
 	EnvironmentVariable string `json:"env" toml:"env"`
 }
 
+// FileLocation contains the location of a file the the invocation image
+// can use
+type FileLocation struct {
+	Path     string `json:"path" toml:"path"`
+	Required bool   `json:"required" toml:"required"`
+}
+
 // Maintainer describes a code maintainer of a bundle
 type Maintainer struct {
 	// Name is a user name or organization name
@@ -97,6 +104,7 @@ type Bundle struct {
 	Images           []Image                        `json:"images" toml:"images"`
 	Parameters       map[string]ParameterDefinition `json:"parameters" toml:"parameters"`
 	Credentials      map[string]CredentialLocation  `json:"credentials" toml:"credentials"`
+	Files            map[string]FileLocation        `json:"files" toml:"files"`
 }
 
 // ValuesOrDefaults returns parameter values or the default parameter values
