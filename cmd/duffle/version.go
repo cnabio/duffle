@@ -10,7 +10,7 @@ import (
 )
 
 func newVersionCmd(w io.Writer) *cobra.Command {
-	const usage = `prints current version of the Duffle CLI`
+	const usage = `print current version of the Duffle CLI`
 
 	cmd := &cobra.Command{
 		Use:   "version",

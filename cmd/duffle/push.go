@@ -19,13 +19,13 @@ type pushCmd struct {
 }
 
 func newPushCmd(out io.Writer) *cobra.Command {
-	const usage = `pushes a CNAB bundle to a repository`
+	const usage = `Pushes a CNAB bundle to a repository.`
 
 	var push = &pushCmd{out: out}
 
 	cmd := &cobra.Command{
 		Use:   "push",
-		Short: usage,
+		Short: "push a CNAB bundle to a repository",
 		Long:  usage,
 		RunE: func(_ *cobra.Command, args []string) error {
 			push.home = home.Home(homePath())

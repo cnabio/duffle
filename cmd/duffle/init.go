@@ -45,7 +45,7 @@ func newInitCmd(w io.Writer) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "sets up local environment to work with duffle",
+		Short: "set up local environment to work with duffle",
 		Long:  initDesc,
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {

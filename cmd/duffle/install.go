@@ -22,7 +22,7 @@ import (
 )
 
 func newInstallCmd() *cobra.Command {
-	const usage = `Install a CNAB bundle
+	const usage = `Installs a CNAB bundle.
 
 This installs a CNAB bundle with a specific installation name. Once the install is complete,
 this bundle can be referenced by installation name.

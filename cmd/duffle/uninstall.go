@@ -9,7 +9,7 @@ import (
 	"github.com/deis/duffle/pkg/action"
 )
 
-const usage = `This command will uninstall an installation of a CNAB bundle.
+const usage = `Uninstalls an installation of a CNAB bundle.
 
 When using '--parameters' or '--set', the uninstall command will replace the old
 parameters with the new ones supplied (even if the new set is an empty set). If neither
