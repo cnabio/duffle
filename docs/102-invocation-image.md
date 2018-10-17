@@ -12,18 +12,18 @@ This section describes the layout of an invocation image.
 An invocation image is composed of the following:
 
 - A file system hierarchy following a defined pattern (below)
-- A main entry point, which is an executable (often a script) called the _run tool_
+- A main entry point, called the _run tool_, which is an executable (often a script) responsible for translating action requests (`install`, `upgrade`,...) to a sequence of tasks
 - Runtime metadata (Helm charts, Terraform templates, etc)
-- The bundle file, which enumerates images used and available parameters, along with other metadata.
 - The material necessary for reproducing the invocation image (`Dockerfile` and `packer.json` are two examples)
+
+Note that the bundle definition itself is not stored inside of the invocation image.
 
 ### The File System Layout
 
 The following exhibits the filesystem layout:
 
 ```yaml
-cnab/
-├── bundle.json​      # Required -- but also stored outside of the image
+cnab/                  # Required top-level directory
 └── Dockerfile​         # Optional
 └── app​                # Required
     ├── run​            # Required: This is the main entrypoint, and must be executable
@@ -37,17 +37,43 @@ cnab/
         └── sfmesh-deploy.json
 ```
 
-The `app/` directory contains subdirectories, each of which stores configuration for a particular target environment. The `app/run` file _must be an executable file_ that will act as the "main" installer for this CNAB bundle.
+### The `/cnab` Directory
+
+An invocation image _must_ have a directory named `cnab` placed directly under the root of the file system hierarchy inside of an image.
+
+This directory _must_ have a subdirectory named `app`.
+
+This directory _may_ have any of the following:
+
+- `Dockerfile`: A valid Dockerfile used for constructing this image
+- Files for the form `Dockerfile.$INFO`, where `$INFO` is a further specification of that Dockerfile (e.g. `Dockerfile.arm64`)
+- `packer.json`: A valid Packer configuration file
+- `bundle.json`: A valid bundle definition, possibly without digests
+- `build/`: A directory containing other files used in the construction of this image
+- `README.txt` or `README.md`: A text file containing information about this bundle
+- `LICENSE`: A text file containing the license(s) for this image
+
+This directory _must not_ have any files or directories not explicitly named in the present document. The `/cnab` directory is considered a reserved namespace where future CNAB revisions may place new files or directories.
+
+### The `/cnab/app` Directory
+
+The `app/` directory contains subdirectories, each of which stores configuration for a particular target environment. The `app/run` file _must be an executable file_ that will act as the "main" installer for this CNAB bundle. This is the only file that is required in this directory.
 
 The contents beneath `/cnab/app/SUBDIRECTORY` are undefined by the spec. `run` is considered the only reserved word underneath `/cnab/app/`
 
-_NOTE:_ While _ad hoc_ data may be placed under `/cnab/app/`, all possible names under the root container directory (`/cnab/`) are considered reserved, and no additional names may be added beyond the spec. For example, creating `/cnab/bin/` would violate the specification.
+### The Optional `/cnab/build` Directory
 
-### Why a `cnab/` directory?
+The directory `/cnab/build` _may_ be present within the CNAB hierarchy. The contents of this directory are undefined by the spec. However, the intention is to provide space for artifacts that are used during the assembly (or re-assembly) of the bundle, but are not part of the execution of a bundle action.
 
-Earlier versions of the spec did not include a top-level `cnab` directory, and dropped all files in `/`. However, this would put packages into an unregulated namespace (the root directory). Existing images may already contain or require files and directories like `run` or `app`. In turn, this leads to the potential for unintended namespace collisions.
+For example, _base bundles_ may use this directory to store utilities that derived bundles may use during bundle building.
 
-By declaring a `cnab` directory, we reduce the likelihood of collisions, while also making it possible for base images to scaffold out CNAB constructs that can be leveraged.
+### Base Bundles
+
+This section of the specification is non-normative. It describes a pattern for using the contents of one bundle in another bundle as a form of extension or inheritance. While this is non-normative to the specificationm, facilitating this pattern was a goal of CNAB's design.
+
+The _base bundle pattern_ is a pattern for sharing common bundle tooling across multiple bundles. Succinctly expressed, a _base bundle_ is a bundle whose contents are inherited by another bundle. The most frequent way in which is occurs is when one bundle uses a `Dockerfile` to import another bundle's invocation image in its `FROM` line.
+
+A bundle that uses a base bundle as a source is referred to here as an _extending bundle_ or _extension bundle_, drawing from the object oriented terminology of base classes and extension classes.
 
 For example, a base CNAB image may provide something like this:
 
@@ -57,31 +83,32 @@ FROM ubuntu:latest
 COPY ./some-chart /cnab/app/charts/some-chart
 ```
 
-Then a later `Dockerfile` could do this:
+If the above bundle is built as `base-bundle:latest`, then it may be referenced by other images.
+
+The `Dockerfile` for an extending bundle can import `base-bundle:latest` as a starting point:
 
 ```Dockerfile
-FROM above-image:latest
+FROM base-bundle:latest
 
 RUN helm inspect values /cnab/app/charts/some-chart > ./myvals.yaml &&  sed ...
 ```
 
-The example above is simply intended to show how by reserving the `/cnab` directory, we can make images composable, while not worrying about non-CNAB images putting data in places CNAB treats as special.
+The example above is simply intended to show how by reserving the `/cnab` directory, we can make images extensible, while not worrying about non-CNAB images putting data in places CNAB treats as special.
 
-## The bundle.json File
+The mechanisms for taking a base bundle and creating an extension bundle are not formalized in the definition, as tooling may implement this pattern as fit for the tooling's domain. However, there are particular points of consideration that implementations may wish to address:
 
-The `bundle.json` file included inside of the CNAB image _must_ be identical to the version stored outside of the bundle. The `bundle.json` is required to make the image format portable.
-
-This format is defined in the previous [bundle.json definition](101-bundle-json.md).
-
-_Note:_ The `bundle.json` file that exists inside of the bundle is not a signed bundle, because signing requires calculating the hash of the `invocationImages`.
+- Run tools make good candidates for reuse, and may then be well suited for base bundles
+- A base bundle _may_ define parameters and credentials in its bundle definition. In such cases, implementations of the base bundle pattern may wish to bubble this configuration up to the extension bundle via tooling.
+- The `/cnab/build` directory may be used to store tooling in a base bundle that extension bundles can use during bundle assembly.
+- Docker and other OCI tooling may provide mechanisms for creating a bundle by composing via more than one base image. The present specification does not prohibit composition, and this section of the specification is non-normative.
 
 ## Image Construction Files
 
-Including a Dockerfile is _recommended_ for all images built with Docker. It is useful for reproducing a bundle. For other build tools, the build tool's definition may be included instead (e.g. `packer.json` for VM images built with Packer).
+Including a Dockerfile is _recommended_ for all images built with Docker. It is useful for reproducing a bundle. For other build tools, the build tool's definition may be included instead (e.g. `packer.json` for VM images built with Packer). Any image construction artifacts that are not explicitly allowed in the `/cnbab` directory may be placed in the `/cnab/build` directory.
 
 The remainder of this subsection is non-normative.
 
-The `Dockerfile` used to build the invocation image must be stored inside of the invocation image. This is to ensure reproducibility, and in order to allow rename operations that require a rebuild.
+The `Dockerfile` used to build the invocation image ought to be stored inside of the invocation image. This is to ensure reproducibility, and in order to allow rename operations that require a rebuild. (Likewise, if a build tool like Packer is used, this tool's configuration ought to be placed in the bundle.)
 
 This is a normal Dockerfile, and may derive from any base image.
 
