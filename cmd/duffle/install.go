@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -250,16 +249,10 @@ func getBundleRepoURL(bundleName string, home home.Home) (*url.URL, error) {
 		proto = parts[0]
 	}
 
-	refPath := reference.Path(ref)
-	if len(strings.Split(refPath, "/")) == 1 {
-		// this should go into the default library
-		refPath = path.Join("library", refPath)
-	}
-
 	url := &url.URL{
 		Scheme: proto,
 		Host:   reference.Domain(ref),
-		Path:   fmt.Sprintf("repositories/%s/tags/%s", refPath, ref.Tag()),
+		Path:   fmt.Sprintf("repositories/%s/tags/%s", reference.Path(ref), ref.Tag()),
 	}
 	return url, nil
 }

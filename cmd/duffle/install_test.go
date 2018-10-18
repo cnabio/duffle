@@ -32,8 +32,8 @@ func TestGetBundleFile(t *testing.T) {
 		},
 		{
 			Name:             "namespaced helloazure",
-			File:             "https://hub.cnlabs.io/bacongobbler/helloazure:0.1.0",
-			ExpectedFilepath: filepath.Join(testHome.Cache(), "bacongobbler-helloazure-0.1.0.json"),
+			File:             "https://hub.cnlabs.io/library/helloazure:0.1.0",
+			ExpectedFilepath: filepath.Join(testHome.Cache(), "helloazure-0.1.0.json"),
 		},
 	}
 
