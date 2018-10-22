@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/deis/duffle/pkg/version"
+
 	"github.com/stretchr/testify/assert"
 )
 

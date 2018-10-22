@@ -27,7 +27,7 @@ import (
 )
 
 const buildDesc = `
-This command builds a CNAB bundle.
+Builds a CNAB bundle.
 `
 
 const (
@@ -59,7 +59,7 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "build [path]",
-		Short: "builds a CNAB bundle",
+		Short: "build a CNAB bundle",
 		Long:  buildDesc,
 		PersistentPreRun: func(c *cobra.Command, args []string) {
 			build.dockerClientOptions.Common.SetDefaultOptions(f)

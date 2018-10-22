@@ -20,20 +20,37 @@ func TestGetBundleFile(t *testing.T) {
 	duffleHome = filepath.Join(cwd, "..", "..", "tests", "testdata", "home")
 	testHome := home.Home(duffleHome)
 
-	filePath, repo, err := getBundleFile("foo")
-	if err != nil {
-		t.Error(err)
+	tests := []struct {
+		Name             string
+		File             string
+		ExpectedFilepath string
+	}{
+		{
+			Name:             "helloazure",
+			File:             "https://hub.cnlabs.io/helloazure:0.1.0",
+			ExpectedFilepath: filepath.Join(testHome.Cache(), "helloazure-0.1.0.json"),
+		},
+		{
+			Name:             "namespaced helloazure",
+			File:             "https://hub.cnlabs.io/library/helloazure:0.1.0",
+			ExpectedFilepath: filepath.Join(testHome.Cache(), "helloazure-0.1.0.json"),
+		},
 	}
 
-	expectedFilepath := filepath.Join(testHome.Repositories(), testHome.DefaultRepository(), "bundles", "foo.json")
-	expectedRepo := testHome.DefaultRepository()
+	for _, tc := range tests {
+		tc := tc // capture range variable
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			filePath, err := getBundleFile(tc.File)
+			if err != nil {
+				t.Error(err)
+			}
+			defer os.Remove(filePath)
 
-	if filePath != expectedFilepath {
-		t.Errorf("got '%v', wanted '%v'", filePath, expectedFilepath)
-	}
-
-	if repo != expectedRepo {
-		t.Errorf("got '%v', wanted '%v'", repo, expectedRepo)
+			if filePath != tc.ExpectedFilepath {
+				t.Errorf("got '%v', wanted '%v'", filePath, tc.ExpectedFilepath)
+			}
+		})
 	}
 }
 

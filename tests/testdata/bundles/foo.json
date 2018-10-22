@@ -28,5 +28,17 @@
                 }
             ]
         }
-    ]
+    ],
+    "credentials": {
+        "foo": {
+            "path": "pfoo"
+        },
+        "bar": {
+            "env": "ebar"
+        },
+        "quux": {
+            "path": "pquux",
+            "env": "equux"
+        }
+    }
 }

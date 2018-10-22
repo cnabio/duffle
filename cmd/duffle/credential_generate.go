@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -38,7 +39,7 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 		Short:   "generate a credentialset from a bundle",
 		Long:    credentialGenerateHelp,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bf, err := bundleFileOrArg2(args, bundleFile, out)
+			bf, err := getBundleFileFromCredentialsArg(args, bundleFile, out)
 			if err != nil {
 				return err
 			}
@@ -90,4 +91,18 @@ func genCredentialSet(name string, creds map[string]bundle.CredentialLocation) c
 	}
 
 	return cs
+}
+
+func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writer) (string, error) {
+	switch {
+	case len(args) < 1:
+		return "", errors.New("This command requires at least one argument: NAME (name for the credentialset). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle credentials generate NAME BUNDLE\n\t$ duffle credentials generate NAME -f path-to-bundle.json")
+	case len(args) == 2 && bundleFile != "":
+		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
+	case len(args) < 2 && bundleFile == "":
+		return "", errors.New("required arguments are NAME (name for the credentialset) and BUNDLE (CNAB bundle name) or file")
+	case len(args) == 2:
+		return getBundleFile(args[1])
+	}
+	return bundleFile, nil
 }
