@@ -14,7 +14,7 @@ import (
 
 func newStatusCmd(w io.Writer) *cobra.Command {
 	const short = "get the status of an installation"
-	const long = `Get the status of an existing installation.
+	const long = `Gets the status of an existing installation.
 
 Given an installation name, execute the status task for this. A status
 action will restart the CNAB image and ask it to query for status. For that

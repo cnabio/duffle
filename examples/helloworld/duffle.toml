@@ -20,5 +20,5 @@ name = "helloworld"
 
 [credentials]
     [credentials.quux]
-    path = "pquux"
-    env = "equux"
+        path = "pquux"
+        env = "equux"

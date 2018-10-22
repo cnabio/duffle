@@ -34,7 +34,7 @@ test:
 
 .PHONY: lint
 lint:
-	golangci-lint run --config ./.golangci.yml
+	golangci-lint run --config ./golangci.yml
 
 HAS_DEP          := $(shell $(CHECK) dep)
 HAS_GOLANGCI     := $(shell $(CHECK) golangci-lint)

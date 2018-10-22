@@ -9,8 +9,8 @@ import (
 	"github.com/deis/duffle/pkg/action"
 )
 
-const upgradeUsage = `This command will perform the upgrade action in the CNAB bundle`
-const upgradeLong = `Upgrade an existing application.
+const upgradeUsage = `perform the upgrade action in the CNAB bundle`
+const upgradeLong = `Upgrades an existing application.
 
 An upgrade can do the following:
 
