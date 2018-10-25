@@ -3,6 +3,10 @@
 
 Duffle is a command line tool that allows you to install and manage CNAB bundles. To learn more about about CNAB and duffle, check out the [docs](docs/000-index.md).
 
+## CNAB Specification
+
+The CNAB specification can be found at https://github.com/deislabs/cnab-spec
+
 ## Getting Started
 
 1. Ensure you're running the latest version of Go (1.11+) by running `$ go version`
