@@ -47,7 +47,7 @@ build-drivers:
 .PHONY: bootstrap
 bootstrap:
 ifndef HAS_DEP
-	go get -u github.com/golang/dep/cmd/dep
+	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 endif
 ifndef HAS_GOLANGCI
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin
