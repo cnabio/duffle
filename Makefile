@@ -34,10 +34,10 @@ test:
 
 .PHONY: lint
 lint:
-	gometalinter --config ./gometalinter.json ./...
+	golangci-lint run --config ./golangci.yml
 
 HAS_DEP          := $(shell $(CHECK) dep)
-HAS_GOMETALINTER := $(shell $(CHECK) gometalinter)
+HAS_GOLANGCI     := $(shell $(CHECK) golangci-lint)
 
 .PHONY: build-drivers
 build-drivers:
@@ -49,8 +49,7 @@ bootstrap:
 ifndef HAS_DEP
 	go get -u github.com/golang/dep/cmd/dep
 endif
-ifndef HAS_GOMETALINTER
-	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install
+ifndef HAS_GOLANGCI
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin
 endif
 	dep ensure -vendor-only -v
