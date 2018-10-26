@@ -20,7 +20,10 @@ func (i *Install) Run(c *claim.Claim, creds credentials.Set, w io.Writer) error 
 		return err
 	}
 
-	op := opFromClaim(claim.ActionInstall, c, invocImage, creds, w)
+	op, err := opFromClaim(claim.ActionInstall, c, invocImage, creds, w)
+	if err != nil {
+		return err
+	}
 	if err := i.Driver.Run(op); err != nil {
 		c.Update(claim.ActionInstall, claim.StatusFailure)
 		c.Result.Message = err.Error()

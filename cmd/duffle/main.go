@@ -58,8 +58,8 @@ func claimStorage() claim.Store {
 }
 
 // loadCredentials loads a set of credentials from HOME.
-func loadCredentials(file string, b *bundle.Bundle) (map[string]credentials.Destination, error) {
-	creds := map[string]credentials.Destination{}
+func loadCredentials(file string, b *bundle.Bundle) (map[string]string, error) {
+	creds := map[string]string{}
 	if file == "" {
 		return creds, credentials.Validate(creds, b.Credentials)
 	}

@@ -57,9 +57,6 @@ func (sh *credentialShowCmd) printCredentials(cs credentials.CredentialSet) erro
 			if cred.Source.Value != "" {
 				cred.Source.Value = "REDACTED"
 			}
-			if cred.Destination.Value != "" {
-				cred.Destination.Value = "REDACTED"
-			}
 			creds[i] = cred
 		}
 		cs.Credentials = creds

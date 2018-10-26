@@ -20,14 +20,8 @@ type mockFailingDriver struct {
 }
 
 var mockSet = credentials.Set{
-	"secret_one": {
-		EnvVar: "SECRET_ONE",
-		Value:  "I'm a secret",
-	},
-	"secret_two": {
-		Path:  "secret_two",
-		Value: "I'm also a secret",
-	},
+	"secret_one": "I'm a secret",
+	"secret_two": "I'm also a secret",
 }
 
 func (d *mockFailingDriver) Handles(imageType string) bool {
@@ -43,6 +37,14 @@ func mockBundle() *bundle.Bundle {
 		Version: "0.1.0",
 		InvocationImages: []bundle.InvocationImage{
 			{Image: "foo/bar:0.1.0", ImageType: "docker"},
+		},
+		Credentials: map[string]bundle.CredentialLocation{
+			"secret_one": bundle.CredentialLocation{
+				EnvironmentVariable: "SECRET_ONE",
+			},
+			"secret_two": bundle.CredentialLocation{
+				Path: "secret_two",
+			},
 		},
 	}
 
@@ -60,7 +62,10 @@ func TestOpFromClaim(t *testing.T) {
 	}
 	invocImage := c.Bundle.InvocationImages[0]
 
-	op := opFromClaim(claim.ActionInstall, c, invocImage, mockSet, os.Stdout)
+	op, err := opFromClaim(claim.ActionInstall, c, invocImage, mockSet, os.Stdout)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	is := assert.New(t)
 

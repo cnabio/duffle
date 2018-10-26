@@ -20,7 +20,10 @@ func (u *Uninstall) Run(c *claim.Claim, creds credentials.Set, w io.Writer) erro
 		return err
 	}
 
-	op := opFromClaim(claim.ActionUninstall, c, invocImage, creds, w)
+	op, err := opFromClaim(claim.ActionUninstall, c, invocImage, creds, w)
+	if err != nil {
+		return err
+	}
 	if err := u.Driver.Run(op); err != nil {
 		c.Update(claim.ActionUninstall, claim.StatusFailure)
 		c.Result.Message = err.Error()

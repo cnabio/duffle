@@ -20,7 +20,10 @@ func (u *Upgrade) Run(c *claim.Claim, creds credentials.Set, w io.Writer) error 
 		return err
 	}
 
-	op := opFromClaim(claim.ActionUpgrade, c, invocImage, creds, w)
+	op, err := opFromClaim(claim.ActionUpgrade, c, invocImage, creds, w)
+	if err != nil {
+		return err
+	}
 	if err := u.Driver.Run(op); err != nil {
 		c.Update(claim.ActionUpgrade, claim.StatusFailure)
 		c.Result.Message = err.Error()
