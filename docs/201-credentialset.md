@@ -2,8 +2,6 @@
 
 This document covers how credentials are passed into Duffle from the environment.
 
-> This functionality was not part of the initial draft specification.
-
 ## The Credential Problem
 
 Consider the case where a CNAB bundle named `example/myapp:1.0.0` connects to both ARM (Azure IaaS API service) and Kubernetes. Each has its own API surface which is secured by a separate set of credentials. ARM requires a periodically expiring token managed via `az`. Kubernetes stores credentialing information in a `KUBECONFIG` YAML file.
@@ -52,33 +50,21 @@ credentials:
     source:
       path: $SOMEPATH/testdata/someconfig.txt  # credential will be read from this file
                                                # In 'path', env vars are evaluated.
-    destination:
-      # credential data will be presented as environment variable $TEST_READ_FILE
-      env: TEST_READ_FILE    
   - name: run_program
     source:
       command: "echo wildebeest" # The command `echo wildebeest` will be executed
                                  # An error will cause the process to exit
-    destination:
-      env: TEST_RUN_PROGRAM  # Results will be placed as an env var.
   - name: use_var
     source:
       env: TEST_USE_VAR      # This will read an env var from local, and copy to dest
       value: "this space intentionally left non-blank"
-    destination:
-      env: TEST_USE_VAR
   - name: fallthrough
     source:
       name: NO_SUCH_VAR      # Assuming this is not set....
       value: quokka          # Then this will be used as the default value
-    destination:
-      env: TEST_FALLTHROUGH     # The result will be written to env var...
-      path: animals/quokka.txt  # and also to a file path.
   - name: plain_value
     source:
       value: cassowary       # Load this literal value.
-    destination:
-      path: animals/cassowary.txt  # Save the value to a file on dest.
 ```
 
 The above shows several examples of how credentials can be loaded from a local source and
@@ -91,12 +77,7 @@ Loading from source is done from four potential inputs:
 - `path` is loaded from a file at the given path (or else it errors)
 - `command` executes a command, and returns the output as the value (or else it errors)
 
-Data can then be passed into the image in one of two ways:
-
-- `env` will store the data as an environment variable
-- `path` will store the data as the contents of a file located at the given path
-
-Note that both `env` and `path` can be specified, which will result in the data being stored in both.
+Duffle will capture (at runtime) the data presented by these sources, and will pass the data into the container as required.
 
 Credential sets are specified when needed:
 
@@ -108,22 +89,69 @@ $ duffle install --credentials=staging my_example example/myapp:1.0.0
 
 Credential sets are loaded locally. All commands are executed locally. Then the results are injected into the image at startup.
 
-## Default Credential Sets
+## Matching Credentials in a Bundle
 
-A default credential set may be specified in the Duffle preferences. They may be set in a project's `duffle.yaml`, or (more frequently) per user in the `$HOME/.duffle/preferences.yaml` file:
+Bundles declare which credentials they require. This information is specified in the `bundle.json`:
+
+```json
+{
+    "schemaVersion": 1,
+    "name": "helloworld",
+    "version": "0.1.2",
+    "description": "An example 'thin' helloworld Cloud-Native Application Bundle",
+    "invocationImages":[],
+    "images": [],
+    "parameters": {},
+    "credentials": {
+        "kubeconfig": {
+            "path": "/home/.kube/config",
+        },
+        "image_token": {
+            "env": "AZ_IMAGE_TOKEN",
+        },
+        "hostkey": {
+            "path": "/etc/hostkey.txt",
+            "env": "HOST_KEY"
+        }
+    }
+}
+```
+
+The `credentials` section maps a name (e.g. `kubeconfig`) to the destination (e.g. `path: ...` or `env: ...`).
+
+Duffle will match the credentials requested in the `bundle.json` to the credentials specified in the credential set passed with the `--credentials` flag. Matching is done by name. Thus, to send configuration data to the above bundle, we would need a credentialset like this:
 
 ```yaml
-defaultCredentials: "staging"
+name: mycreds
+credentials:
+  - name: kubeconfig
+    source:
+      path: $HOME/.kube/config
+  - name: image_token
+    source:
+      value: "abcdefg"
+  - name: hostkey
+    source:
+      env: "HOSTKEY"
+  - name: sir-not-appearing-in-this-film
+    source:
+      value: unused
 ```
+
+When the above bundle (`helloworld`) is installed with the above credentials (`mycreds`), the credentials are resolved as follows:
+
+- `kubeconfig` is read from Duffle's local path (`$HOME/.kube/config`), and the contents are placed into the invocation image at the path `/home/.kube/config`
+- `image_token` is treated as a literal value, and the string `abcdefg` is injected into the invocation image as the environment variable `$AZ_IMAGE_TOKEN`
+- `hostkey` is read from the local environment variable `$HOSTKEY`, and is then injected into two places in the invocation image:
+  - It is set as the value of `$HOST_KEY`
+  - It is placed in the file `/etc/hostkey.txt`
+
+Since the last credential in the credentialset (`sir-not-appearing-in-this-film`) is not required by the bundle, it is ignored.
+
+During the resolution phase, _if any required credential is not provided in the credentialset, the operation is aborted and Duffle exits with a failure.`
 
 ## Limitations
 
 In this model, credentials can only be injected as files and environment variables. Some systems may not be satisfied with this limitation, in which case additional scripting may be required inside of the invocation image.
-
-Other:
-
-- We might be able to put all credentials in one large YAML file. Credentials may include x509 certs or other large things
-- There is no way to specify in a CNAB bundle what credentials are required on the host system, other than by documentation. We might have to figure that out at some point
-- We don't address how a credential might be injected into a file on the image. The assumption is that such a thing would be scripted
 
 Next Section: [drivers](202-drivers.md)
