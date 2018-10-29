@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/deis/duffle/pkg/bundle"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,13 +48,13 @@ func TestCredentialSet_Expand(t *testing.T) {
 	b := &bundle.Bundle{
 		Name: "knapsack",
 		Credentials: map[string]bundle.CredentialLocation{
-			"first": bundle.CredentialLocation{
+			"first": {
 				EnvironmentVariable: "FIRST_VAR",
 			},
-			"second": bundle.CredentialLocation{
+			"second": {
 				Path: "/second/path",
 			},
-			"third": bundle.CredentialLocation{
+			"third": {
 				EnvironmentVariable: "/THIRD_VAR",
 				Path:                "/third/path",
 			},
