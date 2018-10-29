@@ -31,6 +31,7 @@ type upgradeCmd struct {
 	name       string
 	valuesFile string
 	setParams  []string
+	insecure   bool
 }
 
 func newUpgradeCmd() *cobra.Command {
@@ -67,6 +68,8 @@ func newUpgradeCmd() *cobra.Command {
 	flags.StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
 	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
+	flags.BoolVarP(&uc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
+
 	return cmd
 }
 
@@ -79,11 +82,11 @@ func (up *upgradeCmd) upgrade(credentialsFile, bundleFile string) error {
 
 	// If the user specifies a bundle file, override the existing one.
 	if bundleFile != "" {
-		bun, err := loadBundle(bundleFile)
+		bun, err := loadBundle(bundleFile, up.insecure)
 		if err != nil {
 			return err
 		}
-		claim.Bundle = &bun
+		claim.Bundle = bun
 	}
 
 	driverImpl, err := prepareDriver(upgradeDriver)

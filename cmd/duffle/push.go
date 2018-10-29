@@ -16,6 +16,7 @@ type pushCmd struct {
 	bundleFile string
 	repo       string
 	home       home.Home
+	insecure   bool
 }
 
 func newPushCmd(out io.Writer) *cobra.Command {
@@ -30,7 +31,7 @@ func newPushCmd(out io.Writer) *cobra.Command {
 		RunE: func(_ *cobra.Command, args []string) error {
 			push.home = home.Home(homePath())
 
-			b, err := loadBundle(push.bundleFile)
+			b, err := loadBundle(push.bundleFile, push.insecure)
 			if err != nil {
 				return err
 			}
@@ -64,6 +65,7 @@ func newPushCmd(out io.Writer) *cobra.Command {
 
 	cmd.Flags().StringVarP(&push.bundleFile, "file", "f", "", "bundle file to push")
 	cmd.Flags().StringVarP(&push.repo, "repo", "", "https://hub.cnlabs.io", "repo to push to")
+	cmd.Flags().BoolVarP(&push.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }

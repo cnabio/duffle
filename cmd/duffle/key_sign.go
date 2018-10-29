@@ -54,7 +54,7 @@ func signFile(filepath, keyring, identity string, skipValidation bool) error {
 	if err != nil {
 		return err
 	}
-	b, err := bundle.Parse(string(bdata))
+	b, err := bundle.Unmarshal(bdata)
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func signFile(filepath, keyring, identity string, skipValidation bool) error {
 
 	// Sign the file
 	s := signature.NewSigner(k)
-	data, err := s.Clearsign(&b)
+	data, err := s.Clearsign(b)
 	fmt.Println(string(data))
 	return err
 }
