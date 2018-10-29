@@ -18,6 +18,15 @@ func TestLoadKeyRing(t *testing.T) {
 	is.NotNil(k.entities[0].PrivateKey)
 }
 
+func TestLoadKeyRings(t *testing.T) {
+	is := assert.New(t)
+	k, err := LoadKeyRings(keyringFile, "testdata/public.gpg")
+	is.NoError(err)
+	is.Len(k.entities, 2)
+	is.Equal(k.entities[0].Identities[fullKeyID].UserId.Email, keyEmail)
+	is.NotNil(k.entities[0].PrivateKey)
+}
+
 func TestKeyRing_Len(t *testing.T) {
 	is := assert.New(t)
 	k, err := LoadKeyRing(keyringFile)
