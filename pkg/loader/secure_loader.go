@@ -5,7 +5,7 @@ import (
 	"github.com/deis/duffle/pkg/signature"
 )
 
-// SecureLoader load signed bundles.
+// SecureLoader loads signed bundles.
 //
 // A signed bundle is a bundle.json file that has been cryptographically signed.
 // This loader will load such a file, and test the validity of the signature.

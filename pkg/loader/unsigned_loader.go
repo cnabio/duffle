@@ -13,7 +13,7 @@ import (
 // UnsignedLoader loads a bundle.json that is not signed.
 type UnsignedLoader struct{}
 
-// NewUnsignedLoader creates a new *InsecureLoader
+// NewUnsignedLoader creates a new *UnsignedLoader
 //
 // An UnsignedLoader can load an unsigned bundle, which is represented as a plain JSON file.
 func NewUnsignedLoader() *UnsignedLoader {
@@ -30,7 +30,7 @@ func (l *UnsignedLoader) Load(filename string) (*bundle.Bundle, error) {
 	return bundle.Unmarshal(data)
 }
 
-// loadData is a utility method that loads a file either of the FS (if it exists) or via a remote HTTP GET.
+// loadData is a utility method that loads a file either off of the FS (if it exists) or via a remote HTTP GET.
 //
 // If bundleFile exists on disk, this will return that file. Otherwise, it will attempt to parse the
 // file name as a URL and request it as an HTTP GET request.
