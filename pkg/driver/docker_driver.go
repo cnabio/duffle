@@ -1,11 +1,14 @@
 package driver
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	unix_path "path"
 	"path/filepath"
+	"runtime"
 )
 
 // DockerDriver is capable of running Docker invocation images using Docker itself.
@@ -45,12 +48,11 @@ func (d *DockerDriver) exec(op *Operation) error {
 		}
 	}()
 	for path, content := range op.Files {
-		path, err := filepath.Abs(path)
-		if err != nil {
-			return err
+		if !unix_path.IsAbs(path) {
+			return errors.New("destination path should be an absolute unix path")
 		}
-		base := filepath.Base(path)
-		dir := filepath.Dir(path)
+		base := unix_path.Base(path)
+		dir := unix_path.Dir(path)
 
 		// If it's another file in the same folder, add it to the existing tmp location
 		if existingTmp, ok := tmpdirs[base]; ok {
@@ -58,9 +60,11 @@ func (d *DockerDriver) exec(op *Operation) error {
 			continue
 		}
 
-		// FIXME: On Docker-for-Mac, you must hard code the temp dir location. But
-		// does this work on Windows?
-		tmp, err := ioutil.TempDir("/tmp", "duffle-volume-")
+		tmpDirRoot := "/tmp"
+		if runtime.GOOS == "windows" {
+			tmpDirRoot = ""
+		}
+		tmp, err := ioutil.TempDir(tmpDirRoot, "duffle-volume-")
 		if err != nil {
 			return err
 		}
