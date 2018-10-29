@@ -17,9 +17,16 @@ GIT_TAG  := $(shell git describe --tags --always)
 VERSION  := ${GIT_TAG}
 LDFLAGS  += -X github.com/deis/duffle/pkg/version.Version=$(VERSION)
 
+.PHONY: default
+default: build
+
 .PHONY: build
 build:
 	go build $(GOFLAGS) -o $(BINDIR)/$(TARGET) -ldflags '$(LDFLAGS)' github.com/deis/duffle/cmd/...
+
+.PHONY: debug
+debug:
+	go build $(GOFLAGS) -o $(BINDIR)/$(TARGET) github.com/deis/duffle/cmd/...
 
 .PHONY: test
 test:
@@ -27,11 +34,10 @@ test:
 
 .PHONY: lint
 lint:
-	gometalinter --config ./gometalinter.json ./...
+	golangci-lint run --config ./golangci.yml
 
 HAS_DEP          := $(shell $(CHECK) dep)
-HAS_GOMETALINTER := $(shell $(CHECK) gometalinter)
-
+HAS_GOLANGCI     := $(shell $(CHECK) golangci-lint)
 
 .PHONY: build-drivers
 build-drivers:
@@ -41,10 +47,9 @@ build-drivers:
 .PHONY: bootstrap
 bootstrap:
 ifndef HAS_DEP
-	go get -u github.com/golang/dep/cmd/dep
+	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 endif
-ifndef HAS_GOMETALINTER
-	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install
+ifndef HAS_GOLANGCI
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin
 endif
 	dep ensure -vendor-only -v

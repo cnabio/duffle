@@ -3,52 +3,87 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/action"
 )
 
-const upgradeUsage = `This command will perform the upgrade action in the CNAB bundle`
+const upgradeUsage = `perform the upgrade action in the CNAB bundle`
+const upgradeLong = `Upgrades an existing application.
+
+An upgrade can do the following:
+
+	- Upgrade a current release to a newer bundle (optionally with parameters)
+	- Upgrade a current release using the same bundle but different parameters
+
+Credentials must be supplied when applicable, though they need not be the same credentials that were used
+to do the install.
+
+If no parameters are passed, the parameters from the previous release will be used. If '--set' or '--parameters'
+are specified, the parameters there will be used (even if the resolved set is empty).
+`
 
 var upgradeDriver string
 
 type upgradeCmd struct {
-	out  io.Writer
-	name string
+	duffleCmd
+	name       string
+	valuesFile string
+	setParams  []string
 }
 
-func newUpgradeCmd(w io.Writer) *cobra.Command {
-	uc := &upgradeCmd{out: w}
+func newUpgradeCmd() *cobra.Command {
+	uc := &upgradeCmd{}
 
-	var credentialsFile string
+	var (
+		credentialsFile string
+		bundleFile      string
+	)
 
 	cmd := &cobra.Command{
-		Use:   "upgrade",
-		Short: upgradeUsage,
-		Long:  upgradeUsage,
+		Use:     "upgrade NAME [BUNDLE]",
+		Short:   upgradeUsage,
+		Long:    upgradeLong,
+		PreRunE: uc.Prepare(),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
-				return errors.New("This command requires exactly 1 argument: the name of the installation to upgrade")
+				return errors.New("This command requires at least 1 argument: the name of the installation to upgrade")
 			}
 			uc.name = args[0]
+			uc.Out = cmd.OutOrStdout()
+			bundleFile, err := optBundleFileOrArg2(args, bundleFile, uc.Out)
+			if err != nil {
+				return err
+			}
 
-			return uc.upgrade(credentialsFile)
+			return uc.upgrade(credentialsFile, bundleFile)
 		},
 	}
 
-	cmd.Flags().StringVarP(&upgradeDriver, "driver", "d", "docker", "Specify a driver name")
-	cmd.Flags().StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
-
+	flags := cmd.Flags()
+	flags.StringVarP(&bundleFile, "file", "f", "", "Set the bundle file to use for upgrading")
+	flags.StringVarP(&upgradeDriver, "driver", "d", "docker", "Specify a driver name")
+	flags.StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
+	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
+	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
 	return cmd
 }
 
-func (up *upgradeCmd) upgrade(credentialsFile string) error {
+func (up *upgradeCmd) upgrade(credentialsFile, bundleFile string) error {
 
 	claim, err := claimStorage().Read(up.name)
 	if err != nil {
 		return fmt.Errorf("%v not found: %v", up.name, err)
+	}
+
+	// If the user specifies a bundle file, override the existing one.
+	if bundleFile != "" {
+		bun, err := loadBundle(bundleFile)
+		if err != nil {
+			return err
+		}
+		claim.Bundle = &bun
 	}
 
 	driverImpl, err := prepareDriver(upgradeDriver)
@@ -56,18 +91,29 @@ func (up *upgradeCmd) upgrade(credentialsFile string) error {
 		return err
 	}
 
-	creds, err := loadCredentials(credentialsFile)
+	creds, err := loadCredentials(credentialsFile, claim.Bundle)
 	if err != nil {
 		return err
+	}
+
+	// Override parameters only if some are set.
+	if up.valuesFile != "" || len(up.setParams) > 0 {
+		claim.Parameters, err = calculateParamValues(claim.Bundle, up.valuesFile, up.setParams)
+		if err != nil {
+			return err
+		}
 	}
 
 	upgr := &action.Upgrade{
 		Driver: driverImpl,
 	}
+	err = upgr.Run(&claim, creds, up.Out)
 
-	if err := upgr.Run(&claim, creds); err != nil {
+	// persist the claim, regardless of the success of the upgrade action
+	persistErr := claimStorage().Store(claim)
+
+	if err != nil {
 		return fmt.Errorf("could not upgrade %q: %s", up.name, err)
 	}
-
-	return nil
+	return persistErr
 }

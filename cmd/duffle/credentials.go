@@ -7,7 +7,7 @@ import (
 )
 
 const credentialDesc = `
-Manage credential sets
+Manages credential sets.
 `
 
 func newCredentialsCmd(w io.Writer) *cobra.Command {
@@ -20,6 +20,10 @@ func newCredentialsCmd(w io.Writer) *cobra.Command {
 
 	cmd.AddCommand(
 		newCredentialListCmd(w),
+		newCredentialRemoveCmd(w),
+		newCredentialAddCmd(w),
+		newCredentialShowCmd(w),
+		newCredentialGenerateCmd(w),
 	)
 
 	return cmd

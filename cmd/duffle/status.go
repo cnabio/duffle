@@ -14,7 +14,7 @@ import (
 
 func newStatusCmd(w io.Writer) *cobra.Command {
 	const short = "get the status of an installation"
-	const long = `Get the status of an existing installation.
+	const long = `Gets the status of an existing installation.
 
 Given an installation name, execute the status task for this. A status
 action will restart the CNAB image and ask it to query for status. For that
@@ -57,7 +57,7 @@ reason, it may need the same credentials used to install.
 			table.AddRow("Last Action Message:", c.Result.Message)
 			fmt.Println(table)
 
-			creds, err := loadCredentials(credentialsFile)
+			creds, err := loadCredentials(credentialsFile, c.Bundle)
 			if err != nil {
 				return err
 			}
@@ -70,7 +70,7 @@ reason, it may need the same credentials used to install.
 			// TODO: Do we pass new values in here? Or just from Claim?
 			action := &action.Status{Driver: driverImpl}
 			fmt.Println("Executing status action in bundle...")
-			return action.Run(&c, creds)
+			return action.Run(&c, creds, cmd.OutOrStdout())
 		},
 	}
 	cmd.Flags().StringVarP(&statusDriver, "driver", "d", "docker", "Specify a driver name")

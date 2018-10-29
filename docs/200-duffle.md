@@ -22,7 +22,7 @@ The behavior of `duffle build` is described in [Duffle Build](203-duffle-build.m
 
 ## Duffle Install, Upgrade, Uninstall, and Status
 
-The following commands run a CNAB's `invocationImage`, each passing a different `CNAB_ACTION`:
+The following commands run a CNAB's applicable invocation image, each passing a different `CNAB_ACTION`:
 
 - `duffle install` captures the intent to install a bundle, and sets `CNAB_ACTION=install`.
 - `duffle upgrade` captures the intent to upgrade an existing installation with a bundle, and sets `CNAB_ACTION=upgrade`.
@@ -76,10 +76,9 @@ CNAB includes a method for declaring user-facing parameters that can be changed 
 - During startup of the image, Duffle will inject each parameter as an environment variable, following the conversion method determined by CNAB:
   - The variable name will be: `CNAB_P_` plus the uppercased variable name (e.g. `CNAB_P_SERVER_PORT`), and the value will be a string representation of the value.
 
-
 ## The Invocation Image Lifecycle
 
-For operations that execute this installation image (install, upgrade, etc), this is the lifecycle:
+For operations that execute this installation image (install, upgrade, etc.), this is the lifecycle:
 
 - Load the parameters and credential set definitions
 - Load the claim (if necessary)
@@ -101,9 +100,10 @@ The following items remain to be specified:
 - Whether Duffle will support multi-runtimes in a single image.
 
 | Method | Description |
+| --- | --- |
 | naive | A CNAB bundle can have only configurational runtime |
 | intentional | A CNAB bundle can expose toggle switches for which runtimes (e.g. Mesos vs Kubernetes), and user chooses |
 | automatic | A CNAB bundle may expose multiple runtimes, but automatically choose which applies to the current config |
 
-
+Next section: [credential set](201-credentialset.md)
 

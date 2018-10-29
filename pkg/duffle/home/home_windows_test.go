@@ -4,19 +4,19 @@ package home
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDuffleHome(t *testing.T) {
+	is := assert.New(t)
 	ph := Home("r:\\")
-	isEq := func(t *testing.T, a, b string) {
-		if a != b {
-			t.Errorf("Expected %q, got %q", b, a)
-		}
-	}
-
-	isEq(t, ph.String(), "r:\\")
-	isEq(t, ph.Repositories(), "r:\\repositories")
-	isEq(t, ph.Plugins(), "r:\\plugins")
-	isEq(t, ph.Claims(), "r:\\claims")
-	isEq(t, ph.Credentials(), "r:\\credentials")
+	is.Equal(ph.String(), "r:\\")
+	is.Equal(ph.Cache(), "r:\\cache")
+	is.Equal(ph.Plugins(), "r:\\plugins")
+	is.Equal(ph.Claims(), "r:\\claims")
+	is.Equal(ph.Credentials(), "r:\\credentials")
+	is.Equal(ph.Logs(), "r:\\logs")
+	is.Equal(ph.SecretKeyRing(), "r:\\secret.ring")
+	is.Equal(ph.PublicKeyRing(), "r:\\public.ring")
 }

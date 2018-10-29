@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/credentials"
 	"github.com/deis/duffle/pkg/driver"
@@ -30,12 +30,8 @@ func main() {
 			}
 		}
 	}()
-	rootCmd = newRootCmd(os.Stdout)
+	rootCmd = newRootCmd(nil)
 	must(rootCmd.Execute())
-}
-
-func unimplemented(msg string) {
-	panic(fmt.Errorf("unimplemented: %s", msg))
 }
 
 func homePath() string {
@@ -62,10 +58,10 @@ func claimStorage() claim.Store {
 }
 
 // loadCredentials loads a set of credentials from HOME.
-func loadCredentials(file string) (map[string]credentials.Destination, error) {
+func loadCredentials(file string, b *bundle.Bundle) (map[string]credentials.Destination, error) {
 	creds := map[string]credentials.Destination{}
 	if file == "" {
-		return creds, nil
+		return creds, credentials.Validate(creds, b.Credentials)
 	}
 	if !isPathy(file) {
 		file = filepath.Join(home.Home(homePath()).Credentials(), file+".yaml")
@@ -74,7 +70,11 @@ func loadCredentials(file string) (map[string]credentials.Destination, error) {
 	if err != nil {
 		return creds, err
 	}
-	return cset.Resolve()
+	res, err := cset.Resolve()
+	if err != nil {
+		return res, err
+	}
+	return res, credentials.Validate(res, b.Credentials)
 }
 
 // isPathy checks to see if a name looks like a path.

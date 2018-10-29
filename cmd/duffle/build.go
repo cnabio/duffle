@@ -27,7 +27,7 @@ import (
 )
 
 const buildDesc = `
-This command builds a CNAB bundle.
+Builds a CNAB bundle.
 `
 
 const (
@@ -48,26 +48,6 @@ type buildCmd struct {
 	dockerClientOptions *dockerflags.ClientOptions
 }
 
-func defaultDockerTLS() bool {
-	return os.Getenv(dockerTLSEnvVar) != ""
-}
-
-func defaultDockerTLSVerify() bool {
-	return os.Getenv(dockerTLSVerifyEnvVar) != ""
-}
-
-func dockerPreRun(opts *dockerflags.ClientOptions) {
-	dockerflags.SetLogLevel(opts.Common.LogLevel)
-
-	if opts.ConfigDir != "" {
-		cliconfig.SetDir(opts.ConfigDir)
-	}
-
-	if opts.Common.Debug {
-		dockerdebug.Enable()
-	}
-}
-
 func newBuildCmd(out io.Writer) *cobra.Command {
 	var (
 		build = &buildCmd{
@@ -79,7 +59,7 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "build [path]",
-		Short: "builds a CNAB bundle",
+		Short: "build a CNAB bundle",
 		Long:  buildDesc,
 		PersistentPreRun: func(c *cobra.Command, args []string) {
 			build.dockerClientOptions.Common.SetDefaultOptions(f)
@@ -130,7 +110,7 @@ func (b *buildCmd) run() (err error) {
 	)
 	bldr.LogsDir = b.home.Logs()
 
-	mfst, err := manifest.Load(filepath.Join(b.src, "duffle.toml"))
+	mfst, err := manifest.Load("", b.src)
 	if err != nil {
 		return err
 	}
@@ -145,7 +125,7 @@ func (b *buildCmd) run() (err error) {
 		return fmt.Errorf("cannot prepare build: %v", err)
 	}
 
-	f, err := os.OpenFile("cnab/bundle.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	f, err := os.OpenFile(filepath.Join(b.src, "cnab", "bundle.json"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf("cannot create or open bundle file: %v", err)
 	}
@@ -179,4 +159,24 @@ func lookupComponents(mfst *manifest.Manifest, cmd *buildCmd) ([]builder.Compone
 		}
 	}
 	return components, nil
+}
+
+func defaultDockerTLS() bool {
+	return os.Getenv(dockerTLSEnvVar) != ""
+}
+
+func defaultDockerTLSVerify() bool {
+	return os.Getenv(dockerTLSVerifyEnvVar) != ""
+}
+
+func dockerPreRun(opts *dockerflags.ClientOptions) {
+	dockerflags.SetLogLevel(opts.Common.LogLevel)
+
+	if opts.ConfigDir != "" {
+		cliconfig.SetDir(opts.ConfigDir)
+	}
+
+	if opts.Common.Debug {
+		dockerdebug.Enable()
+	}
 }

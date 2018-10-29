@@ -116,10 +116,33 @@ func (d *DockerDriver) exec(op *Operation) error {
 		tmpdirs[dir] = tmp
 		localFile := filepath.Join(tmp, base)
 		if err := ioutil.WriteFile(localFile, []byte(content), 0755); err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(op.Out, err)
 		}
+<<<<<<< HEAD
 
 		mounts = append(mounts, mount.Mount{Type: mount.TypeBind, Source: tmp, Target: m})
+=======
+		args = append(args, "--volume", fmt.Sprintf("%s:%s", localFile, fmt.Sprintf("%s/%s", dir, base)))
+	}
+
+	// TODO: For now, we mount the docker socket to alllow things like Compose
+	// to run inside of a CNAB bundle. This should be configurable.
+	// See https://github.com/docker/compose/blob/master/script/run/run.sh
+	// Also https://media.giphy.com/media/RIECDaCdxqKha/giphy.gif
+	args = append(args, "--volume", "/var/run/docker.sock:/var/run/docker.sock")
+
+	// TODO: Should we hard code in the call to run? This might actually make it possible
+	// for CNAB devs to create a default command that is perhaps user-oriented (like setting
+	// the default command to help text).
+	args = append(args, img, "/cnab/app/run")
+
+	if isTrue(d.config["VERBOSE"]) {
+		fmt.Fprintln(op.Out, "--------> args")
+		for _, arg := range args {
+			fmt.Fprintln(op.Out, arg)
+		}
+		fmt.Fprintln(op.Out, "<-------- args")
+>>>>>>> upstream/master
 	}
 
 	cfg := &container.Config{
@@ -133,6 +156,13 @@ func (d *DockerDriver) exec(op *Operation) error {
 	if err != nil {
 		return fmt.Errorf("cannot create container: %v", err)
 	}
+<<<<<<< HEAD
+=======
+	out, err := cmd.CombinedOutput()
+	fmt.Fprintln(op.Out, "\n"+string(out)+"\n")
+	return err
+}
+>>>>>>> upstream/master
 
 	if err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("cannot start container: %v", err)

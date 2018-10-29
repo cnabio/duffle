@@ -2,9 +2,12 @@ package action
 
 import (
 	"errors"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/credentials"
 	"github.com/deis/duffle/pkg/driver"
@@ -34,6 +37,17 @@ func (d *mockFailingDriver) Run(op *driver.Operation) error {
 	return errors.New("I always fail")
 }
 
+func mockBundle() *bundle.Bundle {
+	return &bundle.Bundle{
+		Name:    "bar",
+		Version: "0.1.0",
+		InvocationImages: []bundle.InvocationImage{
+			{Image: "foo/bar:0.1.0", ImageType: "docker"},
+		},
+	}
+
+}
+
 func TestOpFromClaim(t *testing.T) {
 	now := time.Now()
 	c := &claim.Claim{
@@ -41,20 +55,51 @@ func TestOpFromClaim(t *testing.T) {
 		Modified:   now,
 		Name:       "name",
 		Revision:   "revision",
-		Bundle:     "foo/bar:0.1.0",
+		Bundle:     mockBundle(),
 		Parameters: map[string]interface{}{"duff": "beer"},
-		ImageType:  driver.ImageTypeDocker,
 	}
+	invocImage := c.Bundle.InvocationImages[0]
 
-	op := opFromClaim(claim.ActionInstall, c, mockSet)
+	op := opFromClaim(claim.ActionInstall, c, invocImage, mockSet, os.Stdout)
 
 	is := assert.New(t)
 
 	is.Equal(c.Name, op.Installation)
 	is.Equal(c.Revision, op.Revision)
-	is.Equal(c.Bundle, op.Image)
+	is.Equal(invocImage.Image, op.Image)
 	is.Equal(driver.ImageTypeDocker, op.ImageType)
 	is.Equal(op.Environment["SECRET_ONE"], "I'm a secret")
 	is.Equal(op.Files["secret_two"], "I'm also a secret")
 	is.Len(op.Parameters, 1)
+	is.Equal(os.Stdout, op.Out)
+}
+
+func TestSelectInvocationImage_EmptyInvocationImages(t *testing.T) {
+	c := &claim.Claim{
+		Bundle: &bundle.Bundle{},
+	}
+	_, err := selectInvocationImage(&driver.DebugDriver{}, c)
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	want := "no invocationImages are defined"
+	got := err.Error()
+	if !strings.Contains(got, want) {
+		t.Fatalf("expected an error containing %q but got %q", want, got)
+	}
+}
+
+func TestSelectInvocationImage_DriverIncompatible(t *testing.T) {
+	c := &claim.Claim{
+		Bundle: mockBundle(),
+	}
+	_, err := selectInvocationImage(&mockFailingDriver{}, c)
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	want := "driver is not compatible"
+	got := err.Error()
+	if !strings.Contains(got, want) {
+		t.Fatalf("expected an error containing %q but got %q", want, got)
+	}
 }

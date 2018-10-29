@@ -1,6 +1,7 @@
 package action
 
 import (
+	"io/ioutil"
 	"testing"
 	"time"
 
@@ -11,20 +12,22 @@ import (
 )
 
 func TestStatus_Run(t *testing.T) {
+	out := ioutil.Discard
+
 	st := &Status{Driver: &driver.DebugDriver{}}
 	c := &claim.Claim{
 		Created:    time.Time{},
 		Modified:   time.Time{},
 		Name:       "name",
 		Revision:   "revision",
-		Bundle:     "fake/bundle:0.1.0",
+		Bundle:     mockBundle(),
 		Parameters: map[string]interface{}{},
 	}
 
-	if err := st.Run(c, mockSet); err != nil {
+	if err := st.Run(c, mockSet, out); err != nil {
 		t.Fatal(err)
 	}
 
 	st = &Status{Driver: &mockFailingDriver{}}
-	assert.Error(t, st.Run(c, mockSet))
+	assert.Error(t, st.Run(c, mockSet, out))
 }

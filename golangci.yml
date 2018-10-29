@@ -1,0 +1,15 @@
+run:
+  deadline: 2m
+
+linters:
+  disable-all: true
+  enable:
+  - gofmt
+  - goimports
+  - golint
+  - gosimple
+  - ineffassign
+  - misspell
+  - unused
+  - deadcode
+  - govet

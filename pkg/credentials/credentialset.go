@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/deis/duffle/pkg/bundle"
+
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -45,6 +47,35 @@ func Load(path string) (*CredentialSet, error) {
 		return cset, err
 	}
 	return cset, yaml.Unmarshal(data, cset)
+}
+
+// Validate compares the given credentials with the spec.
+//
+// This will result in an error only if:
+// - a parameter in the spec is not present in the given set
+// - a parameter in the given set does not match the format required by the spec
+//
+// It is allowed for spec to specify both an env var and a file. In such case, if
+// the givn set provides either, it will be considered valid.
+func Validate(given Set, spec map[string]bundle.CredentialLocation) error {
+	for name, loc := range spec {
+		if !isValidCred(given, loc) {
+			return fmt.Errorf("bundle requires credential for %s", name)
+		}
+	}
+	return nil
+}
+
+func isValidCred(given Set, loc bundle.CredentialLocation) bool {
+	for _, v := range given {
+		if loc.EnvironmentVariable == v.EnvVar {
+			return true
+		}
+		if loc.Path == v.Path {
+			return true
+		}
+	}
+	return false
 }
 
 // Resolve looks up the credentials as described in Source, then copies the resulting value into Destination.

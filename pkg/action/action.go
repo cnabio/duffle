@@ -1,8 +1,12 @@
 package action
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"strings"
+
+	"github.com/deis/duffle/pkg/bundle"
 
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/credentials"
@@ -22,17 +26,32 @@ type Action interface {
 	Run(*claim.Claim, credentials.Set) error
 }
 
-func opFromClaim(action string, c *claim.Claim, creds credentials.Set) *driver.Operation {
+func selectInvocationImage(d driver.Driver, c *claim.Claim) (bundle.InvocationImage, error) {
+	if len(c.Bundle.InvocationImages) == 0 {
+		return bundle.InvocationImage{}, errors.New("no invocationImages are defined in the bundle")
+	}
+
+	for _, ii := range c.Bundle.InvocationImages {
+		if d.Handles(ii.ImageType) {
+			return ii, nil
+		}
+	}
+
+	return bundle.InvocationImage{}, errors.New("driver is not compatible with any of the invocation images in the bundle")
+}
+
+func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) *driver.Operation {
 	env, files := creds.Flatten()
 	return &driver.Operation{
 		Action:       action,
 		Installation: c.Name,
 		Parameters:   c.Parameters,
-		Image:        c.Bundle,
-		ImageType:    c.ImageType,
+		Image:        ii.Image,
+		ImageType:    ii.ImageType,
 		Revision:     c.Revision,
 		Environment:  conflateEnv(action, c, env),
 		Files:        files,
+		Out:          w,
 	}
 }
 
@@ -41,7 +60,8 @@ func opFromClaim(action string, c *claim.Claim, creds credentials.Set) *driver.O
 func conflateEnv(action string, c *claim.Claim, env map[string]string) map[string]string {
 	env["CNAB_INSTALLATION_NAME"] = c.Name
 	env["CNAB_ACTION"] = action
-	env["CNAB_BUNDLE_NAME"] = c.Bundle
+	env["CNAB_BUNDLE_NAME"] = c.Bundle.Name
+	env["CNAB_BUNDLE_VERSION"] = c.Bundle.Version
 
 	for k, v := range c.Parameters {
 		// TODO: Vet against bundle's parameters.json

@@ -1,7 +1,7 @@
 package action
 
 import (
-	"fmt"
+	"io"
 
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/credentials"
@@ -14,12 +14,13 @@ type Install struct {
 }
 
 // Run performs an installation and updates the Claim accordingly
-func (i *Install) Run(c *claim.Claim, creds credentials.Set) error {
-	if !i.Driver.Handles(c.ImageType) {
-		return fmt.Errorf("driver does not handle image type %s", c.ImageType)
+func (i *Install) Run(c *claim.Claim, creds credentials.Set, w io.Writer) error {
+	invocImage, err := selectInvocationImage(i.Driver, c)
+	if err != nil {
+		return err
 	}
 
-	op := opFromClaim(claim.ActionInstall, c, creds)
+	op := opFromClaim(claim.ActionInstall, c, invocImage, creds, w)
 	if err := i.Driver.Run(op); err != nil {
 		c.Update(claim.ActionInstall, claim.StatusFailure)
 		c.Result.Message = err.Error()

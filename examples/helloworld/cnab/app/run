@@ -3,8 +3,10 @@
 #set -eo pipefail
 
 action=$CNAB_ACTION
-name=$CNAB_INSTALLATION_NAME 
+name=$CNAB_INSTALLATION_NAME
+param=${CNAB_P_HELLO:-hello}
 
+echo "$param world"
 case $action in
     install)
     echo "Install action"

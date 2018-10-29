@@ -1,7 +1,7 @@
 package action
 
 import (
-	"fmt"
+	"io"
 
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/credentials"
@@ -14,10 +14,12 @@ type Status struct {
 }
 
 // Run executes a status action in an image
-func (i *Status) Run(c *claim.Claim, creds credentials.Set) error {
-	op := opFromClaim(claim.ActionStatus, c, creds)
-	if !i.Driver.Handles(op.ImageType) {
-		return fmt.Errorf("driver does not handle image type %s", op.ImageType)
+func (i *Status) Run(c *claim.Claim, creds credentials.Set, w io.Writer) error {
+	invocImage, err := selectInvocationImage(i.Driver, c)
+	if err != nil {
+		return err
 	}
+
+	op := opFromClaim(claim.ActionStatus, c, invocImage, creds, w)
 	return i.Driver.Run(op)
 }

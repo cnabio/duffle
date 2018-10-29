@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/oklog/ulid"
+
+	"github.com/deis/duffle/pkg/bundle"
 )
 
 // Status constants define the CNAB status fields on a Result.
@@ -37,10 +39,9 @@ type Claim struct {
 	Revision   string                 `json:"revision"`
 	Created    time.Time              `json:"created"`
 	Modified   time.Time              `json:"modified"`
-	Bundle     string                 `json:"bundle"`
+	Bundle     *bundle.Bundle         `json:"bundle"`
 	Result     Result                 `json:"result"`
 	Parameters map[string]interface{} `json:"parameters"`
-	ImageType  string                 `json:"image_type"`
 }
 
 // ValidName is a regular expression that indicates whether a name is a valid claim name.

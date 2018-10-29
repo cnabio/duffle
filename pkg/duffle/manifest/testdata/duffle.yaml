@@ -1,0 +1,7 @@
+name: testbundle
+components:
+  cnab:
+    name: cnab
+    builder: docker
+    configuration:
+      registry: microsoft

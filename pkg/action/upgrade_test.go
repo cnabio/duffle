@@ -1,6 +1,7 @@
 package action
 
 import (
+	"io/ioutil"
 	"testing"
 	"time"
 
@@ -11,17 +12,19 @@ import (
 )
 
 func TestUpgrade_Run(t *testing.T) {
+	out := ioutil.Discard
+
 	c := &claim.Claim{
 		Created:    time.Time{},
 		Modified:   time.Time{},
 		Name:       "name",
 		Revision:   "revision",
-		Bundle:     "fake/bundle:0.1.0",
+		Bundle:     mockBundle(),
 		Parameters: map[string]interface{}{},
 	}
 
 	upgr := &Upgrade{Driver: &driver.DebugDriver{}}
-	assert.NoError(t, upgr.Run(c, mockSet))
+	assert.NoError(t, upgr.Run(c, mockSet, out))
 	if c.Created == c.Modified {
 		t.Error("Claim was not updated with modified time stamp during upgrade action")
 	}
@@ -34,10 +37,10 @@ func TestUpgrade_Run(t *testing.T) {
 	}
 
 	upgr = &Upgrade{Driver: &mockFailingDriver{}}
-	assert.Error(t, upgr.Run(c, mockSet))
+	assert.Error(t, upgr.Run(c, mockSet, out))
 
 	upgr = &Upgrade{Driver: &mockFailingDriver{shouldHandle: true}}
-	assert.Error(t, upgr.Run(c, mockSet))
+	assert.Error(t, upgr.Run(c, mockSet, out))
 	if c.Result.Message == "" {
 		t.Error("Expected error message in claim result message")
 	}

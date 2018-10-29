@@ -83,7 +83,15 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 	mutex := &sync.Mutex{}
 
 	wg.Add(len(ctx.Components))
-	bf := &bundle.Bundle{Name: ctx.Manifest.Name}
+	bf := &bundle.Bundle{
+		Name:        ctx.Manifest.Name,
+		Description: ctx.Manifest.Description,
+		Images:      []bundle.Image{},
+		Keywords:    ctx.Manifest.Keywords,
+		Maintainers: ctx.Manifest.Maintainers,
+		Parameters:  ctx.Manifest.Parameters,
+		Credentials: ctx.Manifest.Credentials,
+	}
 
 	for _, c := range ctx.Components {
 		go func(c Component) {
@@ -95,10 +103,11 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 			}
 
 			if c.Name() == "cnab" {
-				bf.InvocationImage = bundle.InvocationImage{
-					Image:     c.URI(),
-					ImageType: c.Type(),
-				}
+				bf.InvocationImages = []bundle.InvocationImage{
+					{
+						Image:     c.URI(),
+						ImageType: c.Type(),
+					}}
 				bf.Version = strings.Split(c.URI(), ":")[1]
 				return
 			}

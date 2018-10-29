@@ -3,6 +3,8 @@ package bundle
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCanReadParameterNames(t *testing.T) {
@@ -325,6 +327,33 @@ func TestValidateBoolParameterValue(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected invalid type but got no error")
 	}
+}
+
+func TestConvertValue(t *testing.T) {
+	pd := ParameterDefinition{
+		DataType: "bool",
+	}
+	is := assert.New(t)
+
+	out, _ := pd.ConvertValue("true")
+	is.True(out.(bool))
+	out, _ = pd.ConvertValue("false")
+	is.False(out.(bool))
+	out, _ = pd.ConvertValue("barbeque")
+	is.False(out.(bool))
+
+	pd.DataType = "string"
+	out, err := pd.ConvertValue("hello")
+	is.NoError(err)
+	is.Equal("hello", out.(string))
+
+	pd.DataType = "int"
+	out, err = pd.ConvertValue("123")
+	is.NoError(err)
+	is.Equal(123, out.(int))
+
+	_, err = pd.ConvertValue("onetwothree")
+	is.Error(err)
 }
 
 func intPtr(i int) *int {

@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 )
 
@@ -15,13 +14,16 @@ func TestSearch(t *testing.T) {
 	}
 	duffleHome = filepath.Join(cwd, "..", "..", "tests", "testdata", "home")
 
-	expectedBundleList := []string{
-		"foo",
-		"github.com/customorg/duffle-bundles/foo",
+	if _, err := search([]string{}); err != nil {
+		t.Error(err)
 	}
 
-	bundleList := search([]string{})
-	if !reflect.DeepEqual(bundleList, expectedBundleList) {
-		t.Errorf("expected bundle lists to be equal; got '%v', wanted '%v'", bundleList, expectedBundleList)
+	bundleList, err := search([]string{"hello"})
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(bundleList) == 0 {
+		t.Error("expected to find at least one bundle with the keyword 'hello'")
 	}
 }
