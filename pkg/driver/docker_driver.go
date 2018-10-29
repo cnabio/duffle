@@ -3,10 +3,13 @@ package driver
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	unix_path "path"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/docker/docker/api/types"
@@ -82,6 +85,9 @@ func (d *DockerDriver) exec(op *Operation) error {
 	}()
 
 	for path, content := range op.Files {
+		if !unix_path.IsAbs(path) {
+			return errors.New("destination path should be an absolute unix path")
+		}
 		// osPath is used to compute files to create
 		// based on the operating system running duffle install
 		osPath, err := filepath.Abs(path)
@@ -109,7 +115,11 @@ func (d *DockerDriver) exec(op *Operation) error {
 			continue
 		}
 
-		tmp, err := ioutil.TempDir(os.TempDir(), "duffle-volume-")
+		tmpDirRoot := "/tmp"
+		if runtime.GOOS == "windows" {
+			tmpDirRoot = ""
+		}
+		tmp, err := ioutil.TempDir(tmpDirRoot, "duffle-volume-")
 		if err != nil {
 			return err
 		}
@@ -118,33 +128,10 @@ func (d *DockerDriver) exec(op *Operation) error {
 		if err := ioutil.WriteFile(localFile, []byte(content), 0755); err != nil {
 			fmt.Fprintln(op.Out, err)
 		}
-<<<<<<< HEAD
 
 		mounts = append(mounts, mount.Mount{Type: mount.TypeBind, Source: tmp, Target: m})
-=======
-		args = append(args, "--volume", fmt.Sprintf("%s:%s", localFile, fmt.Sprintf("%s/%s", dir, base)))
 	}
-
-	// TODO: For now, we mount the docker socket to alllow things like Compose
-	// to run inside of a CNAB bundle. This should be configurable.
-	// See https://github.com/docker/compose/blob/master/script/run/run.sh
-	// Also https://media.giphy.com/media/RIECDaCdxqKha/giphy.gif
-	args = append(args, "--volume", "/var/run/docker.sock:/var/run/docker.sock")
-
-	// TODO: Should we hard code in the call to run? This might actually make it possible
-	// for CNAB devs to create a default command that is perhaps user-oriented (like setting
-	// the default command to help text).
-	args = append(args, img, "/cnab/app/run")
-
-	if isTrue(d.config["VERBOSE"]) {
-		fmt.Fprintln(op.Out, "--------> args")
-		for _, arg := range args {
-			fmt.Fprintln(op.Out, arg)
-		}
-		fmt.Fprintln(op.Out, "<-------- args")
->>>>>>> upstream/master
-	}
-
+	//args = append(args, "--volume", "/var/run/docker.sock:/var/run/docker.sock")
 	cfg := &container.Config{
 		Image:      op.Image,
 		Entrypoint: strslice.StrSlice{"/cnab/app/run"},
@@ -156,13 +143,6 @@ func (d *DockerDriver) exec(op *Operation) error {
 	if err != nil {
 		return fmt.Errorf("cannot create container: %v", err)
 	}
-<<<<<<< HEAD
-=======
-	out, err := cmd.CombinedOutput()
-	fmt.Fprintln(op.Out, "\n"+string(out)+"\n")
-	return err
-}
->>>>>>> upstream/master
 
 	if err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("cannot start container: %v", err)
