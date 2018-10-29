@@ -40,21 +40,19 @@ func (s fileSystemStore) List() ([]string, error) {
 }
 
 func (s fileSystemStore) Store(name string, data []byte) error {
-	if err := s.ensure(); err != nil {
+	filename, err := s.fullyQualifiedName(name)
+	if err != nil {
 		return err
 	}
-
-	filename := s.fileNameOf(name)
 
 	return ioutil.WriteFile(filename, data, os.ModePerm)
 }
 
 func (s fileSystemStore) Read(name string) ([]byte, error) {
-	if err := s.ensure(); err != nil {
+	filename, err := s.fullyQualifiedName(name)
+	if err != nil {
 		return nil, err
 	}
-
-	filename := s.fileNameOf(name)
 
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		return nil, ErrFileDoesNotExist
@@ -64,17 +62,22 @@ func (s fileSystemStore) Read(name string) ([]byte, error) {
 }
 
 func (s fileSystemStore) Delete(name string) error {
-	if err := s.ensure(); err != nil {
+	filename, err := s.fullyQualifiedName(name)
+	if err != nil {
 		return err
 	}
-
-	filename := s.fileNameOf(name)
-
 	return os.Remove(filename)
 }
 
 func (s fileSystemStore) fileNameOf(name string) string {
 	return filepath.Join(s.baseDirectory, fmt.Sprintf("%s.%s", name, s.fileExtension))
+}
+
+func (s fileSystemStore) fullyQualifiedName(name string) (string, error) {
+	if err := s.ensure(); err != nil {
+		return "", err
+	}
+	return s.fileNameOf(name), nil
 }
 
 func (s fileSystemStore) ensure() error {
@@ -89,7 +92,7 @@ func (s fileSystemStore) ensure() error {
 }
 
 func (s fileSystemStore) storageFiles(files []os.FileInfo) []os.FileInfo {
-	result := []os.FileInfo{}
+	var result []os.FileInfo
 	ext := "." + s.fileExtension
 	for _, file := range files {
 		if !file.IsDir() && filepath.Ext(file.Name()) == ext {
@@ -100,7 +103,7 @@ func (s fileSystemStore) storageFiles(files []os.FileInfo) []os.FileInfo {
 }
 
 func names(files []os.FileInfo) []string {
-	result := []string{}
+	var result []string
 	for _, file := range files {
 		result = append(result, name(file.Name()))
 	}
