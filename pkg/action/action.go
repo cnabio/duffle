@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/deis/duffle/pkg/bundle"
-
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/credentials"
 	"github.com/deis/duffle/pkg/driver"
@@ -42,6 +41,10 @@ func selectInvocationImage(d driver.Driver, c *claim.Claim) (bundle.InvocationIm
 
 func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) *driver.Operation {
 	env, files := creds.Flatten()
+	for k, v := range c.Files {
+		files[c.Bundle.Files[k].Path] = v
+	}
+
 	return &driver.Operation{
 		Action:       action,
 		Installation: c.Name,

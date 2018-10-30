@@ -42,6 +42,7 @@ type Claim struct {
 	Bundle     *bundle.Bundle         `json:"bundle"`
 	Result     Result                 `json:"result"`
 	Parameters map[string]interface{} `json:"parameters"`
+	Files      map[string]string      `json:"files"`
 }
 
 // ValidName is a regular expression that indicates whether a name is a valid claim name.

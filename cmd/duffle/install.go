@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
-
-	"github.com/deis/duffle/pkg/signature"
 
 	"github.com/deis/duffle/pkg/action"
 	"github.com/deis/duffle/pkg/bundle"
@@ -17,7 +16,7 @@ import (
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
 	"github.com/deis/duffle/pkg/reference"
-
+	"github.com/deis/duffle/pkg/signature"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -61,6 +60,8 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		bundleFile      string
 		setParams       []string
 		insecure        bool
+		setFiles        []string
+		setFilesContent []string
 
 		installationName string
 		bun              *bundle.Bundle
@@ -108,6 +109,10 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 			if err != nil {
 				return err
 			}
+			c.Files, err = calculateInjectedFiles(bun, setFiles, setFilesContent)
+			if err != nil {
+				return err
+			}
 
 			inst := &action.Install{
 				Driver: driverImpl,
@@ -133,6 +138,8 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 	flags.StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringVarP(&bundleFile, "file", "f", "", "Bundle file to install")
 	flags.StringArrayVarP(&setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
+	flags.StringArrayVarP(&setFiles, "inject-file", "i", []string{}, "Set injected files as NAME=SOURCE-PATH pairs")
+	flags.StringArrayVar(&setFilesContent, "inject-file-content", []string{}, "Set injected files as NAME=CONTENT pairs")
 	return cmd
 }
 
@@ -321,4 +328,52 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams []str
 		vals[k] = v
 	}
 	return bundle.ValuesOrDefaults(vals, bun)
+}
+
+func calculateInjectedFiles(bun *bundle.Bundle, setFilePaths []string, setFileContents []string) (map[string]string, error) {
+	remainingRequired := map[string]struct{}{}
+	result := map[string]string{}
+	for k, v := range bun.Files {
+		if v.Required {
+			remainingRequired[k] = struct{}{}
+		}
+	}
+	for _, p := range setFilePaths {
+		parts := strings.SplitN(p, "=", 2)
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("malformed injected file path parameter: %q", p)
+		}
+		if _, ok := result[parts[0]]; ok {
+			return nil, fmt.Errorf("ambiguous content for file %q", parts[0])
+		}
+		content, err := ioutil.ReadFile(parts[1])
+		if err != nil {
+			return nil, fmt.Errorf("error while reading file %q: %s", parts[1], err)
+		}
+		result[parts[0]] = string(content)
+		delete(remainingRequired, parts[0])
+	}
+
+	for _, p := range setFileContents {
+		parts := strings.SplitN(p, "=", 2)
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("malformed injected file path parameter: %q", p)
+		}
+		if _, ok := result[parts[0]]; ok {
+			return nil, fmt.Errorf("ambiguous content for file %q", parts[0])
+		}
+		result[parts[0]] = parts[1]
+		delete(remainingRequired, parts[0])
+	}
+
+	if len(remainingRequired) == 0 {
+		return result, nil
+	}
+
+	var missingRequired []string
+	for k := range remainingRequired {
+		missingRequired = append(missingRequired, k)
+	}
+
+	return nil, fmt.Errorf("the following required files are not set: %s", strings.Join(missingRequired, ", "))
 }

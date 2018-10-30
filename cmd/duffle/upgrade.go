@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	"github.com/deis/duffle/pkg/action"
+	"github.com/spf13/cobra"
 )
 
 const upgradeUsage = `perform the upgrade action in the CNAB bundle`
@@ -28,10 +27,12 @@ var upgradeDriver string
 
 type upgradeCmd struct {
 	duffleCmd
-	name       string
-	valuesFile string
-	setParams  []string
-	insecure   bool
+	name            string
+	valuesFile      string
+	setParams       []string
+	insecure        bool
+	setFiles        []string
+	setFilesContent []string
 }
 
 func newUpgradeCmd() *cobra.Command {
@@ -69,7 +70,8 @@ func newUpgradeCmd() *cobra.Command {
 	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
 	flags.BoolVarP(&uc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
-
+	flags.StringArrayVarP(&uc.setFiles, "inject-file", "i", []string{}, "Set injected files as NAME=SOURCE-PATH pairs")
+	flags.StringArrayVar(&uc.setFilesContent, "inject-file-content", []string{}, "Set injected files as NAME=CONTENT pairs")
 	return cmd
 }
 
@@ -102,6 +104,13 @@ func (up *upgradeCmd) upgrade(credentialsFile, bundleFile string) error {
 	// Override parameters only if some are set.
 	if up.valuesFile != "" || len(up.setParams) > 0 {
 		claim.Parameters, err = calculateParamValues(claim.Bundle, up.valuesFile, up.setParams)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(up.setFilesContent) > 0 || len(up.setFiles) > 0 {
+		claim.Files, err = calculateInjectedFiles(claim.Bundle, up.setFiles, up.setFilesContent)
 		if err != nil {
 			return err
 		}
