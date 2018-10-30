@@ -92,7 +92,7 @@ func (s fileSystemStore) ensure() error {
 }
 
 func (s fileSystemStore) storageFiles(files []os.FileInfo) []os.FileInfo {
-	var result []os.FileInfo
+	result := make([]os.FileInfo, 0)
 	ext := "." + s.fileExtension
 	for _, file := range files {
 		if !file.IsDir() && filepath.Ext(file.Name()) == ext {
@@ -103,7 +103,7 @@ func (s fileSystemStore) storageFiles(files []os.FileInfo) []os.FileInfo {
 }
 
 func names(files []os.FileInfo) []string {
-	var result []string
+	result := make([]string, 0)
 	for _, file := range files {
 		result = append(result, name(file.Name()))
 	}

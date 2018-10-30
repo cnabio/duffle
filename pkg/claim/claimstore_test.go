@@ -85,3 +85,42 @@ func TestCanUpdate(t *testing.T) {
 		t.Errorf("Expected to read back new revision, got old revision %s", rev)
 	}
 }
+
+func TestReadAll(t *testing.T) {
+	is := assert.New(t)
+
+	tempDir, err := ioutil.TempDir("", "duffletest")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %s", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	storeDir := filepath.Join(tempDir, "claimstore")
+	store := NewClaimStore(crud.NewFileSystemStore(storeDir, "json"))
+
+	claim, err := New("foo")
+	is.NoError(err)
+	claim.Bundle = &bundle.Bundle{Name: "foobundle", Version: "0.1.0"}
+
+	is.NoError(store.Store(*claim), "Failed to store: %s", err)
+
+	claim2, err := New("bar")
+	is.NoError(err)
+	claim2.Bundle = &bundle.Bundle{Name: "barbundle", Version: "0.1.0"}
+
+	is.NoError(store.Store(*claim2), "Failed to store: %s", err)
+
+	claim3, err := New("baz")
+	is.NoError(err)
+	claim3.Bundle = &bundle.Bundle{Name: "bazbundle", Version: "0.1.0"}
+
+	is.NoError(store.Store(*claim3), "Failed to store: %s", err)
+
+	claims, err := store.ReadAll()
+	is.NoError(err, "Failed to read claims: %s", err)
+
+	is.Len(claims, 3)
+	is.Equal("foo", claim.Name)
+	is.Equal("bar", claim2.Name)
+	is.Equal("baz", claim3.Name)
+}
