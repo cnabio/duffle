@@ -134,11 +134,11 @@ func (d *DockerDriver) exec(op *Operation) error {
 		mounts = append(mounts, mount.Mount{Type: mount.TypeBind, Source: tmp, Target: m})
 	}
 
-	// mounts = append(mounts, mount.Mount{
-	// 	Type:   mount.TypeBind,
-	// 	Source: "/var/run/docker.sock",
-	// 	Target: "/var/run/docker.sock"},
-	// )
+	mounts = append(mounts, mount.Mount{
+		Type:   mount.TypeBind,
+		Source: "/var/run/docker.sock",
+		Target: "/var/run/docker.sock"},
+	)
 
 	cfg := &container.Config{
 		Image:      op.Image,
