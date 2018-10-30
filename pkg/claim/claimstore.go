@@ -54,7 +54,7 @@ func (s Store) Read(name string) (Claim, error) {
 
 // ReadAll retrieves all the claims
 func (s Store) ReadAll() ([]Claim, error) {
-	claims := []Claim{}
+	claims := make([]Claim, 0)
 
 	list, err := s.backingStore.List()
 	if err != nil {
