@@ -16,7 +16,6 @@ import (
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
 	"github.com/deis/duffle/pkg/reference"
-	"github.com/deis/duffle/pkg/signature"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -301,7 +300,7 @@ func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {
 	if insecure {
 		l = loader.NewUnsignedLoader()
 	} else {
-		kr, err := signature.LoadKeyRing(home.Home(homePath()).PublicKeyRing())
+		kr, err := loadVerifyingKeyRings(homePath())
 		if err != nil {
 			return nil, err
 		}

@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/deis/duffle/pkg/signature"
+
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/bundle"
@@ -75,6 +77,14 @@ func loadCredentials(file string, b *bundle.Bundle) (map[string]credentials.Dest
 		return res, err
 	}
 	return res, credentials.Validate(res, b.Credentials)
+}
+
+// loadVerifyingKeyRings loads all of the keys that can be used for verifying.
+//
+// This includes all the keys in the public key file and in the secret key file.
+func loadVerifyingKeyRings(homedir string) (*signature.KeyRing, error) {
+	hp := home.Home(homedir)
+	return signature.LoadKeyRings(hp.PublicKeyRing(), hp.SecretKeyRing())
 }
 
 // isPathy checks to see if a name looks like a path.

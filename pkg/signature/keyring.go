@@ -281,6 +281,29 @@ func LoadKeyRing(path string) (*KeyRing, error) {
 	return LoadKeyRingFetcher(path, nil)
 }
 
+// LoadKeyRings loads multiple keyring files into one *KeyRing object
+//
+// This can be used to load both public and private keyrings for verification.
+func LoadKeyRings(paths ...string) (*KeyRing, error) {
+	if len(paths) == 0 {
+		return &KeyRing{}, errors.New("no keyrings provided")
+	}
+	baseRing, err := LoadKeyRing(paths[0])
+	if err != nil {
+		return baseRing, err
+	}
+	for i := 1; i < len(paths); i++ {
+		ring, err := LoadKeyRingFetcher(paths[i], baseRing.PassphraseFetcher)
+		if err != nil {
+			return baseRing, err
+		}
+		for _, k := range ring.Keys() {
+			baseRing.AddKey(k)
+		}
+	}
+	return baseRing, nil
+}
+
 // CreateKeyRing creates an empty in-memory keyring.
 func CreateKeyRing(fetcher PassphraseFetcher) *KeyRing {
 	return &KeyRing{
