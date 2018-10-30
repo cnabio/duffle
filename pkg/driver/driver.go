@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 )
 
 // ImageType constants provide some of the image types supported
@@ -105,8 +104,4 @@ func (d *DebugDriver) Config() map[string]string {
 // SetConfig sets configuration for this driver
 func (d *DebugDriver) SetConfig(settings map[string]string) {
 	d.config = settings
-}
-
-func isTrue(val string) bool {
-	return strings.ToLower(val) == "true"
 }
