@@ -2,18 +2,21 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/deis/duffle/pkg/builder"
 	"github.com/deis/duffle/pkg/builder/docker"
 	"github.com/deis/duffle/pkg/builder/mock"
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/cmdline"
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/duffle/manifest"
+	"github.com/deis/duffle/pkg/signature"
 
 	"github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
@@ -40,9 +43,10 @@ var (
 )
 
 type buildCmd struct {
-	out  io.Writer
-	src  string
-	home home.Home
+	out    io.Writer
+	src    string
+	home   home.Home
+	signer string
 
 	// options common to the docker client and the daemon.
 	dockerClientOptions *dockerflags.ClientOptions
@@ -80,6 +84,8 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 	}
 
 	f = cmd.Flags()
+	f.StringVarP(&build.signer, "user", "u", "", "the user ID of the signing key to use. Format is either email address or 'NAME (COMMENT) <EMAIL>'")
+
 	f.BoolVar(&build.dockerClientOptions.Common.Debug, "docker-debug", false, "Enable debug mode")
 	f.StringVar(&build.dockerClientOptions.Common.LogLevel, "docker-log-level", "info", `Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")`)
 	f.BoolVar(&build.dockerClientOptions.Common.TLS, "docker-tls", defaultDockerTLS(), "Use TLS; implied by --tlsverify")
@@ -125,19 +131,41 @@ func (b *buildCmd) run() (err error) {
 		return fmt.Errorf("cannot prepare build: %v", err)
 	}
 
-	f, err := os.OpenFile(filepath.Join(b.src, "cnab", "bundle.json"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return fmt.Errorf("cannot create or open bundle file: %v", err)
-	}
-
-	enc := json.NewEncoder(f)
-	enc.SetIndent("", "    ")
-	if err := enc.Encode(bf); err != nil {
-		return fmt.Errorf("cannot write bundle file: %v", err)
+	loc := filepath.Join(b.src, "cnab", "bundle.cnab")
+	if err := b.writeBundle(loc, bf); err != nil {
+		return err
 	}
 
 	cmdline.Display(ctx, app.Ctx.Manifest.Name, bldr.Build(ctx, app), cmdline.WithBuildID(bldr.ID))
 	return nil
+}
+
+func (b *buildCmd) writeBundle(loc string, bf *bundle.Bundle) error {
+	kr, err := signature.LoadKeyRing(b.home.SecretKeyRing())
+	if err != nil {
+		return fmt.Errorf("cannot load keyring: %s", err)
+	}
+
+	if kr.Len() == 0 {
+		return errors.New("no signing keys are present in the keyring")
+	}
+
+	// Default to the first key in the ring unless the user specifies otherwise.
+	key := kr.Keys()[0]
+	if b.signer != "" {
+		key, err = kr.Key(b.signer)
+		if err != nil {
+			return err
+		}
+	}
+
+	sign := signature.NewSigner(key)
+	data, err := sign.Clearsign(bf)
+	data = append(data, '\n')
+	if err != nil {
+		return fmt.Errorf("cannot sign bundle: %s", err)
+	}
+	return ioutil.WriteFile(loc, data, 0644)
 }
 
 // lookupComponents returns a builder component given its builder type
