@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	unix_path "path"
@@ -132,7 +133,13 @@ func (d *DockerDriver) exec(op *Operation) error {
 
 		mounts = append(mounts, mount.Mount{Type: mount.TypeBind, Source: tmp, Target: m})
 	}
-	//args = append(args, "--volume", "/var/run/docker.sock:/var/run/docker.sock")
+
+	// mounts = append(mounts, mount.Mount{
+	// 	Type:   mount.TypeBind,
+	// 	Source: "/var/run/docker.sock",
+	// 	Target: "/var/run/docker.sock"},
+	// )
+
 	cfg := &container.Config{
 		Image:      op.Image,
 		Env:        env,
@@ -159,21 +166,12 @@ func (d *DockerDriver) exec(op *Operation) error {
 	if err != nil {
 		return fmt.Errorf("unable to retrieve logs: %v", err)
 	}
-
-	done := make(chan bool)
-	errorChan := make(chan error)
-
 	go func() {
 		defer attach.Close()
 		for {
-			select {
-			case <-done:
-				errorChan <- nil
-			default:
-				_, err := stdcopy.StdCopy(os.Stdout, os.Stderr, attach.Reader)
-				if err != nil {
-					errorChan <- fmt.Errorf("error getting output: %s", err)
-				}
+			_, err := stdcopy.StdCopy(os.Stdout, os.Stderr, attach.Reader)
+			if err == io.EOF {
+				break
 			}
 		}
 	}()
@@ -186,6 +184,5 @@ func (d *DockerDriver) exec(op *Operation) error {
 		}
 	case <-statusc:
 	}
-	done <- true
-	return <-errorChan
+	return err
 }
