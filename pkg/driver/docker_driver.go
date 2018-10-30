@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -9,14 +8,16 @@ import (
 	"os"
 	unix_path "path"
 	"path/filepath"
-	"runtime"
 	"strings"
+
+	"github.com/deis/duffle/pkg/duffle/home"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 )
 
 // DockerDriver is capable of running Docker invocation images using Docker itself.
@@ -56,7 +57,10 @@ func (d *DockerDriver) exec(op *Operation) error {
 	if err != nil {
 		return fmt.Errorf("cannot create Docker client: %v", err)
 	}
-
+	//err = client.FromEnv(cli)
+	//if err != nil {
+	//		return fmt.Errorf("cannot update Docker client: %v, err")
+	//	}
 	if d.Simulate {
 		return nil
 	}
@@ -96,7 +100,6 @@ func (d *DockerDriver) exec(op *Operation) error {
 		}
 		base := filepath.Base(osPath)
 		dir := filepath.Dir(osPath)
-
 		// mount is the target mount path in the container
 		//
 		// TODO - make sure this is actually computed correctly
@@ -115,18 +118,16 @@ func (d *DockerDriver) exec(op *Operation) error {
 			continue
 		}
 
-		tmpDirRoot := "/tmp"
-		if runtime.GOOS == "windows" {
-			tmpDirRoot = ""
-		}
+		tmpDirRoot := home.DefaultHome()
 		tmp, err := ioutil.TempDir(tmpDirRoot, "duffle-volume-")
 		if err != nil {
 			return err
 		}
 		tmpdirs[dir] = tmp
 		localFile := filepath.Join(tmp, base)
-		if err := ioutil.WriteFile(localFile, []byte(content), 0755); err != nil {
+		if err := ioutil.WriteFile(localFile, []byte(content), 0777); err != nil {
 			fmt.Fprintln(op.Out, err)
+			return err
 		}
 
 		mounts = append(mounts, mount.Mount{Type: mount.TypeBind, Source: tmp, Target: m})
@@ -134,10 +135,11 @@ func (d *DockerDriver) exec(op *Operation) error {
 	//args = append(args, "--volume", "/var/run/docker.sock:/var/run/docker.sock")
 	cfg := &container.Config{
 		Image:      op.Image,
+		Env:        env,
 		Entrypoint: strslice.StrSlice{"/cnab/app/run"},
 	}
 
-	hostCfg := &container.HostConfig{Mounts: mounts}
+	hostCfg := &container.HostConfig{Mounts: mounts, AutoRemove: true}
 
 	resp, err := cli.ContainerCreate(ctx, cfg, hostCfg, nil, "")
 	if err != nil {
@@ -148,6 +150,34 @@ func (d *DockerDriver) exec(op *Operation) error {
 		return fmt.Errorf("cannot start container: %v", err)
 	}
 
+	attach, err := cli.ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
+		Stream: true,
+		Stdout: true,
+		Stderr: true,
+		Logs:   true,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to retrieve logs: %v", err)
+	}
+
+	done := make(chan bool)
+	errorChan := make(chan error)
+
+	go func() {
+		defer attach.Close()
+		for {
+			select {
+			case <-done:
+				errorChan <- nil
+			default:
+				_, err := stdcopy.StdCopy(os.Stdout, os.Stderr, attach.Reader)
+				if err != nil {
+					errorChan <- fmt.Errorf("error getting output: %s", err)
+				}
+			}
+		}
+	}()
+
 	statusc, errc := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errc:
@@ -156,11 +186,6 @@ func (d *DockerDriver) exec(op *Operation) error {
 		}
 	case <-statusc:
 	}
-
-	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(out)
-	fmt.Println(buf.String())
-
-	return nil
+	done <- true
+	return <-errorChan
 }
