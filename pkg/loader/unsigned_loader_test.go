@@ -12,9 +12,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRmoteLoader(t *testing.T) {
+var testFooJSON = filepath.Join("..", "..", "tests", "testdata", "bundles", "foo.json")
 
-	data, err := ioutil.ReadFile(filepath.Join("..", "..", "tests", "testdata", "bundles", "foo.json"))
+func TestUnsignedLoader(t *testing.T) {
+	is := assert.New(t)
+
+	l := NewUnsignedLoader()
+	bundle, err := l.Load(testFooJSON)
+	if err != nil {
+		t.Fatalf("cannot load bundle: %v", err)
+	}
+
+	is.Equal("foo", bundle.Name)
+	is.Equal("1.0", bundle.Version)
+}
+func TestUnsignedLoader_Remote(t *testing.T) {
+
+	data, err := ioutil.ReadFile(testFooJSON)
 	if err != nil {
 		t.Fatalf("cannot read bundle file: %v", err)
 	}
@@ -24,9 +38,8 @@ func TestRmoteLoader(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	l := RemoteLoader{source: ts.URL}
-
-	bundle, err := l.Load()
+	l := NewUnsignedLoader()
+	bundle, err := l.Load(ts.URL)
 	if err != nil {
 		t.Fatal(err)
 	}

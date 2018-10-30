@@ -33,6 +33,7 @@ will still need to edit that file to set the appropriate values.
 
 func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 	bundleFile := ""
+	var insecure bool
 	cmd := &cobra.Command{
 		Use:     "generate NAME [BUNDLE]",
 		Aliases: []string{"gen"},
@@ -45,7 +46,7 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 			}
 			csName := args[0]
 
-			bun, err := loadBundle(bf)
+			bun, err := loadBundle(bf, insecure)
 			if err != nil {
 				return err
 			}
@@ -66,6 +67,7 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 
 	f := cmd.Flags()
 	f.StringVarP(&bundleFile, "file", "f", "", "path to bundle.json")
+	f.BoolVarP(&insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 	return cmd
 }
 

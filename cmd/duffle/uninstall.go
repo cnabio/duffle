@@ -25,6 +25,7 @@ type uninstallCmd struct {
 	bundleFile string
 	valuesFile string
 	setParams  []string
+	insecure   bool
 }
 
 func newUninstallCmd() *cobra.Command {
@@ -60,6 +61,7 @@ func newUninstallCmd() *cobra.Command {
 	flags.StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
 	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "set individual parameters as NAME=VALUE pairs")
+	flags.BoolVarP(&uc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }
@@ -72,11 +74,11 @@ func (un *uninstallCmd) uninstall(credentialsFile string) error {
 	}
 
 	if un.bundleFile != "" {
-		b, err := loadBundle(un.bundleFile)
+		b, err := loadBundle(un.bundleFile, un.insecure)
 		if err != nil {
 			return err
 		}
-		claim.Bundle = &b
+		claim.Bundle = b
 	}
 
 	// If no params are specified, allow re-use. But if params are set -- even if empty --

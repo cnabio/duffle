@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/deis/duffle/pkg/signature"
+
 	"github.com/deis/duffle/pkg/action"
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/claim"
@@ -58,9 +60,10 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		valuesFile      string
 		bundleFile      string
 		setParams       []string
+		insecure        bool
 
 		installationName string
-		bun              bundle.Bundle
+		bun              *bundle.Bundle
 	)
 
 	cmd := &cobra.Command{
@@ -74,7 +77,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 			}
 			installationName = args[0]
 
-			bun, err = loadBundle(bundleFile)
+			bun, err = loadBundle(bundleFile, insecure)
 			if err != nil {
 				return err
 			}
@@ -88,7 +91,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 				return err
 			}
 
-			creds, err := loadCredentials(credentialsFile, &bun)
+			creds, err := loadCredentials(credentialsFile, bun)
 			if err != nil {
 				return err
 			}
@@ -100,8 +103,8 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 				return err
 			}
 
-			c.Bundle = &bun
-			c.Parameters, err = calculateParamValues(&bun, valuesFile, setParams)
+			c.Bundle = bun
+			c.Parameters, err = calculateParamValues(bun, valuesFile, setParams)
 			if err != nil {
 				return err
 			}
@@ -124,11 +127,12 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 	}
 
 	flags := cmd.Flags()
+	flags.BoolVarP(&insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 	flags.StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
 	flags.StringVarP(&installDriver, "driver", "d", "docker", "Specify a driver name")
 	flags.StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
-	flags.StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
-	flags.StringArrayVarP(&setParams, "set", "s", []string{}, "set individual parameters as NAME=VALUE pairs")
+	flags.StringVarP(&bundleFile, "file", "f", "", "Bundle file to install")
+	flags.StringArrayVarP(&setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
 	return cmd
 }
 
@@ -285,13 +289,18 @@ func getBundleFile(bundleName string) (string, error) {
 	return bundleFilepath, nil
 }
 
-func loadBundle(bundleFile string) (bundle.Bundle, error) {
-	l, err := loader.New(bundleFile)
-	if err != nil {
-		return bundle.Bundle{}, err
+func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {
+	var l loader.Loader
+	if insecure {
+		l = loader.NewUnsignedLoader()
+	} else {
+		kr, err := signature.LoadKeyRing(home.Home(homePath()).PublicKeyRing())
+		if err != nil {
+			return nil, err
+		}
+		l = loader.NewSecureLoader(kr)
 	}
-
-	return l.Load()
+	return l.Load(bundleFile)
 }
 
 func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams []string) (map[string]interface{}, error) {

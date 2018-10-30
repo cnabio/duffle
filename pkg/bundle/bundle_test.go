@@ -14,7 +14,7 @@ func TestReadTopLevelProperties(t *testing.T) {
 		"images": [],
 		"credentials": {}
 	}`
-	bundle, err := Parse(json)
+	bundle, err := Unmarshal([]byte(json))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestReadImageProperties(t *testing.T) {
 		t.Errorf("cannot read bundle file: %v", err)
 	}
 
-	bundle, err := ParseBuffer(data)
+	bundle, err := Unmarshal(data)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestReadCredentialProperties(t *testing.T) {
 		t.Errorf("cannot read bundle file: %v", err)
 	}
 
-	bundle, err := ParseBuffer(data)
+	bundle, err := Unmarshal(data)
 	if err != nil {
 		t.Fatal(err)
 	}
