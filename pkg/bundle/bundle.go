@@ -26,7 +26,7 @@ func ParseReader(r io.Reader) (Bundle, error) {
 // WriteFile serializes the bundle and writes it to a file as JSON.
 func (b Bundle) WriteFile(dest string, mode os.FileMode) error {
 	// FIXME: The marshal here should exactly match the Marshal in the signature code.
-	d, err := json.Marshal(b)
+	d, err := json.MarshalIndent(b, "", "    ")
 	if err != nil {
 		return err
 	}

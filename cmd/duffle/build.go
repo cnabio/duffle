@@ -9,24 +9,25 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/deis/duffle/pkg/builder"
-	"github.com/deis/duffle/pkg/builder/docker"
-	"github.com/deis/duffle/pkg/builder/mock"
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/cmdline"
-	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/duffle/manifest"
-	"github.com/deis/duffle/pkg/signature"
-
 	"github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
 	dockerdebug "github.com/docker/cli/cli/debug"
 	dockerflags "github.com/docker/cli/cli/flags"
 	"github.com/docker/cli/opts"
 	"github.com/docker/go-connections/tlsconfig"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/deis/duffle/pkg/builder"
+	"github.com/deis/duffle/pkg/builder/docker"
+	"github.com/deis/duffle/pkg/builder/mock"
+	"github.com/deis/duffle/pkg/bundle"
+	"github.com/deis/duffle/pkg/crypto/digest"
+	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/duffle/manifest"
+	"github.com/deis/duffle/pkg/ohai"
+	"github.com/deis/duffle/pkg/repo"
+	"github.com/deis/duffle/pkg/signature"
 )
 
 const buildDesc = `
@@ -131,23 +132,32 @@ func (b *buildCmd) run() (err error) {
 		return fmt.Errorf("cannot prepare build: %v", err)
 	}
 
-	loc := filepath.Join(b.src, "cnab", "bundle.cnab")
-	if err := b.writeBundle(loc, bf); err != nil {
+	if err := bldr.Build(ctx, app); err != nil {
 		return err
 	}
 
-	cmdline.Display(ctx, app.Ctx.Manifest.Name, bldr.Build(ctx, app), cmdline.WithBuildID(bldr.ID))
+	digest, err := b.writeBundle(bf)
+	if err != nil {
+		return err
+	}
+
+	// record the new bundle in repositories.json
+	if err := recordBundleReference(b.home, bf.Name, bf.Version, digest); err != nil {
+		return fmt.Errorf("could not record bundle: %v", err)
+	}
+	ohai.Fsuccessf(b.out, "Successfully built bundle %s:%s", bf.Name, bf.Version)
+
 	return nil
 }
 
-func (b *buildCmd) writeBundle(loc string, bf *bundle.Bundle) error {
+func (b *buildCmd) writeBundle(bf *bundle.Bundle) (string, error) {
 	kr, err := signature.LoadKeyRing(b.home.SecretKeyRing())
 	if err != nil {
-		return fmt.Errorf("cannot load keyring: %s", err)
+		return "", fmt.Errorf("cannot load keyring: %s", err)
 	}
 
 	if kr.Len() == 0 {
-		return errors.New("no signing keys are present in the keyring")
+		return "", errors.New("no signing keys are present in the keyring")
 	}
 
 	// Default to the first key in the ring unless the user specifies otherwise.
@@ -155,7 +165,7 @@ func (b *buildCmd) writeBundle(loc string, bf *bundle.Bundle) error {
 	if b.signer != "" {
 		key, err = kr.Key(b.signer)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
@@ -163,9 +173,15 @@ func (b *buildCmd) writeBundle(loc string, bf *bundle.Bundle) error {
 	data, err := sign.Clearsign(bf)
 	data = append(data, '\n')
 	if err != nil {
-		return fmt.Errorf("cannot sign bundle: %s", err)
+		return "", fmt.Errorf("cannot sign bundle: %s", err)
 	}
-	return ioutil.WriteFile(loc, data, 0644)
+
+	digest, err := digest.OfBuffer(data)
+	if err != nil {
+		return "", fmt.Errorf("cannot compute digest from bundle: %v", err)
+	}
+
+	return digest, ioutil.WriteFile(filepath.Join(b.home.Bundles(), digest), data, 0644)
 }
 
 // lookupComponents returns a builder component given its builder type
@@ -207,4 +223,20 @@ func dockerPreRun(opts *dockerflags.ClientOptions) {
 	if opts.Common.Debug {
 		dockerdebug.Enable()
 	}
+}
+
+func recordBundleReference(home home.Home, name, version, digest string) error {
+	// record the new bundle in repositories.json
+	index, err := repo.LoadIndex(home.Repositories())
+	if err != nil {
+		return fmt.Errorf("cannot create or open %s: %v", home.Repositories(), err)
+	}
+
+	index.Add(name, version, digest)
+
+	if err := index.WriteFile(home.Repositories(), 0644); err != nil {
+		return fmt.Errorf("could not write to %s: %v", home.Repositories(), err)
+	}
+
+	return nil
 }

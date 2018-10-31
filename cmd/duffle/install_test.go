@@ -1,58 +1,13 @@
 package main
 
 import (
-	"log"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/reference"
 )
-
-func TestGetBundleFile(t *testing.T) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	duffleHome = filepath.Join(cwd, "..", "..", "tests", "testdata", "home")
-	testHome := home.Home(duffleHome)
-
-	tests := []struct {
-		Name             string
-		File             string
-		ExpectedFilepath string
-	}{
-		{
-			Name:             "helloazure",
-			File:             "https://hub.cnlabs.io/helloazure:0.1.0",
-			ExpectedFilepath: filepath.Join(testHome.Cache(), "helloazure-0.1.0.json"),
-		},
-		{
-			Name:             "namespaced helloazure",
-			File:             "https://hub.cnlabs.io/library/helloazure:0.1.0",
-			ExpectedFilepath: filepath.Join(testHome.Cache(), "helloazure-0.1.0.json"),
-		},
-	}
-
-	for _, tc := range tests {
-		tc := tc // capture range variable
-		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
-			filePath, err := getBundleFile(tc.File)
-			if err != nil {
-				t.Error(err)
-			}
-			defer os.Remove(filePath)
-
-			if filePath != tc.ExpectedFilepath {
-				t.Errorf("got '%v', wanted '%v'", filePath, tc.ExpectedFilepath)
-			}
-		})
-	}
-}
 
 func TestOverrides(t *testing.T) {
 	is := assert.New(t)
@@ -75,4 +30,40 @@ func TestOverrides(t *testing.T) {
 	// We expect an error if we pass a param that was not defined:
 	_, err = overrides([]string{"undefined=foo"}, defs)
 	is.Error(err)
+}
+
+func TestRepoURLFromReference(t *testing.T) {
+	tests := []struct {
+		Name      string
+		Reference reference.NamedTagged
+		Expected  string
+	}{
+		{
+			Name: "basic repository",
+			// discard the digest; we don't care about that
+			Reference: &NamedRepository{"hub.cnlabs.io/helloazure", "0.1.0", ""},
+			Expected:  "https://hub.cnlabs.io/repositories/helloazure/tags/0.1.0",
+		},
+		{
+			Name: "namespaced repository",
+			// discard the digest; we don't care about that
+			Reference: &NamedRepository{"hub.cnlabs.io/library/helloazure", "0.2.0", ""},
+			Expected:  "https://hub.cnlabs.io/repositories/library/helloazure/tags/0.2.0",
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc // capture range variable
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			url, err := repoURLFromReference(tc.Reference)
+			if err != nil {
+				t.Error(err)
+			}
+
+			if url.String() != tc.Expected {
+				t.Errorf("expected '%s', got '%s'", tc.Expected, url.String())
+			}
+		})
+	}
 }
