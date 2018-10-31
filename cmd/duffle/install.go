@@ -103,18 +103,9 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 			}
 
 			c.Bundle = bun
-			c.Parameters, err = calculateParamValues(bun, valuesFile, setParams)
+			c.Parameters, err = calculateParamValues(bun, valuesFile, setParams, setFiles)
 			if err != nil {
 				return err
-			}
-			fileParams, err := calculateInjectedFiles(bun, setFiles)
-			if err != nil {
-				return err
-			}
-			for k, v := range fileParams {
-				// Assumption here is that we override --set/--params with these values.
-				// We could error out, though, if that is preferable.
-				c.Parameters[k] = v
 			}
 
 			inst := &action.Install{
@@ -196,6 +187,11 @@ func overrides(overrides []string, paramDefs map[string]bundle.ParameterDefiniti
 		if !ok {
 			return res, fmt.Errorf("parameter %s not defined in bundle", pair[0])
 		}
+
+		if _, ok := res[pair[0]]; ok {
+			return res, fmt.Errorf("parameter %q specified multiple times", pair[0])
+		}
+
 		var err error
 		res[pair[0]], err = def.ConvertValue(pair[1])
 		if err != nil {
@@ -312,7 +308,7 @@ func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {
 	return l.Load(bundleFile)
 }
 
-func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams []string) (map[string]interface{}, error) {
+func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setFilePaths []string) (map[string]interface{}, error) {
 	vals := map[string]interface{}{}
 	if valuesFile != "" {
 		var err error
@@ -329,30 +325,28 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams []str
 	for k, v := range overridden {
 		vals[k] = v
 	}
-	return bundle.ValuesOrDefaults(vals, bun)
-}
 
-func calculateInjectedFiles(bun *bundle.Bundle, setFilePaths []string) (map[string][]byte, error) {
-	result := map[string][]byte{}
+	// Now add files.
 	for _, p := range setFilePaths {
 		parts := strings.SplitN(p, "=", 2)
 		if len(parts) != 2 {
-			return result, fmt.Errorf("malformed set-file parameter: %q (must be NAME=PATH)", p)
+			return vals, fmt.Errorf("malformed set-file parameter: %q (must be NAME=PATH)", p)
 		}
 
 		// Check that this is a known param
 		if _, ok := bun.Parameters[parts[0]]; !ok {
-			return result, fmt.Errorf("bundle does not have a parameter named %q", parts[0])
+			return vals, fmt.Errorf("bundle does not have a parameter named %q", parts[0])
 		}
 
-		if _, ok := result[parts[0]]; ok {
-			return result, fmt.Errorf("parameter %q specified multiple times", parts[0])
+		if _, ok := overridden[parts[0]]; ok {
+			return vals, fmt.Errorf("parameter %q specified multiple times", parts[0])
 		}
 		content, err := ioutil.ReadFile(parts[1])
 		if err != nil {
-			return result, fmt.Errorf("error while reading file %q: %s", parts[1], err)
+			return vals, fmt.Errorf("error while reading file %q: %s", parts[1], err)
 		}
-		result[parts[0]] = content
+		vals[parts[0]] = string(content)
 	}
-	return result, nil
+
+	return bundle.ValuesOrDefaults(vals, bun)
 }

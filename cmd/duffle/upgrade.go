@@ -101,19 +101,9 @@ func (up *upgradeCmd) upgrade(credentialsFile, bundleFile string) error {
 
 	// Override parameters only if some are set.
 	if up.valuesFile != "" || len(up.setParams) > 0 {
-		claim.Parameters, err = calculateParamValues(claim.Bundle, up.valuesFile, up.setParams)
+		claim.Parameters, err = calculateParamValues(claim.Bundle, up.valuesFile, up.setParams, up.setFiles)
 		if err != nil {
 			return err
-		}
-	}
-
-	if len(up.setFiles) > 0 {
-		files, err := calculateInjectedFiles(claim.Bundle, up.setFiles)
-		if err != nil {
-			return err
-		}
-		for k, v := range files {
-			claim.Parameters[k] = v
 		}
 	}
 

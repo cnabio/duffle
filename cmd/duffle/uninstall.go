@@ -87,7 +87,7 @@ func (un *uninstallCmd) uninstall(credentialsFile string) error {
 		if claim.Bundle == nil {
 			return errors.New("parameters can only be set if a bundle is provided")
 		}
-		params, err := calculateParamValues(claim.Bundle, un.valuesFile, un.setParams)
+		params, err := calculateParamValues(claim.Bundle, un.valuesFile, un.setParams, []string{})
 		if err != nil {
 			return err
 		}
