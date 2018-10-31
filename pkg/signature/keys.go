@@ -82,6 +82,12 @@ func (k *Key) Fingerprint() string {
 	return buf.String()
 }
 
+// CanSign indicates that a key is able to be used as a signer.
+func (k *Key) CanSign() bool {
+	_, err := k.findPrivateKey()
+	return err == nil
+}
+
 // bestPrivateKey will find a private key and decrypt it if necessary.
 //
 // If a specific key is pinned on selectedPrivateKey, that key will be used.
