@@ -8,14 +8,12 @@ import (
 	"io"
 	"os"
 	unix_path "path"
-	"path/filepath"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/docker/pkg/term"
@@ -81,7 +79,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 	}
 
 	mounts := []mount.Mount{
-		mount.Mount{
+		{
 			Type:   mount.TypeBind,
 			Source: "/var/run/docker.sock",
 			Target: "/var/run/docker.sock"},
@@ -105,12 +103,17 @@ func (d *DockerDriver) exec(op *Operation) error {
 			return errors.New("destination path should be an absolute unix path")
 		}
 		tarContent, err := generateTar(path, content)
+		if err != nil {
+			return fmt.Errorf("error staging files for %s", path)
+		}
 		options := types.CopyToContainerOptions{
 			AllowOverwriteDirWithFile: false,
 		}
+		// This copies the tar to the root of the container. The tar has been assembled using the
+		// path from the given file, starting at the /.
 		err = cli.CopyToContainer(ctx, resp.ID, "/", tarContent, options)
 		if err != nil {
-			return fmt.Errorf("error copying %s to %s in container: %s", unix_path.Base(path), unix_path.Dir(path), err)
+			return fmt.Errorf("error copying %s to / in container: %s", path, err)
 		}
 	}
 
@@ -146,13 +149,6 @@ func (d *DockerDriver) exec(op *Operation) error {
 	case <-statusc:
 	}
 	return err
-}
-
-func resolveLocalPath(localPath string) (absPath string, err error) {
-	if absPath, err = filepath.Abs(localPath); err != nil {
-		return
-	}
-	return archive.PreserveTrailingDotOrSeparator(absPath, localPath, filepath.Separator), nil
 }
 
 func generateTar(dst string, content string) (io.Reader, error) {
