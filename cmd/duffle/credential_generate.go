@@ -174,7 +174,7 @@ func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writ
 	case len(args) < 2 && bundleFile == "":
 		return "", errors.New("required arguments are NAME (name for the credentialset) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return getBundleFile(args[1], insecure)
+		return pullBundle(args[1], insecure)
 	}
 	return bundleFile, nil
 }

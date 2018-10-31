@@ -83,16 +83,39 @@ func (i *initCmd) run() error {
 	home := home.Home(homePath())
 	dirs := []string{
 		home.String(),
+		home.Bundles(),
 		home.Logs(),
 		home.Plugins(),
-		home.Cache(),
 		home.Claims(),
 		home.Credentials(),
 	}
 
-	if err := i.ensureDirectories(dirs); err != nil {
-		return err
+	files := []string{
+		home.Repositories(),
 	}
+
+	if i.verbose {
+		ohai.Fohailn(i.w, "The following new directories will be created:")
+		fmt.Fprintln(i.w, strings.Join(dirs, "\n"))
+	}
+
+	if !i.dryRun {
+		if err := ensureDirectories(dirs); err != nil {
+			return err
+		}
+	}
+
+	if i.verbose {
+		ohai.Fohailn(i.w, "The following new files will be created:")
+		fmt.Fprintln(i.w, strings.Join(files, "\n"))
+	}
+
+	if !i.dryRun {
+		if err := ensureFiles(files); err != nil {
+			return err
+		}
+	}
+
 	pkr, err := i.loadOrCreateSecretKeyRing(home.SecretKeyRing())
 	if err != nil {
 		return err
@@ -101,22 +124,26 @@ func (i *initCmd) run() error {
 	return err
 }
 
-func (i *initCmd) ensureDirectories(dirs []string) error {
-	if i.verbose {
-		ohai.Fohailn(i.w, "The following new directories will be created:")
-		ohai.Fohailn(i.w, strings.Join(dirs, "\n"))
-	}
-
+func ensureDirectories(dirs []string) error {
 	for _, dir := range dirs {
 		if fi, err := os.Stat(dir); err != nil {
-			if !i.dryRun {
-				if err := os.MkdirAll(dir, 0755); err != nil {
-					return fmt.Errorf("Could not create %s: %s", dir, err)
-				}
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				return fmt.Errorf("Could not create %s: %s", dir, err)
 			}
 		} else if !fi.IsDir() {
 			return fmt.Errorf("%s must be a directory", dir)
 		}
+	}
+	return nil
+}
+
+func ensureFiles(files []string) error {
+	for _, name := range files {
+		f, err := os.OpenFile(name, os.O_RDONLY|os.O_CREATE, 0666)
+		if err != nil {
+			return err
+		}
+		f.Close()
 	}
 	return nil
 }

@@ -12,15 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/repo"
 	"github.com/deis/duffle/pkg/signature"
 )
 
 func TestBuild(t *testing.T) {
-	tempHome, err := ioutil.TempDir("", "dufflehome")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(duffleHome)
+	testHome := CreateTestHome(t)
+	defer os.RemoveAll(testHome.String())
 
 	tempBundleDir, err := ioutil.TempDir("", "dufflebundles")
 	if err != nil {
@@ -51,21 +49,33 @@ func TestBuild(t *testing.T) {
 
 	out := bytes.NewBuffer(nil)
 	cmd := &buildCmd{
-		home: home.Home(tempHome),
+		home: testHome,
 		src:  testBundlePath,
 		out:  out,
 	}
 
 	// Create temporary signing key
-	mockSigningKeyring(tempHome, t)
+	mockSigningKeyring(testHome.String(), t)
 
 	if err := cmd.run(); err != nil {
 		t.Errorf("Expected no error but got err: %s", err)
 	}
 
-	// Verify that the bundle.cnab exists, and is signed
+	// Verify that the bundle exists and is signed
 	is := assert.New(t)
-	loc := filepath.Join(testBundlePath, "cnab", "bundle.cnab")
+
+	index, err := repo.LoadIndex(testHome.Repositories())
+	if err != nil {
+		t.Errorf("cannot open %s: %v", testHome.Repositories(), err)
+	}
+
+	// since we've only built one bundle, let's just fetch the latest version
+	digest, err := index.Get("testbundle", "")
+	if err != nil {
+		t.Fatalf("could not find bundle: %v", err)
+	}
+
+	loc := filepath.Join(testHome.Bundles(), digest)
 	is.FileExists(loc)
 	data, err := ioutil.ReadFile(loc)
 	is.NoError(err)
@@ -73,6 +83,7 @@ func TestBuild(t *testing.T) {
 }
 
 func mockSigningKeyring(tempHome string, t *testing.T) {
+	t.Helper()
 	uid, err := signature.ParseUserID("fake <fake@example.com>")
 	if err != nil {
 		t.Fatal(err)
