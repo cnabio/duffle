@@ -141,7 +141,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 	flags.StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringVarP(&bundleFile, "file", "f", "", "Bundle file to install")
 	flags.StringArrayVarP(&setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
-	flags.StringArrayVarP(&setFiles, "set-file", "i", []string{}, "Set injected files as NAME=SOURCE-PATH pairs")
+	flags.StringArrayVarP(&setFiles, "set-file", "i", []string{}, "Set individual parameters from file content as NAME=SOURCE-PATH pairs")
 	return cmd
 }
 
@@ -332,27 +332,27 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams []str
 	return bundle.ValuesOrDefaults(vals, bun)
 }
 
-func calculateInjectedFiles(bun *bundle.Bundle, setFilePaths []string) (map[string]string, error) {
-	result := map[string]string{}
+func calculateInjectedFiles(bun *bundle.Bundle, setFilePaths []string) (map[string][]byte, error) {
+	result := map[string][]byte{}
 	for _, p := range setFilePaths {
 		parts := strings.SplitN(p, "=", 2)
 		if len(parts) != 2 {
-			return nil, fmt.Errorf("malformed injected file path parameter: %q", p)
+			return result, fmt.Errorf("malformed set-file parameter: %q (must be NAME=PATH)", p)
 		}
 
 		// Check that this is a known param
 		if _, ok := bun.Parameters[parts[0]]; !ok {
-			return nil, fmt.Errorf("bundle does not have a parameter named %q", parts[0])
+			return result, fmt.Errorf("bundle does not have a parameter named %q", parts[0])
 		}
 
 		if _, ok := result[parts[0]]; ok {
-			return nil, fmt.Errorf("ambiguous content for file %q", parts[0])
+			return result, fmt.Errorf("parameter %q specified multiple times", parts[0])
 		}
 		content, err := ioutil.ReadFile(parts[1])
 		if err != nil {
-			return nil, fmt.Errorf("error while reading file %q: %s", parts[1], err)
+			return result, fmt.Errorf("error while reading file %q: %s", parts[1], err)
 		}
-		result[parts[0]] = string(content)
+		result[parts[0]] = content
 	}
 	return result, nil
 }

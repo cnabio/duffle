@@ -69,7 +69,7 @@ func newUpgradeCmd() *cobra.Command {
 	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
 	flags.BoolVarP(&uc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
-	flags.StringArrayVarP(&uc.setFiles, "set-file", "i", []string{}, "Set injected files as NAME=SOURCE-PATH pairs")
+	flags.StringArrayVarP(&uc.setFiles, "set-file", "i", []string{}, "Set individual parameters from file content as NAME=SOURCE-PATH pairs")
 	return cmd
 }
 

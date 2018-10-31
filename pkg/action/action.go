@@ -72,23 +72,8 @@ func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds
 		Image:        ii.Image,
 		ImageType:    ii.ImageType,
 		Revision:     c.Revision,
-		Environment:  env, //conflateEnv(action, c, env),
+		Environment:  env,
 		Files:        files,
 		Out:          w,
 	}, err
-}
-
-// conflateEnv combines all the stuff that should be placed into env vars
-// It returns a new map.
-func conflateEnv(action string, c *claim.Claim, env map[string]string) map[string]string {
-	env["CNAB_INSTALLATION_NAME"] = c.Name
-	env["CNAB_ACTION"] = action
-	env["CNAB_BUNDLE_NAME"] = c.Bundle.Name
-	env["CNAB_BUNDLE_VERSION"] = c.Bundle.Version
-
-	for k, v := range c.Parameters {
-		// TODO: Vet against bundle's parameters.json
-		env[fmt.Sprintf("CNAB_P_%s", strings.ToUpper(k))] = fmt.Sprintf("%v", v)
-	}
-	return env
 }
