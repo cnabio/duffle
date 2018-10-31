@@ -1,24 +1,24 @@
 package driver
 
 import (
+	"archive/tar"
 	"context"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	unix_path "path"
 	"path/filepath"
-	"strings"
-
-	"github.com/deis/duffle/pkg/duffle/home"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/docker/docker/pkg/term"
 )
 
 // DockerDriver is capable of running Docker invocation images using Docker itself.
@@ -58,88 +58,34 @@ func (d *DockerDriver) exec(op *Operation) error {
 	if err != nil {
 		return fmt.Errorf("cannot create Docker client: %v", err)
 	}
-	//err = client.FromEnv(cli)
-	//if err != nil {
-	//		return fmt.Errorf("cannot update Docker client: %v, err")
-	//	}
+	err = client.FromEnv(cli)
+	if err != nil {
+		return fmt.Errorf("cannot update Docker client: %v", err)
+	}
 	if d.Simulate {
 		return nil
 	}
-
-	// TODO - decide how to handle logs from Docker
-	_, err = cli.ImagePull(ctx, op.Image, types.ImagePullOptions{})
+	fmt.Println("Pulling Invocation Image...")
+	pullReader, err := cli.ImagePull(ctx, op.Image, types.ImagePullOptions{})
 	if err != nil {
 		return fmt.Errorf("cannot pull image %v: %v", op.Image, err)
 	}
-
+	termFd, isTerm := term.GetFdInfo(os.Stdout)
+	err = jsonmessage.DisplayJSONMessagesStream(pullReader, os.Stdout, termFd, isTerm, nil)
+	if err != nil {
+		return err
+	}
 	var env []string
 	for k, v := range op.Environment {
 		env = append(env, fmt.Sprintf("%s=%v", k, v))
 	}
 
-	var mounts []mount.Mount
-
-	// To pass secrets into the running container, we loop through all of the files
-	// and store them in a local temp directory (one file per directory). Then we
-	// mount all of the directories to Docker.
-	tmpdirs := map[string]string{}
-	defer func() {
-		for _, tmp := range tmpdirs {
-			os.RemoveAll(tmp)
-		}
-	}()
-
-	for path, content := range op.Files {
-		if !unix_path.IsAbs(path) {
-			return errors.New("destination path should be an absolute unix path")
-		}
-		// osPath is used to compute files to create
-		// based on the operating system running duffle install
-		osPath, err := filepath.Abs(path)
-		if err != nil {
-			return err
-		}
-		base := filepath.Base(osPath)
-		dir := filepath.Dir(osPath)
-		// mount is the target mount path in the container
-		//
-		// TODO - make sure this is actually computed correctly
-		// as the filepath.Dir(osPath) for any Unix path
-		var m string
-		x := strings.Split(path, `/`)
-		if len(x) > 0 {
-			m = strings.Join(x[:len(x)-1], "/")
-		} else {
-			m = strings.Join(x, "/")
-		}
-
-		// If it's another file in the same folder, add it to the existing tmp location
-		if existingTmp, ok := tmpdirs[base]; ok {
-			ioutil.WriteFile(filepath.Join(existingTmp, base), []byte(content), 0755)
-			continue
-		}
-
-		tmpDirRoot := home.DefaultHome()
-		tmp, err := ioutil.TempDir(tmpDirRoot, "duffle-volume-")
-		if err != nil {
-			return err
-		}
-		tmpdirs[dir] = tmp
-		localFile := filepath.Join(tmp, base)
-		if err := ioutil.WriteFile(localFile, []byte(content), 0777); err != nil {
-			fmt.Fprintln(op.Out, err)
-			return err
-		}
-
-		mounts = append(mounts, mount.Mount{Type: mount.TypeBind, Source: tmp, Target: m})
+	mounts := []mount.Mount{
+		mount.Mount{
+			Type:   mount.TypeBind,
+			Source: "/var/run/docker.sock",
+			Target: "/var/run/docker.sock"},
 	}
-
-	mounts = append(mounts, mount.Mount{
-		Type:   mount.TypeBind,
-		Source: "/var/run/docker.sock",
-		Target: "/var/run/docker.sock"},
-	)
-
 	cfg := &container.Config{
 		Image:      op.Image,
 		Env:        env,
@@ -151,6 +97,21 @@ func (d *DockerDriver) exec(op *Operation) error {
 	resp, err := cli.ContainerCreate(ctx, cfg, hostCfg, nil, "")
 	if err != nil {
 		return fmt.Errorf("cannot create container: %v", err)
+	}
+
+	for path, content := range op.Files {
+
+		if !unix_path.IsAbs(path) {
+			return errors.New("destination path should be an absolute unix path")
+		}
+		tarContent, err := generateTar(path, content)
+		options := types.CopyToContainerOptions{
+			AllowOverwriteDirWithFile: false,
+		}
+		err = cli.CopyToContainer(ctx, resp.ID, "/", tarContent, options)
+		if err != nil {
+			return fmt.Errorf("error copying %s to %s in container: %s", unix_path.Base(path), unix_path.Dir(path), err)
+		}
 	}
 
 	if err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
@@ -170,7 +131,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 		defer attach.Close()
 		for {
 			_, err := stdcopy.StdCopy(os.Stdout, os.Stderr, attach.Reader)
-			if err == io.EOF {
+			if err != nil {
 				break
 			}
 		}
@@ -185,4 +146,27 @@ func (d *DockerDriver) exec(op *Operation) error {
 	case <-statusc:
 	}
 	return err
+}
+
+func resolveLocalPath(localPath string) (absPath string, err error) {
+	if absPath, err = filepath.Abs(localPath); err != nil {
+		return
+	}
+	return archive.PreserveTrailingDotOrSeparator(absPath, localPath, filepath.Separator), nil
+}
+
+func generateTar(dst string, content string) (io.Reader, error) {
+	r, w := io.Pipe()
+	tw := tar.NewWriter(w)
+	go func() {
+		hdr := &tar.Header{
+			Name: dst,
+			Mode: 0644,
+			Size: int64(len(content)),
+		}
+		tw.WriteHeader(hdr)
+		tw.Write([]byte(content))
+		w.Close()
+	}()
+	return r, nil
 }
