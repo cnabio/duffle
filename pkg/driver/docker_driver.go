@@ -3,7 +3,8 @@ package driver
 import (
 	"archive/tar"
 	"context"
-	"errors"
+
+	//	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -68,7 +69,10 @@ func (d *DockerDriver) exec(op *Operation) error {
 	if err != nil {
 		return fmt.Errorf("cannot pull image %v: %v", op.Image, err)
 	}
-	termFd, isTerm := term.GetFdInfo(os.Stdout)
+	termFd, _ := term.GetFdInfo(os.Stdout)
+	// Setting this to false here because Moby os.Exit(1) all over the place and this fails on WSL (only)
+	// when Term is true.
+	isTerm := false
 	err = jsonmessage.DisplayJSONMessagesStream(pullReader, os.Stdout, termFd, isTerm, nil)
 	if err != nil {
 		return err
@@ -97,24 +101,18 @@ func (d *DockerDriver) exec(op *Operation) error {
 		return fmt.Errorf("cannot create container: %v", err)
 	}
 
-	for path, content := range op.Files {
-
-		if !unix_path.IsAbs(path) {
-			return errors.New("destination path should be an absolute unix path")
-		}
-		tarContent, err := generateTar(path, content)
-		if err != nil {
-			return fmt.Errorf("error staging files for %s", path)
-		}
-		options := types.CopyToContainerOptions{
-			AllowOverwriteDirWithFile: false,
-		}
-		// This copies the tar to the root of the container. The tar has been assembled using the
-		// path from the given file, starting at the /.
-		err = cli.CopyToContainer(ctx, resp.ID, "/", tarContent, options)
-		if err != nil {
-			return fmt.Errorf("error copying %s to / in container: %s", path, err)
-		}
+	tarContent, err := generateTar(op.Files)
+	if err != nil {
+		return fmt.Errorf("error staging files: %s", err)
+	}
+	options := types.CopyToContainerOptions{
+		AllowOverwriteDirWithFile: false,
+	}
+	// This copies the tar to the root of the container. The tar has been assembled using the
+	// path from the given file, starting at the /.
+	err = cli.CopyToContainer(ctx, resp.ID, "/", tarContent, options)
+	if err != nil {
+		return fmt.Errorf("error copying to / in container: %s", err)
 	}
 
 	if err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
@@ -151,17 +149,24 @@ func (d *DockerDriver) exec(op *Operation) error {
 	return err
 }
 
-func generateTar(dst string, content string) (io.Reader, error) {
+func generateTar(files map[string]string) (io.Reader, error) {
 	r, w := io.Pipe()
 	tw := tar.NewWriter(w)
-	go func() {
-		hdr := &tar.Header{
-			Name: dst,
-			Mode: 0644,
-			Size: int64(len(content)),
+	for path := range files {
+		if !unix_path.IsAbs(path) {
+			return nil, fmt.Errorf("destination path %s should be an absolute unix path", path)
 		}
-		tw.WriteHeader(hdr)
-		tw.Write([]byte(content))
+	}
+	go func() {
+		for path, content := range files {
+			hdr := &tar.Header{
+				Name: path,
+				Mode: 0644,
+				Size: int64(len(content)),
+			}
+			tw.WriteHeader(hdr)
+			tw.Write([]byte(content))
+		}
 		w.Close()
 	}()
 	return r, nil
