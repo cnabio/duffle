@@ -39,12 +39,11 @@ func selectInvocationImage(d driver.Driver, c *claim.Claim) (bundle.InvocationIm
 	return bundle.InvocationImage{}, errors.New("driver is not compatible with any of the invocation images in the bundle")
 }
 
-func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) *driver.Operation {
-	env, files := creds.Flatten()
+func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) (*driver.Operation, error) {
+	env, files, err := creds.Expand(c.Bundle)
 	for k, v := range c.Files {
 		files[c.Bundle.Files[k].Path] = v
 	}
-
 	return &driver.Operation{
 		Action:       action,
 		Installation: c.Name,
@@ -55,7 +54,7 @@ func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds
 		Environment:  conflateEnv(action, c, env),
 		Files:        files,
 		Out:          w,
-	}
+	}, err
 }
 
 // conflateEnv combines all the stuff that should be placed into env vars

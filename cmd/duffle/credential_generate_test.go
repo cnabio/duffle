@@ -24,15 +24,15 @@ func TestGenCredentialSet(t *testing.T) {
 	is.Equal(creds.Name, name)
 	is.Len(creds.Credentials, 2)
 
+	found := map[string]bool{"first": false, "second": false}
+
 	for _, cred := range creds.Credentials {
-		if cred.Name == "first" {
-			is.Equal(cred.Destination.EnvVar, credlocs["first"].EnvironmentVariable)
-			is.Equal(cred.Source.Value, "EMPTY")
-		} else if cred.Name == "second" {
-			is.Equal(cred.Destination.EnvVar, credlocs["second"].EnvironmentVariable)
-			is.Equal(cred.Destination.Path, credlocs["second"].Path)
-		} else {
-			t.Fatalf("unexpected credential %s", cred.Name)
-		}
+		found[cred.Name] = true
+		is.Equal(cred.Source.Value, "EMPTY")
+	}
+
+	is.Len(found, 2)
+	for k, v := range found {
+		is.True(v, "%q not found", k)
 	}
 }

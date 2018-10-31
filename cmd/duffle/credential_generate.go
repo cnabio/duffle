@@ -52,7 +52,6 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 			}
 
 			creds := genCredentialSet(csName, bun.Credentials)
-			//data, err := json.MarshalIndent(creds, "", "  ")
 			data, err := yaml.Marshal(creds)
 			if err != nil {
 				return err
@@ -77,17 +76,10 @@ func genCredentialSet(name string, creds map[string]bundle.CredentialLocation) c
 	}
 	cs.Credentials = []credentials.CredentialStrategy{}
 
-	for name, loc := range creds {
+	for name := range creds {
 		c := credentials.CredentialStrategy{
-			Name:        name,
-			Source:      credentials.Source{Value: "EMPTY"},
-			Destination: credentials.Destination{},
-		}
-		if loc.EnvironmentVariable != "" {
-			c.Destination.EnvVar = loc.EnvironmentVariable
-		}
-		if loc.Path != "" {
-			c.Destination.Path = loc.Path
+			Name:   name,
+			Source: credentials.Source{Value: "EMPTY"},
 		}
 		cs.Credentials = append(cs.Credentials, c)
 	}

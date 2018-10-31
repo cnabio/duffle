@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/deis/duffle/pkg/bundle"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,10 +17,7 @@ func TestCredentialSet(t *testing.T) {
 	defer os.Unsetenv("TEST_USE_VAR")
 
 	credset, err := Load("testdata/staging.yaml")
-	if err != nil {
-		//t.Fatal(err)
-		t.Error(err)
-	}
+	is.NoError(err)
 
 	results, err := credset.Resolve()
 	if err != nil {
@@ -39,9 +38,43 @@ func TestCredentialSet(t *testing.T) {
 		{name: "fallthrough", key: "TEST_FALLTHROUGH", expect: "quokka", path: "/animals/quokka.txt"},
 		{name: "plain_value", key: "TEST_PLAIN_VALUE", expect: "cassowary"},
 	} {
-		dest := results[tt.name]
-		is.Equal(tt.key, dest.EnvVar)
-		is.Equal(tt.expect, dest.Value)
-		is.Equal(tt.path, dest.Path)
+		dest, ok := results[tt.name]
+		is.True(ok)
+		is.Equal(tt.expect, dest)
+	}
+}
+
+func TestCredentialSet_Expand(t *testing.T) {
+	b := &bundle.Bundle{
+		Name: "knapsack",
+		Credentials: map[string]bundle.CredentialLocation{
+			"first": {
+				EnvironmentVariable: "FIRST_VAR",
+			},
+			"second": {
+				Path: "/second/path",
+			},
+			"third": {
+				EnvironmentVariable: "/THIRD_VAR",
+				Path:                "/third/path",
+			},
+		},
+	}
+	cs := Set{
+		"first":  "first",
+		"second": "second",
+		"third":  "third",
+	}
+
+	env, path, err := cs.Expand(b)
+	is := assert.New(t)
+	is.NoError(err)
+	for k, v := range b.Credentials {
+		if v.EnvironmentVariable != "" {
+			is.Equal(env[v.EnvironmentVariable], cs[k])
+		}
+		if v.Path != "" {
+			is.Equal(path[v.Path], cs[k])
+		}
 	}
 }

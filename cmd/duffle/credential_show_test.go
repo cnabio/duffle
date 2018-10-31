@@ -12,23 +12,19 @@ func TestPrintCredentials(t *testing.T) {
 		Name: "foo",
 		Credentials: []credentials.CredentialStrategy{
 			{
-				Name:        "password",
-				Source:      credentials.Source{Value: "TOPSECRET"},
-				Destination: credentials.Destination{EnvVar: "PASSWORD"},
+				Name:   "password",
+				Source: credentials.Source{Value: "TOPSECRET"},
 			},
 			{
-				Name:        "another-password",
-				Destination: credentials.Destination{Value: "TOPSECRET"},
+				Name: "another-password",
 			},
 			{
-				Name:        "kubeconfig",
-				Source:      credentials.Source{Path: "/root/.kube/config"},
-				Destination: credentials.Destination{Path: "/root/.kube/config"},
+				Name:   "kubeconfig",
+				Source: credentials.Source{Path: "/root/.kube/config"},
 			},
 			{
-				Name:        "some-setting",
-				Source:      credentials.Source{EnvVar: "MYSETTING"},
-				Destination: credentials.Destination{EnvVar: "MYSETTING"},
+				Name:   "some-setting",
+				Source: credentials.Source{EnvVar: "MYSETTING"},
 			},
 		},
 	}
@@ -40,45 +36,29 @@ func TestPrintCredentials(t *testing.T) {
 	}{
 		{name: "reacted", unredacted: false, output: `name: foo
 credentials:
-- destination:
-    env: PASSWORD
-  name: password
+- name: password
   source:
     value: REDACTED
-- destination:
-    value: REDACTED
-  name: another-password
+- name: another-password
   source: {}
-- destination:
-    path: /root/.kube/config
-  name: kubeconfig
+- name: kubeconfig
   source:
     path: /root/.kube/config
-- destination:
-    env: MYSETTING
-  name: some-setting
+- name: some-setting
   source:
     env: MYSETTING
 `},
 		{name: "unredacted", unredacted: true, output: `name: foo
 credentials:
-- destination:
-    env: PASSWORD
-  name: password
+- name: password
   source:
     value: TOPSECRET
-- destination:
-    value: TOPSECRET
-  name: another-password
+- name: another-password
   source: {}
-- destination:
-    path: /root/.kube/config
-  name: kubeconfig
+- name: kubeconfig
   source:
     path: /root/.kube/config
-- destination:
-    env: MYSETTING
-  name: some-setting
+- name: some-setting
   source:
     env: MYSETTING
 `},
