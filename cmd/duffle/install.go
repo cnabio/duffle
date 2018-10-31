@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"net/url"
-	"path/filepath"
 	"strings"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/deis/duffle/pkg/action"
 	"github.com/deis/duffle/pkg/bundle"
@@ -16,9 +17,6 @@ import (
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
 	"github.com/deis/duffle/pkg/reference"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func newInstallCmd() *cobra.Command {
@@ -146,7 +144,7 @@ func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, er
 	case len(args) < 2 && bundleFile == "":
 		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return getBundleFile(args[1])
+		return pullBundle(args[1], home.Home(homePath()))
 	}
 	return bundleFile, nil
 }
@@ -165,7 +163,7 @@ func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string,
 		return "", nil
 	case len(args) == 2:
 		var err error
-		bundleFile, err = getBundleFile(args[1])
+		bundleFile, err = pullBundle(args[1], home.Home(homePath()))
 		if err != nil {
 			return "", err
 		}
@@ -247,52 +245,22 @@ func getReference(bundleName string) (reference.NamedTagged, error) {
 	return ref, nil
 }
 
-func getBundleRepoURL(bundleName string, home home.Home) (*url.URL, error) {
+func getBundleRepoURL(bundleName string) (*url.URL, error) {
 	ref, err := getReference(bundleName)
 	if err != nil {
 		return nil, err
 	}
+	return repoURLFromReference(ref)
+}
 
-	proto := "https"
-	parts := strings.Split(bundleName, "://")
-	if len(parts) == 2 {
-		proto = parts[0]
-	}
-
+func repoURLFromReference(ref reference.NamedTagged) (*url.URL, error) {
+	// TODO: find a way to make the proto configurable
 	url := &url.URL{
-		Scheme: proto,
+		Scheme: "https",
 		Host:   reference.Domain(ref),
 		Path:   fmt.Sprintf("repositories/%s/tags/%s", reference.Path(ref), ref.Tag()),
 	}
 	return url, nil
-}
-
-func getBundleFile(bundleName string) (string, error) {
-	home := home.Home(homePath())
-	url, err := getBundleRepoURL(bundleName, home)
-	if err != nil {
-		return "", err
-	}
-	resp, err := http.Get(url.String())
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("request to %s responded with a non-200 status code: %d", url, resp.StatusCode)
-	}
-
-	bundle, err := bundle.ParseReader(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	bundleFilepath := filepath.Join(home.Cache(), fmt.Sprintf("%s-%s.json", strings.Replace(bundle.Name, "/", "-", -1), bundle.Version))
-	if err := bundle.WriteFile(bundleFilepath, 0644); err != nil {
-		return "", err
-	}
-
-	return bundleFilepath, nil
 }
 
 func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {

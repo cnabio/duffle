@@ -13,7 +13,7 @@ type Component struct {
 
 // Name represents the name of a mock component
 func (dc Component) Name() string {
-	return "mock-name"
+	return "cnab"
 }
 
 // Type represents the type of a mock component
@@ -23,7 +23,7 @@ func (dc Component) Type() string {
 
 // URI represents the URI of the artefact of a mock component
 func (dc Component) URI() string {
-	return "mock-uri"
+	return "mock-uri:1.0.0"
 }
 
 // Digest represents the digest of a mock component
