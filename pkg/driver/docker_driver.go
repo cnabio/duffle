@@ -50,14 +50,12 @@ func (d *DockerDriver) SetConfig(settings map[string]string) {
 }
 
 func (d *DockerDriver) exec(op *Operation) error {
-
-	// TODO - should ctx be passed here?
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.38"))
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return fmt.Errorf("cannot create Docker client: %v", err)
 	}
-	err = client.FromEnv(cli)
+	cli.NegotiateAPIVersion(ctx)
 	if err != nil {
 		return fmt.Errorf("cannot update Docker client: %v", err)
 	}
