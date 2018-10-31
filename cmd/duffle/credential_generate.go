@@ -70,7 +70,7 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 	return cmd
 }
 
-func genCredentialSet(name string, creds map[string]bundle.CredentialLocation) credentials.CredentialSet {
+func genCredentialSet(name string, creds map[string]bundle.Location) credentials.CredentialSet {
 	cs := credentials.CredentialSet{
 		Name: name,
 	}

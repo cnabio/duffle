@@ -17,6 +17,7 @@ type ParameterDefinition struct {
 	MinLength     *int              `json:"minLength,omitempty" toml:"minLength,omitempty"`
 	MaxLength     *int              `json:"maxLength,omitempty" toml:"maxLength,omitempty"`
 	Metadata      ParameterMetadata `json:"metadata,omitempty" toml:"metadata,omitempty"`
+	Destination   *Location         `json:"destination,omitemtpty" toml:"destination,omitempty"`
 }
 
 // ParameterMetadata contains metadata for a parameter definition.

@@ -60,7 +60,6 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		setParams       []string
 		insecure        bool
 		setFiles        []string
-		setFilesContent []string
 
 		installationName string
 		bun              *bundle.Bundle
@@ -108,9 +107,14 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 			if err != nil {
 				return err
 			}
-			c.Files, err = calculateInjectedFiles(bun, setFiles, setFilesContent)
+			fileParams, err := calculateInjectedFiles(bun, setFiles)
 			if err != nil {
 				return err
+			}
+			for k, v := range fileParams {
+				// Assumption here is that we override --set/--params with these values.
+				// We could error out, though, if that is preferable.
+				c.Parameters[k] = v
 			}
 
 			inst := &action.Install{
@@ -137,8 +141,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 	flags.StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringVarP(&bundleFile, "file", "f", "", "Bundle file to install")
 	flags.StringArrayVarP(&setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
-	flags.StringArrayVarP(&setFiles, "inject-file", "i", []string{}, "Set injected files as NAME=SOURCE-PATH pairs")
-	flags.StringArrayVar(&setFilesContent, "inject-file-content", []string{}, "Set injected files as NAME=CONTENT pairs")
+	flags.StringArrayVarP(&setFiles, "set-file", "i", []string{}, "Set injected files as NAME=SOURCE-PATH pairs")
 	return cmd
 }
 
@@ -329,19 +332,19 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams []str
 	return bundle.ValuesOrDefaults(vals, bun)
 }
 
-func calculateInjectedFiles(bun *bundle.Bundle, setFilePaths []string, setFileContents []string) (map[string]string, error) {
-	remainingRequired := map[string]struct{}{}
+func calculateInjectedFiles(bun *bundle.Bundle, setFilePaths []string) (map[string]string, error) {
 	result := map[string]string{}
-	for k, v := range bun.Files {
-		if v.Required {
-			remainingRequired[k] = struct{}{}
-		}
-	}
 	for _, p := range setFilePaths {
 		parts := strings.SplitN(p, "=", 2)
 		if len(parts) != 2 {
 			return nil, fmt.Errorf("malformed injected file path parameter: %q", p)
 		}
+
+		// Check that this is a known param
+		if _, ok := bun.Parameters[parts[0]]; !ok {
+			return nil, fmt.Errorf("bundle does not have a parameter named %q", parts[0])
+		}
+
 		if _, ok := result[parts[0]]; ok {
 			return nil, fmt.Errorf("ambiguous content for file %q", parts[0])
 		}
@@ -350,29 +353,6 @@ func calculateInjectedFiles(bun *bundle.Bundle, setFilePaths []string, setFileCo
 			return nil, fmt.Errorf("error while reading file %q: %s", parts[1], err)
 		}
 		result[parts[0]] = string(content)
-		delete(remainingRequired, parts[0])
 	}
-
-	for _, p := range setFileContents {
-		parts := strings.SplitN(p, "=", 2)
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("malformed injected file path parameter: %q", p)
-		}
-		if _, ok := result[parts[0]]; ok {
-			return nil, fmt.Errorf("ambiguous content for file %q", parts[0])
-		}
-		result[parts[0]] = parts[1]
-		delete(remainingRequired, parts[0])
-	}
-
-	if len(remainingRequired) == 0 {
-		return result, nil
-	}
-
-	var missingRequired []string
-	for k := range remainingRequired {
-		missingRequired = append(missingRequired, k)
-	}
-
-	return nil, fmt.Errorf("the following required files are not set: %s", strings.Join(missingRequired, ", "))
+	return result, nil
 }

@@ -69,18 +69,13 @@ type InvocationImage struct {
 	Image     string `json:"image" toml:"image"`
 }
 
-// CredentialLocation provides the location of a credential that the invocation
-// image needs to use.
-type CredentialLocation struct {
+// Location provides the location where a value should be written in
+// the invocation image.
+//
+// A location may be either a file (by path) or an environment variable.
+type Location struct {
 	Path                string `json:"path" toml:"path"`
 	EnvironmentVariable string `json:"env" toml:"env"`
-}
-
-// FileLocation contains the location of a file the the invocation image
-// can use
-type FileLocation struct {
-	Path     string `json:"path" toml:"path"`
-	Required bool   `json:"required" toml:"required"`
 }
 
 // Maintainer describes a code maintainer of a bundle
@@ -98,13 +93,12 @@ type Bundle struct {
 	Name             string                         `json:"name" toml:"name"`
 	Version          string                         `json:"version" toml:"version"`
 	Description      string                         `json:"description" toml:"description"`
-	Keywords         []string                       `json:"keywords" toml:"keywords"`
-	Maintainers      []Maintainer                   `json:"maintainers" toml:"maintainers"`
+	Keywords         []string                       `json:"keywords,omitempty" toml:"keywords,omitempty"`
+	Maintainers      []Maintainer                   `json:"maintainers,omitempty" toml:"maintainers,omitempty"`
 	InvocationImages []InvocationImage              `json:"invocationImages" toml:"invocationImages"`
 	Images           []Image                        `json:"images" toml:"images"`
 	Parameters       map[string]ParameterDefinition `json:"parameters" toml:"parameters"`
-	Credentials      map[string]CredentialLocation  `json:"credentials" toml:"credentials"`
-	Files            map[string]FileLocation        `json:"files" toml:"files"`
+	Credentials      map[string]Location            `json:"credentials" toml:"credentials"`
 }
 
 // ValuesOrDefaults returns parameter values or the default parameter values
