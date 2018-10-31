@@ -40,10 +40,12 @@ func mockBundle() *bundle.Bundle {
 		},
 		Credentials: map[string]bundle.Location{
 			"secret_one": {
-				Path: "/foo/bar",
+				EnvironmentVariable: "SECRET_ONE",
+				Path:                "/foo/bar",
 			},
 			"secret_two": {
 				EnvironmentVariable: "SECRET_TWO",
+				Path:                "/secret/two",
 			},
 		},
 		Parameters: map[string]bundle.ParameterDefinition{
@@ -97,7 +99,7 @@ func TestOpFromClaim(t *testing.T) {
 	is.Equal(op.Environment["SECRET_ONE"], "I'm a secret")
 	is.Equal(op.Environment["PARAM_TWO"], "twoval")
 	is.Equal(op.Environment["CNAB_P_PARAM_ONE"], "oneval")
-	is.Equal(op.Files["secret_two"], "I'm also a secret")
+	is.Equal(op.Files["/secret/two"], "I'm also a secret")
 	is.Equal(op.Files["/param/three"], "threeval")
 	is.Len(op.Parameters, 3)
 	is.Equal(os.Stdout, op.Out)

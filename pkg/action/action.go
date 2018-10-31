@@ -39,7 +39,7 @@ func selectInvocationImage(d driver.Driver, c *claim.Claim) (bundle.InvocationIm
 	return bundle.InvocationImage{}, errors.New("driver is not compatible with any of the invocation images in the bundle")
 }
 
-func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) *driver.Operation {
+func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) (*driver.Operation, error) {
 	env, files, err := creds.Expand(c.Bundle)
 	for k, param := range c.Bundle.Parameters {
 		rawval, ok := c.Parameters[k]
