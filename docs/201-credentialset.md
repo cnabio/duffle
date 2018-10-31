@@ -146,9 +146,9 @@ When the above bundle (`helloworld`) is installed with the above credentials (`m
   - It is set as the value of `$HOST_KEY`
   - It is placed in the file `/etc/hostkey.txt`
 
-Since the last credential in the credentialset (`sir-not-appearing-in-this-film`) is not required by the bundle, it is ignored.
+Since the last credential in the credential set (`sir-not-appearing-in-this-film`) is not required by the bundle, it is ignored.
 
-During the resolution phase, _if any required credential is not provided in the credentialset, the operation is aborted and Duffle exits with a failure.`
+During the resolution phase, _if any required credential is not provided in the credential set, the operation is aborted and Duffle exits with a failure._
 
 ## Limitations
 

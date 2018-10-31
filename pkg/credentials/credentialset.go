@@ -154,7 +154,6 @@ type CredentialStrategy struct {
 
 // Source represents a strategy for loading a credential from local host.
 type Source struct {
-	//Type    string `json:"type"`
 	Path    string `json:"path,omitempty" yaml:"path,omitempty"`
 	Command string `json:"command,omitempty" yaml:"command,omitempty"`
 	Value   string `json:"value,omitempty" yaml:"value,omitempty"`
@@ -163,7 +162,5 @@ type Source struct {
 
 // Destination reprents a strategy for injecting a credential into an image.
 type Destination struct {
-	//Path   string `json:"path,omitempty" yaml:"path,omitempty"`
-	//EnvVar string `json:"env,omitempty" yaml:"env,omitempty"`
 	Value string `json:"value,omitempty" yaml:"value,omitempty"`
 }
