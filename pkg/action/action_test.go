@@ -46,6 +46,9 @@ func mockBundle() *bundle.Bundle {
 				Path: "secret_two",
 			},
 		},
+		Actions: map[string]bundle.Action{
+			"test": {Modifies: true},
+		},
 	}
 
 }
