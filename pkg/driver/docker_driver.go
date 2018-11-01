@@ -82,7 +82,8 @@ func (d *DockerDriver) exec(op *Operation) error {
 		{
 			Type:   mount.TypeBind,
 			Source: "/var/run/docker.sock",
-			Target: "/var/run/docker.sock"},
+			Target: "/var/run/docker.sock",
+		},
 	}
 	cfg := &container.Config{
 		Image:      op.Image,
