@@ -92,29 +92,52 @@ function release(project, tag) {
     "for bin in ./bin/*; do github-release upload -f ${bin} -n $(basename ${bin}) -t " + tag + "; done"
   ];
 
-  console.log(release.tasks);
-  console.log(`releases at https://github.com/${project.repo.name}/releases/tag/${tag}`);
-  return release.run();
+  console.log(`release at https://github.com/${project.repo.name}/releases/tag/${tag}`);
+
+  return Group.runEach([
+    release,
+    slackNotify("Duffle Release", `${tag} release now on GitHub! <https://github.com/${project.repo.name}/releases/tag/${tag}>`, project)
+  ])
 }
 
 function ghNotify(state, msg, e, project) {
-  const gh = new Job(`${projectName}-notify-${state}`, "technosophos/github-notify:latest")
+  if (e.revision.commit) {
+    const gh = new Job(`${projectName}-notify-${state}`, "technosophos/github-notify:latest")
 
-  if (!e.revision.commit) {
+    gh.env = {
+      GH_REPO: project.repo.name,
+      GH_STATE: state,
+      GH_DESCRIPTION: msg,
+      GH_CONTEXT: projectName,
+      GH_TOKEN: project.secrets.ghToken,
+      GH_COMMIT: e.revision.commit
+    }
+
+    return gh
+  } else {
     console.log(`Warning: GitHub notification not sent for state '${state}' as no commit was found.`)
     return noop
   }
+}
 
-  gh.env = {
-    GH_REPO: project.repo.name,
-    GH_STATE: state,
-    GH_DESCRIPTION: msg,
-    GH_CONTEXT: projectName,
-    GH_TOKEN: project.secrets.ghToken,
-    GH_COMMIT: e.revision.commit
+function slackNotify(title, msg, project) {
+  if (project.secrets.SLACK_WEBHOOK) {
+    var slack = new Job(`${projectName}-slack-notify`, "technosophos/slack-notify:latest")
+
+    slack.env = {
+      SLACK_WEBHOOK: project.secrets.SLACK_WEBHOOK,
+      SLACK_USERNAME: "duffle-ci",
+      SLACK_TITLE: title,
+      SLACK_MESSAGE: msg,
+      SLACK_COLOR: "#00ff00"
+    }
+    slack.tasks = ["/slack-notify"]
+
+    return slack
+  } else {
+    console.log(`Slack Notification for '${title}' not sent; no SLACK_WEBHOOK secret found.`)
+    return noop
   }
-
-  return gh
 }
  
 events.on("exec", build)
