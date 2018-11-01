@@ -51,7 +51,7 @@ reason, it may need the same credentials used to install.
 			table.AddRow("Installed at:", c.Created)
 			table.AddRow("Last Modified at:", c.Modified)
 			table.AddRow("Current Revision:", c.Revision)
-			table.AddRow("Bundle:", c.Bundle)
+			table.AddRow("Bundle:", c.Bundle.Name)
 			table.AddRow("Last Action Performed:", c.Result.Action)
 			table.AddRow("Last Action Status:", c.Result.Status)
 			table.AddRow("Last Action Message:", c.Result.Message)
