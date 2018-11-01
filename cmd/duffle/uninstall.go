@@ -32,8 +32,8 @@ func newUninstallCmd() *cobra.Command {
 	uc := &uninstallCmd{}
 
 	var (
-		credentialsFile string
-		bundleFile      string
+		credentialsFiles []string
+		bundleFile       string
 	)
 
 	cmd := &cobra.Command{
@@ -51,13 +51,13 @@ func newUninstallCmd() *cobra.Command {
 				uc.bundleFile = bundleFile
 			}
 
-			return uc.uninstall(credentialsFile)
+			return uc.uninstall(credentialsFiles)
 		},
 	}
 
 	flags := cmd.Flags()
 	flags.StringVarP(&uninstallDriver, "driver", "d", "docker", "Specify a driver name")
-	flags.StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
+	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify a set of credentials to use inside the CNAB bundle")
 	flags.StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
 	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "set individual parameters as NAME=VALUE pairs")
@@ -66,7 +66,7 @@ func newUninstallCmd() *cobra.Command {
 	return cmd
 }
 
-func (un *uninstallCmd) uninstall(credentialsFile string) error {
+func (un *uninstallCmd) uninstall(credentialsFiles []string) error {
 
 	claim, err := claimStorage().Read(un.name)
 	if err != nil {
@@ -99,7 +99,7 @@ func (un *uninstallCmd) uninstall(credentialsFile string) error {
 		return fmt.Errorf("could not prepare driver: %s", err)
 	}
 
-	creds, err := loadCredentials(credentialsFile, claim.Bundle)
+	creds, err := loadCredentials(credentialsFiles, claim.Bundle)
 	if err != nil {
 		return fmt.Errorf("could not load credentials: %s", err)
 	}

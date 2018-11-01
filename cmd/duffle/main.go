@@ -60,23 +60,33 @@ func claimStorage() claim.Store {
 }
 
 // loadCredentials loads a set of credentials from HOME.
-func loadCredentials(file string, b *bundle.Bundle) (map[string]string, error) {
+func loadCredentials(files []string, b *bundle.Bundle) (map[string]string, error) {
 	creds := map[string]string{}
-	if file == "" {
+	if len(files) == 0 {
 		return creds, credentials.Validate(creds, b.Credentials)
 	}
-	if !isPathy(file) {
-		file = filepath.Join(home.Home(homePath()).Credentials(), file+".yaml")
+
+	// The strategy here is "last one wins". We loop through each credential file and
+	// calculate its credentials. Then we insert them into the creds map in the order
+	// in which they were supplied on the CLI.
+	for _, file := range files {
+		if !isPathy(file) {
+			file = filepath.Join(home.Home(homePath()).Credentials(), file+".yaml")
+		}
+		cset, err := credentials.Load(file)
+		if err != nil {
+			return creds, err
+		}
+		res, err := cset.Resolve()
+		if err != nil {
+			return res, err
+		}
+
+		for k, v := range res {
+			creds[k] = v
+		}
 	}
-	cset, err := credentials.Load(file)
-	if err != nil {
-		return creds, err
-	}
-	res, err := cset.Resolve()
-	if err != nil {
-		return res, err
-	}
-	return res, credentials.Validate(res, b.Credentials)
+	return creds, credentials.Validate(creds, b.Credentials)
 }
 
 // loadVerifyingKeyRings loads all of the keys that can be used for verifying.

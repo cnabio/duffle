@@ -39,8 +39,8 @@ func newUpgradeCmd() *cobra.Command {
 	uc := &upgradeCmd{}
 
 	var (
-		credentialsFile string
-		bundleFile      string
+		credentialsFiles []string
+		bundleFile       string
 	)
 
 	cmd := &cobra.Command{
@@ -59,14 +59,14 @@ func newUpgradeCmd() *cobra.Command {
 				return err
 			}
 
-			return uc.upgrade(credentialsFile, bundleFile)
+			return uc.upgrade(credentialsFiles, bundleFile)
 		},
 	}
 
 	flags := cmd.Flags()
 	flags.StringVarP(&bundleFile, "file", "f", "", "Set the bundle file to use for upgrading")
 	flags.StringVarP(&upgradeDriver, "driver", "d", "docker", "Specify a driver name")
-	flags.StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
+	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify a set of credentials to use inside the CNAB bundle")
 	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
 	flags.BoolVarP(&uc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
@@ -74,7 +74,7 @@ func newUpgradeCmd() *cobra.Command {
 	return cmd
 }
 
-func (up *upgradeCmd) upgrade(credentialsFile, bundleFile string) error {
+func (up *upgradeCmd) upgrade(credentialsFiles []string, bundleFile string) error {
 
 	claim, err := claimStorage().Read(up.name)
 	if err != nil {
@@ -95,7 +95,7 @@ func (up *upgradeCmd) upgrade(credentialsFile, bundleFile string) error {
 		return err
 	}
 
-	creds, err := loadCredentials(credentialsFile, claim.Bundle)
+	creds, err := loadCredentials(credentialsFiles, claim.Bundle)
 	if err != nil {
 		return err
 	}
