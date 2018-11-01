@@ -17,7 +17,7 @@ type Manifest struct {
 	Maintainers []bundle.Maintainer                   `mapstructure:"maintainers"`
 	Components  map[string]*Component                 `mapstructure:"components"`
 	Parameters  map[string]bundle.ParameterDefinition `mapstructure:"parameters"`
-	Credentials map[string]bundle.CredentialLocation  `mapstructure:"credentials"`
+	Credentials map[string]bundle.Location            `mapstructure:"credentials"`
 }
 
 // Component represents a component of a CNAB bundle

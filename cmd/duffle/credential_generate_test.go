@@ -10,7 +10,7 @@ import (
 
 func TestGenCredentialSet(t *testing.T) {
 	name := "zed"
-	credlocs := map[string]bundle.CredentialLocation{
+	credlocs := map[string]bundle.Location{
 		"first": {
 			EnvironmentVariable: "FIRST_VAR",
 		},

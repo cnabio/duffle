@@ -47,7 +47,7 @@ func TestCredentialSet(t *testing.T) {
 func TestCredentialSet_Expand(t *testing.T) {
 	b := &bundle.Bundle{
 		Name: "knapsack",
-		Credentials: map[string]bundle.CredentialLocation{
+		Credentials: map[string]bundle.Location{
 			"first": {
 				EnvironmentVariable: "FIRST_VAR",
 			},

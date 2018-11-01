@@ -38,12 +38,31 @@ func mockBundle() *bundle.Bundle {
 		InvocationImages: []bundle.InvocationImage{
 			{Image: "foo/bar:0.1.0", ImageType: "docker"},
 		},
-		Credentials: map[string]bundle.CredentialLocation{
+		Credentials: map[string]bundle.Location{
 			"secret_one": {
 				EnvironmentVariable: "SECRET_ONE",
+				Path:                "/foo/bar",
 			},
 			"secret_two": {
-				Path: "secret_two",
+				EnvironmentVariable: "SECRET_TWO",
+				Path:                "/secret/two",
+			},
+		},
+		Parameters: map[string]bundle.ParameterDefinition{
+			"param_one": {
+				DefaultValue: "one",
+			},
+			"param_two": {
+				DefaultValue: "two",
+				Destination: &bundle.Location{
+					EnvironmentVariable: "PARAM_TWO",
+				},
+			},
+			"param_three": {
+				DefaultValue: "three",
+				Destination: &bundle.Location{
+					Path: "/param/three",
+				},
 			},
 		},
 	}
@@ -53,12 +72,16 @@ func mockBundle() *bundle.Bundle {
 func TestOpFromClaim(t *testing.T) {
 	now := time.Now()
 	c := &claim.Claim{
-		Created:    now,
-		Modified:   now,
-		Name:       "name",
-		Revision:   "revision",
-		Bundle:     mockBundle(),
-		Parameters: map[string]interface{}{"duff": "beer"},
+		Created:  now,
+		Modified: now,
+		Name:     "name",
+		Revision: "revision",
+		Bundle:   mockBundle(),
+		Parameters: map[string]interface{}{
+			"param_one":   "oneval",
+			"param_two":   "twoval",
+			"param_three": "threeval",
+		},
 	}
 	invocImage := c.Bundle.InvocationImages[0]
 
@@ -74,8 +97,11 @@ func TestOpFromClaim(t *testing.T) {
 	is.Equal(invocImage.Image, op.Image)
 	is.Equal(driver.ImageTypeDocker, op.ImageType)
 	is.Equal(op.Environment["SECRET_ONE"], "I'm a secret")
-	is.Equal(op.Files["secret_two"], "I'm also a secret")
-	is.Len(op.Parameters, 1)
+	is.Equal(op.Environment["PARAM_TWO"], "twoval")
+	is.Equal(op.Environment["CNAB_P_PARAM_ONE"], "oneval")
+	is.Equal(op.Files["/secret/two"], "I'm also a secret")
+	is.Equal(op.Files["/param/three"], "threeval")
+	is.Len(op.Parameters, 3)
 	is.Equal(os.Stdout, op.Out)
 }
 

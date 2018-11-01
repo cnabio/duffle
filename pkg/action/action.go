@@ -41,9 +41,30 @@ func selectInvocationImage(d driver.Driver, c *claim.Claim) (bundle.InvocationIm
 
 func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) (*driver.Operation, error) {
 	env, files, err := creds.Expand(c.Bundle)
-	for k, v := range c.Files {
-		files[c.Bundle.Files[k].Path] = v
+	for k, param := range c.Bundle.Parameters {
+		rawval, ok := c.Parameters[k]
+		if !ok {
+			continue
+		}
+		value := fmt.Sprintf("%v", rawval)
+		if param.Destination == nil {
+			// env is a CNAB_P_
+			env[fmt.Sprintf("CNAB_P_%s", strings.ToUpper(k))] = value
+			continue
+		}
+		if param.Destination.Path != "" {
+			files[param.Destination.Path] = value
+		}
+		if param.Destination.EnvironmentVariable != "" {
+			env[param.Destination.EnvironmentVariable] = value
+		}
 	}
+
+	env["CNAB_INSTALLATION_NAME"] = c.Name
+	env["CNAB_ACTION"] = action
+	env["CNAB_BUNDLE_NAME"] = c.Bundle.Name
+	env["CNAB_BUNDLE_VERSION"] = c.Bundle.Version
+
 	return &driver.Operation{
 		Action:       action,
 		Installation: c.Name,
@@ -51,23 +72,8 @@ func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds
 		Image:        ii.Image,
 		ImageType:    ii.ImageType,
 		Revision:     c.Revision,
-		Environment:  conflateEnv(action, c, env),
+		Environment:  env,
 		Files:        files,
 		Out:          w,
 	}, err
-}
-
-// conflateEnv combines all the stuff that should be placed into env vars
-// It returns a new map.
-func conflateEnv(action string, c *claim.Claim, env map[string]string) map[string]string {
-	env["CNAB_INSTALLATION_NAME"] = c.Name
-	env["CNAB_ACTION"] = action
-	env["CNAB_BUNDLE_NAME"] = c.Bundle.Name
-	env["CNAB_BUNDLE_VERSION"] = c.Bundle.Version
-
-	for k, v := range c.Parameters {
-		// TODO: Vet against bundle's parameters.json
-		env[fmt.Sprintf("CNAB_P_%s", strings.ToUpper(k))] = fmt.Sprintf("%v", v)
-	}
-	return env
 }
