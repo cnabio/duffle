@@ -3,8 +3,6 @@ package driver
 import (
 	"archive/tar"
 	"context"
-
-	//	"errors"
 	"fmt"
 	"io"
 	"os"
