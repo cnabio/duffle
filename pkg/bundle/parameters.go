@@ -12,6 +12,7 @@ type ParameterDefinition struct {
 	DataType      string            `json:"type" toml:"type"`
 	DefaultValue  interface{}       `json:"defaultValue,omitempty" toml:"defaultValue,omitempty"`
 	AllowedValues []interface{}     `json:"allowedValues,omitempty" toml:"allowedValues,omitempty"`
+	Required      bool              `json:"required" toml:"required"`
 	MinValue      *int              `json:"minValue,omitempty" toml:"minValue,omitempty"`
 	MaxValue      *int              `json:"maxValue,omitempty" toml:"maxValue,omitempty"`
 	MinLength     *int              `json:"minLength,omitempty" toml:"minLength,omitempty"`
@@ -28,11 +29,18 @@ type ParameterMetadata struct {
 // ValidateParameterValue checks whether a value is valid as the value of
 // the specified parameter.
 func (pd ParameterDefinition) ValidateParameterValue(value interface{}) error {
+	if err := pd.validateRequired(value); err != nil {
+		return err
+	}
 	if err := pd.validateByType(value); err != nil {
 		return err
 	}
 
 	return pd.validateAllowedValue(value)
+}
+
+func (pd ParameterDefinition) validateRequired(value interface{}) error {
+	return errors.New("parameter is required")
 }
 
 func (pd ParameterDefinition) validateByType(value interface{}) error {
