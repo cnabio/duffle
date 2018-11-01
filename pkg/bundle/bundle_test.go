@@ -135,6 +135,40 @@ func TestValuesOrDefaults(t *testing.T) {
 	is.Error(err)
 }
 
+func TestValuesOrDefaults_Required(t *testing.T) {
+	is := assert.New(t)
+	vals := map[string]interface{}{
+		"enabled": true,
+	}
+	b := &Bundle{
+		Parameters: map[string]ParameterDefinition{
+			"minimum": {
+				DataType: "int",
+				Required: true,
+			},
+			"enabled": {
+				DataType:     "bool",
+				DefaultValue: false,
+			},
+		},
+	}
+
+	_, err := ValuesOrDefaults(vals, b)
+	is.Error(err)
+
+	// It is unclear what the outcome should be when the user supplies
+	// empty values on purpose. For now, we will assume those meet the
+	// minimum definition of "required", and that other rules will
+	// correct for empty values.
+	//
+	// Example: It makes perfect sense for a user to specify --set minimum=0
+	// and in so doing meet the requirement that a value be specified.
+	vals["minimum"] = 0
+	res, err := ValuesOrDefaults(vals, b)
+	is.NoError(err)
+	is.Equal(0, res["minimum"])
+}
+
 func TestValidateBundle_RequiresInvocationImage(t *testing.T) {
 	b := Bundle{
 		Name:    "bar",

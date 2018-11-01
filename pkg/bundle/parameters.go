@@ -29,20 +29,12 @@ type ParameterMetadata struct {
 // ValidateParameterValue checks whether a value is valid as the value of
 // the specified parameter.
 func (pd ParameterDefinition) ValidateParameterValue(value interface{}) error {
-	if err := pd.validateRequired(value); err != nil {
-		return err
-	}
 	if err := pd.validateByType(value); err != nil {
 		return err
 	}
 
 	return pd.validateAllowedValue(value)
 }
-
-func (pd ParameterDefinition) validateRequired(value interface{}) error {
-	return errors.New("parameter is required")
-}
-
 func (pd ParameterDefinition) validateByType(value interface{}) error {
 	switch pd.DataType {
 	case "string":
