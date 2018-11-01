@@ -16,6 +16,7 @@ import (
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
 	"github.com/deis/duffle/pkg/reference"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

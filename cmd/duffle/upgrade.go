@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/deis/duffle/pkg/action"
+
 	"github.com/spf13/cobra"
 )
 
