@@ -21,8 +21,8 @@ action will restart the CNAB image and ask it to query for status. For that
 reason, it may need the same credentials used to install.
 `
 	var (
-		statusDriver    string
-		credentialsFile string
+		statusDriver     string
+		credentialsFiles []string
 	)
 
 	cmd := &cobra.Command{
@@ -57,7 +57,7 @@ reason, it may need the same credentials used to install.
 			table.AddRow("Last Action Message:", c.Result.Message)
 			fmt.Println(table)
 
-			creds, err := loadCredentials(credentialsFile, c.Bundle)
+			creds, err := loadCredentials(credentialsFiles, c.Bundle)
 			if err != nil {
 				return err
 			}
@@ -74,7 +74,7 @@ reason, it may need the same credentials used to install.
 		},
 	}
 	cmd.Flags().StringVarP(&statusDriver, "driver", "d", "docker", "Specify a driver name")
-	cmd.Flags().StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
+	cmd.Flags().StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify a set of credentials to use inside the CNAB bundle")
 
 	return cmd
 }

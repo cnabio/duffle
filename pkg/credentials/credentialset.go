@@ -41,9 +41,9 @@ func (s Set) Expand(b *bundle.Bundle) (env, files map[string]string, err error) 
 // CredentialSet represents a collection of credentials
 type CredentialSet struct {
 	// Name is the name of the credentialset.
-	Name string
+	Name string `json:"name" yaml:"name"`
 	// Creadentials is a list of credential specs.
-	Credentials []CredentialStrategy
+	Credentials []CredentialStrategy `json:"credentials" yaml:"credentials"`
 }
 
 // Load a CredentialSet from a file at a given path.

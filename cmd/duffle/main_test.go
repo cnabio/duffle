@@ -1,9 +1,15 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/deis/duffle/pkg/bundle"
+	"github.com/deis/duffle/pkg/credentials"
+
+	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,4 +25,74 @@ func TestIsPathy(t *testing.T) {
 	} {
 		is.Equal(expect, isPathy(path), "Expected %t, for %s", expect, path)
 	}
+}
+
+func TestLoadCredentials(t *testing.T) {
+	cred1 := credentials.CredentialSet{
+		Name: "first",
+		Credentials: []credentials.CredentialStrategy{
+			{Name: "knapsack", Source: credentials.Source{Value: "cred1"}},
+			{Name: "gym-bag", Source: credentials.Source{Value: "cred1"}},
+		},
+	}
+	cred2 := credentials.CredentialSet{
+		Name: "second",
+		Credentials: []credentials.CredentialStrategy{
+			{Name: "knapsack", Source: credentials.Source{Value: "cred2"}},
+			{Name: "haversack", Source: credentials.Source{Value: "cred2"}},
+		},
+	}
+	cred3 := credentials.CredentialSet{
+		Name: "third",
+		Credentials: []credentials.CredentialStrategy{
+			{Name: "haversack", Source: credentials.Source{Value: "cred3"}},
+		},
+	}
+
+	// The above should generate:
+	// -- knapsack: cred2
+	// -- havershack: cred3
+	// -- gym-bag: cred1
+
+	tmpdir, err := ioutil.TempDir("", "duffle-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpdir)
+
+	files := make([]string, 3)
+	for i, c := range []credentials.CredentialSet{cred1, cred2, cred3} {
+		data, err := yaml.Marshal(c)
+		t.Log(string(data))
+		if err != nil {
+			t.Fatal(err)
+		}
+		fp := filepath.Join(tmpdir, c.Name+".yaml")
+		if err := ioutil.WriteFile(fp, data, 0644); err != nil {
+			t.Fatal(err)
+		}
+		files[i] = fp
+	}
+
+	bun := bundle.Bundle{
+		Name: "test-load-creds",
+		Credentials: map[string]bundle.Location{
+			"knapsack": {
+				EnvironmentVariable: "KNAP",
+			},
+			"haversack": {
+				EnvironmentVariable: "HAVER",
+			},
+			"gym-bag": {
+				EnvironmentVariable: "GYM",
+			},
+		},
+	}
+
+	is := assert.New(t)
+	creds, err := loadCredentials(files, &bun)
+	is.NoError(err)
+	is.Equal("cred2", creds["knapsack"])
+	is.Equal("cred3", creds["haversack"])
+	is.Equal("cred1", creds["gym-bag"])
 }
