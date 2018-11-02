@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 
 	log "github.com/sirupsen/logrus"
@@ -19,10 +20,18 @@ func newRootCmd(outputRedirect io.Writer) *cobra.Command {
 		Short:        usage,
 		SilenceUsage: true,
 		Long:         usage,
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if verbose {
 				log.SetLevel(log.DebugLevel)
 			}
+			if cmd.Name() == "init" {
+				return nil
+			}
+			err := autoInit(cmd.OutOrStdout(), false)
+			if err != nil {
+				fmt.Fprintf(cmd.OutOrStderr(), "pre-flight check failed: %s", err)
+			}
+			return err
 		},
 	}
 	cmd.SetOutput(outputRedirect)

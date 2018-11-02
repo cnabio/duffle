@@ -18,7 +18,11 @@ import (
 
 const (
 	initDesc = `
-Initializes duffle with configuration required to start installing CNAB bundles.
+Explicitly control the creation of the Duffle environment.
+
+Normally, Duffle initializes itself. But on occasion, you may wish to customize Duffle's initialization,
+passing your own keys or testing to see what directories will be created. This command is provided for
+such a reason.
 
 This command will create a subdirectory in your home directory, and use that directory for storing
 configuration, preferences, and persistent data. Duffle uses OpenPGP-style keys for signing and
@@ -38,10 +42,11 @@ type initCmd struct {
 	username   string
 	w          io.Writer
 	pubkeyFile string
+	verbose    bool
 }
 
 func newInitCmd(w io.Writer) *cobra.Command {
-	i := &initCmd{w: w}
+	i := &initCmd{w: w, verbose: true}
 
 	cmd := &cobra.Command{
 		Use:   "init",
@@ -63,6 +68,15 @@ func newInitCmd(w io.Writer) *cobra.Command {
 	f.StringVarP(&i.username, "user", "u", "", "User identity for the OpenPGP key. The format is 'NAME (OPTIONAL COMMENT) <EMAIL@ADDRESS>'.")
 
 	return cmd
+}
+
+// autoInit is called by the root command for all calls except init.
+func autoInit(w io.Writer, verbose bool) error {
+	i := initCmd{
+		w:       w,
+		verbose: verbose,
+	}
+	return i.run()
 }
 
 func (i *initCmd) run() error {
@@ -88,8 +102,11 @@ func (i *initCmd) run() error {
 }
 
 func (i *initCmd) ensureDirectories(dirs []string) error {
-	ohai.Fohailn(i.w, "The following new directories will be created:")
-	ohai.Fohailn(i.w, strings.Join(dirs, "\n"))
+	if i.verbose {
+		ohai.Fohailn(i.w, "The following new directories will be created:")
+		ohai.Fohailn(i.w, strings.Join(dirs, "\n"))
+	}
+
 	for _, dir := range dirs {
 		if fi, err := os.Stat(dir); err != nil {
 			if !i.dryRun {
