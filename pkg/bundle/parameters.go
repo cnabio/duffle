@@ -12,6 +12,7 @@ type ParameterDefinition struct {
 	DataType      string            `json:"type" toml:"type"`
 	DefaultValue  interface{}       `json:"defaultValue,omitempty" toml:"defaultValue,omitempty"`
 	AllowedValues []interface{}     `json:"allowedValues,omitempty" toml:"allowedValues,omitempty"`
+	Required      bool              `json:"required" toml:"required"`
 	MinValue      *int              `json:"minValue,omitempty" toml:"minValue,omitempty"`
 	MaxValue      *int              `json:"maxValue,omitempty" toml:"maxValue,omitempty"`
 	MinLength     *int              `json:"minLength,omitempty" toml:"minLength,omitempty"`
@@ -34,7 +35,6 @@ func (pd ParameterDefinition) ValidateParameterValue(value interface{}) error {
 
 	return pd.validateAllowedValue(value)
 }
-
 func (pd ParameterDefinition) validateByType(value interface{}) error {
 	switch pd.DataType {
 	case "string":

@@ -112,6 +112,8 @@ func ValuesOrDefaults(vals map[string]interface{}, b *Bundle) (map[string]interf
 			typedVal := def.CoerceValue(val)
 			res[name] = typedVal
 			continue
+		} else if def.Required {
+			return res, fmt.Errorf("parameter %q is required", name)
 		}
 		res[name] = def.DefaultValue
 	}
