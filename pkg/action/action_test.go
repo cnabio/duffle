@@ -65,6 +65,9 @@ func mockBundle() *bundle.Bundle {
 				},
 			},
 		},
+		Actions: map[string]bundle.Action{
+			"test": {Modifies: true},
+		},
 	}
 
 }

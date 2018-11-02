@@ -88,6 +88,14 @@ type Maintainer struct {
 	URL string `json:"url" toml:"url"`
 }
 
+// Action describes a custom (non-core) action.
+type Action struct {
+	// Modifies indicates whether this action modifies the release.
+	//
+	// If it is possible that an action modify a release, this must be set to true.
+	Modifies bool
+}
+
 // Bundle is a CNAB metadata document
 type Bundle struct {
 	Name             string                         `json:"name" toml:"name"`
@@ -97,6 +105,7 @@ type Bundle struct {
 	Maintainers      []Maintainer                   `json:"maintainers,omitempty" toml:"maintainers,omitempty"`
 	InvocationImages []InvocationImage              `json:"invocationImages" toml:"invocationImages"`
 	Images           []Image                        `json:"images" toml:"images"`
+	Actions          map[string]Action              `json:"actions,omitempty" toml:"actions,omitempty"`
 	Parameters       map[string]ParameterDefinition `json:"parameters" toml:"parameters"`
 	Credentials      map[string]Location            `json:"credentials" toml:"credentials"`
 }
