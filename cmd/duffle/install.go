@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -17,6 +18,7 @@ import (
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
 	"github.com/deis/duffle/pkg/reference"
+	"github.com/deis/duffle/pkg/repo"
 )
 
 func newInstallCmd() *cobra.Command {
@@ -141,40 +143,61 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 	return cmd
 }
 
-func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+func bundleFileOrArg2(args []string, bundle string, w io.Writer) (string, error) {
 	switch {
 	case len(args) < 1:
 		return "", errors.New("This command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
-	case len(args) == 2 && bundleFile != "":
+	case len(args) == 2 && bundle != "":
 		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
-	case len(args) < 2 && bundleFile == "":
+	case len(args) < 2 && bundle == "":
 		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return pullBundle(args[1], home.Home(homePath()))
+		return loadOrPullBundle(args[1], home.Home(homePath()))
 	}
-	return bundleFile, nil
+	return bundle, nil
 }
 
 // optBundleFileOrArg2 optionally gets a bundle file.
 // Returning an empty string with no error is a possible outcome.
-func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+func optBundleFileOrArg2(args []string, bundle string, w io.Writer) (string, error) {
 	switch {
 	case len(args) < 1:
 		// No bundle provided
 		return "", nil
-	case len(args) == 2 && bundleFile != "":
+	case len(args) == 2 && bundle != "":
 		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
-	case len(args) < 2 && bundleFile == "":
+	case len(args) < 2 && bundle == "":
 		// No bundle provided
 		return "", nil
 	case len(args) == 2:
 		var err error
-		bundleFile, err = pullBundle(args[1], home.Home(homePath()))
+		bundle, err = pullBundle(args[1], home.Home(homePath()))
 		if err != nil {
 			return "", err
 		}
 	}
-	return bundleFile, nil
+	return bundle, nil
+}
+
+func loadOrPullBundle(bundle string, home home.Home) (string, error) {
+	ref, err := getReference(bundle)
+	if err != nil {
+		return "", fmt.Errorf("could not parse reference for %s: %v", bundle, err)
+	}
+
+	// read the bundle reference from repositories.json
+	index, err := repo.LoadIndex(home.Repositories())
+	if err != nil {
+		return "", fmt.Errorf("cannot open %s: %v\n try running duffle init first", home.Repositories(), err)
+	}
+
+	digest, err := index.Get(ref.Name(), ref.Tag())
+	if err == nil {
+		return filepath.Join(home.Bundles(), digest), nil
+	}
+
+	// the bundle was not found locally, so we pull it
+	return pullBundle(bundle, home)
 }
 
 // overrides parses the --set data and returns values that should override other params.
