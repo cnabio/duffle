@@ -30,10 +30,11 @@ Custom actions can only be executed on releases (already-installed bundles).
 Credentials and parameters may be passed to the bundle during a target action.
 `
 	var (
-		driver          string
-		credentialsFile string
-		valuesFile      string
-		setParams       []string
+		driver           string
+		credentialsFiles []string
+		valuesFile       string
+		setParams        []string
+		setFiles         []string
 	)
 
 	cmd := &cobra.Command{
@@ -54,7 +55,7 @@ Credentials and parameters may be passed to the bundle during a target action.
 				return err
 			}
 
-			creds, err := loadCredentials(credentialsFile, c.Bundle)
+			creds, err := loadCredentials(credentialsFiles, c.Bundle)
 			if err != nil {
 				return err
 			}
@@ -66,7 +67,7 @@ Credentials and parameters may be passed to the bundle during a target action.
 
 			// Override parameters only if some are set.
 			if valuesFile != "" || len(setParams) > 0 {
-				c.Parameters, err = calculateParamValues(c.Bundle, valuesFile, setParams)
+				c.Parameters, err = calculateParamValues(c.Bundle, valuesFile, setParams, setFiles)
 				if err != nil {
 					return err
 				}
@@ -93,7 +94,7 @@ Credentials and parameters may be passed to the bundle during a target action.
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&driver, "driver", "d", "docker", "Specify a driver name")
-	flags.StringVarP(&credentialsFile, "credentials", "c", "", "Specify a set of credentials to use inside the CNAB bundle")
+	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify a set of credentials to use inside the CNAB bundle")
 	flags.StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
 
