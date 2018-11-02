@@ -54,7 +54,7 @@ Credentials and parameters may be passed to the bundle during a target action.
 				return err
 			}
 
-			creds, err := loadCredentials(credentialsFile, c.Bundle)
+			creds, err := loadCredentials([]string{credentialsFile}, c.Bundle)
 			if err != nil {
 				return err
 			}
@@ -66,7 +66,7 @@ Credentials and parameters may be passed to the bundle during a target action.
 
 			// Override parameters only if some are set.
 			if valuesFile != "" || len(setParams) > 0 {
-				c.Parameters, err = calculateParamValues(c.Bundle, valuesFile, setParams)
+				c.Parameters, err = calculateParamValues(c.Bundle, valuesFile, setParams, []string{})
 				if err != nil {
 					return err
 				}
