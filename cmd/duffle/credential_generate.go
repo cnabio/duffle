@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	survey "gopkg.in/AlecAivazis/survey.v1"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/deis/duffle/pkg/bundle"
@@ -33,7 +34,10 @@ will still need to edit that file to set the appropriate values.
 
 func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 	bundleFile := ""
-	var insecure bool
+	var (
+		insecure bool
+		dryRun   bool
+	)
 	cmd := &cobra.Command{
 		Use:     "generate NAME [BUNDLE]",
 		Aliases: []string{"gen"},
@@ -51,13 +55,19 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 				return err
 			}
 
-			creds := genCredentialSet(csName, bun.Credentials)
+			creds, err := genCredentialSet(csName, bun.Credentials, genCredentialSurvey)
+			if err != nil {
+				return err
+			}
 			data, err := yaml.Marshal(creds)
 			if err != nil {
 				return err
 			}
 
 			fmt.Printf("%v", string(data))
+			if dryRun {
+				return nil
+			}
 
 			dest := filepath.Join(home.Home(homePath()).Credentials(), csName+".yaml")
 			return ioutil.WriteFile(dest, data, 0600)
@@ -66,25 +76,78 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 
 	f := cmd.Flags()
 	f.StringVarP(&bundleFile, "file", "f", "", "path to bundle.json")
-	f.BoolVarP(&insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
+	f.BoolVarP(&insecure, "insecure", "k", false, "do not verify the bundle (INSECURE)")
+	f.BoolVar(&dryRun, "dry-run", false, "show prompts and result, but don't create credential set")
 	return cmd
 }
 
-func genCredentialSet(name string, creds map[string]bundle.Location) credentials.CredentialSet {
+type credentialAnswers struct {
+	Source string `survey:"source"`
+	Value  string `survey:"value"`
+}
+
+const (
+	questionValue   = "specific value"
+	questionEnvVar  = "environment variable"
+	questionPath    = "file path"
+	questionCommand = "shell command"
+)
+
+type credentialGenerator func(name string) (credentials.CredentialStrategy, error)
+
+func genCredentialSet(name string, creds map[string]bundle.Location, fn credentialGenerator) (credentials.CredentialSet, error) {
 	cs := credentials.CredentialSet{
 		Name: name,
 	}
 	cs.Credentials = []credentials.CredentialStrategy{}
 
 	for name := range creds {
-		c := credentials.CredentialStrategy{
-			Name:   name,
-			Source: credentials.Source{Value: "EMPTY"},
+		c, err := fn(name)
+		if err != nil {
+			return cs, err
 		}
 		cs.Credentials = append(cs.Credentials, c)
 	}
 
-	return cs
+	return cs, nil
+}
+
+func genCredentialSurvey(name string) (credentials.CredentialStrategy, error) {
+	questions := []*survey.Question{
+		{
+			Name: "source",
+			Prompt: &survey.Select{
+				Message: fmt.Sprintf("Choose a source for %q", name),
+				Options: []string{questionValue, questionEnvVar, questionPath, questionCommand},
+				Default: "environment variable",
+			},
+		},
+		{
+			Name: "value",
+			Prompt: &survey.Input{
+				Message: fmt.Sprintf("Enter a value for %q", name),
+			},
+		},
+	}
+	c := credentials.CredentialStrategy{Name: name}
+	answers := &credentialAnswers{}
+
+	if err := survey.Ask(questions, answers); err != nil {
+		return c, err
+	}
+
+	c.Source = credentials.Source{}
+	switch answers.Source {
+	case questionValue:
+		c.Source.Value = answers.Value
+	case questionEnvVar:
+		c.Source.EnvVar = answers.Value
+	case questionPath:
+		c.Source.Path = answers.Value
+	case questionCommand:
+		c.Source.Command = answers.Value
+	}
+	return c, nil
 }
 
 func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writer) (string, error) {
