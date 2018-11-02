@@ -37,6 +37,7 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 	var (
 		insecure bool
 		dryRun   bool
+		noPrompt bool
 	)
 	cmd := &cobra.Command{
 		Use:     "generate NAME [BUNDLE]",
@@ -55,7 +56,12 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 				return err
 			}
 
-			creds, err := genCredentialSet(csName, bun.Credentials, genCredentialSurvey)
+			generator := genCredentialSurvey
+			if noPrompt {
+				generator = genEmptyCredentials
+			}
+
+			creds, err := genCredentialSet(csName, bun.Credentials, generator)
 			if err != nil {
 				return err
 			}
@@ -78,6 +84,8 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 	f.StringVarP(&bundleFile, "file", "f", "", "path to bundle.json")
 	f.BoolVarP(&insecure, "insecure", "k", false, "do not verify the bundle (INSECURE)")
 	f.BoolVar(&dryRun, "dry-run", false, "show prompts and result, but don't create credential set")
+	f.BoolVarP(&noPrompt, "no-prompt", "q", false, "do not prompt for input, but generate a stub credentialset")
+
 	return cmd
 }
 
@@ -110,6 +118,13 @@ func genCredentialSet(name string, creds map[string]bundle.Location, fn credenti
 	}
 
 	return cs, nil
+}
+
+func genEmptyCredentials(name string) (credentials.CredentialStrategy, error) {
+	return credentials.CredentialStrategy{
+		Name:   name,
+		Source: credentials.Source{Value: "EMPTY"},
+	}, nil
 }
 
 func genCredentialSurvey(name string) (credentials.CredentialStrategy, error) {

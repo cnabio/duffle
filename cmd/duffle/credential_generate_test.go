@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/credentials"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -21,7 +20,7 @@ func TestGenCredentialSet(t *testing.T) {
 		},
 	}
 	is := assert.New(t)
-	creds, err := genCredentialSet(name, credlocs, mockGenCreds)
+	creds, err := genCredentialSet(name, credlocs, genEmptyCredentials)
 	is.NoError(err)
 	is.Equal(creds.Name, name)
 	is.Len(creds.Credentials, 2)
@@ -37,11 +36,4 @@ func TestGenCredentialSet(t *testing.T) {
 	for k, v := range found {
 		is.True(v, "%q not found", k)
 	}
-}
-
-func mockGenCreds(name string) (credentials.CredentialStrategy, error) {
-	return credentials.CredentialStrategy{
-		Name:   name,
-		Source: credentials.Source{Value: "EMPTY"},
-	}, nil
 }
