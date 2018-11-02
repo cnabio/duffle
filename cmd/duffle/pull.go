@@ -67,8 +67,12 @@ func pullBundle(bundleName string, insecure bool) (string, error) {
 		return "", fmt.Errorf("request to %s responded with a non-200 status code: %d", url, resp.StatusCode)
 	}
 
-	// TODO - fix this
-	buf, digest, err := digest.OfReader(resp.Body)
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("could not read bundle from remote server: %s", err)
+	}
+
+	digest, err := digest.OfBuffer(data)
 	if err != nil {
 		return "", err
 	}
@@ -78,21 +82,10 @@ func pullBundle(bundleName string, insecure bool) (string, error) {
 		return "", err
 	}
 
-	data, err := ioutil.ReadAll(buf)
-	if err != nil {
-		return "", fmt.Errorf("cannot read data")
-	}
-
 	bundle, err := ldr.LoadData(data)
 	if err != nil {
 		return "", err
 	}
-
-	// TODO - actually use extension
-	// ext := "cnab"
-	// if insecure {
-	// 	ext = "json"
-	// }
 
 	bundleFilepath := filepath.Join(home.Bundles(), digest)
 	if err := bundle.WriteFile(bundleFilepath, 0644); err != nil {

@@ -33,7 +33,7 @@ func (s *SecureLoader) Load(filename string) (*bundle.Bundle, error) {
 
 // LoadData loads a bundle from data.
 //
-// This will perform verification of tbe bundle, extract the JSON, and then
+// This will perform verification of the bundle, extract the JSON, and then
 // parse the JSON into a *Bundle.
 func (s *SecureLoader) LoadData(data []byte) (*bundle.Bundle, error) {
 	verifier := signature.NewVerifier(s.keyring)

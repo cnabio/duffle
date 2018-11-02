@@ -17,7 +17,7 @@ func newPushCmd(out io.Writer) *cobra.Command {
 	const usage = `Pushes a CNAB bundle to a repository.`
 
 	cmd := &cobra.Command{
-		Use:   "push",
+		Use:   "push NAME",
 		Short: "push a CNAB bundle to a repository",
 		Long:  usage,
 		Args:  cobra.ExactArgs(1),
