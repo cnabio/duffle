@@ -8,6 +8,7 @@ import (
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/driver"
+
 	"github.com/stretchr/testify/assert"
 )
 
