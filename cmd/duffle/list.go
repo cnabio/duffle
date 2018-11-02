@@ -51,7 +51,7 @@ func (l *listCmd) run() error {
 
 		table.AddRow("NAME", "BUNDLE", "Installed", "Last Action", "Last Action Status")
 		for _, cl := range claims {
-			table.AddRow(cl.Name, cl.Bundle, cl.Created, cl.Result.Action, cl.Result.Status)
+			table.AddRow(cl.Name, cl.Bundle.Name, cl.Created, cl.Result.Action, cl.Result.Status)
 		}
 
 		fmt.Fprintln(l.out, table)
