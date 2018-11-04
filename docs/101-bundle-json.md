@@ -14,9 +14,9 @@ A `bundle.json` is broken down into the following categories of information:
 - A specification of which parameters may be overridden, and how those are to be validated
 - A list of credentials (name and desired location) that the application needs
 
-There are two formats for a bundle (thin and thick formats). The primary way in which the `bundle.json` file differs is the presence or absence of information in a thick bundle that helps it validate the contents of an image. In a thick bundle, `mediaType` and `size` attributes may assiste the reconstitution of images from the thick format to a runtime format.
+There are two formats for a bundle (thin and thick formats). The primary way in which the `bundle.json` file differs is the presence or absence of information in a thick bundle that helps it validate the contents of an image. In a thick bundle, `mediaType` and `size` attributes may assist with the reconstitution of images from the thick format to a runtime format.
 
-For the rest of the documentation, by default we'll be refererring bundles using the "thin" type, but when "thick" bundles become relevant we'll make note that it's a "thick" bundle type.
+For the rest of the documentation, by default we'll be referring to bundles using the "thin" type, but when "thick" bundles become relevant we'll make note that it's a "thick" bundle type.
 
 The following is an example of a `bundle.json` for a bundled distributed as a _thin_ bundle:
 
@@ -147,7 +147,7 @@ The following fields are informational pieces of metadata designed to convey add
 - `keywords`: A list of keywords
 - `maintainers`: A list of maintainers, where each maintainer may have the following:
   - `name`: Maintainer name
-  - `email`: Matainer's email
+  - `email`: Maintainer's email
   - `url`: URL to relevant maintainer information
 
 *TODO:* `bundle.json` probably requires a few more top-level fields, such as something about who published it, and something about the license, as well as a bundle api version. A decision on this is deferred until after the PoC
@@ -257,7 +257,7 @@ TODO: How do we specify URI is a VM image (or Jar or other) instead of a Docker-
 
 The `parameters` section of the `bundle.json` defines which parameters a user (person installing a CNAB bundle) may _override_. Parameter specifications are flat (not tree-like), consisting of name/value pairs. The name is fixed, but the value may be overridden by the user. The parameter definition includes a specification on how to constrain the values submitted by the user.
 
-> The parameters definition is a subset of the ARM template laguage.
+> The parameters definition is a subset of the ARM template language.
 
 ```json
 "parameters": {
@@ -286,7 +286,7 @@ The `parameters` section of the `bundle.json` defines which parameters a user (p
     - metadata: Holds fields that are not used in validation
       - description: A user-friendly description of the parameter
 
-Parameter names (the keys in `parameters`) ought to conform to the [Open Group Base Specification Issue 6, Section 8.1, paragraph 4](http://pubs.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap08.html) definition of environment variable names with one exception: parameter names _may_ begin with a digit (approximately `[A-Z0-9_]+`).
+Parameter names (the keys in `parameters`) should ideally conform to the [Open Group Base Specification Issue 6, Section 8.1, paragraph 4](http://pubs.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap08.html) definition of environment variable names with one exception: parameter names _may_ begin with a digit (approximately `[A-Z0-9_]+`).
 
 For convenience, if lowercase characters are used in parameter names, they will be automatically capitalized. This effectively makes parameter names case-insensitive.
 
