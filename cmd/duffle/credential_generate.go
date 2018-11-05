@@ -7,12 +7,11 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/credentials"
 	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const credentialGenerateHelp = `Generate credentials from a CNAB bundle
@@ -40,7 +39,7 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 		Short:   "generate a credentialset from a bundle",
 		Long:    credentialGenerateHelp,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bf, err := getBundleFileFromCredentialsArg(args, bundleFile, out)
+			bf, err := getBundleFileFromCredentialsArg(args, bundleFile, out, insecure)
 			if err != nil {
 				return err
 			}
@@ -87,7 +86,7 @@ func genCredentialSet(name string, creds map[string]bundle.Location) credentials
 	return cs
 }
 
-func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writer) (string, error) {
+func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writer, insecure bool) (string, error) {
 	switch {
 	case len(args) < 1:
 		return "", errors.New("This command requires at least one argument: NAME (name for the credentialset). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle credentials generate NAME BUNDLE\n\t$ duffle credentials generate NAME -f path-to-bundle.json")
@@ -96,7 +95,7 @@ func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writ
 	case len(args) < 2 && bundleFile == "":
 		return "", errors.New("required arguments are NAME (name for the credentialset) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return getBundleFile(args[1])
+		return getBundleFile(args[1], insecure)
 	}
 	return bundleFile, nil
 }

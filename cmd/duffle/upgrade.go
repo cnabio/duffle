@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/deis/duffle/pkg/action"
-
 	"github.com/spf13/cobra"
 )
 
@@ -54,7 +53,7 @@ func newUpgradeCmd() *cobra.Command {
 			}
 			uc.name = args[0]
 			uc.Out = cmd.OutOrStdout()
-			bundleFile, err := optBundleFileOrArg2(args, bundleFile, uc.Out)
+			bundleFile, err := optBundleFileOrArg2(args, bundleFile, uc.Out, uc.insecure)
 			if err != nil {
 				return err
 			}

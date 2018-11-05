@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -16,7 +15,6 @@ import (
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/loader"
 	"github.com/deis/duffle/pkg/reference"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -71,7 +69,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		Short: "install a CNAB bundle",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bundleFile, err := bundleFileOrArg2(args, bundleFile, cmd.OutOrStdout())
+			bundleFile, err := bundleFileOrArg2(args, bundleFile, cmd.OutOrStdout(), insecure)
 			if err != nil {
 				return err
 			}
@@ -137,7 +135,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 	return cmd
 }
 
-func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+func bundleFileOrArg2(args []string, bundleFile string, w io.Writer, insecure bool) (string, error) {
 	switch {
 	case len(args) < 1:
 		return "", errors.New("This command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
@@ -146,14 +144,14 @@ func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, er
 	case len(args) < 2 && bundleFile == "":
 		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return getBundleFile(args[1])
+		return getBundleFile(args[1], insecure)
 	}
 	return bundleFile, nil
 }
 
 // optBundleFileOrArg2 optionally gets a bundle file.
 // Returning an empty string with no error is a possible outcome.
-func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer, insecure bool) (string, error) {
 	switch {
 	case len(args) < 1:
 		// No bundle provided
@@ -165,7 +163,7 @@ func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string,
 		return "", nil
 	case len(args) == 2:
 		var err error
-		bundleFile, err = getBundleFile(args[1])
+		bundleFile, err = getBundleFile(args[1], insecure)
 		if err != nil {
 			return "", err
 		}
@@ -267,23 +265,14 @@ func getBundleRepoURL(bundleName string, home home.Home) (*url.URL, error) {
 	return url, nil
 }
 
-func getBundleFile(bundleName string) (string, error) {
+func getBundleFile(bundleName string, insecure bool) (string, error) {
 	home := home.Home(homePath())
 	url, err := getBundleRepoURL(bundleName, home)
 	if err != nil {
 		return "", err
 	}
-	resp, err := http.Get(url.String())
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("request to %s responded with a non-200 status code: %d", url, resp.StatusCode)
-	}
-
-	bundle, err := bundle.ParseReader(resp.Body)
+	bundle, err := loadBundle(url.String(), insecure)
 	if err != nil {
 		return "", err
 	}
