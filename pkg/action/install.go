@@ -1,10 +1,13 @@
 package action
 
 import (
+	"context"
+	"fmt"
 	"io"
 
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/credentials"
+	"github.com/deis/duffle/pkg/digest"
 	"github.com/deis/duffle/pkg/driver"
 )
 
@@ -19,7 +22,27 @@ func (i *Install) Run(c *claim.Claim, creds credentials.Set, w io.Writer) error 
 	if err != nil {
 		return err
 	}
-
+	// Validate the Digests of Invocation Image and Bundle Images
+	validator, err := digest.NewValidator(invocImage.ImageType)
+	if err != nil {
+		return fmt.Errorf("unable to get image validator: %s", err)
+	}
+	ctx := context.Background()
+	if invocImage.Digest != "" {
+		err = validator.Validate(ctx, invocImage.Digest, invocImage.Image)
+		if err != nil {
+			return fmt.Errorf("unable to validate invocation image: %s", err)
+		}
+	}
+	// TODO, how do we know what kind this is? default to docker right now
+	for _, img := range c.Bundle.Images {
+		if img.Digest != "" {
+			err = validator.Validate(ctx, img.Digest, img.URI)
+			if err != nil {
+				return fmt.Errorf("unable to validate image %s: %s", img.URI, err)
+			}
+		}
+	}
 	op, err := opFromClaim(claim.ActionInstall, c, invocImage, creds, w)
 	if err != nil {
 		return err

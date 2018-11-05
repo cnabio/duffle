@@ -56,6 +56,21 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
+  digest = "1:97c718ca47def4161eb17363d5726aa66199b3992a5998d01ffe0b5b44641462"
+  name = "github.com/containerd/containerd"
+  packages = [
+    "content",
+    "errdefs",
+    "images",
+    "log",
+    "platforms",
+    "remotes",
+  ]
+  pruneopts = ""
+  revision = "c4446665cb9c30056f4998ed953e6d4ff22c7c39"
+  version = "v1.2.0"
+
+[[projects]]
   branch = "master"
   digest = "1:717ba9e50aa9d57876fb141e6d348fffbe29fc8411d5e1c8a4befa06f4fccde7"
   name = "github.com/containerd/continuity"
@@ -152,6 +167,7 @@
     "pkg/mount",
     "pkg/pools",
     "pkg/progress",
+    "pkg/stdcopy",
     "pkg/streamformatter",
     "pkg/stringid",
     "pkg/symlink",
@@ -247,7 +263,13 @@
 [[projects]]
   digest = "1:3dd078fda7500c341bc26cfbc6c6a34614f295a2457149fc1045cab767cbcf18"
   name = "github.com/golang/protobuf"
-  packages = ["proto"]
+  packages = [
+    "proto",
+    "ptypes",
+    "ptypes/any",
+    "ptypes/duration",
+    "ptypes/timestamp",
+  ]
   pruneopts = ""
   revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
   version = "v1.2.0"
@@ -630,6 +652,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:b2ea75de0ccb2db2ac79356407f8a4cd8f798fe15d41b381c00abf3ae8e55ed1"
+  name = "golang.org/x/sync"
+  packages = ["errgroup"]
+  pruneopts = ""
+  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
+
+[[projects]]
+  branch = "master"
   digest = "1:149a432fabebb8221a80f77731b1cd63597197ded4f14af606ebe3a0959004ec"
   name = "golang.org/x/sys"
   packages = [
@@ -663,6 +693,25 @@
   revision = "fbb02b2291d28baffd63558aa44b4b56f178d650"
 
 [[projects]]
+  branch = "master"
+  digest = "1:80aae82eb03dd30038e2002cdbf3dc269bc17bfd170ef5c5a816b224ae29776f"
+  name = "google.golang.org/genproto"
+  packages = ["googleapis/rpc/status"]
+  pruneopts = ""
+  revision = "c830210a61dfaa790e1920f8d0470fc27bc2efbe"
+
+[[projects]]
+  digest = "1:1293087271e314cfa2b3decededba2ecba0ff327e7b7809e00f73f616449191c"
+  name = "google.golang.org/grpc"
+  packages = [
+    "codes",
+    "status",
+  ]
+  pruneopts = ""
+  revision = "2e463a05d100327ca47ac218281906921038fd95"
+  version = "v1.16.0"
+
+[[projects]]
   digest = "1:059a61fa3b24fd4ef7edc018914a92d87e99afe3dfb52f7902c22a6e66619427"
   name = "gopkg.in/AlecAivazis/survey.v1"
   packages = [
@@ -687,6 +736,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Masterminds/semver",
+    "github.com/containerd/containerd/remotes",
     "github.com/docker/cli/cli/command",
     "github.com/docker/cli/cli/command/image/build",
     "github.com/docker/cli/cli/config",
@@ -695,11 +745,15 @@
     "github.com/docker/cli/opts",
     "github.com/docker/distribution/digestset",
     "github.com/docker/docker/api/types",
+    "github.com/docker/docker/api/types/container",
+    "github.com/docker/docker/api/types/mount",
+    "github.com/docker/docker/api/types/strslice",
     "github.com/docker/docker/builder/dockerignore",
     "github.com/docker/docker/client",
     "github.com/docker/docker/pkg/archive",
     "github.com/docker/docker/pkg/fileutils",
     "github.com/docker/docker/pkg/jsonmessage",
+    "github.com/docker/docker/pkg/stdcopy",
     "github.com/docker/docker/pkg/term",
     "github.com/docker/go-connections/tlsconfig",
     "github.com/fatih/color",
