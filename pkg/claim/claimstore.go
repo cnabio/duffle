@@ -31,7 +31,7 @@ func (s Store) List() ([]string, error) {
 // Store saves a claim. Any previous version of the claim (that is, with the same
 // name) is overwritten.
 func (s Store) Store(claim Claim) error {
-	bytes, err := json.Marshal(claim)
+	bytes, err := json.MarshalIndent(claim, "", "  ")
 	if err != nil {
 		return err
 	}
