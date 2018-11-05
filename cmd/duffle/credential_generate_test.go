@@ -19,8 +19,9 @@ func TestGenCredentialSet(t *testing.T) {
 			Path:                "/second/path",
 		},
 	}
-	creds := genCredentialSet(name, credlocs)
 	is := assert.New(t)
+	creds, err := genCredentialSet(name, credlocs, genEmptyCredentials)
+	is.NoError(err)
 	is.Equal(creds.Name, name)
 	is.Len(creds.Credentials, 2)
 

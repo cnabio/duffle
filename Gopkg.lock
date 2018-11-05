@@ -309,6 +309,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:63e7368fcf6b54804076eaec26fd9cf0c4466166b272393db4b93102e1e962df"
+  name = "github.com/kballard/go-shellquote"
+  packages = ["."]
+  pruneopts = ""
+  revision = "95032a82bc518f77982ea72343cc1ade730072f0"
+
+[[projects]]
+  branch = "master"
   digest = "1:448b4a6e39e46d8740b00dc871f26d58dc39341b160e01267b7917132831a136"
   name = "github.com/konsorten/go-windows-terminal-sequences"
   packages = ["."]
@@ -354,6 +362,14 @@
   pruneopts = ""
   revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
   version = "v1.0.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:50416da10e189bc201e122e20078fb8e680a439cbdd24aaece06c434b4415b60"
+  name = "github.com/mgutz/ansi"
+  packages = ["."]
+  pruneopts = ""
+  revision = "9520e82c474b0a04dd04f8a40959027271bab992"
 
 [[projects]]
   branch = "master"
@@ -647,6 +663,18 @@
   revision = "fbb02b2291d28baffd63558aa44b4b56f178d650"
 
 [[projects]]
+  digest = "1:059a61fa3b24fd4ef7edc018914a92d87e99afe3dfb52f7902c22a6e66619427"
+  name = "gopkg.in/AlecAivazis/survey.v1"
+  packages = [
+    ".",
+    "core",
+    "terminal",
+  ]
+  pruneopts = ""
+  revision = "0be4439d90f533f1ea2e0adddd5b1a405e6f5559"
+  version = "v1.6.3"
+
+[[projects]]
   digest = "1:f0620375dd1f6251d9973b5f2596228cc8042e887cd7f827e4220bc1ce8c30e2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -692,6 +720,7 @@
     "golang.org/x/crypto/openpgp/packet",
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/net/context",
+    "gopkg.in/AlecAivazis/survey.v1",
     "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
