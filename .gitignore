@@ -2,6 +2,7 @@ bin/
 vendor/
 .vimrc
 *.exe
+*.cnab
 __pycache__/
 /duffle
 .vscode/settings.json
