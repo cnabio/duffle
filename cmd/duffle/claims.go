@@ -25,6 +25,7 @@ func newClaimsCmd(w io.Writer) *cobra.Command {
 	}
 
 	cmd.AddCommand(newClaimsShowCmd(w))
+	cmd.AddCommand(newClaimListCmd(w))
 
 	return cmd
 }
