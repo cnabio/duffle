@@ -24,6 +24,7 @@ func newCredentialsCmd(w io.Writer) *cobra.Command {
 		newCredentialAddCmd(w),
 		newCredentialShowCmd(w),
 		newCredentialGenerateCmd(w),
+		newCredentialEditCmd(w),
 	)
 
 	return cmd
