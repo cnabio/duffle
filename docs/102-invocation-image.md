@@ -69,7 +69,7 @@ For example, _base bundles_ may use this directory to store utilities that deriv
 
 ### Base Bundles
 
-This section of the specification is non-normative. It describes a pattern for using the contents of one bundle in another bundle as a form of extension or inheritance. While this is non-normative to the specificationm, facilitating this pattern was a goal of CNAB's design.
+This section of the specification is non-normative. It describes a pattern for using the contents of one bundle in another bundle as a form of extension or inheritance. While this is non-normative to the specification, facilitating this pattern was a goal of CNAB's design.
 
 The _base bundle pattern_ is a pattern for sharing common bundle tooling across multiple bundles. Succinctly expressed, a _base bundle_ is a bundle whose contents are inherited by another bundle. The most frequent way in which is occurs is when one bundle uses a `Dockerfile` to import another bundle's invocation image in its `FROM` line.
 
@@ -104,7 +104,7 @@ The mechanisms for taking a base bundle and creating an extension bundle are not
 
 ## Image Construction Files
 
-Including a Dockerfile is _recommended_ for all images built with Docker. It is useful for reproducing a bundle. For other build tools, the build tool's definition may be included instead (e.g. `packer.json` for VM images built with Packer). Any image construction artifacts that are not explicitly allowed in the `/cnbab` directory may be placed in the `/cnab/build` directory.
+Including a Dockerfile is _recommended_ for all images built with Docker. It is useful for reproducing a bundle. For other build tools, the build tool's definition may be included instead (e.g. `packer.json` for VM images built with Packer). Any image construction artifacts that are not explicitly allowed in the `/cnab` directory may be placed in the `/cnab/build` directory.
 
 The remainder of this subsection is non-normative.
 

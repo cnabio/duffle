@@ -74,7 +74,7 @@ None of the actions are required to be implemented. Bundles _ought not_ return e
 
 A CNAB `bundle.json` file may specify zero or more parameters whose values may be specified by a user.
 
-Values that are passed into the container are passed in as environment variables, where each environment variable begins with the prefix `CNAB_P_` and to which the uppercased parameter name is appended. For example `backend_port` will be exposed inside the container as `CNAB_P_BACKEND_PORT`, and thus can be accessed inside of the `run` script:
+Values that are passed into the container are passed in as environment variables, where each environment variable begins with the prefix `CNAB_P_` and to which the upper-cased parameter name is appended. For example `backend_port` will be exposed inside the container as `CNAB_P_BACKEND_PORT`, and thus can be accessed inside of the `run` script:
 
 ```bash
 #!/bin/sh
