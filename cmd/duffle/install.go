@@ -77,6 +77,12 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 			}
 			installationName = args[0]
 
+			// look in claims store for another claim with the same name
+			_, err = claimStorage().Read(installationName)
+			if err != claim.ErrClaimNotFound {
+				return fmt.Errorf("a claim with the name %v already exists. Execute `$ duffle claims show %v` to inspect it", installationName, installationName)
+			}
+
 			bun, err = loadBundle(bundleFile, insecure)
 			if err != nil {
 				return err
