@@ -70,8 +70,8 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("%v", string(data))
 			if dryRun {
+				fmt.Fprintf(out, "%v", string(data))
 				return nil
 			}
 
