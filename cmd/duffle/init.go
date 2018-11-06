@@ -6,14 +6,14 @@ import (
 	"io"
 	"os"
 	"strings"
-	"syscall"
+
+	"gopkg.in/AlecAivazis/survey.v1"
 
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/ohai"
 	"github.com/deis/duffle/pkg/signature"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 const (
@@ -242,8 +242,10 @@ func (i *initCmd) printUserID(k *signature.Key) {
 
 // passwordFetcher is a simple prompt-based no-echo password input.
 func passwordFetcher(prompt string) ([]byte, error) {
-	fmt.Printf("Passphrase for key %q >  ", prompt)
-	pp, err := terminal.ReadPassword(int(syscall.Stdin))
-	fmt.Println()
-	return pp, err
+	var pw string
+	err := survey.AskOne(&survey.Password{
+		Message: fmt.Sprintf("Passphrase for key %q >  ", prompt),
+		Help:    "Unlock a passphrase-protected key",
+	}, &pw, nil)
+	return []byte(pw), err
 }
