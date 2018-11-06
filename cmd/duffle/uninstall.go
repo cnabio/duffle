@@ -44,7 +44,7 @@ func newUninstallCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			uc.name = args[0]
 			uc.Out = cmd.OutOrStdout()
-			bundleFile, err := bundleFileOrArg2(args, bundleFile, uc.Out)
+			bundleFile, err := bundleFileOrArg2(args, bundleFile, uc.Out, uc.insecure)
 			// If no bundle was found, we just wait for the claim system
 			// to load its bundleFile
 			if err == nil {

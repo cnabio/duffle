@@ -27,6 +27,13 @@ func (l *UnsignedLoader) Load(filename string) (*bundle.Bundle, error) {
 	if err != nil {
 		return b, err
 	}
+	return l.LoadData(data)
+}
+
+// LoadData loads a Bundle from the given data.
+//
+// This loads an unsigned JSON bundle file into a *Bundle.
+func (l *UnsignedLoader) LoadData(data []byte) (*bundle.Bundle, error) {
 	return bundle.Unmarshal(data)
 }
 

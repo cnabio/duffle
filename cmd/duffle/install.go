@@ -71,7 +71,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		Short: "install a CNAB bundle",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bundleFile, err := bundleFileOrArg2(args, bundleFile, cmd.OutOrStdout())
+			bundleFile, err := bundleFileOrArg2(args, bundleFile, cmd.OutOrStdout(), insecure)
 			if err != nil {
 				return err
 			}
@@ -143,7 +143,7 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 	return cmd
 }
 
-func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+func bundleFileOrArg2(args []string, bundleFile string, w io.Writer, insecure bool) (string, error) {
 	switch {
 	case len(args) < 1:
 		return "", errors.New("This command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
@@ -152,14 +152,14 @@ func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, er
 	case len(args) < 2 && bundleFile == "":
 		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return getBundleFile(args[1])
+		return getBundleFile(args[1], insecure)
 	}
 	return bundleFile, nil
 }
 
 // optBundleFileOrArg2 optionally gets a bundle file.
 // Returning an empty string with no error is a possible outcome.
-func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer, insecure bool) (string, error) {
 	switch {
 	case len(args) < 1:
 		// No bundle provided
@@ -171,7 +171,7 @@ func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string,
 		return "", nil
 	case len(args) == 2:
 		var err error
-		bundleFile, err = getBundleFile(args[1])
+		bundleFile, err = getBundleFile(args[1], insecure)
 		if err != nil {
 			return "", err
 		}
@@ -273,7 +273,7 @@ func getBundleRepoURL(bundleName string, home home.Home) (*url.URL, error) {
 	return url, nil
 }
 
-func getBundleFile(bundleName string) (string, error) {
+func getBundleFile(bundleName string, insecure bool) (string, error) {
 	home := home.Home(homePath())
 	url, err := getBundleRepoURL(bundleName, home)
 	if err != nil {
@@ -289,11 +289,28 @@ func getBundleFile(bundleName string) (string, error) {
 		return "", fmt.Errorf("request to %s responded with a non-200 status code: %d", url, resp.StatusCode)
 	}
 
-	bundle, err := bundle.ParseReader(resp.Body)
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("could not read bundle from remote server: %s", err)
+	}
+
+	ldr, err := getLoader(insecure)
 	if err != nil {
 		return "", err
 	}
-	bundleFilepath := filepath.Join(home.Cache(), fmt.Sprintf("%s-%s.json", strings.Replace(bundle.Name, "/", "-", -1), bundle.Version))
+
+	bundle, err := ldr.LoadData(data)
+	if err != nil {
+		return "", err
+	}
+
+	ext := "cnab"
+	if insecure {
+		ext = "json"
+	}
+
+	bundleFilepath := filepath.Join(home.Cache(), fmt.Sprintf("%s-%s.%s", strings.Replace(bundle.Name, "/", "-", -1), bundle.Version, ext))
+	//bundleFilepath := filepath.Join(home.Cache(), fmt.Sprintf("%s-%s.json", strings.Replace(bundle.Name, "/", "-", -1), bundle.Version))
 	if err := bundle.WriteFile(bundleFilepath, 0644); err != nil {
 		return "", err
 	}
@@ -301,16 +318,24 @@ func getBundleFile(bundleName string) (string, error) {
 	return bundleFilepath, nil
 }
 
-func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {
-	var l loader.Loader
+func getLoader(insecure bool) (loader.Loader, error) {
+	var load loader.Loader
 	if insecure {
-		l = loader.NewUnsignedLoader()
+		load = loader.NewUnsignedLoader()
 	} else {
 		kr, err := loadVerifyingKeyRings(homePath())
 		if err != nil {
 			return nil, err
 		}
-		l = loader.NewSecureLoader(kr)
+		load = loader.NewSecureLoader(kr)
+	}
+	return load, nil
+}
+
+func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {
+	l, err := getLoader(insecure)
+	if err != nil {
+		return nil, err
 	}
 	return l.Load(bundleFile)
 }
