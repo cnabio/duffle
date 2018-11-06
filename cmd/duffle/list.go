@@ -49,7 +49,7 @@ func (l *listCmd) run() error {
 		table.MaxColWidth = 50
 		table.Wrap = true
 
-		table.AddRow("NAME", "BUNDLE", "Installed", "Last Action", "Last Action Status")
+		table.AddRow("NAME", "BUNDLE", "INSTALLED", "LAST ACTION", "LAST STATUS")
 		for _, cl := range claims {
 			table.AddRow(cl.Name, cl.Bundle.Name, cl.Created, cl.Result.Action, cl.Result.Status)
 		}
