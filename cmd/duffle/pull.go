@@ -14,12 +14,13 @@ Example:
 	$ duffle pull duffle/example:0.1.0
 `
 
+	var insecure bool
 	cmd := &cobra.Command{
 		Use:   "pull",
 		Short: "pull a CNAB bundle from a repository",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path, err := getBundleFile(args[0])
+			path, err := getBundleFile(args[0], insecure)
 			if err != nil {
 				return err
 			}
@@ -27,6 +28,8 @@ Example:
 			return nil
 		},
 	}
+
+	cmd.Flags().BoolVarP(&insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }

@@ -41,7 +41,7 @@ func TestGetBundleFile(t *testing.T) {
 		tc := tc // capture range variable
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
-			filePath, err := getBundleFile(tc.File)
+			filePath, err := getBundleFile(tc.File, true)
 			if err != nil {
 				t.Error(err)
 			}
