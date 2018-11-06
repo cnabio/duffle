@@ -50,6 +50,18 @@ func TestLoad(t *testing.T) {
 			if _, ok := m.Components["cnab"]; !ok {
 				t.Errorf("expected a component named cnab but got %v", m.Components)
 			}
+
+			if len(m.Parameters) != 1 {
+				t.Fatalf("expected 1 parameter but got %d", len(m.Parameters))
+			}
+
+			if _, ok := m.Parameters["foo"]; !ok {
+				t.Fatalf("expected a parameter named foo but got %v", m.Parameters)
+			}
+
+			if m.Parameters["foo"].DataType != "string" {
+				t.Errorf("expected parameter foo to have data type string, but got %q", m.Parameters["foo"].DataType)
+			}
 		})
 	}
 }

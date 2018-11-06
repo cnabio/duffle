@@ -4,3 +4,6 @@ name = "testbundle"
         name = "cnab"
         builder = "docker"
         configuration = { registry = "microsoft" }
+[parameters]
+    [parameters.foo]
+        type = "string"

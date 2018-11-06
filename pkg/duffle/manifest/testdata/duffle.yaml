@@ -5,3 +5,6 @@ components:
     builder: docker
     configuration:
       registry: microsoft
+parameters:
+  foo:
+      type: string

@@ -5,6 +5,7 @@ import (
 
 	"github.com/deis/duffle/pkg/duffle"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 )
 
@@ -17,12 +18,15 @@ func Load(name, dir string) (*Manifest, error) {
 		v.SetConfigFile(filepath.Join(dir, name))
 	}
 	v.AddConfigPath(dir)
+
 	err := v.ReadInConfig()
 	if err != nil {
 		return nil, err
 	}
 
 	m := New()
-	v.Unmarshal(m)
+	v.Unmarshal(m, func(cfg *mapstructure.DecoderConfig) {
+		cfg.TagName = "json"
+	})
 	return m, nil
 }

@@ -8,5 +8,10 @@
         "registry": "microsoft"
       }
     }
+  },
+  "parameters": {
+    "foo":{
+      "type": "string"
+    }
   }
 }
