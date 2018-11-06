@@ -75,4 +75,4 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
     ```
 
 # Debugging using VS Code
-For instructions on using VS Code to debug the Duffle binary, see [the debugging document][docs/001-debugging.md].
+For instructions on using VS Code to debug the Duffle binary, see [the debugging document](docs/001-debugging.md).
