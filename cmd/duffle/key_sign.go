@@ -16,7 +16,7 @@ import (
 const keySignDesc = `Clear-sign a given bundle.json file.
 
 This remarshals the bundle.json into canonical form, and then clear-signs the JSON.
-The output is written to STDOUT.
+By default, the signed bundle is written in a bundle.cnab file in the current directory.
 
 If no key name is supplied, this uses the first signing key in the secret keyring.
 `
