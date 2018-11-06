@@ -19,25 +19,32 @@ keyring(s) that can successfully decrypt the signature and verify the hash.
 `
 
 func newKeyVerifyCmd(w io.Writer) *cobra.Command {
-	var public bool
+	var (
+		public     bool
+		bundleFile string
+	)
+
 	cmd := &cobra.Command{
-		Use:   "verify FILE",
+		Use:   "verify",
 		Short: "verify the signature on a signed bundle",
 		Long:  keyVerifyDesc,
-		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h := home.Home(homePath())
 			secret := h.SecretKeyRing()
 			public := h.PublicKeyRing()
-			return verifySig(args[0], public, secret, w)
+			return verifySig(bundleFile, public, secret, w)
 		},
 	}
 	cmd.Flags().BoolVarP(&public, "public", "p", false, "show public key IDs instead of private key IDs")
+	cmd.Flags().StringVarP(&bundleFile, "file", "f", "", "path to signed bundle to verify")
 
 	return cmd
 }
 
 func verifySig(filename, public, private string, out io.Writer) error {
+	if filename == "" {
+		return fmt.Errorf("no bundle provided to verify")
+	}
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err

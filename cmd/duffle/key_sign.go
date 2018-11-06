@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -24,22 +25,23 @@ If no key name is supplied, this uses the first signing key in the secret keyrin
 func newKeySignCmd(w io.Writer) *cobra.Command {
 	var (
 		identity   string
+		bundleFile string
 		outfile    string
 		noValidate bool
 	)
 
 	cmd := &cobra.Command{
-		Use:   "sign FILE",
+		Use:   "sign",
 		Short: "clear-sign a bundle.json file",
 		Long:  keySignDesc,
-		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h := home.Home(homePath())
 			secring := h.SecretKeyRing()
-			return signFile(args[0], secring, identity, outfile, noValidate)
+			return signFile(bundleFile, secring, identity, outfile, noValidate)
 		},
 	}
 	cmd.Flags().StringVarP(&identity, "user", "u", "", "the user ID of the key to use. Format is either email address or 'NAME (COMMENT) <EMAIL>'")
+	cmd.Flags().StringVarP(&bundleFile, "file", "f", "", "path to bundle file to sign")
 	cmd.Flags().StringVarP(&outfile, "output-file", "o", "bundle.cnab", "the name of the output file")
 	cmd.Flags().BoolVar(&noValidate, "no-validate", false, "do not validate the JSON before marshaling it.")
 
@@ -49,7 +51,7 @@ func newKeySignCmd(w io.Writer) *cobra.Command {
 func signFile(filepath, keyring, identity, outfile string, skipValidation bool) error {
 	// Verify that file exists
 	if fi, err := os.Stat(filepath); err != nil {
-		return err
+		return fmt.Errorf("cannot find bundle file to sign: %v", err)
 	} else if fi.IsDir() {
 		return errors.New("cannot sign a directory")
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -21,12 +22,15 @@ private key material may be removed).
 `
 
 func newKeyAddCmd(w io.Writer) *cobra.Command {
-	var secret bool
+	var (
+		secret  bool
+		keyFile string
+	)
+
 	cmd := &cobra.Command{
-		Use:   "add FILE",
+		Use:   "add",
 		Short: "add one or more keys to the keyring",
 		Long:  keyAddDesc,
-		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h := home.Home(homePath())
 			var ring string
@@ -37,19 +41,23 @@ func newKeyAddCmd(w io.Writer) *cobra.Command {
 				// any key added to the secret ring can be used to verify a
 				// bundle.
 				ring = h.SecretKeyRing()
-				if err := addKeys(args[0], ring, secret); err != nil {
+				if err := addKeys(keyFile, ring, secret); err != nil {
 					return err
 				}
 			}
 			ring = h.PublicKeyRing()
-			return addKeys(args[0], ring, false)
+			return addKeys(keyFile, ring, false)
 		},
 	}
 	cmd.Flags().BoolVarP(&secret, "secret", "s", false, "add a secret (private) key")
+	cmd.Flags().StringVarP(&keyFile, "file", "f", "", "path to the key file")
 	return cmd
 }
 
 func addKeys(file, ring string, private bool) error {
+	if file == "" {
+		return fmt.Errorf("no key file provided")
+	}
 	reader, err := os.Open(file)
 	if err != nil {
 		return err
