@@ -36,6 +36,7 @@ func newCredentialEditCmd(w io.Writer) *cobra.Command {
 		Use:   "edit [NAME]",
 		Short: "edit an existing credential set",
 		Long:  credentialEditDesc,
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			edit.home = home.Home(homePath())
 			edit.name = args[0]
