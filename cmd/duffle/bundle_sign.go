@@ -6,10 +6,12 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/bundle"
+	"github.com/deis/duffle/pkg/crypto/digest"
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/signature"
 )
@@ -31,32 +33,51 @@ func newBundleSignCmd(w io.Writer) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "sign",
+		Use:   "sign BUNDLE",
 		Short: "clear-sign a bundle",
+		Args:  cobra.MaximumNArgs(1),
 		Long:  bundleSignDesc,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h := home.Home(homePath())
 			secring := h.SecretKeyRing()
-			return signFile(bundleFile, secring, identity, outfile, noValidate)
+			bundle, err := bundleFileOrArg1(args, bundleFile)
+			if err != nil {
+				return err
+			}
+			return signBundle(bundle, secring, identity, outfile, noValidate)
 		},
 	}
 	cmd.Flags().StringVarP(&identity, "user", "u", "", "the user ID of the key to use. Format is either email address or 'NAME (COMMENT) <EMAIL>'")
 	cmd.Flags().StringVarP(&bundleFile, "file", "f", "", "path to bundle file to sign")
-	cmd.Flags().StringVarP(&outfile, "output-file", "o", "bundle.cnab", "the name of the output file")
+	cmd.Flags().StringVarP(&outfile, "output-file", "o", "", "the name of the output file")
 	cmd.Flags().BoolVar(&noValidate, "no-validate", false, "do not validate the JSON before marshaling it.")
 
 	return cmd
 }
 
-func signFile(filepath, keyring, identity, outfile string, skipValidation bool) error {
+func bundleFileOrArg1(args []string, bundle string) (string, error) {
+	switch {
+	case len(args) == 1 && bundle != "":
+		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
+	case len(args) == 0 && bundle == "":
+		return "", errors.New("please specify a BUNDLE or use -f for a file")
+	case len(args) == 1:
+		// passing insecure: true, as currently we can only sign an unsinged bundle
+		return loadOrPullBundle(args[0], true)
+	}
+	return bundle, nil
+}
+func signBundle(bundleFile, keyring, identity, outfile string, skipValidation bool) error {
+	def := home.DefaultRepository()
+	home := home.Home(homePath())
 	// Verify that file exists
-	if fi, err := os.Stat(filepath); err != nil {
+	if fi, err := os.Stat(bundleFile); err != nil {
 		return fmt.Errorf("cannot find bundle file to sign: %v", err)
 	} else if fi.IsDir() {
 		return errors.New("cannot sign a directory")
 	}
 
-	bdata, err := ioutil.ReadFile(filepath)
+	bdata, err := ioutil.ReadFile(bundleFile)
 	if err != nil {
 		return err
 	}
@@ -94,7 +115,27 @@ func signFile(filepath, keyring, identity, outfile string, skipValidation bool) 
 	// Sign the file
 	s := signature.NewSigner(k)
 	data, err := s.Clearsign(b)
+	if err != nil {
+		return err
+	}
+
 	data = append(data, '\n')
-	ioutil.WriteFile(outfile, data, 0644)
-	return err
+
+	digest, err := digest.OfBuffer(data)
+	if err != nil {
+		return fmt.Errorf("cannot compute digest from bundle: %v", err)
+	}
+
+	// if --output-file is provided, write and return
+	if outfile != "" {
+		return ioutil.WriteFile(outfile, data, 0644)
+	}
+
+	err = ioutil.WriteFile(filepath.Join(home.Bundles(), digest), data, 0644)
+	if err != nil {
+		return err
+	}
+
+	// TODO - write pkg method in bundle that writes file and records the reference
+	return recordBundleReference(home, fmt.Sprintf("%s/%s", def, b.Name), b.Version, digest)
 }
