@@ -108,6 +108,27 @@ func TestOpFromClaim(t *testing.T) {
 	is.Equal(os.Stdout, op.Out)
 }
 
+func TestOpFromClaim_UndefinedParams(t *testing.T) {
+	now := time.Now()
+	c := &claim.Claim{
+		Created:  now,
+		Modified: now,
+		Name:     "name",
+		Revision: "revision",
+		Bundle:   mockBundle(),
+		Parameters: map[string]interface{}{
+			"param_one":         "oneval",
+			"param_two":         "twoval",
+			"param_three":       "threeval",
+			"param_one_million": "this is not a valid parameter",
+		},
+	}
+	invocImage := c.Bundle.InvocationImages[0]
+
+	_, err := opFromClaim(claim.ActionInstall, c, invocImage, mockSet, os.Stdout)
+	assert.Error(t, err)
+}
+
 func TestSelectInvocationImage_EmptyInvocationImages(t *testing.T) {
 	c := &claim.Claim{
 		Bundle: &bundle.Bundle{},

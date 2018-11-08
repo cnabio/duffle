@@ -41,6 +41,14 @@ func selectInvocationImage(d driver.Driver, c *claim.Claim) (bundle.InvocationIm
 
 func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) (*driver.Operation, error) {
 	env, files, err := creds.Expand(c.Bundle)
+
+	// Quick verification that no params were passed that are not actual legit params.
+	for key := range c.Parameters {
+		if _, ok := c.Bundle.Parameters[key]; !ok {
+			return nil, fmt.Errorf("undefined parameter %q", key)
+		}
+	}
+
 	for k, param := range c.Bundle.Parameters {
 		rawval, ok := c.Parameters[k]
 		if !ok {
