@@ -55,9 +55,9 @@ func (n *NamedRepository) Digest() string {
 	return n.digest
 }
 
-func newBundlesCmd(w io.Writer) *cobra.Command {
+func newBundleListCmd(w io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bundles",
+		Use:   "list",
 		Short: "lists bundles pulled or built and stored locally",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			home := home.Home(homePath())

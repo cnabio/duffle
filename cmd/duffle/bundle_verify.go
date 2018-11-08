@@ -11,19 +11,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const keyVerifyDesc = `Verify a signed bundle.
+const bundleVerifyDesc = `Verify a signed bundle.
 
 This command verifies the signature by checking it against both the public
 and secret keyrings. A bundle is verified if and only if a key exists in the
 keyring(s) that can successfully decrypt the signature and verify the hash.
 `
 
-func newKeyVerifyCmd(w io.Writer) *cobra.Command {
+func newBundleVerifyCmd(w io.Writer) *cobra.Command {
 	var public bool
 	cmd := &cobra.Command{
 		Use:   "verify FILE",
 		Short: "verify the signature on a signed bundle",
-		Long:  keyVerifyDesc,
+		Long:  bundleVerifyDesc,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h := home.Home(homePath())

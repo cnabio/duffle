@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestKeySign(t *testing.T) {
+func TestBundleSign(t *testing.T) {
 	tmp, err := ioutil.TempFile("", "duffle-")
 	if err != nil {
 		t.Fatal(err)
