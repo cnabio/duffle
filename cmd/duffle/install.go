@@ -51,7 +51,23 @@ Windows Example:
 
 For unpublished CNAB bundles, you can also load the bundle.json directly:
 
-    $ duffle install dev_bundle -f path/to/bundle.json
+	$ duffle install dev_bundle -f path/to/bundle.json
+	
+
+Verifying and --insecure:
+
+  When the --insecure flag is passed, verification steps will not be performed. This means
+  that Duffle will accept both unsigned (bundle.json) and signed (bundle.cnab) files, but
+  will not perform any validation. The following table illustrates this:
+
+	Bundle     Key known?    Flag            Result
+	------     ----------    -----------     ------
+	Signed     Known         None            Okay
+	Signed     Known         --insecure      Okay
+	Signed     Unknown       None            Verification error
+	Signed     Unknown       --insecure      Okay
+	Unsigned   N/A           None            Verification error
+	Unsigned   N/A           --insecure      Okay
 `
 	var (
 		installDriver    string
@@ -321,7 +337,7 @@ func getBundleFile(bundleName string, insecure bool) (string, error) {
 func getLoader(insecure bool) (loader.Loader, error) {
 	var load loader.Loader
 	if insecure {
-		load = loader.NewUnsignedLoader()
+		load = loader.NewDetectingLoader()
 	} else {
 		kr, err := loadVerifyingKeyRings(homePath())
 		if err != nil {
