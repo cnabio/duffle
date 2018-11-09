@@ -26,6 +26,6 @@ steps:
 - script: |
     go version
     go get -v -t -d ./...
-    make bootstrap build test lint
+    make bootstrap dep-validate build test lint
   workingDirectory: '$(modulePath)'
   displayName: 'Get dependencies, build, test'

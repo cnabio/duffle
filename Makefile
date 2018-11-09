@@ -49,6 +49,10 @@ debug:
 test:
 	go test $(TESTFLAGS) ./...
 
+.PHONY: dep-validate
+dep-validate:
+	dep check
+
 .PHONY: lint
 lint:
 	golangci-lint run --config ./golangci.yml
