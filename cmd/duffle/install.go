@@ -96,7 +96,7 @@ Verifying and --insecure:
 			// look in claims store for another claim with the same name
 			_, err = claimStorage().Read(installationName)
 			if err != claim.ErrClaimNotFound {
-				return fmt.Errorf("a claim with the name %v already exists. Execute `$ duffle claims show %v` to inspect it", installationName, installationName)
+				return fmt.Errorf("a claim with the name %v already exists", installationName)
 			}
 
 			bun, err = loadBundle(bundleFile, insecure)
