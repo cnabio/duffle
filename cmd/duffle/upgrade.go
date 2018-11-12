@@ -66,7 +66,7 @@ func newUpgradeCmd() *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&bundleFile, "file", "f", "", "Set the bundle file to use for upgrading")
 	flags.StringVarP(&upgradeDriver, "driver", "d", "docker", "Specify a driver name")
-	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify a set of credentials to use inside the CNAB bundle")
+	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
 	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
 	flags.BoolVarP(&uc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")

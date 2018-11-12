@@ -153,7 +153,7 @@ Verifying and --insecure:
 	flags.StringVarP(&installDriver, "driver", "d", "docker", "Specify a driver name")
 	flags.StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringVarP(&bundleFile, "file", "f", "", "Bundle file to install")
-	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify a set of credentials to use inside the CNAB bundle")
+	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
 	flags.StringArrayVarP(&setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
 	flags.StringArrayVarP(&setFiles, "set-file", "i", []string{}, "Set individual parameters from file content as NAME=SOURCE-PATH pairs")
 	return cmd
