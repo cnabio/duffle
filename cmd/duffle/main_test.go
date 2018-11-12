@@ -11,7 +11,34 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/deis/duffle/pkg/duffle/home"
 )
+
+func CreateTestHome(t *testing.T) home.Home {
+	t.Helper()
+	tempDir, err := ioutil.TempDir("", "duffle")
+	if err != nil {
+		t.Fatal(err)
+	}
+	duffleHome = tempDir
+	testHome := home.Home(tempDir)
+	dirs := []string{
+		testHome.String(),
+		testHome.Bundles(),
+		testHome.Logs(),
+		testHome.Plugins(),
+		testHome.Claims(),
+		testHome.Credentials(),
+	}
+	if err := ensureDirectories(dirs); err != nil {
+		t.Fatal(err)
+	}
+	if err := ensureFiles([]string{testHome.Repositories()}); err != nil {
+		t.Fatal(err)
+	}
+	return testHome
+}
 
 func TestIsPathy(t *testing.T) {
 	is := assert.New(t)

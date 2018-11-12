@@ -5,20 +5,17 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
-	"net/url"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/deis/duffle/pkg/action"
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/loader"
-	"github.com/deis/duffle/pkg/reference"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/deis/duffle/pkg/repo"
 )
 
 func newInstallCmd() *cobra.Command {
@@ -159,40 +156,62 @@ Verifying and --insecure:
 	return cmd
 }
 
-func bundleFileOrArg2(args []string, bundleFile string, w io.Writer, insecure bool) (string, error) {
+func bundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) (string, error) {
 	switch {
 	case len(args) < 1:
 		return "", errors.New("This command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
-	case len(args) == 2 && bundleFile != "":
+	case len(args) == 2 && bun != "":
 		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
-	case len(args) < 2 && bundleFile == "":
+	case len(args) < 2 && bun == "":
 		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return getBundleFile(args[1], insecure)
+		return loadOrPullBundle(args[1], insecure)
 	}
-	return bundleFile, nil
+	return bun, nil
 }
 
-// optBundleFileOrArg2 optionally gets a bundle file.
+// optBundleFileOrArg2 optionally gets a bundle.
 // Returning an empty string with no error is a possible outcome.
-func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer, insecure bool) (string, error) {
+func optBundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) (string, error) {
 	switch {
 	case len(args) < 1:
 		// No bundle provided
 		return "", nil
-	case len(args) == 2 && bundleFile != "":
+	case len(args) == 2 && bun != "":
 		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
-	case len(args) < 2 && bundleFile == "":
+	case len(args) < 2 && bun == "":
 		// No bundle provided
 		return "", nil
 	case len(args) == 2:
 		var err error
-		bundleFile, err = getBundleFile(args[1], insecure)
+		bun, err = pullBundle(args[1], insecure)
 		if err != nil {
 			return "", err
 		}
 	}
-	return bundleFile, nil
+	return bun, nil
+}
+
+func loadOrPullBundle(bun string, insecure bool) (string, error) {
+	home := home.Home(homePath())
+	ref, err := getReference(bun)
+	if err != nil {
+		return "", fmt.Errorf("could not parse reference for %s: %v", bun, err)
+	}
+
+	// read the bundle reference from repositories.json
+	index, err := repo.LoadIndex(home.Repositories())
+	if err != nil {
+		return "", fmt.Errorf("cannot open %s: %v\n try running duffle init first", home.Repositories(), err)
+	}
+
+	digest, err := index.Get(ref.Name(), ref.Tag())
+	if err == nil {
+		return filepath.Join(home.Bundles(), digest), nil
+	}
+
+	// the bundle was not found locally, so we pull it
+	return pullBundle(bun, insecure)
 }
 
 // overrides parses the --set data and returns values that should override other params.
@@ -232,128 +251,6 @@ func parseValues(file string) (map[string]interface{}, error) {
 		return nil, err
 	}
 	return v.AllSettings(), nil
-}
-
-func getReference(bundleName string) (reference.NamedTagged, error) {
-	var (
-		name string
-		ref  reference.NamedTagged
-	)
-
-	parts := strings.SplitN(bundleName, "://", 2)
-	if len(parts) == 2 {
-		name = parts[1]
-	} else {
-		name = parts[0]
-	}
-	normalizedRef, err := reference.ParseNormalizedNamed(name)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse image name: %s: %v", name, err)
-	}
-	if reference.IsNameOnly(normalizedRef) {
-		ref, err = reference.WithTag(normalizedRef, "latest")
-		if err != nil {
-			// NOTE(bacongobbler): Using the default tag *must* be valid.
-			// To create a NamedTagged type with non-validated
-			// input, the WithTag function should be used instead.
-			panic(err)
-		}
-	} else {
-		if taggedRef, ok := normalizedRef.(reference.NamedTagged); ok {
-			ref = taggedRef
-		} else {
-			return nil, fmt.Errorf("unsupported image name: %s", normalizedRef.String())
-		}
-	}
-
-	return ref, nil
-}
-
-func getBundleRepoURL(bundleName string, home home.Home) (*url.URL, error) {
-	ref, err := getReference(bundleName)
-	if err != nil {
-		return nil, err
-	}
-
-	proto := "https"
-	parts := strings.Split(bundleName, "://")
-	if len(parts) == 2 {
-		proto = parts[0]
-	}
-
-	url := &url.URL{
-		Scheme: proto,
-		Host:   reference.Domain(ref),
-		Path:   fmt.Sprintf("repositories/%s/tags/%s", reference.Path(ref), ref.Tag()),
-	}
-	return url, nil
-}
-
-func getBundleFile(bundleName string, insecure bool) (string, error) {
-	home := home.Home(homePath())
-	url, err := getBundleRepoURL(bundleName, home)
-	if err != nil {
-		return "", err
-	}
-	resp, err := http.Get(url.String())
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("request to %s responded with a non-200 status code: %d", url, resp.StatusCode)
-	}
-
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("could not read bundle from remote server: %s", err)
-	}
-
-	ldr, err := getLoader(insecure)
-	if err != nil {
-		return "", err
-	}
-
-	bundle, err := ldr.LoadData(data)
-	if err != nil {
-		return "", err
-	}
-
-	ext := "cnab"
-	if insecure {
-		ext = "json"
-	}
-
-	bundleFilepath := filepath.Join(home.Cache(), fmt.Sprintf("%s-%s.%s", strings.Replace(bundle.Name, "/", "-", -1), bundle.Version, ext))
-	//bundleFilepath := filepath.Join(home.Cache(), fmt.Sprintf("%s-%s.json", strings.Replace(bundle.Name, "/", "-", -1), bundle.Version))
-	if err := bundle.WriteFile(bundleFilepath, 0644); err != nil {
-		return "", err
-	}
-
-	return bundleFilepath, nil
-}
-
-func getLoader(insecure bool) (loader.Loader, error) {
-	var load loader.Loader
-	if insecure {
-		load = loader.NewDetectingLoader()
-	} else {
-		kr, err := loadVerifyingKeyRings(homePath())
-		if err != nil {
-			return nil, err
-		}
-		load = loader.NewSecureLoader(kr)
-	}
-	return load, nil
-}
-
-func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {
-	l, err := getLoader(insecure)
-	if err != nil {
-		return nil, err
-	}
-	return l.Load(bundleFile)
 }
 
 func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setFilePaths []string) (map[string]interface{}, error) {

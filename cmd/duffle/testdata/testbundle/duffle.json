@@ -1,3 +1,10 @@
 {
-    "name": "testbundle"
+    "name": "testbundle",
+    "version": "1.0.0",
+    "components": {
+        "cnab": {
+            "name": "cnab",
+            "builder": "mock"
+        }
+    }
 }

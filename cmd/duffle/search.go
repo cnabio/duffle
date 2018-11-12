@@ -15,7 +15,7 @@ import (
 
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/repo"
+	"github.com/deis/duffle/pkg/repo/remote"
 )
 
 // BundleList is a list of bundle references.
@@ -57,12 +57,12 @@ func newSearchCmd(w io.Writer) *cobra.Command {
 }
 
 func search(keywords []string) (BundleList, error) {
-	home := home.Home(homePath())
 	foundBundles := BundleList{}
+
 	url := &url.URL{
 		Scheme: "https",
 		Host:   home.DefaultRepository(),
-		Path:   repo.IndexPath,
+		Path:   remote.IndexPath,
 	}
 
 	log.Debugf("Searching %s...", url.String())
@@ -82,7 +82,7 @@ func search(keywords []string) (BundleList, error) {
 			return nil, fmt.Errorf("request to %s responded with a non-200 status code: %d", url.String(), resp.StatusCode)
 		}
 
-		index, err := repo.LoadIndexReader(resp.Body)
+		index, err := remote.LoadIndexReader(resp.Body)
 		if err != nil {
 			return nil, err
 		}
@@ -125,7 +125,7 @@ func searchRepo(url *url.URL) (BundleList, error) {
 		return nil, fmt.Errorf("request to %s responded with a non-200 status code: %d", url.String(), resp.StatusCode)
 	}
 
-	index, err := repo.LoadIndexReader(resp.Body)
+	index, err := remote.LoadIndexReader(resp.Body)
 	if err != nil {
 		return nil, err
 	}
