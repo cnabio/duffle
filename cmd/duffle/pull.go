@@ -98,7 +98,7 @@ func pullBundle(bundleName string, insecure bool) (string, error) {
 func getLoader(insecure bool) (loader.Loader, error) {
 	var load loader.Loader
 	if insecure {
-		load = loader.NewUnsignedLoader()
+		load = loader.NewDetectingLoader()
 	} else {
 		kr, err := loadVerifyingKeyRings(homePath())
 		if err != nil {
