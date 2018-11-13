@@ -1,9 +1,10 @@
-PROJECT   := duffle
-ORG       := deis
-BINDIR    := $(CURDIR)/bin
-GOFLAGS   :=
-LDFLAGS   := -w -s
-TESTFLAGS :=
+PROJECT     := duffle
+ORG         := deis
+BINDIR      := $(CURDIR)/bin
+GOFLAGS     :=
+LDFLAGS     := -w -s
+TESTFLAGS   :=
+INSTALL_DIR := /usr/local/bin
 
 ifeq ($(OS),Windows_NT)
 	TARGET = $(PROJECT).exe
@@ -25,6 +26,10 @@ default: build
 .PHONY: build
 build:
 	go build $(GOFLAGS) -o $(BINDIR)/$(TARGET) -ldflags '$(LDFLAGS)' github.com/$(ORG)/$(PROJECT)/cmd/...
+
+.PHONY: install
+install:
+	install $(BINDIR)/$(TARGET) $(INSTALL_DIR)
 
 CX_OSES  = linux windows darwin
 CX_ARCHS = amd64
