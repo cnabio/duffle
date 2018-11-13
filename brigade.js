@@ -194,6 +194,16 @@ events.on("exec", (e, p) => {
   return build(e, p).run()
 })
 
+// Although a GH App will trigger 'check_suite:requested' on a push to master event,
+// it will not for a tag push, hence the need for this handler
+events.on("push", (e, p) => {
+  if (e.revision.ref.startsWith("refs/tags/")) {
+    let parts = e.revision.ref.split("/", 3)
+    let tag = parts[2]
+    release(p, tag)
+  }
+})
+
 events.on("check_suite:requested", runSuite)
 events.on("check_suite:rerequested", runSuite)
 events.on("check_run:rerequested", runSuite)
