@@ -44,7 +44,7 @@ func (pd ParameterDefinition) validateByType(value interface{}) error {
 	case "bool":
 		return pd.validateBoolParameterValue(value)
 	default:
-		return fmt.Errorf("invalid parameter definition")
+		return errors.New("invalid parameter definition")
 	}
 }
 
@@ -52,7 +52,7 @@ func (pd ParameterDefinition) validateAllowedValue(value interface{}) error {
 	if len(pd.AllowedValues) > 0 {
 		val := pd.CoerceValue(value)
 		if !isInCollection(val, pd.allowedValues()) {
-			return fmt.Errorf("value is not in the set of allowed values for this parameter")
+			return errors.New("value is not in the set of allowed values for this parameter")
 		}
 	}
 	return nil
@@ -112,7 +112,7 @@ func (pd ParameterDefinition) ConvertValue(val string) (interface{}, error) {
 		} else if strings.ToLower(val) == "false" {
 			return false, nil
 		} else {
-			return false, fmt.Errorf("%s is not a valid boolean", val)
+			return false, fmt.Errorf("%q is not a valid boolean", val)
 		}
 	default:
 		return nil, errors.New("invalid parameter definition")
@@ -122,13 +122,13 @@ func (pd ParameterDefinition) ConvertValue(val string) (interface{}, error) {
 func (pd ParameterDefinition) validateStringParameterValue(value interface{}) error {
 	s, ok := value.(string)
 	if !ok {
-		return fmt.Errorf("Value is not a string")
+		return errors.New("value is not a string")
 	}
 	if pd.MinLength != nil && len(s) < *pd.MinLength {
-		return fmt.Errorf("Value is too short: minimum length is %d", pd.MinLength)
+		return fmt.Errorf("value is too short: minimum length is %d", pd.MinLength)
 	}
 	if pd.MaxLength != nil && len(s) > *pd.MaxLength {
-		return fmt.Errorf("Value is too long: maximum length is %d", pd.MaxLength)
+		return fmt.Errorf("value is too long: maximum length is %d", pd.MaxLength)
 	}
 	return nil
 }
@@ -138,18 +138,18 @@ func (pd ParameterDefinition) validateIntParameterValue(value interface{}) error
 	if !ok {
 		f, ok := value.(float64)
 		if !ok {
-			return fmt.Errorf("Value is not a number")
+			return errors.New("value is not a number")
 		}
 		i, ok = asInt(f)
 		if !ok {
-			return fmt.Errorf("Value is not an integer")
+			return errors.New("value is not an integer")
 		}
 	}
 	if pd.MinValue != nil && i < *pd.MinValue {
-		return fmt.Errorf("Value is too low: minimum value is %d", pd.MinValue)
+		return fmt.Errorf("value is too low: minimum value is %d", *pd.MinValue)
 	}
 	if pd.MaxValue != nil && i > *pd.MaxValue {
-		return fmt.Errorf("Value is too long: maximum length is %d", pd.MaxValue)
+		return fmt.Errorf("value is too high: maximum value is %d", *pd.MaxValue)
 	}
 	return nil
 }
@@ -157,7 +157,7 @@ func (pd ParameterDefinition) validateIntParameterValue(value interface{}) error
 func (pd ParameterDefinition) validateBoolParameterValue(value interface{}) error {
 	_, ok := value.(bool)
 	if !ok {
-		return fmt.Errorf("Value is not a boolean")
+		return errors.New("value is not a boolean")
 	}
 	return nil
 }

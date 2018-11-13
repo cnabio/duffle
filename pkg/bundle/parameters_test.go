@@ -289,6 +289,7 @@ func TestValidateIntParameterValue_MinValue(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected too-small value but got no error")
 	}
+	assert.Equal(t, "value is too low: minimum value is 5", err.Error())
 }
 
 func TestValidateIntParameterValue_MaxValue(t *testing.T) {
@@ -306,6 +307,7 @@ func TestValidateIntParameterValue_MaxValue(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected too-large value but got no error")
 	}
+	assert.Equal(t, "value is too high: maximum value is 5", err.Error())
 }
 
 func TestValidateBoolParameterValue(t *testing.T) {
