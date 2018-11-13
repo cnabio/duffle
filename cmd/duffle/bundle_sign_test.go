@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestKeySign(t *testing.T) {
+func TestBundleSign(t *testing.T) {
 	tmp, err := ioutil.TempFile("", "duffle-")
 	if err != nil {
 		t.Fatal(err)
@@ -21,7 +21,7 @@ func TestKeySign(t *testing.T) {
 	keyring := filepath.Join("..", "..", "pkg", "signature", "testdata", "keyring.gpg")
 	identity := "test2@example.com"
 
-	if err := signFile(bundlejson, keyring, identity, outfile, false); err != nil {
+	if err := signBundle(bundlejson, keyring, identity, outfile, false); err != nil {
 		t.Fatal(err)
 	}
 

@@ -20,9 +20,7 @@ func newKeyCmd(w io.Writer) *cobra.Command {
 	}
 	cmd.AddCommand(
 		newKeyAddCmd(w),
-		newKeySignCmd(w),
 		newKeyListCmd(w),
-		newKeyVerifyCmd(w),
 	)
 	return cmd
 }
