@@ -24,13 +24,17 @@ By default, the signed bundle is written in a bundle.cnab file in the current di
 If no key name is supplied, this uses the first signing key in the secret keyring.
 `
 
+type bundleSignCmd struct {
+	out            io.Writer
+	home           home.Home
+	identity       string
+	bundleFile     string
+	outfile        string
+	skipValidation bool
+}
+
 func newBundleSignCmd(w io.Writer) *cobra.Command {
-	var (
-		identity   string
-		bundleFile string
-		outfile    string
-		noValidate bool
-	)
+	sign := &bundleSignCmd{out: w}
 
 	cmd := &cobra.Command{
 		Use:   "sign BUNDLE",
@@ -38,19 +42,19 @@ func newBundleSignCmd(w io.Writer) *cobra.Command {
 		Args:  cobra.MaximumNArgs(1),
 		Long:  bundleSignDesc,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			h := home.Home(homePath())
-			secring := h.SecretKeyRing()
-			bundle, err := bundleFileOrArg1(args, bundleFile)
+			sign.home = home.Home(homePath())
+			secring := sign.home.SecretKeyRing()
+			bundle, err := bundleFileOrArg1(args, sign.bundleFile)
 			if err != nil {
 				return err
 			}
-			return signBundle(bundle, secring, identity, outfile, noValidate)
+			return sign.signBundle(bundle, secring)
 		},
 	}
-	cmd.Flags().StringVarP(&identity, "user", "u", "", "the user ID of the key to use. Format is either email address or 'NAME (COMMENT) <EMAIL>'")
-	cmd.Flags().StringVarP(&bundleFile, "file", "f", "", "path to bundle file to sign")
-	cmd.Flags().StringVarP(&outfile, "output-file", "o", "", "the name of the output file")
-	cmd.Flags().BoolVar(&noValidate, "no-validate", false, "do not validate the JSON before marshaling it.")
+	cmd.Flags().StringVarP(&sign.identity, "user", "u", "", "the user ID of the key to use. Format is either email address or 'NAME (COMMENT) <EMAIL>'")
+	cmd.Flags().StringVarP(&sign.bundleFile, "file", "f", "", "path to bundle file to sign")
+	cmd.Flags().StringVarP(&sign.outfile, "output-file", "o", "", "the name of the output file")
+	cmd.Flags().BoolVar(&sign.skipValidation, "skip-validate", false, "do not validate the JSON before marshaling it.")
 
 	return cmd
 }
@@ -67,9 +71,8 @@ func bundleFileOrArg1(args []string, bundle string) (string, error) {
 	}
 	return bundle, nil
 }
-func signBundle(bundleFile, keyring, identity, outfile string, skipValidation bool) error {
+func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
 	def := home.DefaultRepository()
-	home := home.Home(homePath())
 	// Verify that file exists
 	if fi, err := os.Stat(bundleFile); err != nil {
 		return fmt.Errorf("cannot find bundle file to sign: %v", err)
@@ -86,7 +89,7 @@ func signBundle(bundleFile, keyring, identity, outfile string, skipValidation bo
 		return err
 	}
 
-	if !skipValidation {
+	if !bs.skipValidation {
 		if err := b.Validate(); err != nil {
 			return err
 		}
@@ -99,8 +102,8 @@ func signBundle(bundleFile, keyring, identity, outfile string, skipValidation bo
 	}
 	// Find identity
 	var k *signature.Key
-	if identity != "" {
-		k, err = kr.Key(identity)
+	if bs.identity != "" {
+		k, err = kr.Key(bs.identity)
 		if err != nil {
 			return err
 		}
@@ -127,15 +130,15 @@ func signBundle(bundleFile, keyring, identity, outfile string, skipValidation bo
 	}
 
 	// if --output-file is provided, write and return
-	if outfile != "" {
-		return ioutil.WriteFile(outfile, data, 0644)
+	if bs.outfile != "" {
+		return ioutil.WriteFile(bs.outfile, data, 0644)
 	}
 
-	err = ioutil.WriteFile(filepath.Join(home.Bundles(), digest), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(bs.home.Bundles(), digest), data, 0644)
 	if err != nil {
 		return err
 	}
 
 	// TODO - write pkg method in bundle that writes file and records the reference
-	return recordBundleReference(home, fmt.Sprintf("%s/%s", def, b.Name), b.Version, digest)
+	return recordBundleReference(bs.home, fmt.Sprintf("%s/%s", def, b.Name), b.Version, digest)
 }
