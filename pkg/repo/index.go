@@ -65,6 +65,21 @@ func (i Index) Delete(name string) bool {
 	return ok
 }
 
+// DeleteVersion removes a single version of a given bundle from the index.
+//
+// Returns false if the name or version is not found.
+func (i Index) DeleteVersion(name, version string) bool {
+	sub, ok := i[name]
+	if !ok {
+		return false
+	}
+	_, ok = sub[version]
+	if ok {
+		delete(sub, version)
+	}
+	return ok
+}
+
 // Has returns true if the index has an entry for a bundle with the given name and exact version.
 func (i Index) Has(name, version string) bool {
 	_, err := i.Get(name, version)

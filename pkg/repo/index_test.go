@@ -48,4 +48,9 @@ func TestLoadIndexReader(t *testing.T) {
 
 	is.True(l.Delete("hub.cnlabs.io/goodbyeworld"))
 	is.False(l.Has("hub.cnlabs.io/goodbyeworld", "1.0.0"))
+
+	is.False(l.DeleteVersion("nosuchname", "0.1.2"))
+	is.True(l.DeleteVersion("hub.cnlabs.io/helloworld", "2.0.0"))
+	is.True(l.Has("hub.cnlabs.io/helloworld", "1.0.0"))
+	is.False(l.Has("hub.cnlabs.io/helloworld", "2.0.0"))
 }
