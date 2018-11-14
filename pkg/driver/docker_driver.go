@@ -8,6 +8,9 @@ import (
 	"os"
 	unix_path "path"
 
+	"github.com/docker/cli/cli/command"
+	cliflags "github.com/docker/cli/cli/flags"
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -15,7 +18,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/docker/docker/pkg/term"
+	"github.com/docker/docker/registry"
 )
 
 // DockerDriver is capable of running Docker invocation images using Docker itself.
@@ -38,7 +41,8 @@ func (d *DockerDriver) Handles(dt string) bool {
 // Config returns the Docker driver configuration options
 func (d *DockerDriver) Config() map[string]string {
 	return map[string]string{
-		"VERBOSE": "Increase verbosity. true, false are supported values",
+		"VERBOSE":     "Increase verbosity. true, false are supported values",
+		"PULL_ALWAYS": "Always pull image, even if locally available (0|1)",
 	}
 }
 
@@ -47,31 +51,51 @@ func (d *DockerDriver) SetConfig(settings map[string]string) {
 	d.config = settings
 }
 
+func pullImage(ctx context.Context, cli command.Cli, image string) error {
+	ref, err := reference.ParseNormalizedNamed(image)
+	if err != nil {
+		return err
+	}
+
+	// Resolve the Repository name from fqn to RepositoryInfo
+	repoInfo, err := registry.ParseRepositoryInfo(ref)
+	if err != nil {
+		return err
+	}
+	authConfig := command.ResolveAuthConfig(ctx, cli, repoInfo.Index)
+	encodedAuth, err := command.EncodeAuthToBase64(authConfig)
+	if err != nil {
+		return err
+	}
+	options := types.ImagePullOptions{
+		RegistryAuth: encodedAuth,
+	}
+	responseBody, err := cli.Client().ImagePull(ctx, image, options)
+	if err != nil {
+		return err
+	}
+	defer responseBody.Close()
+	return jsonmessage.DisplayJSONMessagesStream(
+		responseBody,
+		cli.Out(),
+		cli.Out().FD(),
+		cli.Out().IsTerminal(),
+		nil)
+}
+
 func (d *DockerDriver) exec(op *Operation) error {
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		return fmt.Errorf("cannot create Docker client: %v", err)
-	}
-	cli.NegotiateAPIVersion(ctx)
-	if err != nil {
-		return fmt.Errorf("cannot update Docker client: %v", err)
+	cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false)
+	if err := cli.Initialize(cliflags.NewClientOptions()); err != nil {
+		return err
 	}
 	if d.Simulate {
 		return nil
 	}
-	fmt.Println("Pulling Invocation Image...")
-	pullReader, err := cli.ImagePull(ctx, op.Image, types.ImagePullOptions{})
-	if err != nil {
-		return fmt.Errorf("cannot pull image %v: %v", op.Image, err)
-	}
-	termFd, _ := term.GetFdInfo(os.Stdout)
-	// Setting this to false here because Moby os.Exit(1) all over the place and this fails on WSL (only)
-	// when Term is true.
-	isTerm := false
-	err = jsonmessage.DisplayJSONMessagesStream(pullReader, os.Stdout, termFd, isTerm, nil)
-	if err != nil {
-		return err
+	if d.config["PULL_ALWAYS"] == "1" {
+		if err := pullImage(ctx, cli, op.Image); err != nil {
+			return err
+		}
 	}
 	var env []string
 	for k, v := range op.Environment {
@@ -93,8 +117,17 @@ func (d *DockerDriver) exec(op *Operation) error {
 
 	hostCfg := &container.HostConfig{Mounts: mounts, AutoRemove: true}
 
-	resp, err := cli.ContainerCreate(ctx, cfg, hostCfg, nil, "")
-	if err != nil {
+	resp, err := cli.Client().ContainerCreate(ctx, cfg, hostCfg, nil, "")
+	switch {
+	case client.IsErrNotFound(err):
+		fmt.Fprintf(cli.Err(), "Unable to find image '%s' locally\n", op.Image)
+		if err := pullImage(ctx, cli, op.Image); err != nil {
+			return err
+		}
+		if resp, err = cli.Client().ContainerCreate(ctx, cfg, hostCfg, nil, ""); err != nil {
+			return fmt.Errorf("cannot create container: %v", err)
+		}
+	case err != nil:
 		return fmt.Errorf("cannot create container: %v", err)
 	}
 
@@ -107,16 +140,16 @@ func (d *DockerDriver) exec(op *Operation) error {
 	}
 	// This copies the tar to the root of the container. The tar has been assembled using the
 	// path from the given file, starting at the /.
-	err = cli.CopyToContainer(ctx, resp.ID, "/", tarContent, options)
+	err = cli.Client().CopyToContainer(ctx, resp.ID, "/", tarContent, options)
 	if err != nil {
 		return fmt.Errorf("error copying to / in container: %s", err)
 	}
 
-	if err = cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err = cli.Client().ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("cannot start container: %v", err)
 	}
 
-	attach, err := cli.ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
+	attach, err := cli.Client().ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
 		Stream: true,
 		Stdout: true,
 		Stderr: true,
@@ -135,7 +168,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 		}
 	}()
 
-	statusc, errc := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	statusc, errc := cli.Client().ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errc:
 		if err != nil {
