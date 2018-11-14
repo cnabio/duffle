@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -16,11 +18,17 @@ import (
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/repo/remote"
+	"github.com/deis/duffle/pkg/repo/remote/auth"
 )
+
+type RepoBundle struct {
+	bundle.Bundle
+	Repository string
+}
 
 // BundleList is a list of bundle references.
 // Implements a sorter on Name.
-type BundleList []*bundle.Bundle
+type BundleList []*RepoBundle
 
 // Len returns the length.
 func (bl BundleList) Len() int { return len(bl) }
@@ -46,7 +54,7 @@ func newSearchCmd(w io.Writer) *cobra.Command {
 			table := uitable.New()
 			table.AddRow("NAME", "VERSION")
 			for _, bundle := range found {
-				table.AddRow(bundle.Name, bundle.Version)
+				table.AddRow(path.Join(bundle.Repository, bundle.Name), bundle.Version)
 			}
 			fmt.Fprintln(w, table)
 			return nil
@@ -58,70 +66,102 @@ func newSearchCmd(w io.Writer) *cobra.Command {
 
 func search(keywords []string) (BundleList, error) {
 	foundBundles := BundleList{}
+	h := home.Home(homePath())
 
-	url := &url.URL{
-		Scheme: "https",
-		Host:   home.DefaultRepository(),
-		Path:   remote.IndexPath,
+	loginCreds, err := auth.Load(filepath.Join(h.String(), "auth.json"))
+	if err != nil {
+		return nil, err
 	}
 
-	log.Debugf("Searching %s...", url.String())
-
-	// if no keywords are given, display all available bundles
-	if len(keywords) == 0 {
-		return searchRepo(url)
+	if len(loginCreds) == 0 {
+		return nil, fmt.Errorf("You have not logged into any repository yet. Try `duffle login %s`", home.DefaultRepository())
 	}
-	for _, keyword := range keywords {
-		resp, err := http.Get(url.String())
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("request to %s responded with a non-200 status code: %d", url.String(), resp.StatusCode)
+	for entry, creds := range loginCreds {
+		url := &url.URL{
+			Scheme: "https",
+			Host:   entry,
+			Path:   remote.IndexPath,
 		}
 
-		index, err := remote.LoadIndexReader(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		var found = make(map[string]bool)
-		names := make([]string, 0, len(index.Entries))
-		for name := range index.Entries {
-			names = append(names, name)
-		}
-		for _, foundName := range fuzzy.Find(keyword, names) {
-			found[foundName] = true
-		}
-		// also check if the latest version of each bundle has a matching keyword
-		for _, name := range names {
-			for _, bundleKeyword := range index.Entries[name][0].Keywords {
-				if bundleKeyword == keyword {
-					found[name] = true
-				}
+		log.Debugf("Searching %s...", url.String())
+		// if no keywords are given, display all available bundles
+		if len(keywords) == 0 {
+			repoBundles, err := searchRepo(url, creds)
+			if err != nil {
+				return nil, err
 			}
+			foundBundles = append(foundBundles, repoBundles...)
 		}
-		for n := range found {
+		for _, keyword := range keywords {
+			req, err := http.NewRequest("GET", url.String(), nil)
+			if err != nil {
+				return nil, err
+			}
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", creds.Token))
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				return nil, err
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode == http.StatusUnauthorized {
+				return nil, fmt.Errorf("token for %s expired. Please run `duffle login %s` again to fetch a new auth token", url.Hostname(), url.Hostname())
+			} else if resp.StatusCode != http.StatusOK {
+				return nil, fmt.Errorf("request to %s responded with a non-200 status code: %d", url.String(), resp.StatusCode)
+			}
+
+			index, err := remote.LoadIndexReader(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+
+			var found = make(map[string]bool)
+			names := make([]string, 0, len(index.Entries))
 			for name := range index.Entries {
-				if n == name {
-					foundBundles = append(foundBundles, index.Entries[name][0])
+				names = append(names, name)
+			}
+			for _, foundName := range fuzzy.Find(keyword, names) {
+				found[foundName] = true
+			}
+			// also check if the latest version of each bundle has a matching keyword
+			for _, name := range names {
+				for _, bundleKeyword := range index.Entries[name][0].Keywords {
+					if bundleKeyword == keyword {
+						found[name] = true
+					}
+				}
+			}
+			for n := range found {
+				for name := range index.Entries {
+					if n == name {
+						foundBundles = append(foundBundles, &RepoBundle{*index.Entries[name][0], entry})
+					}
 				}
 			}
 		}
 	}
+
 	return foundBundles, nil
 }
 
-func searchRepo(url *url.URL) (BundleList, error) {
-	resp, err := http.Get(url.String())
+func searchRepo(url *url.URL, creds auth.RepositoryCredentials) (BundleList, error) {
+	req, err := http.NewRequest("GET", url.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", creds.Token))
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, fmt.Errorf("token for %s expired. Please run `duffle login %s` again to fetch a new auth token", url.Hostname(), url.Hostname())
+	} else if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("request to %s responded with a non-200 status code: %d", url.String(), resp.StatusCode)
 	}
 
@@ -132,7 +172,7 @@ func searchRepo(url *url.URL) (BundleList, error) {
 
 	bundles := make(BundleList, 0, len(index.Entries))
 	for _, entry := range index.Entries {
-		bundles = append(bundles, entry[0])
+		bundles = append(bundles, &RepoBundle{*entry[0], url.Hostname()})
 	}
 	return bundles, nil
 }

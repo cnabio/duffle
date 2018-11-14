@@ -1,16 +1,19 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/repo"
+	"github.com/deis/duffle/pkg/repo/remote/auth"
 )
 
 func newPushCmd(out io.Writer) *cobra.Command {
@@ -52,17 +55,35 @@ func newPushCmd(out io.Writer) *cobra.Command {
 				return err
 			}
 
+			loginCreds, err := auth.Load(filepath.Join(home.String(), "auth.json"))
+			if err != nil {
+				return err
+			}
+
+			creds, err := loginCreds.Get(url.String())
+			if err != nil {
+				log.Debug(err)
+				return errors.New("could not retrieve authorization token. Are you logged in?")
+			}
+
 			req, err := http.NewRequest("POST", url.String(), body)
 			if err != nil {
 				return err
 			}
 			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", creds.Token))
 
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				return err
 			}
 			defer resp.Body.Close()
+
+			if resp.StatusCode == http.StatusUnauthorized {
+				return fmt.Errorf("token for %s expired. Please run `duffle login %s` again to fetch a new auth token", url.Hostname(), url.Hostname())
+			} else if resp.StatusCode != http.StatusOK {
+				return fmt.Errorf("request to %s responded with a non-200 status code: %d", url, resp.StatusCode)
+			}
 
 			fmt.Fprintf(out, "Successfully pushed %s\n", ref.String())
 			return nil

@@ -10,14 +10,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/loader"
-	"github.com/deis/duffle/pkg/reference"
-
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/crypto/digest"
 	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/loader"
+	"github.com/deis/duffle/pkg/reference"
+	"github.com/deis/duffle/pkg/repo/remote/auth"
 )
 
 func newPullCmd(w io.Writer) *cobra.Command {
@@ -58,13 +59,36 @@ func pullBundle(bundleName string, insecure bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp, err := http.Get(url.String())
+
+	loginCreds, err := auth.Load(filepath.Join(home.String(), "auth.json"))
+	if err != nil {
+		return "", err
+	}
+
+	creds, err := loginCreds.Get(url.String())
+	authorizationRequired := true
+	if err != nil {
+		log.Debugln("could not retrieve authorization token. assuming unauthenticated pull")
+		authorizationRequired = false
+	}
+
+	req, err := http.NewRequest("GET", url.String(), nil)
+	if err != nil {
+		return "", err
+	}
+	if authorizationRequired {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", creds.Token))
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode == http.StatusUnauthorized {
+		return "", fmt.Errorf("unauthorized to fetch %s. please run `duffle login %s`", bundleName, url.Hostname())
+	} else if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("request to %s responded with a non-200 status code: %d", url, resp.StatusCode)
 	}
 

@@ -48,6 +48,14 @@
   revision = "5312a61534124124185d41f09206b9fef1d88403"
 
 [[projects]]
+  digest = "1:9d013c04ff3012769abc7ea289948bf93bf82e8b22c5909f031127647609523f"
+  name = "github.com/bacongobbler/browser"
+  packages = ["."]
+  pruneopts = ""
+  revision = "792d0443b3e34e0a99a68e254084079ad9356db5"
+  version = "v1.0.1"
+
+[[projects]]
   branch = "master"
   digest = "1:707ebe952a8b3d00b343c01536c79c73771d100f63ec6babeaed5c79e2b8a8dd"
   name = "github.com/beorn7/perks"
@@ -214,7 +222,7 @@
   version = "v0.3.3"
 
 [[projects]]
-  digest = "1:1b91ae0dc69a41d4c2ed23ea5cffb721ea63f5037ca4b81e6d6771fbb8f45129"
+  digest = "1:eb53021a8aa3f599d29c7102e65026242bdedce998a54837dc67f14b6a97c5fd"
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   pruneopts = "NUT"
@@ -680,6 +688,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Masterminds/semver",
+    "github.com/bacongobbler/browser",
     "github.com/docker/cli/cli/command",
     "github.com/docker/cli/cli/command/image/build",
     "github.com/docker/cli/cli/config",

@@ -46,6 +46,8 @@ func newRootCmd(outputRedirect io.Writer) *cobra.Command {
 	cmd.AddCommand(newInitCmd(outLog))
 	cmd.AddCommand(newInspectCmd(outLog))
 	cmd.AddCommand(newListCmd(outLog))
+	cmd.AddCommand(newLoginCmd(outLog))
+	cmd.AddCommand(newLogoutCmd(outLog))
 	cmd.AddCommand(newPullCmd(outLog))
 	cmd.AddCommand(newPushCmd(outLog))
 	cmd.AddCommand(newSearchCmd(outLog))
