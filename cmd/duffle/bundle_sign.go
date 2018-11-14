@@ -140,5 +140,14 @@ func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
 	}
 
 	// TODO - write pkg method in bundle that writes file and records the reference
-	return recordBundleReference(bs.home, fmt.Sprintf("%s/%s", def, b.Name), b.Version, digest)
+	if err := recordBundleReference(bs.home, fmt.Sprintf("%s/%s", def, b.Name), b.Version, digest); err != nil {
+		return err
+	}
+
+	userID, err := k.UserID()
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(bs.out, "Signed by %s %s \n", userID.String(), k.Fingerprint())
+	return nil
 }
