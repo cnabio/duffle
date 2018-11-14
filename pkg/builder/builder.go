@@ -89,6 +89,9 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 		}
 
 		if c.Name() == "cnab" {
+			ii := bundle.InvocationImage{}
+			ii.Image = c.URI()
+			ii.ImageType = c.Type()
 			bf.InvocationImages = []bundle.InvocationImage{
 				{
 					Image:     c.URI(),
@@ -105,7 +108,9 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 			}
 			bf.Version = newver
 		} else {
-			bf.Images = append(bf.Images, bundle.Image{Name: c.Name(), URI: c.URI()})
+			bundleImage := bundle.Image{Description: c.Name()}
+			bundleImage.Image = c.URI()
+			bf.Images = append(bf.Images, bundleImage)
 		}
 	}
 

@@ -46,11 +46,11 @@ func TestReadImageProperties(t *testing.T) {
 		t.Errorf("Expected 2 images, got %d", len(bundle.Images))
 	}
 	image1 := bundle.Images[0]
-	if image1.Name != "image1" {
-		t.Errorf("Expected name 'image1', got '%s'", image1.Name)
+	if image1.Description != "image1" {
+		t.Errorf("Expected description 'image1', got '%s'", image1.Description)
 	}
-	if image1.URI != "urn:image1uri" {
-		t.Errorf("Expected URI 'urn:image1uri', got '%s'", image1.URI)
+	if image1.Image != "urn:image1uri" {
+		t.Errorf("Expected Image 'urn:image1uri', got '%s'", image1.Image)
 	}
 	if len(image1.Refs) != 1 {
 		t.Errorf("Expected 1 ref, got %d", len(image1.Refs))

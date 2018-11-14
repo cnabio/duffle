@@ -102,7 +102,7 @@ func (ex *Exporter) prepareArtifacts(bun *bundle.Bundle) error {
 	}
 
 	for _, image := range bun.Images {
-		_, err := ex.archiveImage(image.URI, artifactsDir)
+		_, err := ex.archiveImage(image.Image, artifactsDir)
 		if err != nil {
 			return err
 		}

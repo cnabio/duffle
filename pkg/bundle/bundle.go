@@ -41,6 +41,8 @@ type LocationRef struct {
 
 // BaseImage contains fields shared across image types
 type BaseImage struct {
+	ImageType string `json:"imageType" toml:"imageType"`
+	Image     string `json:"image" toml:"image"`
 	Digest    string `json:"digest,omitempty" toml:"digest"`
 	Size      uint64 `json:"size,omitempty" toml:"size"`
 	Platform  string `json:"platform,omitempty" toml:"platform"`
@@ -56,17 +58,13 @@ type ImagePlatform struct {
 // Image describes a container image in the bundle
 type Image struct {
 	BaseImage
-	// FIXME: Is this the same as "image" on InvocationImage? Which do we prefer?
-	Name string        `json:"name" toml:"name"`
-	URI  string        `json:"uri" toml:"uri"`
-	Refs []LocationRef `json:"refs" toml:"refs"`
+	Description string        `json:"description" toml:"description"` //TODO: change? see where it's being used? change to description?
+	Refs        []LocationRef `json:"refs" toml:"refs"`
 }
 
 // InvocationImage contains the image type and location for the installation of a bundle
 type InvocationImage struct {
 	BaseImage
-	ImageType string `json:"imageType" toml:"imageType"`
-	Image     string `json:"image" toml:"image"`
 }
 
 // Location provides the location where a value should be written in
