@@ -31,7 +31,9 @@ import (
 )
 
 const buildDesc = `
-Builds a CNAB bundle.
+Builds a CNAB bundle given a path to directory that contains a duffle
+configuration file [duffle.toml, duffle.json, duffle.yaml] containing
+metadata about the bundle.
 `
 
 const (
@@ -54,13 +56,11 @@ type buildCmd struct {
 }
 
 func newBuildCmd(out io.Writer) *cobra.Command {
-	var (
-		build = &buildCmd{
-			out:                 out,
-			dockerClientOptions: dockerflags.NewClientOptions(),
-		}
-		f *pflag.FlagSet
-	)
+	build := &buildCmd{
+		out:                 out,
+		dockerClientOptions: dockerflags.NewClientOptions(),
+	}
+	var f *pflag.FlagSet
 
 	cmd := &cobra.Command{
 		Use:   "build [path]",
@@ -111,10 +111,8 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 }
 
 func (b *buildCmd) run() (err error) {
-	var (
-		ctx  = context.Background()
-		bldr = builder.New()
-	)
+	ctx := context.Background()
+	bldr := builder.New()
 	bldr.LogsDir = b.home.Logs()
 
 	mfst, err := manifest.Load("", b.src)
