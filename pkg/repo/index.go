@@ -54,6 +54,17 @@ func (i Index) Add(name, version string, digest string) {
 	}
 }
 
+// Delete removes a bundle from the index.
+//
+// Returns false if no record was found to delete.
+func (i Index) Delete(name string) bool {
+	_, ok := i[name]
+	if ok {
+		delete(i, name)
+	}
+	return ok
+}
+
 // Has returns true if the index has an entry for a bundle with the given name and exact version.
 func (i Index) Has(name, version string) bool {
 	_, err := i.Get(name, version)

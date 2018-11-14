@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLoadIndexReader(t *testing.T) {
@@ -37,4 +39,7 @@ func TestLoadIndexReader(t *testing.T) {
 	if !reflect.DeepEqual(expectedList, l) {
 		t.Errorf("expected lists to be equal, got '%v'", l)
 	}
+
+	assert.True(t, l.Delete("hub.cnlabs.io/goodbyeworld"))
+	assert.False(t, l.Has("hub.cnlabs.io/goodbyeworld", "1.0.0"))
 }

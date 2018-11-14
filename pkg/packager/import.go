@@ -15,9 +15,11 @@ import (
 )
 
 var (
+	// ErrNoArtifactsDirectory indicates a missing artifacts/ directory
 	ErrNoArtifactsDirectory = errors.New("No artifacts/ directory found")
 )
 
+// Importer is responsible for importing a file
 type Importer struct {
 	Source      string
 	Destination string
