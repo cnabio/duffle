@@ -21,7 +21,11 @@ func TestBundleSign(t *testing.T) {
 	keyring := filepath.Join("..", "..", "pkg", "signature", "testdata", "keyring.gpg")
 	identity := "test2@example.com"
 
-	if err := signBundle(bundlejson, keyring, identity, outfile, false); err != nil {
+	cmd := bundleSignCmd{
+		outfile:  outfile,
+		identity: identity,
+	}
+	if err := cmd.signBundle(bundlejson, keyring); err != nil {
 		t.Fatal(err)
 	}
 

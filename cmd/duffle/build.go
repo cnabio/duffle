@@ -145,7 +145,7 @@ func (b *buildCmd) run() (err error) {
 	if err := recordBundleReference(b.home, bf.Name, bf.Version, digest); err != nil {
 		return fmt.Errorf("could not record bundle: %v", err)
 	}
-	ohai.Fsuccessf(b.out, "Successfully built bundle %s:%s", bf.Name, bf.Version)
+	ohai.Fsuccessf(b.out, "Successfully built bundle %s:%s\n", bf.Name, bf.Version)
 
 	return nil
 }
