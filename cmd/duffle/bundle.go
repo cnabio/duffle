@@ -12,9 +12,10 @@ Manages bundles
 
 func newBundleCmd(w io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bundle",
-		Short: "manage bundles",
-		Long:  bundleDesc,
+		Use:     "bundle",
+		Aliases: []string{"bundles"},
+		Short:   "manage bundles",
+		Long:    bundleDesc,
 	}
 	cmd.AddCommand(
 		newBundleListCmd(w),

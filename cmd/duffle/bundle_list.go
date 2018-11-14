@@ -56,9 +56,11 @@ func (n *NamedRepository) Digest() string {
 }
 
 func newBundleListCmd(w io.Writer) *cobra.Command {
+	var long bool
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "lists bundles pulled or built and stored locally",
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "lists bundles pulled or built and stored locally",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			home := home.Home(homePath())
 			references, err := searchLocal(home)
@@ -66,15 +68,24 @@ func newBundleListCmd(w io.Writer) *cobra.Command {
 				return err
 			}
 			sort.Sort(references)
-			table := uitable.New()
-			table.AddRow("NAME", "VERSION", "DIGEST")
-			for _, ref := range references {
-				table.AddRow(ref.Name(), ref.Tag(), ref.Digest())
+			if long {
+				table := uitable.New()
+				table.AddRow("NAME", "VERSION", "DIGEST")
+				for _, ref := range references {
+					table.AddRow(ref.Name(), ref.Tag(), ref.Digest())
+				}
+				fmt.Fprintln(w, table)
+				return nil
 			}
-			fmt.Fprintln(w, table)
+
+			for _, ref := range references {
+				fmt.Println(ref.Name())
+			}
+
 			return nil
 		},
 	}
+	cmd.Flags().BoolVarP(&long, "long", "l", false, "output longer listing format")
 
 	return cmd
 }
