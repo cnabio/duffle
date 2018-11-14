@@ -19,7 +19,7 @@ import (
 const bundleSignDesc = `Clear-sign a bundle.
 
 This remarshals the bundle.json into canonical form, and then clear-signs the JSON.
-By default, the signed bundle is written in a bundle.cnab file in the current directory.
+By default, the signed bundle is written to $DUFFLE_HOME. You can specify an output-file to save to instead using the flag.
 
 If no key name is supplied, this uses the first signing key in the secret keyring.
 `
