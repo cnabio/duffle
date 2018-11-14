@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/repo"
@@ -18,10 +20,11 @@ available. Remote bundles can be re-fetched with 'duffle pull'.
 
 func newBundleRemoveCmd(w io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove BUNDLE",
-		Short: "remove a bundle from the local storage",
-		Long:  bundleRemoveDesc,
-		Args:  cobra.MaximumNArgs(1),
+		Use:     "remove BUNDLE",
+		Aliases: []string{"rm"},
+		Short:   "remove a bundle from the local storage",
+		Long:    bundleRemoveDesc,
+		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h := home.Home(homePath())
 			index, err := repo.LoadIndex(h.Repositories())
@@ -30,11 +33,30 @@ func newBundleRemoveCmd(w io.Writer) *cobra.Command {
 			}
 
 			bname := args[0]
-			// TODO: Do we need to delete every record out of the local cache?
+
+			vers, ok := index.GetVersions(bname)
+			if !ok {
+				fmt.Fprintf(w, "Bundle %q not found. Nothing deleted.", bname)
+				return nil
+			}
+
 			if !index.Delete(bname) {
 				fmt.Fprintf(w, "Bundle %q not found. Nothing deleted.", bname)
+				return nil
 			}
-			return index.WriteFile(h.Repositories(), 0644)
+			if err := index.WriteFile(h.Repositories(), 0644); err != nil {
+				return err
+			}
+
+			// Now that the index record is gone, we can safely delete records.
+			// It is odd that there is no library func to do this.
+			for _, sha := range vers {
+				fpath := filepath.Join(h.Bundles(), sha)
+				if err := os.Remove(fpath); err != nil {
+					fmt.Fprintf(w, "WARNING: could not delete stake record %q", fpath)
+				}
+			}
+			return nil
 		},
 	}
 	return cmd

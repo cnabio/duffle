@@ -40,6 +40,12 @@ func TestLoadIndexReader(t *testing.T) {
 		t.Errorf("expected lists to be equal, got '%v'", l)
 	}
 
-	assert.True(t, l.Delete("hub.cnlabs.io/goodbyeworld"))
-	assert.False(t, l.Has("hub.cnlabs.io/goodbyeworld", "1.0.0"))
+	is := assert.New(t)
+	revs, ok := l.GetVersions("hub.cnlabs.io/goodbyeworld")
+	is.True(ok)
+	is.Len(revs, 2)
+	is.Equal("abcdefghijklmnop", revs["1.0.0"])
+
+	is.True(l.Delete("hub.cnlabs.io/goodbyeworld"))
+	is.False(l.Has("hub.cnlabs.io/goodbyeworld", "1.0.0"))
 }

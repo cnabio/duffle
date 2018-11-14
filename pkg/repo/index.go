@@ -107,6 +107,16 @@ func (i Index) Get(name, version string) (string, error) {
 	return "", ErrNoBundleVersion
 }
 
+// GetVersions gets all of the versions for the given name.
+//
+// The versions are returned as hash keys, where the values are the SHAs
+//
+// If the name is not found, this will return false.
+func (i Index) GetVersions(name string) (map[string]string, bool) {
+	ret, ok := i[name]
+	return ret, ok
+}
+
 // WriteFile writes an index file to the given destination path.
 //
 // The mode on the file is set to 'mode'.
