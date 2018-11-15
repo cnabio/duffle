@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -69,6 +68,7 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 	}
 	bf := &bundle.Bundle{
 		Name:        ctx.Manifest.Name,
+		Version:     ctx.Manifest.Version,
 		Description: ctx.Manifest.Description,
 		Images:      []bundle.Image{},
 		Keywords:    ctx.Manifest.Keywords,
@@ -88,7 +88,6 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 					Image:     c.URI(),
 					ImageType: c.Type(),
 				}}
-			bf.Version = strings.Split(c.URI(), ":")[1]
 		} else {
 			bf.Images = append(bf.Images, bundle.Image{Name: c.Name(), URI: c.URI()})
 		}
