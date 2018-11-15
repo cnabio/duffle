@@ -1,17 +1,19 @@
 package manifest
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
 	m := New()
-	expected := "&{manifest  [] [] map[] map[] map[]}"
-	actual := fmt.Sprintf("%v", m)
-	if expected != actual {
-		t.Errorf("wanted %s, got %s", expected, actual)
-	}
+	// Testing to make sure maps are initialized
+	is := assert.New(t)
+	is.Len(m.Components, 0)
+	is.Len(m.Parameters, 0)
+	is.Len(m.Credentials, 0)
+
 }
 
 func TestGenerateName(t *testing.T) {

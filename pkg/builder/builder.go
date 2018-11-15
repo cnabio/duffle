@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Masterminds/semver"
+
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/duffle/manifest"
 )
@@ -18,6 +20,10 @@ import (
 type Builder struct {
 	ID      string
 	LogsDir string
+	// If this is true, versions will contain build metadata
+	// Example:
+	//   0.1.2+2c3c59e8a5adad62d2245cbb7b2a8685b1a9a717
+	VersionWithBuildMetadata bool
 }
 
 // New returns a new Builder
@@ -88,7 +94,16 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 					Image:     c.URI(),
 					ImageType: c.Type(),
 				}}
-			bf.Version = strings.Split(c.URI(), ":")[1]
+			//bf.Version = strings.Split(c.URI(), ":")[1]
+			baseVersion := mfst.Version
+			if baseVersion == "" {
+				baseVersion = "0.1.0"
+			}
+			newver, err := b.version(baseVersion, strings.Split(c.URI(), ":")[1])
+			if err != nil {
+				return nil, nil, err
+			}
+			bf.Version = newver
 		} else {
 			bf.Images = append(bf.Images, bundle.Image{Name: c.Name(), URI: c.URI()})
 		}
@@ -102,6 +117,23 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 	}
 
 	return app, bf, nil
+}
+
+func (b *Builder) version(baseVersion, sha string) (string, error) {
+	sv, err := semver.NewVersion(baseVersion)
+	if err != nil {
+		return baseVersion, err
+	}
+
+	if b.VersionWithBuildMetadata {
+		newsv, err := sv.SetMetadata(sha)
+		if err != nil {
+			return baseVersion, err
+		}
+		return newsv.String(), nil
+	}
+
+	return sv.String(), nil
 }
 
 // Build passes the context of each component to its respective builder
