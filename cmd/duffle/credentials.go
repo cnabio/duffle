@@ -41,7 +41,7 @@ func newCredentialsCmd(w io.Writer) *cobra.Command {
 		Use:     "credentials",
 		Short:   "manage credential sets",
 		Long:    credentialDesc,
-		Aliases: []string{"creds", "credential"},
+		Aliases: []string{"creds", "credential", "cred"},
 	}
 
 	cmd.AddCommand(
