@@ -8,5 +8,18 @@
         "registry": "microsoft"
       }
     }
-  }
+  },
+  "parameters": {
+    "foo": {
+      "type": "string"
+    }
+  },
+  "credentials": {
+    "bar": {
+      "path": "/tmp"
+    }
+  },
+  "maintainers": [
+    {"name": "sally"}
+  ]
 }
