@@ -43,7 +43,7 @@ function runSuite(e, p) {
 
 // runTests is a Check Run that is ran as part of a Checks Suite
 function runTests(e, p) {
-  console.log("Check requested")
+    console.log("Check requested")
 
     // Create Notification object (which is just a Job to update GH using the Checks API)
     var note = new Notification(`tests`, e, p);
@@ -171,44 +171,34 @@ function release(project, tag) {
   ])
 }
 
-// TODO: wire this up
-function goDockerBuild(project, tag) {
+// Separate docker build stage as there may be multiple consumers/publishers
+function goDockerBuild(e, p) {
   // We build in a separate pod b/c AKS's Docker is too old to do multi-stage builds.
-  const goBuild = new Job("brigade-docker-build", goImg);
-  const gopath = "/go"
-  const localPath = gopath + "/src/github.com/" + project.repo.name;
+  const goDockerBuild = new Job(`${projectName}-docker-build`, goImg);
 
-  goBuild.storage.enabled = true;
-  goBuild.env = {
+  goDockerBuild.storage.enabled = true;
+  goDockerBuild.env = {
     "DEST_PATH": localPath,
     "GOPATH": gopath
   };
-  goBuild.tasks = [
-    `cd /src && git checkout ${tag}`,
+  goDockerBuild.tasks = [
+    "cd /src",
     `mkdir -p ${localPath}/bin`,
     `mv /src/* ${localPath}`,
+    `cp -a /src/.git ${localPath}`,
     `cd ${localPath}`,
-    "make vendor",
-    "make build-docker-bins"
+    "make bootstrap",
+    `make build-docker-bin`,
+    "mkdir -p /mnt/brigade/share/bin",
+    "cp -a ./bin/* /mnt/brigade/share/bin/"
   ];
 
-  for (let i of images) {
-    goBuild.tasks.push(
-      // Copy the Docker rootfs of each binary into shared storage. This is
-      // a little tricky because worker is non-Go, so later we will have
-      // to copy them back.
-      `mkdir -p /mnt/brigade/share/${i}/rootfs`,
-      // If there's no rootfs, we're done. Otherwise, copy it.
-      `[ ! -d ${i}/rootfs ] || cp -a ./${i}/rootfs/* /mnt/brigade/share/${i}/rootfs/`,
-    );
-  }
-  goBuild.tasks.push("ls -lah /mnt/brigade/share");
-
-  return goBuild;
+  return goDockerBuild;
 }
 
+// Not being used yet, but most likely will be once repo/image public
 function dockerhubPublish(project, tag) {
-  const publisher = new Job("dockerhub-publish", "docker");
+  const publisher = new Job(`${projectName}-dockerhub-publish`, "docker");
   let dockerRegistry = project.secrets.dockerhubRegistry || "docker.io";
   let dockerOrg = project.secrets.dockerhubOrg || "deis";
 
@@ -217,18 +207,29 @@ function dockerhubPublish(project, tag) {
   publisher.tasks = [
     "apk add --update --no-cache make",
     `docker login ${dockerRegistry} -u ${project.secrets.dockerhubUsername} -p ${project.secrets.dockerhubPassword}`,
-    "cd /src"
+    "cd /src",
+    "cp -av /mnt/brigade/share/bin ./",
+    `SHELL=/bin/sh DOCKER_REGISTRY=${dockerOrg} VERSION=${tag} make docker-build docker-push`,
+    `docker logout ${dockerRegistry}`
   ];
 
-  for (let i of images) {
-      publisher.tasks.push(
-        `cp -av /mnt/brigade/share/${i}/rootfs ./${i}`,
-        `DOCKER_REGISTRY=${dockerOrg} VERSION=${tag} make ${i}-image ${i}-push`
-      );
-  }
-  publisher.tasks.push(`docker logout ${dockerRegistry}`);
-
   return publisher;
+}
+
+function acrBuild(project, tag) {
+  var builder = new Job("az-build", "microsoft/azure-cli:latest")
+  builder.imageForcePull = true;
+  builder.storage.enabled = true;
+
+  let registry = project.secrets.acrRegistry || "brigade"
+  builder.tasks = [
+    `az login --service-principal -u ${project.secrets.acrName} -p '${project.secrets.acrToken}' --tenant ${project.secrets.acrTenant}`,
+    `cd /src`,
+    `cp -av /mnt/brigade/share/bin ./`,
+    `az acr build -r ${registry} -t ${projectOrg}/${projectName}:${tag} .`
+  ];
+
+  return builder;
 }
 
 function slackNotify(title, msg, project) {
@@ -258,9 +259,28 @@ events.on("exec", (e, p) => {
 // Although a GH App will trigger 'check_suite:requested' on a push to master event,
 // it will not for a tag push, hence the need for this handler
 events.on("push", (e, p) => {
-  if (e.revision.ref.startsWith("refs/tags/")) {
+  let publish = false;
+  let release = false;
+  let tag = "";
+
+  if (e.revision.ref.includes("refs/heads/master")) {
+    publish = true;
+    tag = "latest"
+  } else if (e.revision.ref.startsWith("refs/tags/")) {
+    publish = true;
+    release = true;
     let parts = e.revision.ref.split("/", 3)
-    let tag = parts[2]
+    tag = parts[2]
+  }
+
+  if (publish) {
+    Group.runEach([
+      goDockerBuild(e, p),
+      acrBuild(p, tag)
+    ])
+  }
+
+  if (release) {
     release(p, tag)
   }
 })
@@ -268,6 +288,13 @@ events.on("push", (e, p) => {
 events.on("check_suite:requested", runSuite)
 events.on("check_suite:rerequested", runSuite)
 events.on("check_run:rerequested", runSuite)
+
+events.on("publish", (e, p) => {
+  Group.runEach([
+    goDockerBuild(e, p),
+    acrBuild(p, "latest")
+  ])
+})
 
 events.on("release", (e, p) => {
   /*

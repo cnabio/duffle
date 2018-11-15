@@ -13,7 +13,7 @@ ifeq ($(OS),Windows_NT)
 	CHECK  = where.exe
 else
 	TARGET = $(PROJECT)
-	SHELL  = bash
+	SHELL  ?= bash
 	CHECK  = command -v
 endif
 
@@ -59,7 +59,7 @@ build-docker-bin:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(TARGET) github.com/$(ORG)/$(PROJECT)/cmd/...
 
 .PHONY: docker-build
-docker-build: build-docker-bin
+docker-build:
 	docker build -t $(DOCKER_REGISTRY)/$(PROJECT):$(IMAGE_TAG) .
 
 .PHONY: docker-push
