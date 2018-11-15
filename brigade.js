@@ -80,7 +80,8 @@ class Notification {
   // Send a new notification, and return a Promise<result>.
   run() {
       this.count++
-      var j = new Job(`${ this.name }-${ this.count }`, "technosophos/brigade-github-check-run:latest");
+      var j = new Job(`${ this.name }-${ this.count }`, "deis/brigade-github-check-run:latest");
+      j.imageForcePull = true;
       j.env = {
           CHECK_CONCLUSION: this.conclusion,
           CHECK_NAME: this.name,
@@ -170,10 +171,70 @@ function release(project, tag) {
   ])
 }
 
+// TODO: wire this up
+function goDockerBuild(project, tag) {
+  // We build in a separate pod b/c AKS's Docker is too old to do multi-stage builds.
+  const goBuild = new Job("brigade-docker-build", goImg);
+  const gopath = "/go"
+  const localPath = gopath + "/src/github.com/" + project.repo.name;
+
+  goBuild.storage.enabled = true;
+  goBuild.env = {
+    "DEST_PATH": localPath,
+    "GOPATH": gopath
+  };
+  goBuild.tasks = [
+    `cd /src && git checkout ${tag}`,
+    `mkdir -p ${localPath}/bin`,
+    `mv /src/* ${localPath}`,
+    `cd ${localPath}`,
+    "make vendor",
+    "make build-docker-bins"
+  ];
+
+  for (let i of images) {
+    goBuild.tasks.push(
+      // Copy the Docker rootfs of each binary into shared storage. This is
+      // a little tricky because worker is non-Go, so later we will have
+      // to copy them back.
+      `mkdir -p /mnt/brigade/share/${i}/rootfs`,
+      // If there's no rootfs, we're done. Otherwise, copy it.
+      `[ ! -d ${i}/rootfs ] || cp -a ./${i}/rootfs/* /mnt/brigade/share/${i}/rootfs/`,
+    );
+  }
+  goBuild.tasks.push("ls -lah /mnt/brigade/share");
+
+  return goBuild;
+}
+
+function dockerhubPublish(project, tag) {
+  const publisher = new Job("dockerhub-publish", "docker");
+  let dockerRegistry = project.secrets.dockerhubRegistry || "docker.io";
+  let dockerOrg = project.secrets.dockerhubOrg || "deis";
+
+  publisher.docker.enabled = true;
+  publisher.storage.enabled = true;
+  publisher.tasks = [
+    "apk add --update --no-cache make",
+    `docker login ${dockerRegistry} -u ${project.secrets.dockerhubUsername} -p ${project.secrets.dockerhubPassword}`,
+    "cd /src"
+  ];
+
+  for (let i of images) {
+      publisher.tasks.push(
+        `cp -av /mnt/brigade/share/${i}/rootfs ./${i}`,
+        `DOCKER_REGISTRY=${dockerOrg} VERSION=${tag} make ${i}-image ${i}-push`
+      );
+  }
+  publisher.tasks.push(`docker logout ${dockerRegistry}`);
+
+  return publisher;
+}
+
 function slackNotify(title, msg, project) {
   if (project.secrets.SLACK_WEBHOOK) {
     var slack = new Job(`${projectName}-slack-notify`, "technosophos/slack-notify:latest")
-
+    slack.imageForcePull = true;
     slack.env = {
       SLACK_WEBHOOK: project.secrets.SLACK_WEBHOOK,
       SLACK_USERNAME: "duffle-ci",

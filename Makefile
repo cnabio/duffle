@@ -1,10 +1,11 @@
-PROJECT     := duffle
-ORG         := deis
-BINDIR      := $(CURDIR)/bin
-GOFLAGS     :=
-LDFLAGS     := -w -s
-TESTFLAGS   :=
-INSTALL_DIR := /usr/local/bin
+PROJECT         := duffle
+ORG             := deis
+DOCKER_REGISTRY ?= deis
+BINDIR          := $(CURDIR)/bin
+GOFLAGS         :=
+LDFLAGS         := -w -s
+TESTFLAGS       :=
+INSTALL_DIR     := /usr/local/bin
 
 ifeq ($(OS),Windows_NT)
 	TARGET = $(PROJECT).exe
@@ -16,16 +17,19 @@ else
 	CHECK  = command -v
 endif
 
-GIT_TAG  := $(shell git describe --tags --always)
-VERSION  := ${GIT_TAG}
-LDFLAGS  += -X github.com/$(ORG)/$(PROJECT)/pkg/version.Version=$(VERSION)
+GIT_TAG   := $(shell git describe --tags --always)
+VERSION   ?= ${GIT_TAG}
+# Docker image tags won't allow '+' characters, which may exist in a git tag
+# TODO: need a platform-agnostic way of doing this, perhaps in original 'git describe ...' ?
+IMAGE_TAG ?= $(shell echo $(VERSION) | sed 's/+/-/g')
+LDFLAGS   += -X github.com/$(ORG)/$(PROJECT)/pkg/version.Version=$(VERSION)
 
 .PHONY: default
 default: build
 
 .PHONY: build
 build:
-	go build $(GOFLAGS) -o $(BINDIR)/$(TARGET) -ldflags '$(LDFLAGS)' github.com/$(ORG)/$(PROJECT)/cmd/...
+	go build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(TARGET) github.com/$(ORG)/$(PROJECT)/cmd/...
 
 .PHONY: install
 install:
@@ -49,6 +53,18 @@ build-release:
 .PHONY: debug
 debug:
 	go build $(GOFLAGS) -o $(BINDIR)/$(TARGET) github.com/$(ORG)/$(PROJECT)/cmd/...
+
+.PHONY: build-docker-bin
+build-docker-bin:
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(TARGET) github.com/$(ORG)/$(PROJECT)/cmd/...
+
+.PHONY: docker-build
+docker-build: build-docker-bin
+	docker build -t $(DOCKER_REGISTRY)/$(PROJECT):$(IMAGE_TAG) .
+
+.PHONY: docker-push
+docker-push:
+	docker push $(DOCKER_REGISTRY)/$(PROJECT):$(IMAGE_TAG)
 
 .PHONY: test
 test:
