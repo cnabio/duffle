@@ -41,3 +41,8 @@
 [[constraint]]
   name = "gopkg.in/yaml.v2"
   version = "2.2.1"
+
+[prune]
+  non-go = true
+  unused-packages = true
+  go-tests = true
