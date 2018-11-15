@@ -25,7 +25,7 @@ func TestBundleSign(t *testing.T) {
 		outfile:  outfile,
 		identity: identity,
 	}
-	if err := cmd.signBundle(bundlejson, keyring); err != nil {
+	if err := cmd.signBundle(bundlejson, keyring, true); err != nil {
 		t.Fatal(err)
 	}
 

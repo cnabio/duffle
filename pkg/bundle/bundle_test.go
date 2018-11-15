@@ -1,6 +1,8 @@
 package bundle
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -185,5 +187,91 @@ func TestValidateBundle_RequiresInvocationImage(t *testing.T) {
 	err = b.Validate()
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+type fakeContainerImageResolver struct {
+	resolveFun func(string, string) (string, string, error)
+}
+
+func (f fakeContainerImageResolver) Resolve(originalImageRef, originalDigest string) (string, string, error) {
+	return f.resolveFun(originalImageRef, originalDigest)
+}
+
+func makeInvocationImageBundle(image, imageType, digest string) *Bundle {
+	return &Bundle{
+		InvocationImages: []InvocationImage{
+			// Digested Docker image
+			InvocationImage{
+				BaseImage: BaseImage{
+					Digest: digest,
+				},
+				Image:     image,
+				ImageType: imageType,
+			},
+		},
+	}
+}
+
+func TestFixupContainerImages(t *testing.T) {
+	const digest = "sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341"
+	testCases := []struct {
+		name     string
+		bundle   *Bundle
+		expected *Bundle
+		resolver func(string, string) (string, string, error)
+		err      error
+	}{
+		{
+			name:     "Digested Docker invocation image",
+			bundle:   makeInvocationImageBundle("my-image:mytag", "docker", digest),
+			expected: makeInvocationImageBundle("my-image:mytag@"+digest, "docker", digest),
+			resolver: func(image, digest string) (string, string, error) {
+				return fmt.Sprintf("%s@%s", image, digest), digest, nil
+			},
+		},
+		{
+			name:     "Digested OCI invocation image",
+			bundle:   makeInvocationImageBundle("my-image:mytag", "oci", digest),
+			expected: makeInvocationImageBundle("my-image:mytag@"+digest, "oci", digest),
+			resolver: func(image, digest string) (string, string, error) {
+				return fmt.Sprintf("%s@%s", image, digest), digest, nil
+			},
+		},
+		{
+			name:     "Custom invocation image",
+			bundle:   makeInvocationImageBundle("my-vm-image", "custom-vm", digest),
+			expected: makeInvocationImageBundle("my-vm-image", "custom-vm", digest),
+		},
+		{
+			name:     "Not digested Docker invocation image",
+			bundle:   makeInvocationImageBundle("my-image:mytag", "docker", ""),
+			expected: makeInvocationImageBundle("my-image:mytag@"+digest, "docker", digest),
+			resolver: func(image, _ string) (string, string, error) { return fmt.Sprintf("%s@%s", image, digest), digest, nil },
+		},
+		{
+			name:     "Not digested OCI invocation image",
+			bundle:   makeInvocationImageBundle("my-image:mytag", "oci", ""),
+			expected: makeInvocationImageBundle("my-image:mytag@"+digest, "oci", digest),
+			resolver: func(image, _ string) (string, string, error) { return fmt.Sprintf("%s@%s", image, digest), digest, nil },
+		},
+		{
+			name:     "Unresolved image",
+			bundle:   makeInvocationImageBundle("my-image:mytag", "docker", ""),
+			resolver: func(_, _ string) (string, string, error) { return "", "", errors.New("unresolved image") },
+			err:      errors.New("unresolved image"),
+		},
+	}
+
+	for _, c := range testCases {
+		t.Run(c.name, func(t *testing.T) {
+			is := assert.New(t)
+			err := c.bundle.FixupContainerImages(fakeContainerImageResolver{resolveFun: c.resolver})
+			if c.err != nil {
+				is.EqualError(err, c.err.Error())
+			} else {
+				is.Equal(c.expected, c.bundle)
+			}
+		})
 	}
 }
