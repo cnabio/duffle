@@ -77,7 +77,7 @@ func TestResolveImage(t *testing.T) {
 		DockerCli: *command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false),
 		client: fakeDockerClient{
 			localImagesDigests: map[string][]string{
-				"test-image": []string{"test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341"},
+				"test-image": {"test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341"},
 			},
 		},
 	}
@@ -90,7 +90,7 @@ func TestResolveImage(t *testing.T) {
 		client: fakeDockerClient{
 			localImagesDigests: map[string][]string{},
 			pulledImagesDigests: map[string][]string{
-				"test-image": []string{"test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341"},
+				"test-image": {"test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341"},
 			},
 		},
 	}
@@ -107,7 +107,7 @@ func TestResolveImage(t *testing.T) {
 			},
 		},
 	}
-	resolvedImage, resolvedDigest, err = testee.Resolve("test-image", "")
+	_, _, err = testee.Resolve("test-image", "")
 	isLocalOnly, image := IsErrImageLocalOnly(err)
 	is.True(isLocalOnly)
 	is.Equal(image, "test-image")

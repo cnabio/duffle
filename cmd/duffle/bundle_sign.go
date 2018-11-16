@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/deis/duffle/pkg/image"
 	"io"
 	"io/ioutil"
 	"os"
@@ -14,6 +13,7 @@ import (
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/crypto/digest"
 	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/image"
 	"github.com/deis/duffle/pkg/signature"
 )
 
@@ -49,7 +49,11 @@ func newBundleSignCmd(w io.Writer) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return sign.signBundle(bundle, secring, false)
+			resolver, err := image.NewResolver()
+			if err != nil {
+				return err
+			}
+			return sign.signBundle(bundle, secring, resolver)
 		},
 	}
 	cmd.Flags().StringVarP(&sign.identity, "user", "u", "", "the user ID of the key to use. Format is either email address or 'NAME (COMMENT) <EMAIL>'")
@@ -72,7 +76,7 @@ func bundleFileOrArg1(args []string, bundle string) (string, error) {
 	}
 	return bundle, nil
 }
-func (bs *bundleSignCmd) signBundle(bundleFile, keyring string, skipFixupImages bool) error {
+func (bs *bundleSignCmd) signBundle(bundleFile, keyring string, containerImageResolver bundle.ContainerImageResolver) error {
 	def := home.DefaultRepository()
 	// Verify that file exists
 	if fi, err := os.Stat(bundleFile); err != nil {
@@ -89,18 +93,14 @@ func (bs *bundleSignCmd) signBundle(bundleFile, keyring string, skipFixupImages 
 	if err != nil {
 		return err
 	}
-	if !skipFixupImages {
-		resolver, err := image.NewResolver()
-		if err != nil {
-			return err
+
+	if err := b.FixupContainerImages(containerImageResolver); err != nil {
+		if ok, image := image.IsErrImageLocalOnly(err); ok {
+			fmt.Fprintf(os.Stderr, "Image %q is only available locally. Please push it to the registry\n", image)
 		}
-		if err := b.FixupContainerImages(resolver); err != nil {
-			if ok, image := image.IsErrImageLocalOnly(err); ok {
-				fmt.Fprintf(os.Stderr, "Image %q is only available locally. Please push it to the registry\n", image)
-			}
-			return err
-		}
+		return err
 	}
+
 	if !bs.skipValidation {
 		if err := b.Validate(); err != nil {
 			return err

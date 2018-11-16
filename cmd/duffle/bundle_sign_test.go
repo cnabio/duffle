@@ -9,6 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type noopResolver struct {
+}
+
+func (noopResolver) Resolve(originalImageRef, originalDigest string) (string, string, error) {
+	return originalImageRef, originalDigest, nil
+}
+
 func TestBundleSign(t *testing.T) {
 	tmp, err := ioutil.TempFile("", "duffle-")
 	if err != nil {
@@ -25,7 +32,7 @@ func TestBundleSign(t *testing.T) {
 		outfile:  outfile,
 		identity: identity,
 	}
-	if err := cmd.signBundle(bundlejson, keyring, true); err != nil {
+	if err := cmd.signBundle(bundlejson, keyring, noopResolver{}); err != nil {
 		t.Fatal(err)
 	}
 
