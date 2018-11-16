@@ -60,6 +60,7 @@ func newRootCmd(outputRedirect io.Writer) *cobra.Command {
 	cmd.AddCommand(newClaimsCmd(outLog))
 	cmd.AddCommand(newExportCmd(outLog))
 	cmd.AddCommand(newImportCmd(outLog))
+	cmd.AddCommand(newCreateCmd(outLog))
 
 	return cmd
 }
