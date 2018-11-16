@@ -92,11 +92,7 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 			ii := bundle.InvocationImage{}
 			ii.Image = c.URI()
 			ii.ImageType = c.Type()
-			bf.InvocationImages = []bundle.InvocationImage{
-				{
-					Image:     c.URI(),
-					ImageType: c.Type(),
-				}}
+			bf.InvocationImages = []bundle.InvocationImage{ii}
 			//bf.Version = strings.Split(c.URI(), ":")[1]
 			baseVersion := mfst.Version
 			if baseVersion == "" {
