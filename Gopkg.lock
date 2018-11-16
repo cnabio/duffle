@@ -94,13 +94,14 @@
   version = "v18.06.0-ce-rc3"
 
 [[projects]]
-  digest = "1:c2fd3505322eed56c220992927a13029d32b7fea0e9cc1ece7a2217369d76914"
+  digest = "1:1cb756deb458cb9be52d2e3fe67a19a7185b8c8453c691ba5eb0c7db00a51205"
   name = "github.com/docker/distribution"
   packages = [
     ".",
     "digestset",
     "manifest",
     "manifest/manifestlist",
+    "manifest/schema1",
     "manifest/schema2",
     "metrics",
     "reference",
@@ -214,12 +215,28 @@
   version = "v0.3.3"
 
 [[projects]]
+  branch = "master"
+  digest = "1:ce43438a8204a4259b4461153a392bc3e504bef7e4785a8192344f002c7bd935"
+  name = "github.com/docker/libtrust"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "aabc10ec26b754e797f9028f4589c5b7bd90dc20"
+
+[[projects]]
   digest = "1:1b91ae0dc69a41d4c2ed23ea5cffb721ea63f5037ca4b81e6d6771fbb8f45129"
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   pruneopts = "NUT"
   revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
   version = "v1.4.7"
+
+[[projects]]
+  digest = "1:0cb5b9c5e5754914abee038463a4c887f873861ec294c2535e3967e8042d3bcd"
+  name = "github.com/genuinetools/reg"
+  packages = ["registry"]
+  pruneopts = "NUT"
+  revision = "4a4d0e5d108ca9558879bdf1aba94d09e921cf1e"
+  version = "v0.16.0"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
@@ -425,6 +442,14 @@
   pruneopts = "NUT"
   revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
   version = "v1.2.0"
+
+[[projects]]
+  digest = "1:014d3763649dd2f071fcf4acb03f3a2964c0c6dcf5581f4585fdd0d492235518"
+  name = "github.com/peterhellberg/link"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "d1cebc7ea14a5fc0de7cb4a45acae773161642c6"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:5cf3f025cbee5951a4ee961de067c8a89fc95a5adabead774f82822efabab121"
@@ -683,10 +708,14 @@
     "github.com/docker/cli/cli/command",
     "github.com/docker/cli/cli/command/image/build",
     "github.com/docker/cli/cli/config",
+    "github.com/docker/cli/cli/config/configfile",
     "github.com/docker/cli/cli/debug",
     "github.com/docker/cli/cli/flags",
     "github.com/docker/cli/opts",
+    "github.com/docker/distribution",
     "github.com/docker/distribution/digestset",
+    "github.com/docker/distribution/manifest",
+    "github.com/docker/distribution/manifest/schema2",
     "github.com/docker/distribution/reference",
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/api/types/container",
@@ -701,6 +730,7 @@
     "github.com/docker/docker/pkg/term",
     "github.com/docker/docker/registry",
     "github.com/docker/go-connections/tlsconfig",
+    "github.com/genuinetools/reg/registry",
     "github.com/ghodss/yaml",
     "github.com/gosuri/uitable",
     "github.com/oklog/ulid",
