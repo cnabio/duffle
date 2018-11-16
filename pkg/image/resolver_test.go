@@ -33,6 +33,7 @@ type fakeDockerClient struct {
 	client.Client
 	localImagesDigests  map[string][]string
 	pulledImagesDigests map[string][]string
+	pushedImagesDigests map[string][]string
 }
 
 type notFoundMock struct {
@@ -62,6 +63,11 @@ func (c *fakeDockerClient) Info(ctx context.Context) (types.Info, error) {
 
 func (c *fakeDockerClient) ImagePull(ctx context.Context, ref string, options types.ImagePullOptions) (io.ReadCloser, error) {
 	c.localImagesDigests[ref] = c.pulledImagesDigests[ref]
+	return ioutil.NopCloser(bytes.NewBuffer(nil)), nil
+}
+
+func (c *fakeDockerClient) ImagePush(ctx context.Context, ref string, options types.ImagePushOptions) (io.ReadCloser, error) {
+	c.localImagesDigests[ref] = c.pushedImagesDigests[ref]
 	return ioutil.NopCloser(bytes.NewBuffer(nil)), nil
 }
 
@@ -105,10 +111,19 @@ func TestResolveImage(t *testing.T) {
 			localImagesDigests: map[string][]string{
 				"test-image": nil,
 			},
+			pushedImagesDigests: map[string][]string{
+				"test-image": {"test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341"},
+			},
 		},
 	}
 	_, _, err = testee.Resolve("test-image", "")
 	isLocalOnly, image := IsErrImageLocalOnly(err)
 	is.True(isLocalOnly)
 	is.Equal(image, "test-image")
+
+	testee.pushLocalImages = true
+	resolvedImage, resolvedDigest, err = testee.Resolve("test-image", "")
+	is.NoError(err)
+	is.Equal("test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341", resolvedImage)
+	is.Equal("sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341", resolvedDigest)
 }

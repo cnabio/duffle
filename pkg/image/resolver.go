@@ -14,11 +14,11 @@ import (
 
 // Resolver implements bundle.ContainerImageResolver
 type Resolver struct {
-	dockerCli command.Cli
+	dockerCli       command.Cli
+	pushLocalImages bool
 }
 
-// Resolve resolves an image and return the digested reference and digest
-func (r *Resolver) Resolve(image, digest string) (string, string, error) {
+func resolve(cli command.Cli, image, digest string, pushLocalImages bool) (string, string, error) {
 	if digest != "" {
 		// The digest is already there, just append it to the image name
 		if !strings.HasSuffix(image, "@"+digest) {
@@ -28,13 +28,13 @@ func (r *Resolver) Resolve(image, digest string) (string, string, error) {
 	}
 	ctx := context.Background()
 	// Inspect local images to retrieve the digest, pull from registry if not found
-	result, _, err := r.dockerCli.Client().ImageInspectWithRaw(ctx, image)
+	result, _, err := cli.Client().ImageInspectWithRaw(ctx, image)
 	if client.IsErrNotFound(err) {
 		// Try to pull image
-		if err := PullImage(ctx, r.dockerCli, image); err != nil {
+		if err := PullImage(ctx, cli, image); err != nil {
 			return "", "", err
 		}
-		if result, _, err = r.dockerCli.Client().ImageInspectWithRaw(ctx, image); err != nil {
+		if result, _, err = cli.Client().ImageInspectWithRaw(ctx, image); err != nil {
 			return "", "", err
 		}
 	} else if err != nil {
@@ -42,6 +42,12 @@ func (r *Resolver) Resolve(image, digest string) (string, string, error) {
 	}
 
 	if len(result.RepoDigests) == 0 {
+		if pushLocalImages {
+			if err := pushImage(ctx, cli, image); err != nil {
+				return "", "", err
+			}
+			return resolve(cli, image, digest, false)
+		}
 		return "", "", imageLocalOnlyError{name: image}
 	}
 
@@ -52,14 +58,20 @@ func (r *Resolver) Resolve(image, digest string) (string, string, error) {
 	return digestedRef, strings.Split(digestedRef, "@")[1], nil
 }
 
+// Resolve resolves an image and return the digested reference and digest
+func (r *Resolver) Resolve(image, digest string) (string, string, error) {
+	return resolve(r.dockerCli, image, digest, r.pushLocalImages)
+}
+
 // NewResolver creates a container image resolver
-func NewResolver() (*Resolver, error) {
+func NewResolver(pushLocalImages bool) (*Resolver, error) {
 	cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false)
 	if err := cli.Initialize(flags.NewClientOptions()); err != nil {
 		return nil, err
 	}
-	return &Resolver{dockerCli: cli}, nil
+	return &Resolver{dockerCli: cli, pushLocalImages: pushLocalImages}, nil
 }
+
 func getFirstMatchingDigest(image string, digestedRefs []string) (string, error) {
 	repoInfo, err := getRepoInfo(image)
 	if err != nil {

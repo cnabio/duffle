@@ -204,10 +204,10 @@ func makeInvocationImageBundle(image, imageType, digest string) *Bundle {
 			// Digested Docker image
 			{
 				BaseImage: BaseImage{
-					Digest: digest,
+					Digest:    digest,
+					Image:     image,
+					ImageType: imageType,
 				},
-				Image:     image,
-				ImageType: imageType,
 			},
 		},
 	}
