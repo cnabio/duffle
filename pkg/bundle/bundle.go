@@ -33,6 +33,16 @@ func (b Bundle) WriteFile(dest string, mode os.FileMode) error {
 	return ioutil.WriteFile(dest, d, mode)
 }
 
+// WriteTo writes unsigned JSON to an io.Writer using the standard formatting.
+func (b Bundle) WriteTo(w io.Writer) (int64, error) {
+	d, err := json.MarshalIndent(b, "", "    ")
+	if err != nil {
+		return 0, err
+	}
+	l, err := w.Write(d)
+	return int64(l), err
+}
+
 // LocationRef specifies a location within the invocation package
 type LocationRef struct {
 	Path  string `json:"path" toml:"path"`

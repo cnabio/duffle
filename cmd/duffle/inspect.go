@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -29,20 +28,19 @@ func newInspectCmd(w io.Writer) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			bundleName := args[0]
 
-			bundle, err := loadOrPullBundle(bundleName, insecure)
+			bundleFile, err := loadOrPullBundle(bundleName, insecure)
 			if err != nil {
 				return err
 			}
 
-			f, err := os.Open(bundle)
+			bun, err := loadBundle(bundleFile, insecure)
 			if err != nil {
 				return err
 			}
-			defer f.Close()
 
-			io.Copy(w, f)
+			_, err = bun.WriteTo(w)
 
-			return nil
+			return err
 		},
 	}
 
