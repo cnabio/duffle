@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/repo"
@@ -32,6 +34,13 @@ func newBundleRemoveCmd(w io.Writer) *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			bname := args[0]
+			var specificVersion string
+			if parts := strings.Split(bname, ":"); len(parts) == 2 {
+				if versions != "" {
+					return errors.New("cannot set --version flag when bundle name has a tag")
+				}
+				bname, specificVersion = parts[0], parts[1]
+			}
 
 			h := home.Home(homePath())
 			index, err := repo.LoadIndex(h.Repositories())
@@ -79,6 +88,22 @@ func newBundleRemoveCmd(w io.Writer) *cobra.Command {
 				deleteBundleVersions(deletions, index, h, w)
 				return nil
 			}
+			if specificVersion != "" {
+				sha, ok := vers[specificVersion]
+				if !ok {
+					return fmt.Errorf("version %q not found", specificVersion)
+				}
+				index.DeleteVersion(bname, specificVersion)
+				if err := index.WriteFile(h.Repositories(), 0644); err != nil {
+					return err
+				}
+				if !isShaReferenced(index, sha) {
+					fpath := filepath.Join(h.Bundles(), sha)
+					if err := os.Remove(fpath); err != nil {
+						fmt.Fprintf(w, "WARNING: could not delete stake record %q", fpath)
+					}
+				}
+			}
 
 			// If no version was specified, delete entire record
 			if !index.Delete(bname) {
@@ -98,14 +123,27 @@ func newBundleRemoveCmd(w io.Writer) *cobra.Command {
 	return cmd
 }
 
+func isShaReferenced(index repo.Index, sha string) bool {
+	for _, vs := range index {
+		for _, otherSha := range vs {
+			if otherSha == sha {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // deleteBundleVersions removes the given SHAs from bundle storage
 //
 // It warns, but does not fail, if a given SHA is not found.
 func deleteBundleVersions(vers map[string]string, index repo.Index, h home.Home, w io.Writer) {
 	for _, sha := range vers {
-		fpath := filepath.Join(h.Bundles(), sha)
-		if err := os.Remove(fpath); err != nil {
-			fmt.Fprintf(w, "WARNING: could not delete stake record %q", fpath)
+		if !isShaReferenced(index, sha) {
+			fpath := filepath.Join(h.Bundles(), sha)
+			if err := os.Remove(fpath); err != nil {
+				fmt.Fprintf(w, "WARNING: could not delete stake record %q", fpath)
+			}
 		}
 	}
 }

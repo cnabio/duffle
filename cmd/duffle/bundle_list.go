@@ -79,7 +79,7 @@ func newBundleListCmd(w io.Writer) *cobra.Command {
 			}
 
 			for _, ref := range references {
-				fmt.Println(ref.Name())
+				fmt.Println(ref)
 			}
 
 			return nil

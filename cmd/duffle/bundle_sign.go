@@ -79,7 +79,6 @@ func bundleFileOrArg1(args []string, bundle string) (string, error) {
 	return bundle, nil
 }
 func (bs *bundleSignCmd) signBundle(bundleFile, keyring string, containerImageResolver bundle.ContainerImageResolver) error {
-	def := home.DefaultRepository()
 	// Verify that file exists
 	if fi, err := os.Stat(bundleFile); err != nil {
 		return fmt.Errorf("cannot find bundle file to sign: %v", err)
@@ -154,7 +153,7 @@ func (bs *bundleSignCmd) signBundle(bundleFile, keyring string, containerImageRe
 	}
 
 	// TODO - write pkg method in bundle that writes file and records the reference
-	if err := recordBundleReference(bs.home, fmt.Sprintf("%s/%s", def, b.Name), b.Version, digest); err != nil {
+	if err := recordBundleReference(bs.home, b.Name, b.Version, digest); err != nil {
 		return err
 	}
 
