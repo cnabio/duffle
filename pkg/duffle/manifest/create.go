@@ -37,7 +37,7 @@ func Scaffold(path string) error {
 		Version:     "0.1.0",
 		Description: "A short description of your bundle",
 		Components: map[string]*Component{
-			"cnab": &Component{
+			"cnab": {
 				Name:    "cnab",
 				Builder: "docker",
 				Configuration: map[string]string{
