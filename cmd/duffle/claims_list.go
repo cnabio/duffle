@@ -10,8 +10,9 @@ func newClaimListCmd(out io.Writer) *cobra.Command {
 	list := listCmd{out: out}
 
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "list available claims",
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "list available claims",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			l := &listCmd{out: out, long: list.long}
 			return l.run()

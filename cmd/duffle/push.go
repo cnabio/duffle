@@ -5,43 +5,49 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/repo"
 )
-
-type pushCmd struct {
-	out        io.Writer
-	bundleFile string
-	repo       string
-	home       home.Home
-	insecure   bool
-}
 
 func newPushCmd(out io.Writer) *cobra.Command {
 	const usage = `Pushes a CNAB bundle to a repository.`
 
-	var push = &pushCmd{out: out}
-
 	cmd := &cobra.Command{
-		Use:   "push",
+		Use:   "push NAME",
 		Short: "push a CNAB bundle to a repository",
 		Long:  usage,
+		Args:  cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
-			push.home = home.Home(homePath())
+			home := home.Home(homePath())
+			bundleName := args[0]
 
-			b, err := loadBundle(push.bundleFile, push.insecure)
+			ref, err := getReference(bundleName)
+			if err != nil {
+				return fmt.Errorf("could not parse reference for %s: %v", bundleName, err)
+			}
+
+			// read the bundle reference from repositories.json
+			index, err := repo.LoadIndex(home.Repositories())
+			if err != nil {
+				return fmt.Errorf("cannot open %s: %v", home.Repositories(), err)
+			}
+
+			digest, err := index.Get(ref.Name(), ref.Tag())
 			if err != nil {
 				return err
 			}
 
-			url, err := getBundleRepoURL(fmt.Sprintf("%s/%s:%s", push.repo, b.Name, b.Version), push.home)
+			body, err := os.Open(filepath.Join(home.Bundles(), digest))
 			if err != nil {
 				return err
 			}
+			defer body.Close()
 
-			body, err := os.Open(push.bundleFile)
+			url, err := repoURLFromReference(ref)
 			if err != nil {
 				return err
 			}
@@ -58,14 +64,10 @@ func newPushCmd(out io.Writer) *cobra.Command {
 			}
 			defer resp.Body.Close()
 
-			fmt.Fprintf(push.out, "Successfully pushed %s:%s to %s\n", b.Name, b.Version, push.repo)
+			fmt.Fprintf(out, "Successfully pushed %s\n", ref.String())
 			return nil
 		},
 	}
-
-	cmd.Flags().StringVarP(&push.bundleFile, "file", "f", "", "bundle file to push")
-	cmd.Flags().StringVarP(&push.repo, "repo", "", "https://hub.cnlabs.io", "repo to push to")
-	cmd.Flags().BoolVarP(&push.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }

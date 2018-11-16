@@ -1,25 +1,14 @@
 package repo
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
-	"sort"
-	"time"
 
 	"github.com/Masterminds/semver"
-
-	"github.com/deis/duffle/pkg/bundle"
-)
-
-const (
-	// APIVersionV1 is the v1 API version for index and repository files.
-	APIVersionV1 = "v1"
-	// IndexPath is the name of the index file for a given repository.
-	IndexPath = "index.json"
 )
 
 var (
@@ -31,51 +20,12 @@ var (
 	ErrNoBundleName = errors.New("no bundle name found")
 )
 
-// VersionedBundle is a list of versioned bundle references.
-// Implements a sorter on Version.
-type VersionedBundle []*bundle.Bundle
+// Index defines a list of bundle repositories, each repository's respective tags and the digest reference.
+type Index map[string]map[string]string
 
-// Len returns the length.
-func (c VersionedBundle) Len() int { return len(c) }
-
-// Swap swaps the position of two items in the versions slice.
-func (c VersionedBundle) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
-
-// Less returns true if the version of entry a is less than the version of entry b.
-func (c VersionedBundle) Less(a, b int) bool {
-	// Failed parse pushes to the back.
-	i, err := semver.NewVersion(c[a].Version)
-	if err != nil {
-		return true
-	}
-	j, err := semver.NewVersion(c[b].Version)
-	if err != nil {
-		return false
-	}
-	return i.LessThan(j)
-}
-
-// IndexFile represents the index file in a bundle repository
-type IndexFile struct {
-	APIVersion string                     `json:"apiVersion"`
-	Generated  time.Time                  `json:"generated"`
-	Entries    map[string]VersionedBundle `json:"entries"`
-	PublicKeys []string                   `json:"publicKeys,omitempty"`
-}
-
-// NewIndexFile initializes an index.
-func NewIndexFile() *IndexFile {
-	return &IndexFile{
-		APIVersion: APIVersionV1,
-		Generated:  time.Now(),
-		Entries:    map[string]VersionedBundle{},
-		PublicKeys: []string{},
-	}
-}
-
-// LoadIndexFile takes a file at the given path and returns an IndexFile object
-func LoadIndexFile(path string) (*IndexFile, error) {
-	f, err := os.Open(path)
+// LoadIndex takes a file at the given path and returns an Index object
+func LoadIndex(path string) (Index, error) {
+	f, err := os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
 	}
@@ -83,49 +33,69 @@ func LoadIndexFile(path string) (*IndexFile, error) {
 	return loadIndex(f)
 }
 
-// LoadIndexReader takes a reader and returns an IndexFile object
-func LoadIndexReader(r io.Reader) (*IndexFile, error) {
+// LoadIndexReader takes a reader and returns an Index object
+func LoadIndexReader(r io.Reader) (Index, error) {
 	return loadIndex(r)
 }
 
-// Add adds a file to the index
-// This can leave the index in an unsorted state
-func (i IndexFile) Add(e *bundle.Bundle) {
-	if ee, ok := i.Entries[e.Name]; !ok {
-		i.Entries[e.Name] = VersionedBundle{e}
+// LoadIndexBuffer reads repository metadata from a JSON byte stream
+func LoadIndexBuffer(data []byte) (Index, error) {
+	return loadIndex(bytes.NewBuffer(data))
+}
+
+// Add adds a new entry to the index
+func (i Index) Add(name, version string, digest string) {
+	if tags, ok := i[name]; ok {
+		tags[version] = digest
 	} else {
-		i.Entries[e.Name] = append(ee, e)
+		i[name] = map[string]string{
+			version: digest,
+		}
 	}
 }
 
+// Delete removes a bundle from the index.
+//
+// Returns false if no record was found to delete.
+func (i Index) Delete(name string) bool {
+	_, ok := i[name]
+	if ok {
+		delete(i, name)
+	}
+	return ok
+}
+
+// DeleteVersion removes a single version of a given bundle from the index.
+//
+// Returns false if the name or version is not found.
+func (i Index) DeleteVersion(name, version string) bool {
+	sub, ok := i[name]
+	if !ok {
+		return false
+	}
+	_, ok = sub[version]
+	if ok {
+		delete(sub, version)
+	}
+	return ok
+}
+
 // Has returns true if the index has an entry for a bundle with the given name and exact version.
-func (i IndexFile) Has(name, version string) bool {
+func (i Index) Has(name, version string) bool {
 	_, err := i.Get(name, version)
 	return err == nil
 }
 
-// SortEntries sorts the entries by version in descending order.
+// Get returns the digest for the given name.
 //
-// In canonical form, the individual version records should be sorted so that
-// the most recent release for every version is in the 0th slot in the
-// Entries.VersionedBundle array. That way, tooling can predict the newest
-// version without needing to parse SemVers.
-func (i IndexFile) SortEntries() {
-	for _, versions := range i.Entries {
-		sort.Sort(sort.Reverse(versions))
-	}
-}
-
-// Get returns the bundle for the given name.
-//
-// If version is empty, this will return the bundle with the highest version.
-func (i IndexFile) Get(name, version string) (*bundle.Bundle, error) {
-	vs, ok := i.Entries[name]
+// If version is empty, this will return the digest for the bundle with the highest version.
+func (i Index) Get(name, version string) (string, error) {
+	vs, ok := i[name]
 	if !ok {
-		return nil, ErrNoBundleName
+		return "", ErrNoBundleName
 	}
 	if len(vs) == 0 {
-		return nil, ErrNoBundleVersion
+		return "", ErrNoBundleVersion
 	}
 
 	var constraint *semver.Constraints
@@ -135,61 +105,65 @@ func (i IndexFile) Get(name, version string) (*bundle.Bundle, error) {
 		var err error
 		constraint, err = semver.NewConstraint(version)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 	}
 
-	for _, ver := range vs {
-		test, err := semver.NewVersion(ver.Version)
+	for ver, digest := range vs {
+		test, err := semver.NewVersion(ver)
 		if err != nil {
 			continue
 		}
 
 		if constraint.Check(test) {
-			return ver, nil
+			return digest, nil
 		}
 	}
-	return nil, fmt.Errorf("No bundle version found for %s-%s", name, version)
+	return "", ErrNoBundleVersion
+}
+
+// GetVersions gets all of the versions for the given name.
+//
+// The versions are returned as hash keys, where the values are the SHAs
+//
+// If the name is not found, this will return false.
+func (i Index) GetVersions(name string) (map[string]string, bool) {
+	ret, ok := i[name]
+	return ret, ok
 }
 
 // WriteFile writes an index file to the given destination path.
 //
 // The mode on the file is set to 'mode'.
-func (i IndexFile) WriteFile(dest string, mode os.FileMode) error {
-	b, err := json.Marshal(i)
+func (i Index) WriteFile(dest string, mode os.FileMode) error {
+	b, err := json.MarshalIndent(i, "", "    ")
 	if err != nil {
 		return err
 	}
 	return ioutil.WriteFile(dest, b, mode)
 }
 
-// Merge merges the given index file into this index.
+// Merge merges the src index into i (dest).
 //
 // This merges by name and version.
 //
-// If one of the entries in the given index does _not_ already exist, it is added.
+// If one of the entries in the destination index does _not_ already exist, it is added.
 // In all other cases, the existing record is preserved.
-//
-// This can leave the index in an unsorted state
-func (i *IndexFile) Merge(f *IndexFile) {
-	for _, cvs := range f.Entries {
-		for _, cv := range cvs {
-			if !i.Has(cv.Name, cv.Version) {
-				e := i.Entries[cv.Name]
-				i.Entries[cv.Name] = append(e, cv)
+func (i *Index) Merge(src Index) {
+	for name, versionMap := range src {
+		for version, digest := range versionMap {
+			if !i.Has(name, version) {
+				i.Add(name, version, digest)
 			}
 		}
 	}
 }
 
 // loadIndex loads an index file and does minimal validity checking.
-//
-// This will fail if API Version is not set (ErrNoAPIVersion) or if the unmarshal fails.
-func loadIndex(r io.Reader) (*IndexFile, error) {
-	i := &IndexFile{}
-	if err := json.NewDecoder(r).Decode(i); err != nil {
+func loadIndex(r io.Reader) (Index, error) {
+	i := Index{}
+	if err := json.NewDecoder(r).Decode(&i); err != nil && err != io.EOF {
 		return i, err
 	}
-	i.SortEntries()
 	return i, nil
 }

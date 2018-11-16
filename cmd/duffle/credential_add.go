@@ -96,7 +96,7 @@ func addCredentialSet(dest, path string) error {
 
 	// check if it already exists
 	if _, err := os.Stat(dest); !os.IsNotExist(err) {
-		return fmt.Errorf("Credential set (%s) already exists. Run `$ duffle creds remove %s` and try again", cs.Name, cs.Name)
+		return fmt.Errorf("Credential set (%s) already exists", cs.Name)
 	}
 
 	if err := copyCredentialSetFile(dest, path); err != nil {

@@ -44,7 +44,7 @@ func newUninstallCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			uc.name = args[0]
 			uc.Out = cmd.OutOrStdout()
-			bundleFile, err := bundleFileOrArg2(args, bundleFile, uc.Out)
+			bundleFile, err := bundleFileOrArg2(args, bundleFile, uc.Out, uc.insecure)
 			// If no bundle was found, we just wait for the claim system
 			// to load its bundleFile
 			if err == nil {
@@ -57,7 +57,7 @@ func newUninstallCmd() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.StringVarP(&uninstallDriver, "driver", "d", "docker", "Specify a driver name")
-	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify a set of credentials to use inside the CNAB bundle")
+	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
 	flags.StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
 	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "set individual parameters as NAME=VALUE pairs")

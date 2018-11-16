@@ -28,8 +28,8 @@ func (i *Install) Run(c *claim.Claim, creds credentials.Set, w io.Writer) error 
 		return fmt.Errorf("unable to get image validator: %s", err)
 	}
 	ctx := context.Background()
-	if invocImage.Digest != "" {
-		err = validator.Validate(ctx, invocImage.Digest, invocImage.Image)
+	if invocImage.BaseImage.Digest != "" {
+		err = validator.Validate(ctx, invocImage.BaseImage.Digest, invocImage.BaseImage.Image)
 		if err != nil {
 			return fmt.Errorf("unable to validate invocation image: %s", err)
 		}
@@ -37,9 +37,9 @@ func (i *Install) Run(c *claim.Claim, creds credentials.Set, w io.Writer) error 
 	// TODO, how do we know what kind this is? default to docker right now
 	for _, img := range c.Bundle.Images {
 		if img.Digest != "" {
-			err = validator.Validate(ctx, img.Digest, img.URI)
+			err = validator.Validate(ctx, img.BaseImage.Digest, img.BaseImage.Image)
 			if err != nil {
-				return fmt.Errorf("unable to validate image %s: %s", img.URI, err)
+				return fmt.Errorf("unable to validate image %s: %s", img.BaseImage.Image, err)
 			}
 		}
 	}

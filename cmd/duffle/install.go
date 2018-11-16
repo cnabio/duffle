@@ -5,20 +5,17 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
-	"net/url"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/deis/duffle/pkg/action"
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/claim"
 	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/loader"
-	"github.com/deis/duffle/pkg/reference"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/deis/duffle/pkg/repo"
 )
 
 func newInstallCmd() *cobra.Command {
@@ -51,7 +48,23 @@ Windows Example:
 
 For unpublished CNAB bundles, you can also load the bundle.json directly:
 
-    $ duffle install dev_bundle -f path/to/bundle.json
+	$ duffle install dev_bundle -f path/to/bundle.json
+	
+
+Verifying and --insecure:
+
+  When the --insecure flag is passed, verification steps will not be performed. This means
+  that Duffle will accept both unsigned (bundle.json) and signed (bundle.cnab) files, but
+  will not perform any validation. The following table illustrates this:
+
+	Bundle     Key known?    Flag            Result
+	------     ----------    -----------     ------
+	Signed     Known         None            Okay
+	Signed     Known         --insecure      Okay
+	Signed     Unknown       None            Verification error
+	Signed     Unknown       --insecure      Okay
+	Unsigned   N/A           None            Verification error
+	Unsigned   N/A           --insecure      Okay
 `
 	var (
 		installDriver    string
@@ -71,11 +84,17 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 		Short: "install a CNAB bundle",
 		Long:  usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bundleFile, err := bundleFileOrArg2(args, bundleFile, cmd.OutOrStdout())
+			bundleFile, err := bundleFileOrArg2(args, bundleFile, cmd.OutOrStdout(), insecure)
 			if err != nil {
 				return err
 			}
 			installationName = args[0]
+
+			// look in claims store for another claim with the same name
+			_, err = claimStorage().Read(installationName)
+			if err != claim.ErrClaimNotFound {
+				return fmt.Errorf("a claim with the name %v already exists", installationName)
+			}
 
 			bun, err = loadBundle(bundleFile, insecure)
 			if err != nil {
@@ -131,46 +150,68 @@ For unpublished CNAB bundles, you can also load the bundle.json directly:
 	flags.StringVarP(&installDriver, "driver", "d", "docker", "Specify a driver name")
 	flags.StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringVarP(&bundleFile, "file", "f", "", "Bundle file to install")
-	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify a set of credentials to use inside the CNAB bundle")
+	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
 	flags.StringArrayVarP(&setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
 	flags.StringArrayVarP(&setFiles, "set-file", "i", []string{}, "Set individual parameters from file content as NAME=SOURCE-PATH pairs")
 	return cmd
 }
 
-func bundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+func bundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) (string, error) {
 	switch {
 	case len(args) < 1:
 		return "", errors.New("This command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
-	case len(args) == 2 && bundleFile != "":
+	case len(args) == 2 && bun != "":
 		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
-	case len(args) < 2 && bundleFile == "":
+	case len(args) < 2 && bun == "":
 		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return getBundleFile(args[1])
+		return loadOrPullBundle(args[1], insecure)
 	}
-	return bundleFile, nil
+	return bun, nil
 }
 
-// optBundleFileOrArg2 optionally gets a bundle file.
+// optBundleFileOrArg2 optionally gets a bundle.
 // Returning an empty string with no error is a possible outcome.
-func optBundleFileOrArg2(args []string, bundleFile string, w io.Writer) (string, error) {
+func optBundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) (string, error) {
 	switch {
 	case len(args) < 1:
 		// No bundle provided
 		return "", nil
-	case len(args) == 2 && bundleFile != "":
+	case len(args) == 2 && bun != "":
 		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
-	case len(args) < 2 && bundleFile == "":
+	case len(args) < 2 && bun == "":
 		// No bundle provided
 		return "", nil
 	case len(args) == 2:
 		var err error
-		bundleFile, err = getBundleFile(args[1])
+		bun, err = pullBundle(args[1], insecure)
 		if err != nil {
 			return "", err
 		}
 	}
-	return bundleFile, nil
+	return bun, nil
+}
+
+func loadOrPullBundle(bun string, insecure bool) (string, error) {
+	home := home.Home(homePath())
+	ref, err := getReference(bun)
+	if err != nil {
+		return "", fmt.Errorf("could not parse reference for %s: %v", bun, err)
+	}
+
+	// read the bundle reference from repositories.json
+	index, err := repo.LoadIndex(home.Repositories())
+	if err != nil {
+		return "", fmt.Errorf("cannot open %s: %v\n try running duffle init first", home.Repositories(), err)
+	}
+
+	digest, err := index.Get(ref.Name(), ref.Tag())
+	if err == nil {
+		return filepath.Join(home.Bundles(), digest), nil
+	}
+
+	// the bundle was not found locally, so we pull it
+	return pullBundle(bun, insecure)
 }
 
 // overrides parses the --set data and returns values that should override other params.
@@ -210,103 +251,6 @@ func parseValues(file string) (map[string]interface{}, error) {
 		return nil, err
 	}
 	return v.AllSettings(), nil
-}
-
-func getReference(bundleName string) (reference.NamedTagged, error) {
-	var (
-		name string
-		ref  reference.NamedTagged
-	)
-
-	parts := strings.SplitN(bundleName, "://", 2)
-	if len(parts) == 2 {
-		name = parts[1]
-	} else {
-		name = parts[0]
-	}
-	normalizedRef, err := reference.ParseNormalizedNamed(name)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse image name: %s: %v", name, err)
-	}
-	if reference.IsNameOnly(normalizedRef) {
-		ref, err = reference.WithTag(normalizedRef, "latest")
-		if err != nil {
-			// NOTE(bacongobbler): Using the default tag *must* be valid.
-			// To create a NamedTagged type with non-validated
-			// input, the WithTag function should be used instead.
-			panic(err)
-		}
-	} else {
-		if taggedRef, ok := normalizedRef.(reference.NamedTagged); ok {
-			ref = taggedRef
-		} else {
-			return nil, fmt.Errorf("unsupported image name: %s", normalizedRef.String())
-		}
-	}
-
-	return ref, nil
-}
-
-func getBundleRepoURL(bundleName string, home home.Home) (*url.URL, error) {
-	ref, err := getReference(bundleName)
-	if err != nil {
-		return nil, err
-	}
-
-	proto := "https"
-	parts := strings.Split(bundleName, "://")
-	if len(parts) == 2 {
-		proto = parts[0]
-	}
-
-	url := &url.URL{
-		Scheme: proto,
-		Host:   reference.Domain(ref),
-		Path:   fmt.Sprintf("repositories/%s/tags/%s", reference.Path(ref), ref.Tag()),
-	}
-	return url, nil
-}
-
-func getBundleFile(bundleName string) (string, error) {
-	home := home.Home(homePath())
-	url, err := getBundleRepoURL(bundleName, home)
-	if err != nil {
-		return "", err
-	}
-	resp, err := http.Get(url.String())
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("request to %s responded with a non-200 status code: %d", url, resp.StatusCode)
-	}
-
-	bundle, err := bundle.ParseReader(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	bundleFilepath := filepath.Join(home.Cache(), fmt.Sprintf("%s-%s.json", strings.Replace(bundle.Name, "/", "-", -1), bundle.Version))
-	if err := bundle.WriteFile(bundleFilepath, 0644); err != nil {
-		return "", err
-	}
-
-	return bundleFilepath, nil
-}
-
-func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {
-	var l loader.Loader
-	if insecure {
-		l = loader.NewUnsignedLoader()
-	} else {
-		kr, err := loadVerifyingKeyRings(homePath())
-		if err != nil {
-			return nil, err
-		}
-		l = loader.NewSecureLoader(kr)
-	}
-	return l.Load(bundleFile)
 }
 
 func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setFilePaths []string) (map[string]interface{}, error) {

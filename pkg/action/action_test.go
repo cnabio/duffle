@@ -36,7 +36,9 @@ func mockBundle() *bundle.Bundle {
 		Name:    "bar",
 		Version: "0.1.0",
 		InvocationImages: []bundle.InvocationImage{
-			{Image: "foo/bar:0.1.0", ImageType: "docker"},
+			{
+				bundle.BaseImage{Image: "foo/bar:0.1.0", ImageType: "docker"},
+			},
 		},
 		Credentials: map[string]bundle.Location{
 			"secret_one": {
@@ -106,6 +108,27 @@ func TestOpFromClaim(t *testing.T) {
 	is.Equal(op.Files["/param/three"], "threeval")
 	is.Len(op.Parameters, 3)
 	is.Equal(os.Stdout, op.Out)
+}
+
+func TestOpFromClaim_UndefinedParams(t *testing.T) {
+	now := time.Now()
+	c := &claim.Claim{
+		Created:  now,
+		Modified: now,
+		Name:     "name",
+		Revision: "revision",
+		Bundle:   mockBundle(),
+		Parameters: map[string]interface{}{
+			"param_one":         "oneval",
+			"param_two":         "twoval",
+			"param_three":       "threeval",
+			"param_one_million": "this is not a valid parameter",
+		},
+	}
+	invocImage := c.Bundle.InvocationImages[0]
+
+	_, err := opFromClaim(claim.ActionInstall, c, invocImage, mockSet, os.Stdout)
+	assert.Error(t, err)
 }
 
 func TestSelectInvocationImage_EmptyInvocationImages(t *testing.T) {

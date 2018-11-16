@@ -12,6 +12,7 @@ import (
 // Manifest represents a duffle manifest.
 type Manifest struct {
 	Name        string                                `mapstructure:"name"`
+	Version     string                                `mapstructure:"version"`
 	Description string                                `mapstructure:"description"`
 	Keywords    []string                              `mapstructure:"keywords"`
 	Maintainers []bundle.Maintainer                   `mapstructure:"maintainers"`

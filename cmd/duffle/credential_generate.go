@@ -45,7 +45,7 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 		Short:   "generate a credentialset from a bundle",
 		Long:    credentialGenerateHelp,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bf, err := getBundleFileFromCredentialsArg(args, bundleFile, out)
+			bf, err := getBundleFileFromCredentialsArg(args, bundleFile, out, insecure)
 			if err != nil {
 				return err
 			}
@@ -70,8 +70,8 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("%v", string(data))
 			if dryRun {
+				fmt.Fprintf(out, "%v", string(data))
 				return nil
 			}
 
@@ -165,7 +165,7 @@ func genCredentialSurvey(name string) (credentials.CredentialStrategy, error) {
 	return c, nil
 }
 
-func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writer) (string, error) {
+func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writer, insecure bool) (string, error) {
 	switch {
 	case len(args) < 1:
 		return "", errors.New("This command requires at least one argument: NAME (name for the credentialset). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle credentials generate NAME BUNDLE\n\t$ duffle credentials generate NAME -f path-to-bundle.json")
@@ -174,7 +174,7 @@ func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writ
 	case len(args) < 2 && bundleFile == "":
 		return "", errors.New("required arguments are NAME (name for the credentialset) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return getBundleFile(args[1])
+		return pullBundle(args[1], insecure)
 	}
 	return bundleFile, nil
 }

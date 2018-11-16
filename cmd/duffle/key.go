@@ -14,15 +14,13 @@ Manages OpenPGP keys, signatures, and attestations.
 func newKeyCmd(w io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "key",
-		Aliases: []string{"signature", "sig"},
+		Aliases: []string{"keys"},
 		Short:   "manage keys",
 		Long:    keyDesc,
 	}
 	cmd.AddCommand(
 		newKeyAddCmd(w),
-		newKeySignCmd(w),
 		newKeyListCmd(w),
-		newKeyVerifyCmd(w),
 	)
 	return cmd
 }

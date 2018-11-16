@@ -1,5 +1,13 @@
-# Docs
+# Documentation
 
-- Read about the CNAB specification and Duffle reference implementation [here](https://github.com/deislabs/cnab-spec)
-- Set up `duffle` using the [getting started guide](https://github.com/deis/duffle#getting-started)
-- Build your first bundle using [the bundle guides](guides/bundle-guide.md)
+The following documentation is available:
+
+1. Guides
+    1. [Bundle development guide](bundle-guid.md)
+2. [Duffle Proposals](./proposal/200-duffle.md): The CNAB reference implementation
+    1. [Credential Sets](./proposal/201-credentialset.md)
+    2. [Drivers](./proposal/202-drivers.md)
+    3. [Duffle Build](./proposal/203-duffle-build.md)
+    4. [Duffle Repositories](./proposal/204-repositories.md)
+3. Developer Information
+    1. [Debugging](debugging.md)

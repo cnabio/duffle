@@ -74,7 +74,7 @@ reason, it may need the same credentials used to install.
 		},
 	}
 	cmd.Flags().StringVarP(&statusDriver, "driver", "d", "docker", "Specify a driver name")
-	cmd.Flags().StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify a set of credentials to use inside the CNAB bundle")
+	cmd.Flags().StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
 
 	return cmd
 }

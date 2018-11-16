@@ -42,7 +42,9 @@ func newRootCmd(outputRedirect io.Writer) *cobra.Command {
 	p.BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
 
 	cmd.AddCommand(newBuildCmd(outLog))
+	cmd.AddCommand(newBundleCmd(outLog))
 	cmd.AddCommand(newInitCmd(outLog))
+	cmd.AddCommand(newInspectCmd(outLog))
 	cmd.AddCommand(newListCmd(outLog))
 	cmd.AddCommand(newPullCmd(outLog))
 	cmd.AddCommand(newPushCmd(outLog))
@@ -56,6 +58,9 @@ func newRootCmd(outputRedirect io.Writer) *cobra.Command {
 	cmd.AddCommand(newCredentialsCmd(outLog))
 	cmd.AddCommand(newKeyCmd(outLog))
 	cmd.AddCommand(newClaimsCmd(outLog))
+	cmd.AddCommand(newExportCmd(outLog))
+	cmd.AddCommand(newImportCmd(outLog))
+	cmd.AddCommand(newCreateCmd(outLog))
 
 	return cmd
 }

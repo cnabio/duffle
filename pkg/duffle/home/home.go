@@ -25,14 +25,9 @@ func (h Home) Path(elem ...string) string {
 	return filepath.Join(p...)
 }
 
-// Cache returns the path to the Duffle cache.
-func (h Home) Cache() string {
-	return h.Path("cache")
-}
-
-// DefaultRepository returns the name of the default repository.
-func (h Home) DefaultRepository() string {
-	return "hub.cnlabs.io"
+// Bundles is where bundle repository information is stored.
+func (h Home) Bundles() string {
+	return h.Path("bundles")
 }
 
 // Logs returns the path to the Duffle logs.
@@ -48,6 +43,11 @@ func (h Home) Claims() string {
 // Credentials are where credentialsets are stored.
 func (h Home) Credentials() string {
 	return h.Path("credentials")
+}
+
+// Repositories returns the path to the file containing information on all downloaded bundles.
+func (h Home) Repositories() string {
+	return h.Path("repositories.json")
 }
 
 // SecretKeyRing returns the path to the keyring containing private keys.
@@ -90,4 +90,9 @@ func DefaultHome() string {
 	}
 
 	return filepath.Join(homeEnvPath, ".duffle")
+}
+
+// DefaultRepository returns the name of the default repository.
+func DefaultRepository() string {
+	return "hub.cnlabs.io"
 }

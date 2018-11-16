@@ -4,22 +4,26 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/Masterminds/semver"
+
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/duffle/manifest"
-	"github.com/deis/duffle/pkg/osutil"
 )
 
 // Builder defines how to interact with a bundle builder
 type Builder struct {
 	ID      string
 	LogsDir string
+	// If this is true, versions will contain build metadata
+	// Example:
+	//   0.1.2+2c3c59e8a5adad62d2245cbb7b2a8685b1a9a717
+	VersionWithBuildMetadata bool
 }
 
 // New returns a new Builder
@@ -69,20 +73,6 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 		Components: components,
 		Manifest:   mfst,
 	}
-
-	if err := osutil.EnsureDirectory(filepath.Dir(bldr.Logs(ctx.Manifest.Name))); err != nil {
-		return nil, nil, err
-	}
-
-	logf, err := os.OpenFile(bldr.Logs(ctx.Manifest.Name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var wg sync.WaitGroup
-	mutex := &sync.Mutex{}
-
-	wg.Add(len(ctx.Components))
 	bf := &bundle.Bundle{
 		Name:        ctx.Manifest.Name,
 		Description: ctx.Manifest.Description,
@@ -94,71 +84,68 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 	}
 
 	for _, c := range ctx.Components {
-		go func(c Component) {
-			defer wg.Done()
+		if err := c.PrepareBuild(ctx); err != nil {
+			return nil, nil, err
+		}
 
-			err = c.PrepareBuild(ctx)
+		if c.Name() == "cnab" {
+			ii := bundle.InvocationImage{}
+			ii.Image = c.URI()
+			ii.ImageType = c.Type()
+			bf.InvocationImages = []bundle.InvocationImage{ii}
+			//bf.Version = strings.Split(c.URI(), ":")[1]
+			baseVersion := mfst.Version
+			if baseVersion == "" {
+				baseVersion = "0.1.0"
+			}
+			newver, err := b.version(baseVersion, strings.Split(c.URI(), ":")[1])
 			if err != nil {
-				fmt.Printf("ERROR: %v", err)
+				return nil, nil, err
 			}
-
-			if c.Name() == "cnab" {
-				bf.InvocationImages = []bundle.InvocationImage{
-					{
-						Image:     c.URI(),
-						ImageType: c.Type(),
-					}}
-				bf.Version = strings.Split(c.URI(), ":")[1]
-				return
-			}
-
-			// synchronized access to bundle images across goroutines
-			mutex.Lock()
-			bf.Images = append(bf.Images, bundle.Image{Name: c.Name(), URI: c.URI()})
-			mutex.Unlock()
-		}(c)
+			bf.Version = newver
+		} else {
+			bundleImage := bundle.Image{Description: c.Name()}
+			bundleImage.Image = c.URI()
+			bf.Images = append(bf.Images, bundleImage)
+		}
 	}
-
-	wg.Wait()
 
 	app := &AppContext{
 		ID:   bldr.ID,
 		Bldr: bldr,
 		Ctx:  ctx,
-		Log:  logf,
+		Log:  os.Stdout,
 	}
 
 	return app, bf, nil
 }
 
-// Build passes the context of each component to its respective builder
-func (b *Builder) Build(ctx context.Context, app *AppContext) chan *Summary {
-	ch := make(chan *Summary, 1)
+func (b *Builder) version(baseVersion, sha string) (string, error) {
+	sv, err := semver.NewVersion(baseVersion)
+	if err != nil {
+		return baseVersion, err
+	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	go func(app *AppContext) {
-		defer wg.Done()
-		log.SetOutput(app.Log)
-		if err := buildComponents(ctx, app, ch); err != nil {
-			log.Printf("error building components %v", err)
+	if b.VersionWithBuildMetadata {
+		newsv, err := sv.SetMetadata(sha)
+		if err != nil {
+			return baseVersion, err
 		}
-	}(app)
+		return newsv.String(), nil
+	}
 
-	go func() {
-		wg.Wait()
-		close(ch)
-	}()
-
-	return ch
+	return sv.String(), nil
 }
 
-func buildComponents(ctx context.Context, app *AppContext, out chan *Summary) (err error) {
-	const stageDesc = "Building CNAB components"
-	defer Complete(app.ID, stageDesc, out, &err)
-	summary := Summarize(app.ID, stageDesc, out)
-	summary("started", SummaryOngoing)
+// Build passes the context of each component to its respective builder
+func (b *Builder) Build(ctx context.Context, app *AppContext) error {
+	if err := buildComponents(ctx, app); err != nil {
+		return fmt.Errorf("error building components: %v", err)
+	}
+	return nil
+}
+
+func buildComponents(ctx context.Context, app *AppContext) (err error) {
 	errc := make(chan error)
 
 	go func() {
@@ -188,26 +175,8 @@ func buildComponents(ctx context.Context, app *AppContext, out chan *Summary) (e
 			}
 			return err
 		default:
-			summary("ongoing", SummaryOngoing)
 			time.Sleep(time.Second)
 		}
 	}
 	return nil
-}
-
-// Summarize returns a function closure that wraps writing SummaryStatusCode.
-func Summarize(id, desc string, out chan<- *Summary) func(string, SummaryStatusCode) {
-	return func(info string, code SummaryStatusCode) {
-		out <- &Summary{StageDesc: desc, StatusText: info, StatusCode: code, BuildID: id}
-	}
-}
-
-// Complete marks the end of a duffle build stage.
-func Complete(id, desc string, out chan<- *Summary, err *error) {
-	switch fn := Summarize(id, desc, out); {
-	case *err != nil:
-		fn(fmt.Sprintf("failure: %v", *err), SummaryFailure)
-	default:
-		fn("success", SummarySuccess)
-	}
 }

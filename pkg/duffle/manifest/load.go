@@ -1,11 +1,12 @@
 package manifest
 
 import (
+	"fmt"
 	"path/filepath"
 
-	"github.com/deis/duffle/pkg/duffle"
-
 	"github.com/spf13/viper"
+
+	"github.com/deis/duffle/pkg/duffle"
 )
 
 // Load opens the named file for reading. If successful, the manifest is returned.
@@ -19,7 +20,7 @@ func Load(name, dir string) (*Manifest, error) {
 	v.AddConfigPath(dir)
 	err := v.ReadInConfig()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error finding duffle config file: %s", err)
 	}
 
 	m := New()
