@@ -9,21 +9,21 @@ import (
 
 // ParameterDefinition defines a single parameter for a CNAB bundle
 type ParameterDefinition struct {
-	DataType      string            `json:"type" toml:"type"`
-	DefaultValue  interface{}       `json:"defaultValue,omitempty" toml:"defaultValue,omitempty"`
-	AllowedValues []interface{}     `json:"allowedValues,omitempty" toml:"allowedValues,omitempty"`
-	Required      bool              `json:"required" toml:"required"`
-	MinValue      *int              `json:"minValue,omitempty" toml:"minValue,omitempty"`
-	MaxValue      *int              `json:"maxValue,omitempty" toml:"maxValue,omitempty"`
-	MinLength     *int              `json:"minLength,omitempty" toml:"minLength,omitempty"`
-	MaxLength     *int              `json:"maxLength,omitempty" toml:"maxLength,omitempty"`
-	Metadata      ParameterMetadata `json:"metadata,omitempty" toml:"metadata,omitempty"`
-	Destination   *Location         `json:"destination,omitemtpty" toml:"destination,omitempty"`
+	DataType      string            `json:"type" mapstructure:"type"`
+	DefaultValue  interface{}       `json:"defaultValue,omitempty" mapstructure:"defaultValue,omitempty"`
+	AllowedValues []interface{}     `json:"allowedValues,omitempty" mapstructure:"allowedValues,omitempty"`
+	Required      bool              `json:"required" mapstructure:"required"`
+	MinValue      *int              `json:"minValue,omitempty" mapstructure:"minValue,omitempty"`
+	MaxValue      *int              `json:"maxValue,omitempty" mapstructure:"maxValue,omitempty"`
+	MinLength     *int              `json:"minLength,omitempty" mapstructure:"minLength,omitempty"`
+	MaxLength     *int              `json:"maxLength,omitempty" mapstructure:"maxLength,omitempty"`
+	Metadata      ParameterMetadata `json:"metadata,omitempty" mapstructure:"metadata,omitempty"`
+	Destination   *Location         `json:"destination,omitemtpty" mapstructure:"destination,omitempty"`
 }
 
 // ParameterMetadata contains metadata for a parameter definition.
 type ParameterMetadata struct {
-	Description string `json:"description,omitempty" toml:"description,omitempty"`
+	Description string `json:"description,omitempty" mapstructure:"description,omitempty"`
 }
 
 // ValidateParameterValue checks whether a value is valid as the value of

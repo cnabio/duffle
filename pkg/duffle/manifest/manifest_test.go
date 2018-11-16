@@ -52,6 +52,41 @@ func TestLoad(t *testing.T) {
 			if _, ok := m.Components["cnab"]; !ok {
 				t.Errorf("expected a component named cnab but got %v", m.Components)
 			}
+
+			if len(m.Parameters) != 1 {
+				t.Fatalf("expected 1 parameter but got %d", len(m.Parameters))
+			}
+
+			param, ok := m.Parameters["foo"]
+			if !ok {
+				t.Errorf("expected a parameter named foo but got %v", m.Parameters)
+			}
+
+			if param.DataType != "string" {
+				t.Errorf("expected foo parameter to have a type of string but got %v", param.DataType)
+			}
+
+			if len(m.Credentials) != 1 {
+				t.Fatalf("expected 1 credential but got %d", len(m.Credentials))
+			}
+
+			cred, ok := m.Credentials["bar"]
+			if !ok {
+				t.Errorf("expected a credential named bar but got %v", m.Credentials)
+			}
+
+			if cred.Path != "/tmp" {
+				t.Errorf("expected foo credential to have a path of /tmp but got %v", cred.Path)
+			}
+
+			if len(m.Maintainers) != 1 {
+				t.Fatalf("expected 1 maintainer but got %d", len(m.Maintainers))
+			}
+
+			maintainer := m.Maintainers[0]
+			if maintainer.Name != "sally" {
+				t.Errorf("expected maintainer to be sally but got %v", maintainer.Name)
+			}
 		})
 	}
 }

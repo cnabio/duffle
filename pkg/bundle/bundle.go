@@ -45,31 +45,31 @@ func (b Bundle) WriteTo(w io.Writer) (int64, error) {
 
 // LocationRef specifies a location within the invocation package
 type LocationRef struct {
-	Path  string `json:"path" toml:"path"`
-	Field string `json:"field" toml:"field"`
+	Path  string `json:"path" mapstructure:"path"`
+	Field string `json:"field" mapstructure:"field"`
 }
 
 // BaseImage contains fields shared across image types
 type BaseImage struct {
-	ImageType string `json:"imageType" toml:"imageType"`
-	Image     string `json:"image" toml:"image"`
-	Digest    string `json:"digest,omitempty" toml:"digest"`
-	Size      uint64 `json:"size,omitempty" toml:"size"`
-	Platform  string `json:"platform,omitempty" toml:"platform"`
-	MediaType string `json:"mediaType,omitempty" toml:"mediaType"`
+	ImageType string `json:"imageType" mapstructure:"imageType"`
+	Image     string `json:"image" mapstructure:"image"`
+	Digest    string `json:"digest,omitempty" mapstructure:"digest"`
+	Size      uint64 `json:"size,omitempty" mapstructure:"size"`
+	Platform  string `json:"platform,omitempty" mapstructure:"platform"`
+	MediaType string `json:"mediaType,omitempty" mapstructure:"mediaType"`
 }
 
 // ImagePlatform indicates what type of platform an image is built for
 type ImagePlatform struct {
-	Architecture string `json:"architecture,omitempty" toml:"architecture"`
-	OS           string `json:"os,omitempty" toml:"os"`
+	Architecture string `json:"architecture,omitempty" mapstructure:"architecture"`
+	OS           string `json:"os,omitempty" mapstructure:"os"`
 }
 
 // Image describes a container image in the bundle
 type Image struct {
 	BaseImage
-	Description string        `json:"description" toml:"description"` //TODO: change? see where it's being used? change to description?
-	Refs        []LocationRef `json:"refs" toml:"refs"`
+	Description string        `json:"description" mapstructure:"description"` //TODO: change? see where it's being used? change to description?
+	Refs        []LocationRef `json:"refs" mapstructure:"refs"`
 }
 
 // InvocationImage contains the image type and location for the installation of a bundle
@@ -82,18 +82,18 @@ type InvocationImage struct {
 //
 // A location may be either a file (by path) or an environment variable.
 type Location struct {
-	Path                string `json:"path" toml:"path"`
-	EnvironmentVariable string `json:"env" toml:"env"`
+	Path                string `json:"path" mapstructure:"path"`
+	EnvironmentVariable string `json:"env" mapstructure:"env"`
 }
 
 // Maintainer describes a code maintainer of a bundle
 type Maintainer struct {
 	// Name is a user name or organization name
-	Name string `json:"name" toml:"name"`
+	Name string `json:"name" mapstructure:"name"`
 	// Email is an optional email address to contact the named maintainer
-	Email string `json:"email" toml:"email"`
+	Email string `json:"email" mapstructure:"email"`
 	// Url is an optional URL to an address for the named maintainer
-	URL string `json:"url" toml:"url"`
+	URL string `json:"url" mapstructure:"url"`
 }
 
 // Action describes a custom (non-core) action.
@@ -106,16 +106,16 @@ type Action struct {
 
 // Bundle is a CNAB metadata document
 type Bundle struct {
-	Name             string                         `json:"name" toml:"name"`
-	Version          string                         `json:"version" toml:"version"`
-	Description      string                         `json:"description" toml:"description"`
-	Keywords         []string                       `json:"keywords,omitempty" toml:"keywords,omitempty"`
-	Maintainers      []Maintainer                   `json:"maintainers,omitempty" toml:"maintainers,omitempty"`
-	InvocationImages []InvocationImage              `json:"invocationImages" toml:"invocationImages"`
-	Images           []Image                        `json:"images" toml:"images"`
-	Actions          map[string]Action              `json:"actions,omitempty" toml:"actions,omitempty"`
-	Parameters       map[string]ParameterDefinition `json:"parameters" toml:"parameters"`
-	Credentials      map[string]Location            `json:"credentials" toml:"credentials"`
+	Name             string                         `json:"name" mapstructure:"name"`
+	Version          string                         `json:"version" mapstructure:"version"`
+	Description      string                         `json:"description" mapstructure:"description"`
+	Keywords         []string                       `json:"keywords,omitempty" mapstructure:"keywords,omitempty"`
+	Maintainers      []Maintainer                   `json:"maintainers,omitempty" mapstructure:"maintainers,omitempty"`
+	InvocationImages []InvocationImage              `json:"invocationImages" mapstructure:"invocationImages"`
+	Images           []Image                        `json:"images" mapstructure:"images"`
+	Actions          map[string]Action              `json:"actions,omitempty" mapstructure:"actions,omitempty"`
+	Parameters       map[string]ParameterDefinition `json:"parameters" mapstructure:"parameters"`
+	Credentials      map[string]Location            `json:"credentials" mapstructure:"credentials"`
 }
 
 // ValuesOrDefaults returns parameter values or the default parameter values
