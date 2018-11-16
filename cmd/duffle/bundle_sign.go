@@ -131,11 +131,12 @@ func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
 
 	// if --output-file is provided, write and return
 	if bs.outfile != "" {
-		return ioutil.WriteFile(bs.outfile, data, 0644)
+		if err := ioutil.WriteFile(bs.outfile, data, 0644); err != nil {
+			return err
+		}
 	}
 
-	err = ioutil.WriteFile(filepath.Join(bs.home.Bundles(), digest), data, 0644)
-	if err != nil {
+	if err := ioutil.WriteFile(filepath.Join(bs.home.Bundles(), digest), data, 0644); err != nil {
 		return err
 	}
 
