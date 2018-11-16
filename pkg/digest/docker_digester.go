@@ -97,6 +97,9 @@ func (d *dockerDigestValidator) Validate(ctx context.Context, digest string, ima
 		return nil
 	}
 	repoInfo, err := getRepoInfo(image)
+	if err != nil {
+		return fmt.Errorf("unable to obtain repository info for image: %s", err)
+	}
 	for _, candidate := range result.RepoDigests {
 		candidateRepoInfo, err := getRepoInfo(candidate)
 		if err != nil {
@@ -106,7 +109,7 @@ func (d *dockerDigestValidator) Validate(ctx context.Context, digest string, ima
 			fmt.Printf("matched the repo")
 			d, err := getDigestInfo(candidate)
 			if err != nil {
-				fmt.Errorf("unable to obatin digest for suspected digest: %s", err)
+				return fmt.Errorf("unable to obatin digest for suspected digest: %s", err)
 			}
 			if string(d) == digest {
 				return nil
