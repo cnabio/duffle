@@ -24,15 +24,10 @@ type Importer struct {
 	Source      string
 	Destination string
 	Client      *client.Client
-	Loader      loader.Loader
 }
 
-// NewImporter creates a new secure *Importer
-//
-// source is the filesystem path to the archive.
-// destination is the directory to unpack the contents.
-// load is a loader.Loader preconfigured for loading secure or insecure bundles.
-func NewImporter(source, destination string, load loader.Loader) (*Importer, error) {
+// NewImporter takes a source and destination and returns an *Importer
+func NewImporter(source, destination string) (*Importer, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
@@ -46,7 +41,6 @@ func NewImporter(source, destination string, load loader.Loader) (*Importer, err
 		Source:      source,
 		Destination: destination,
 		Client:      cli,
-		Loader:      load,
 	}, nil
 }
 
@@ -68,28 +62,22 @@ func (im *Importer) Import() error {
 		Compression:      archive.Gzip,
 		IncludeFiles:     []string{"."},
 		IncludeSourceDir: true,
-		// Issue #416
-		NoLchown: true,
 	}
 	if err := archive.Untar(reader, tempDir, tarOptions); err != nil {
-		return fmt.Errorf("untar failed: %s", err)
+		return err
 	}
 
-	// We try to load a bundle.cnab file first, and fall back to a bundle.json
-	ext := "cnab"
-	if _, err := os.Stat(filepath.Join(im.Destination, "bundle.cnab")); os.IsNotExist(err) {
-		ext = "json"
-	}
+	l := loader.NewUnsignedLoader() // TODO: switch on flag
 
-	bun, err := im.Loader.Load(filepath.Join(tempDir, "bundle."+ext))
+	bun, err := l.Load(filepath.Join(tempDir, "bundle.json"))
 	if err != nil {
-		return fmt.Errorf("failed to load bundle.%s: %s", ext, err)
+		return fmt.Errorf("Error loading bundle: %s", err)
 	}
 
 	bunDir := filepath.Join(im.Destination, bun.Name)
 	if _, err := os.Stat(bunDir); os.IsNotExist(err) {
 		if err := os.Rename(tempDir, bunDir); err != nil {
-			return fmt.Errorf("move failed: %s", err)
+			return err
 		}
 	} else {
 		return fmt.Errorf("Attempted to unpack bundle to %s but path already exists", bunDir)
