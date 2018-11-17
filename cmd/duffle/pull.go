@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -102,7 +103,7 @@ func getLoader(insecure bool) (loader.Loader, error) {
 	} else {
 		kr, err := loadVerifyingKeyRings(homePath())
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("cannot securely load bundle: %s", err)
 		}
 		load = loader.NewSecureLoader(kr)
 	}
@@ -123,7 +124,7 @@ func getReference(bundleName string) (reference.NamedTagged, error) {
 	}
 	normalizedRef, err := reference.ParseNormalizedNamed(name)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse image name: %s: %v", name, err)
+		return nil, fmt.Errorf("%q is not a valid bundle name: %v", name, err)
 	}
 	if reference.IsNameOnly(normalizedRef) {
 		ref, err = reference.WithTag(normalizedRef, "latest")
@@ -167,5 +168,19 @@ func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {
 	if err != nil {
 		return nil, err
 	}
-	return l.Load(bundleFile)
+	// Issue #439: Errors that come back from the loader can be
+	// pretty opaque.
+	var bun *bundle.Bundle
+	if bun, err := l.Load(bundleFile); err != nil {
+		if err.Error() == "no signature block in data" {
+			return bun, errors.New("bundle is not signed")
+		}
+		// Dear Go, Y U NO TERNARY, kthxbye
+		secflag := "secure"
+		if insecure {
+			secflag = "insecure"
+		}
+		return bun, fmt.Errorf("cannot load %s bundle: %s", secflag, err)
+	}
+	return bun, nil
 }

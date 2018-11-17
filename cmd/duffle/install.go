@@ -159,7 +159,7 @@ Verifying and --insecure:
 func bundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) (string, error) {
 	switch {
 	case len(args) < 1:
-		return "", errors.New("This command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
+		return "", errors.New("this command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
 	case len(args) == 2 && bun != "":
 		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
 	case len(args) < 2 && bun == "":
@@ -183,11 +183,7 @@ func optBundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) 
 		// No bundle provided
 		return "", nil
 	case len(args) == 2:
-		var err error
-		bun, err = pullBundle(args[1], insecure)
-		if err != nil {
-			return "", err
-		}
+		return pullBundle(args[1], insecure)
 	}
 	return bun, nil
 }
@@ -202,7 +198,7 @@ func loadOrPullBundle(bun string, insecure bool) (string, error) {
 	// read the bundle reference from repositories.json
 	index, err := repo.LoadIndex(home.Repositories())
 	if err != nil {
-		return "", fmt.Errorf("cannot open %s: %v\n try running duffle init first", home.Repositories(), err)
+		return "", fmt.Errorf("cannot open %s: %v", home.Repositories(), err)
 	}
 
 	digest, err := index.Get(ref.Name(), ref.Tag())
@@ -237,7 +233,7 @@ func overrides(overrides []string, paramDefs map[string]bundle.ParameterDefiniti
 		var err error
 		res[pair[0]], err = def.ConvertValue(pair[1])
 		if err != nil {
-			return res, fmt.Errorf("can't use %s as value of %s: %s", pair[1], pair[0], err)
+			return res, fmt.Errorf("cannot use %s as value of %s: %s", pair[1], pair[0], err)
 		}
 	}
 	return res, nil
@@ -288,7 +284,7 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setF
 		}
 		content, err := ioutil.ReadFile(parts[1])
 		if err != nil {
-			return vals, fmt.Errorf("error while reading file %q: %s", parts[1], err)
+			return vals, fmt.Errorf("could not read file %q: %s", parts[1], err)
 		}
 		vals[parts[0]] = string(content)
 	}
