@@ -5,6 +5,7 @@ import (
 	"io"
 	"path/filepath"
 
+	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/packager"
 
 	"github.com/spf13/cobra"
@@ -15,13 +16,18 @@ Unpacks a bundle from a gzipped tar file on local file system
 `
 
 type importCmd struct {
-	source string
-	dest   string
-	out    io.Writer
+	source   string
+	dest     string
+	out      io.Writer
+	home     home.Home
+	insecure bool
 }
 
 func newImportCmd(w io.Writer) *cobra.Command {
-	importc := &importCmd{out: w}
+	importc := &importCmd{
+		out:  w,
+		home: home.Home(homePath()),
+	}
 
 	cmd := &cobra.Command{
 		Use:   "import [PATH]",
@@ -38,7 +44,8 @@ func newImportCmd(w io.Writer) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVarP(&importc.dest, "destination", "d", "", "location to unpack bundle")
+	f.StringVarP(&importc.dest, "destination", "d", "", "Location to unpack bundle")
+	f.BoolVarP(&importc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }
@@ -54,7 +61,12 @@ func (im *importCmd) run() error {
 		return err
 	}
 
-	imp, err := packager.NewImporter(source, dest)
+	l, err := getLoader(im.insecure)
+	if err != nil {
+		return err
+	}
+
+	imp, err := packager.NewImporter(source, dest, l)
 	if err != nil {
 		return err
 	}
