@@ -21,6 +21,7 @@ func newKeyCmd(w io.Writer) *cobra.Command {
 	cmd.AddCommand(
 		newKeyAddCmd(w),
 		newKeyListCmd(w),
+		newKeyExportCmd(w),
 	)
 	return cmd
 }
