@@ -5,6 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/deis/duffle/pkg/loader"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestImport(t *testing.T) {
@@ -14,28 +17,25 @@ func TestImport(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
+	is := assert.New(t)
+
 	im := Importer{
 		Source:      "testdata/examplebun-0.1.0.tgz",
 		Destination: tempDir,
+		Loader:      loader.NewDetectingLoader(),
 	}
 
 	if err := im.Import(); err != nil {
-		t.Errorf("Expected no error, got error: %v", err)
+		t.Fatalf("import failed: %v", err)
 	}
 
 	expectedBundlePath := filepath.Join(tempDir, "examplebun")
-	fi, err := os.Stat(expectedBundlePath)
-	if err != nil {
-		t.Errorf("Expected no error examining decompressed bundle but go error %s", err)
-	} else if !fi.IsDir() {
-		t.Errorf("Expected %s to be directory but is not", expectedBundlePath)
-	}
+	is.DirExists(expectedBundlePath, "expected examplebun to exist")
 
 	im = Importer{
 		Source:      "testdata/malformed-0.1.0.tgz",
 		Destination: tempDir,
+		Loader:      loader.NewDetectingLoader(),
 	}
-	if err := im.Import(); err == nil {
-		t.Error("Expected error due to malformed bundle but got none")
-	}
+	is.Error(im.Import(), "expected malformed bundle error")
 }
