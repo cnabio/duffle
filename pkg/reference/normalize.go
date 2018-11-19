@@ -30,7 +30,7 @@ type normalizedNamed interface {
 // use ParseAnyReference.
 func ParseNormalizedNamed(s string) (Named, error) {
 	if ok := anchoredIdentifierRegexp.MatchString(s); ok {
-		return nil, fmt.Errorf("invalid repository name (%s), cannot specify 64-byte hexadecimal strings", s)
+		return nil, fmt.Errorf("repository name (%s) cannot be a 64-byte hexadecimal strings", s)
 	}
 	domain, remainder := splitDockerDomain(s)
 	var remoteName string
@@ -40,7 +40,7 @@ func ParseNormalizedNamed(s string) (Named, error) {
 		remoteName = remainder
 	}
 	if strings.ToLower(remoteName) != remoteName {
-		return nil, errors.New("invalid reference format: repository name must be lowercase")
+		return nil, errors.New("in a reference name, the repository part must be lowercase")
 	}
 
 	ref, err := Parse(domain + "/" + remainder)
