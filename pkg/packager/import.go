@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
@@ -52,11 +52,11 @@ func NewImporter(source, destination string, load loader.Loader) (*Importer, err
 
 // Import decompresses a bundle from Source (location of the compressed bundle) and properly places artifacts in the correct location(s)
 func (im *Importer) Import() error {
-	tempDir, err := ioutil.TempDir("", "duffle-import")
-	if err != nil {
+	baseDir := strings.TrimSuffix(filepath.Base(im.Source), ".tgz")
+	dest := filepath.Join(im.Destination, baseDir)
+	if err := os.MkdirAll(dest, 0755); err != nil {
 		return err
 	}
-	defer os.RemoveAll(tempDir)
 
 	reader, err := os.Open(im.Source)
 	if err != nil {
@@ -71,31 +71,26 @@ func (im *Importer) Import() error {
 		// Issue #416
 		NoLchown: true,
 	}
-	if err := archive.Untar(reader, tempDir, tarOptions); err != nil {
+	if err := archive.Untar(reader, dest, tarOptions); err != nil {
 		return fmt.Errorf("untar failed: %s", err)
 	}
 
 	// We try to load a bundle.cnab file first, and fall back to a bundle.json
 	ext := "cnab"
-	if _, err := os.Stat(filepath.Join(im.Destination, "bundle.cnab")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(dest, "bundle.cnab")); os.IsNotExist(err) {
 		ext = "json"
 	}
 
-	bun, err := im.Loader.Load(filepath.Join(tempDir, "bundle."+ext))
+	_, err = im.Loader.Load(filepath.Join(dest, "bundle."+ext))
 	if err != nil {
-		return fmt.Errorf("failed to load bundle.%s: %s", ext, err)
-	}
-
-	bunDir := filepath.Join(im.Destination, bun.Name)
-	if _, err := os.Stat(bunDir); os.IsNotExist(err) {
-		if err := os.Rename(tempDir, bunDir); err != nil {
-			return fmt.Errorf("move failed: %s", err)
+		removeErr := os.RemoveAll(dest)
+		if removeErr != nil {
+			return fmt.Errorf("failed to load and validate bundle.%s on import %s and failed to remove invalid bundle from filesystem %s", ext, err, removeErr)
 		}
-	} else {
-		return fmt.Errorf("Attempted to unpack bundle to %s but path already exists", bunDir)
+		return fmt.Errorf("failed to load and validate bundle.%s: %s", ext, err)
 	}
 
-	artifactsDir := filepath.Join(bunDir, "artifacts")
+	artifactsDir := filepath.Join(dest, "artifacts")
 	_, err = os.Stat(artifactsDir)
 	if err == nil {
 		filepath.Walk(artifactsDir, func(path string, info os.FileInfo, err error) error {
