@@ -19,7 +19,7 @@ func newKeyCmd(w io.Writer) *cobra.Command {
 		Long:    keyDesc,
 	}
 	cmd.AddCommand(
-		newKeyAddCmd(w),
+		newKeyImportCmd(w),
 		newKeyListCmd(w),
 		newKeyExportCmd(w),
 	)

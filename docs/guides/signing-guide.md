@@ -59,7 +59,7 @@ However, when it comes to working with bundles that were created by other people
 Say they give you a key named `friend.key` (the extension, by the way, makes no difference to Duffle). You can import it into your _verifying keys_ like this:
 
 ```console
-$ duffle key add friend.key
+$ duffle key import friend.key
 ```
 
 Then you can verify that it imported by listing the _verifying keys_ that are in your keyring:
@@ -88,14 +88,14 @@ That will export _just the first key_ that you generated. If you want to export 
 $ duffle key export my_signer.key -u test1@example.com
 ```
 
-Now, any of your friends can use `duffle key add` to add your key to their keyring.
+Now, any of your friends can use `duffle key import` to add your key to their keyring.
 
 ## But I Want to Use My Existing Key!
 
 Say you already have a key (from, perhaps, Keybase or GnuPG). In most cases, you can use that key with Duffle. There are two ways of doing this:
 
-- You can use `duffle key add --secret mykey.gpg` and add it to the existing keyring. However, this will place the key at the _end_ of your keyring, and you will need to use the `--user`/`-u` flag whenever signing.
-- You can remove your existing `secret.ring` and then run `duffle init -s mykey.gpg` or run `duffle add --secret mykey.gpg`. Either of these will create a new keyring for you.
+- You can use `duffle key import --secret mykey.gpg` and import it to the existing keyring. However, this will place the key at the _end_ of your keyring, and you will need to use the `--user`/`-u` flag whenever signing.
+- You can remove your existing `secret.ring` and then run `duffle init -s mykey.gpg` or run `duffle key import --secret mykey.gpg`. Either of these will create a new keyring for you.
 
 As always, you can check on your keyring by using `duffle key list --secret` (or see your verifying keys with `duffle key list`).
 
