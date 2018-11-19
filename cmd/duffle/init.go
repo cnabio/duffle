@@ -174,7 +174,7 @@ func (i *initCmd) loadOrCreateSecretKeyRing(dest string) (*signature.KeyRing, er
 		if err != nil {
 			return ring, err
 		}
-		err = ring.Add(key)
+		err = ring.Add(key, true)
 		key.Close()
 		if err != nil {
 			return ring, err
@@ -244,7 +244,7 @@ func (i *initCmd) loadOrCreatePublicKeyRing(dest string, privateKeys *signature.
 		if err != nil {
 			return ring, err
 		}
-		err = ring.Add(keys)
+		err = ring.Add(keys, true)
 		keys.Close()
 		if err != nil {
 			return ring, err

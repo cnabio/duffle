@@ -30,8 +30,14 @@ func (r *KeyRing) Len() int {
 //
 // Add is idempotent. If provided keys already exist, they will be
 // silently ignored. This makes it easier to do bulk imports.
-func (r *KeyRing) Add(armoredKeys io.Reader) error {
-	entities, err := openpgp.ReadArmoredKeyRing(armoredKeys)
+func (r *KeyRing) Add(keyReader io.Reader, armored bool) error {
+	var entities openpgp.EntityList
+	var err error
+	if armored {
+		entities, err = openpgp.ReadArmoredKeyRing(keyReader)
+	} else {
+		entities, err = openpgp.ReadKeyRing(keyReader)
+	}
 	if err != nil {
 		return err
 	}

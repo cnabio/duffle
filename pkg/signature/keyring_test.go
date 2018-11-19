@@ -69,13 +69,13 @@ func TestKeyring_KeyByID(t *testing.T) {
 	is.Equal(key.entity.Identities[key2Email].Name, key2Email)
 }
 
-func TestKeyRing_Add(t *testing.T) {
+func TestKeyRing_Add_Armored(t *testing.T) {
 	is := assert.New(t)
 	extras, err := os.Open("testdata/extra.gpg")
 	is.NoError(err)
 	kr, err := LoadKeyRing(keyringFile)
 	is.NoError(err)
-	is.NoError(kr.Add(extras))
+	is.NoError(kr.Add(extras, true))
 
 	k, err := kr.Key("extra1@example.com")
 	is.NoError(err)
@@ -89,11 +89,25 @@ func TestKeyRing_Add(t *testing.T) {
 	is.NoError(err)
 
 	// Re-add extras
-	is.NoError(kr.Add(extras))
+	is.NoError(kr.Add(extras, true))
 	k2, err := kr.Key("extra1@example.com")
 	is.NoError(err)
 	is.Equal(k2.entity.Identities[fullExtraID].Name, fullExtraID)
 	is.Equal(l, kr.Len())
+}
+
+func TestKeyRing_Add_NotArmored(t *testing.T) {
+	is := assert.New(t)
+	extras, err := os.Open("testdata/extra1-public.key")
+	is.NoError(err)
+	kr, err := LoadKeyRing(keyringFile)
+	is.NoError(err)
+	is.NoError(kr.Add(extras, false))
+
+	k, err := kr.Key("extra1@example.com")
+	is.NoError(err)
+	is.Equal(k.entity.Identities[fullExtraID].Name, fullExtraID)
+
 }
 
 func TestKeyRing_AddKey(t *testing.T) {
@@ -125,7 +139,7 @@ func TestCreateKeyRing(t *testing.T) {
 	is.NoError(err)
 
 	kr := CreateKeyRing(testPassphraseFetch)
-	is.NoError(kr.Add(extras))
+	is.NoError(kr.Add(extras, true))
 
 	k, err := kr.Key("extra1@example.com")
 	is.NoError(err)
