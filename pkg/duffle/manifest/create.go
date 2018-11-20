@@ -8,8 +8,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-const runContent = `
-#!/bin/bash
+const runContent = `#!/bin/bash
 action=$CNAB_ACTION
 
 if [[ action == "install" ]]; then
@@ -19,11 +18,10 @@ echo "hey I am uninstalling things now"
 fi
 `
 
-const dockerfileContent = `
-FROM alpine:latest
+const dockerfileContent = `FROM alpine:latest
 
 COPY Dockerfile /cnab/Dockerfile
-COPY cnab/app /cnab/app
+COPY app /cnab/app
 
 CMD ["/cnab/app/run"]
 `
