@@ -53,3 +53,19 @@ func (m jsonDocMap) asInstance(value interface{}) (docmap, bool) {
 	}
 	return jsonDocMap{}, false
 }
+
+func (r jsonReplacer) Retrieve(source string, selector string) (string, error) {
+	dict := make(map[string]interface{})
+	err := json.Unmarshal([]byte(source), &dict)
+
+	if err != nil {
+		return "", err
+	}
+
+	selectorPath := parseSelector(selector)
+	val, err := findIn(jsonDocMap(dict), selectorPath)
+	if err != nil {
+		return "", err
+	}
+	return val, nil
+}

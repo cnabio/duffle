@@ -119,7 +119,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f4fff0c3c247502a13bde71b41f5b5ff373e4ba2aab32802e334d89382b57d4b"
+  digest = "1:d79af33e877079dedbea448d930d659b077011f761a255f10c2fddd4859a2c87"
   name = "github.com/docker/docker"
   packages = [
     "api",

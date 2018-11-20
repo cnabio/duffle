@@ -45,8 +45,9 @@ func (b Bundle) WriteTo(w io.Writer) (int64, error) {
 
 // LocationRef specifies a location within the invocation package
 type LocationRef struct {
-	Path  string `json:"path" mapstructure:"path"`
-	Field string `json:"field" mapstructure:"field"`
+	Path     string `json:"path" mapstructure:"path"`
+	Field    string `json:"field" mapstructure:"field"`
+	Template string `json:"template,omitempty" toml:"template"`
 }
 
 // BaseImage contains fields shared across image types

@@ -50,3 +50,18 @@ func (m yamlDocMap) asInstance(value interface{}) (docmap, bool) {
 	}
 	return yamlDocMap{}, false
 }
+
+func (r yamlReplacer) Retrieve(source string, selector string) (string, error) {
+	dict := make(map[interface{}]interface{})
+	err := yaml.Unmarshal([]byte(source), dict)
+
+	if err != nil {
+		return "", err
+	}
+	selectorPath := parseSelector(selector)
+	val, err := findIn(yamlDocMap(dict), selectorPath)
+	if err != nil {
+		return "", err
+	}
+	return val, nil
+}
