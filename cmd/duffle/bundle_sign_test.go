@@ -7,9 +7,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/deis/duffle/pkg/duffle/home"
 )
 
 func TestBundleSign(t *testing.T) {
+	tempDir, err := ioutil.TempDir("", "duffle-home")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(filepath.Join(tempDir, "bundles"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
 	tmp, err := ioutil.TempFile("", "duffle-")
 	if err != nil {
 		t.Fatal(err)
@@ -24,6 +34,8 @@ func TestBundleSign(t *testing.T) {
 	cmd := bundleSignCmd{
 		outfile:  outfile,
 		identity: identity,
+		out:      ioutil.Discard,
+		home:     home.Home(tempDir),
 	}
 	if err := cmd.signBundle(bundlejson, keyring); err != nil {
 		t.Fatal(err)
