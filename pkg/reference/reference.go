@@ -205,7 +205,7 @@ func Parse(s string) (Reference, error) {
 	var repo repository
 
 	nameMatch := anchoredNameRegexp.FindStringSubmatch(matches[1])
-	if len(nameMatch) == 3 {
+	if len(nameMatch) == 3 && (strings.ContainsAny(nameMatch[1], ".:") || strings.HasPrefix(nameMatch[1], "localhost")) {
 		repo.domain = nameMatch[1]
 		repo.path = nameMatch[2]
 	} else {
