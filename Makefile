@@ -1,6 +1,6 @@
 PROJECT         := duffle
 ORG             := deis
-DOCKER_REGISTRY ?= deis
+DOCKER_REGISTRY ?= brigade.azurecr.io/deis
 BINDIR          := $(CURDIR)/bin
 GOFLAGS         :=
 LDFLAGS         := -w -s
@@ -19,9 +19,8 @@ endif
 
 GIT_TAG   := $(shell git describe --tags --always)
 VERSION   ?= ${GIT_TAG}
-# Docker image tags won't allow '+' characters, which may exist in a git tag
-# TODO: need a platform-agnostic way of doing this, perhaps in original 'git describe ...' ?
-IMAGE_TAG ?= $(shell echo $(VERSION) | sed 's/+/-/g')
+# Replace + with -, for Docker image tag compliance
+IMAGE_TAG ?= $(subst +,-,$(VERSION))
 LDFLAGS   += -X github.com/$(ORG)/$(PROJECT)/pkg/version.Version=$(VERSION)
 
 .PHONY: default
