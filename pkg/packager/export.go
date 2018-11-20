@@ -56,7 +56,9 @@ func NewExporter(source, dest string, full bool) (*Exporter, error) {
 
 // Export prepares an artifacts directory containing all of the necessary
 //  images, packages the bundle along with the artifacts in a gzipped tar
-//  file, and saves that file to the destination
+//  file, and saves that file to the file path specified as destination.
+//  If the any part of the destination path doesn't, it will be created.
+//  exist
 func (ex *Exporter) Export() error {
 	l := loader.NewUnsignedLoader() // TODO: switch on flag
 
@@ -72,10 +74,17 @@ func (ex *Exporter) Export() error {
 	}
 
 	name := bun.Name + "-" + bun.Version
-	writer, err := os.Create(filepath.Join(ex.Destination, name+".tgz"))
-	if err != nil {
-		return err
+
+	dest := name + ".tgz"
+	if ex.Destination != "" {
+		dest = ex.Destination
 	}
+
+	writer, err := os.Create(dest)
+	if err != nil {
+		return fmt.Errorf("Error creating archive file: %s", err)
+	}
+
 	defer writer.Close()
 
 	tarOptions := &archive.TarOptions{

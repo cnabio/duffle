@@ -13,9 +13,16 @@ import (
 )
 
 const exportDesc = `
-Packages an invocation image together with all of its associated images and generates a single gzipped tarfile
+Packages a bundle, invocation images, and all referenced images within a single
+gzipped tarfile.
 
-All images specified in the bundle metadata are saved as tar files in the artifacts/ directory along with an artifacts.json file which describes the contents of artifacts/.
+All images specified in the bundle metadata are saved as tar files in the artifacts/
+directory along with an artifacts.json file which describes the contents of artifacts/.
+
+By default, this command will use the name and version information of the bundle to create
+a compressed archive file called <name>-<version>.tgz in the current directory. This
+behavior can be augmented by specifying a file path to save the compressed bundle to using
+the --output-file flag.
 `
 
 type exportCmd struct {
@@ -45,7 +52,7 @@ func newExportCmd(w io.Writer) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVarP(&export.dest, "destination", "d", "", "Save exported bundle to path")
+	f.StringVarP(&export.dest, "output-file", "o", "", "Save exported bundle to file path")
 	f.BoolVarP(&export.full, "full", "u", true, "Save bundle with all associated images")
 
 	return cmd
