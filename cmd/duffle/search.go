@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,6 +23,8 @@ import (
 // Implements a sorter on Name.
 type BundleList []*bundle.Bundle
 
+var validOutputs = []string{"table", "json"}
+
 // Len returns the length.
 func (bl BundleList) Len() int { return len(bl) }
 
@@ -34,26 +37,61 @@ func (bl BundleList) Less(a, b int) bool {
 }
 
 func newSearchCmd(w io.Writer) *cobra.Command {
+	var output string
+
 	cmd := &cobra.Command{
 		Use:   "search",
 		Short: "perform a fuzzy search on available bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			output, err := validOutputOrErr(output, cmd.OutOrStdout())
+			if err != nil {
+				return err
+			}
+
 			found, err := search(args)
 			if err != nil {
 				return err
 			}
+
 			sort.Sort(found)
-			table := uitable.New()
-			table.AddRow("NAME", "VERSION")
-			for _, bundle := range found {
-				table.AddRow(bundle.Name, bundle.Version)
+			switch output {
+			case "json":
+				b, err := json.MarshalIndent(found, "", "    ")
+				if err != nil {
+					return err
+				}
+
+				fmt.Println(string(b))
+				return nil
+			default:
+				table := uitable.New()
+				table.AddRow("NAME", "VERSION")
+				for _, bundle := range found {
+					table.AddRow(bundle.Name, bundle.Version)
+				}
+				fmt.Fprintln(w, table)
+				return nil
 			}
-			fmt.Fprintln(w, table)
-			return nil
 		},
 	}
 
+	flags := cmd.Flags()
+	flags.StringVarP(&output, "output", "o", "table", fmt.Sprintf("Specify an output format, one of: %v", validOutputs))
+
 	return cmd
+}
+
+func validOutputOrErr(providedOutput string, w io.Writer) (string, error) {
+	var validOutput bool
+	for _, output := range validOutputs {
+		if providedOutput == output {
+			validOutput = true
+		}
+	}
+	if !validOutput {
+		return "", fmt.Errorf("Please supply a valid output type. Choices are: %v", validOutputs)
+	}
+	return providedOutput, nil
 }
 
 func search(keywords []string) (BundleList, error) {
