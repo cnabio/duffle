@@ -31,9 +31,8 @@ import (
 )
 
 const buildDesc = `
-Builds a CNAB bundle given a path to directory that contains a duffle
-configuration file [duffle.toml, duffle.json, duffle.yaml] containing
-metadata about the bundle.
+Builds a Cloud Native Application Bundle (CNAB) given a path to directory that has a duffle
+build file [duffle.toml, duffle.json, duffle.yaml]. It builds the invocation images specified in the duffle build file and then creates or updates the bundle in local storage with the latest invocation images.
 `
 
 const (
@@ -64,7 +63,7 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "build [path]",
-		Short: "build a CNAB bundle",
+		Short: "build a bundle and invocation images",
 		Long:  buildDesc,
 		PersistentPreRun: func(c *cobra.Command, args []string) {
 			build.dockerClientOptions.Common.SetDefaultOptions(f)
