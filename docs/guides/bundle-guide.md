@@ -1,29 +1,41 @@
 # Build Your First Bundle!
 
-A `bundle` is a CNAB package. In its slimmest form, a bundle contains metadata (in a `bundle.json` file) which points to a image (we call that the `invocation image`) that contains instructions (in a `run` file) on how to install and configure a multi-component cloud native application.
+A `bundle` is a CNAB package. In its slimmest form, a bundle contains metadata (in a `bundle.cnab` file) which points to a image (we call that the "invocation image") that contains instructions (in a `run` file) on how to install and configure a multi-component cloud native application.
 
 In this guide, you will create a CNAB bundle which does `echo` commands for various actions similar to the [helloworld](https://github.com/deis/duffle/blob/master/examples/helloworld/cnab/app/run) example.
 
 ## Create the Directory Structure
-```console
-$ mkdir -p helloworld/cnab/app
-```
-
-### The `app/` directory
-The `app/` directory is the where the logic and any supporting files for the invocation image lives. In this directory, create a `run` file.
 
 ```console
-$ cd helloworld/cnab/app
-$ touch run
-$ chmod 755 run # make run file an executable
+$ duffle create helloworld
+Creating helloworld
+$ cd helloworld
 ```
 
-The `run` file for this example is a bash script that acts on environment variables that have already been set.
+### The `cnab/` directory
+
+The `cnab/` directory is created for you. It is where the logic and any supporting files for the invocation image lives. In this directory, an `app/run` file exists as the entrypoint to the invocation image.
+
+```console
+$ cat cnab/app/run
+#!/bin/bash
+action=$CNAB_ACTION
+
+if [[ action == "install" ]]; then
+echo "hey I am installing things over here"
+elif [[ action == "uninstall" ]]; then
+echo "hey I am uninstalling things now"
+fi
+```
+
+For this example, we are going to modify the `run` file to act on environment variables that have been set by the CNAB runtime.
+
 In `cnab/app/run`:
-```
+
+```bash
 #!/bin/sh
 
-#set -eo pipefail
+set -eo pipefail
 
 action=$CNAB_ACTION
 name=$CNAB_INSTALLATION_NAME
@@ -56,88 +68,79 @@ echo "Action $action complete for $name"
 The `$CNAB_ACTION` environment variable describes what action is to be performed. `$CNAB_INSTALLATION_NAME` is the name of the instance of the installation of the bundle. Any environment variable that has a prefix of `$CNAB_P_` is a parameter that either had a default set or was passed in at runtime by the end user.
 
 ## Defining the Invocation Image
-Create a Dockerfile for the invocation image which defines the `run` tool.
-```console
-$ cd helloworld/cnab
-$ touch Dockerfile
-```
 
-In, `Dockerfile`:
-```
+When we created the application, a Dockerfile for the invocation image was added. This Dockerfile describes the invocation image runtime, copying the `app/run` file to `/cnab/app/run`.
+
+```bash
+$ cat cnab/Dockerfile
 FROM alpine:latest
 
-COPY app/run /cnab/app/run
-COPY Dockerfile cnab/Dockerfile
+COPY Dockerfile /cnab/Dockerfile
+COPY cnab/app /cnab/app
 
+CMD ["/cnab/app/run"]
 ```
 
-## A Tale of Two JSON Files
-Every bundle needs a `bundle.json` file. This file will live in the root of the bundle. This file contains metadata about the bundle, information on the required parameters necessary credentials for a successful installation, and content digests for each image specified for the bundle installation. You can write this file by hand OR you can write a file called `duffle.json` in the root of your bundle which specifies registry information and use the `duffle build` command to push images and generate a proper `bundle.json` file. In this example, let's use the `duffle build` command.
+## Building the bundle
+
+When we build the bundle, a manifest file is written to `$DUFFLE_HOME/bundles`. This file contains metadata about the bundle, information on the required parameters necessary credentials for a successful installation, and content digests for each image specified for the bundle installation. Let's use the `duffle build` command to build the bundle and inspect its output:
 
 ```console
-$ cd helloworld/
-$ touch duffle.json
+$ duffle build .
+[...]
+==> Successfully built bundle helloworld:0.1.0
 ```
 
-In `duffle.json`:
-```
+After the bundle has been built, we can inspect the bundle:
+
+```console
+$ duffle inspect helloworld:0.1.0
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
 {
-    "name": "helloworld",
-    "components": {
-        "cnab": {
-            "name": "cnab",
-            "builder": "docker",
-            "configuration": {
-                "registry": "microsoft"
-            }
-        }
-    },
-    "images": [],
-    "parameters": {
-        "hello": {
-          "defaultValue": "hello",
-          "type": "string"
-        }
-    },
-    "credentials": {
-        "quux": {
-            "path": "pquux",
-            "env": "equux"
-        }
+  "name": "helloworld",
+  "version": "0.1.0",
+  "description": "A short description of your bundle",
+  "invocationImages": [
+    {
+      "imageType": "docker",
+      "image": "helloworld-cnab:f4a5a0dac16c61442ccf19611c06526fcb2e5a74"
     }
+  ],
+  "images": [],
+  "parameters": null,
+  "credentials": null
 }
+-----BEGIN PGP SIGNATURE-----
+
+wsDcBAEBCAAQBQJb9ErXCRA58VPKJbKbxwAARqYMADtWlk3aLj/NVxNpd3GaqlI6
+tUiW/1T5zIFEWYsJgSC3ammN9z266Uf2q+tDC+jt7A5+sZTGHujn/8FCuURLRkp7
+UVU7ot1xJb8nWUyDLeZjX6yG+eI7XbqjIbt17+bp59XYVRlgJtT1/gLxqm1gh8IQ
+D2TLeuOdfI3bstupFEN7AoZWPG5XTYbtQCC9TdBLw70LLGl2f7L4Ll7RFDEJEjx+
+NVCjJEWaYAw7DP1kHUpl67vhkFVeptnbr99uC9aEFUo6fImeuczIU0S9K9g+2Vxf
+wcs+XgWKDBkAN9hF/tnaIVsIeHrPJZ9oviEbYDeVqIKUlUBBbNblVTVnjC7shfjF
+1SQ4AGhkIgf9gFan7KkERlAp3dcjh5XDgZ7/ijVGGItlbIE1p8+KBm2FRwJfox69
+L9aitybWBnt5EIm3w4YIYsMuMZuPM/0taoKH9nzNv4lQsKYqeX6tOD36aDx4fys1
+NSKekvE5KfHYU3t+3rUtJRphoVsSr3cNFldsVCVuzQ==
+=iFSF
+-----END PGP SIGNATURE-----
 ```
 
-WARNING: Replace the `registry` field in the file above with the name of your own registry.
-
-## Building the Artifacts
-In `helloworld/cnab/`:
-```console
-$ cd .. # Go to root of your bundle
-$ pwd
-helloworld/
-$ duffle build
-Duffle Build Started: 'helloworld': 01CT1YHH79CNN66KMC2Y9T1E1D
-helloworld: Building CNAB components: SUCCESS ⚓  (1.0000s)
-```
-
-`duffle build` builds the invocation image(s) and creates a `bundle.json` file.
-
-Push the invocation image:
-```console
-# replace `microsoft` with your own registry
-$ docker push microsoft/helloworld-cnab:0.1.0"
-```
+As shown by the output, `duffle build` cryptographically signs the bundle to ensure that it has not been tampered with.
 
 ## Watch it Work
+
 ```console
-$ duffle install helloworld -f helloworld/cnab/bundle.json
+$ duffle install helloworld helloworld:0.1.0
 hello world
 Install action
 Action install complete for helloworld
 ```
+
 The output of `duffle install` comes from the run script. `hello world` is printed before the defined action is executed. In this example, the action being executed is the install action. In this example, the install action is running `echo 'Install Action'` At the end, the run script prints a message indication the action has been completed.
 
 ## Notes and Next steps
+
 - There are alternatives to defining a custom `run` tool. See examples of more complex and different bundles [here](https://github.com/deis/bundles).
 - Read more about the CNAB spec in the [docs](https://github.com/deislabs/cnab-spec/blob/master/100-CNAB.md)
