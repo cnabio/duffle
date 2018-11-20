@@ -2,11 +2,15 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/version"
 )
 
@@ -109,5 +113,95 @@ func TestErrorsWrittenToStderr(t *testing.T) {
 	wantError := err.Error()
 	if !strings.Contains(gotstderr, wantError) {
 		t.Fatalf("expected error text to be printed to stderr but got %q", gotstderr)
+	}
+}
+
+func TestSearchOutputDefault(t *testing.T) {
+	stdout := os.Stdout
+	defer func() {
+		os.Stdout = stdout
+	}()
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	duffleHome = filepath.Join(cwd, "..", "..", "tests", "testdata", "home")
+
+	// duffle search
+	cmd := newRootCmd(nil)
+	cmd.SetArgs([]string{"search", "hello"})
+	err = cmd.Execute()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// copy the output in a separate goroutine so printing can't block indefinitely
+	outC := make(chan string)
+	go func() {
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		outC <- buf.String()
+	}()
+
+	w.Close()
+	gotstdout := <-outC
+
+	// Verify stdout shows default (table) listing
+	wantOutput := "NAME      \tVERSION\n"
+	if !strings.Contains(gotstdout, wantOutput) {
+		t.Fatalf("expected default table output, got %q", gotstdout)
+	}
+}
+
+func TestSearchOutputJSON(t *testing.T) {
+	stdout := os.Stdout
+	defer func() {
+		os.Stdout = stdout
+	}()
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	duffleHome = filepath.Join(cwd, "..", "..", "tests", "testdata", "home")
+
+	// duffle search -o json
+	cmd := newRootCmd(nil)
+	cmd.SetArgs([]string{"search", "hello", "-o", "json"})
+	err = cmd.Execute()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// copy the output in a separate goroutine so printing can't block indefinitely
+	outC := make(chan string)
+	go func() {
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		outC <- buf.String()
+	}()
+
+	w.Close()
+	gotstdout := <-outC
+
+	// Verify stdout shows json listing
+	var bundleList []*bundle.Bundle
+	err = json.Unmarshal([]byte(gotstdout), &bundleList)
+	if err != nil {
+		t.Fatalf("expected json output, got %q", gotstdout)
+	}
+}
+
+func TestSearchOutputInvalid(t *testing.T) {
+	cmd := newRootCmd(nil)
+	cmd.SetArgs([]string{"search", "hello", "-o", "bogus"})
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected an error to be returned")
 	}
 }
