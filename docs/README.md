@@ -10,5 +10,6 @@ The following documentation is available:
     2. [Drivers](./proposal/202-drivers.md)
     3. [Duffle Build](./proposal/203-duffle-build.md)
     4. [Duffle Repositories](./proposal/204-repositories.md)
+    5. [Duffle Export/Import](./proposal/205-export-import.md)
 3. Developer Information
     1. [Debugging](debugging.md)
