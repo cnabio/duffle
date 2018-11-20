@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"strings"
 
 	"github.com/deis/duffle/pkg/signature"
 )
@@ -23,6 +24,12 @@ func defaultUserID() signature.UserID {
 		name = account.Name
 		username = account.Username
 	}
+	// on Windows, account name are prefixed with '<machinename>\' which makes the generated email invalid
+	// and makes the key user identity parser fail
+	if ix := strings.Index(username, "\\"); ix != -1 {
+		username = username[ix+1:]
+	}
+
 	email := fmt.Sprintf("%s@%s", username, domain)
 	return signature.UserID{
 		Name:  name,

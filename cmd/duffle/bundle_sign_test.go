@@ -11,6 +11,13 @@ import (
 	"github.com/deis/duffle/pkg/duffle/home"
 )
 
+type noopResolver struct {
+}
+
+func (noopResolver) Resolve(originalImageRef, originalDigest string) (string, string, error) {
+	return originalImageRef, originalDigest, nil
+}
+
 func TestBundleSign(t *testing.T) {
 	tempDir, err := ioutil.TempDir("", "duffle-home")
 	if err != nil {
@@ -37,7 +44,7 @@ func TestBundleSign(t *testing.T) {
 		out:      ioutil.Discard,
 		home:     home.Home(tempDir),
 	}
-	if err := cmd.signBundle(bundlejson, keyring); err != nil {
+	if err := cmd.signBundle(bundlejson, keyring, noopResolver{}); err != nil {
 		t.Fatal(err)
 	}
 

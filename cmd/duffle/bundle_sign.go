@@ -13,6 +13,7 @@ import (
 	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/crypto/digest"
 	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/image"
 	"github.com/deis/duffle/pkg/signature"
 )
 
@@ -25,12 +26,13 @@ If no key name is supplied, this uses the first signing key in the secret keyrin
 `
 
 type bundleSignCmd struct {
-	out            io.Writer
-	home           home.Home
-	identity       string
-	bundleFile     string
-	outfile        string
-	skipValidation bool
+	out             io.Writer
+	home            home.Home
+	identity        string
+	bundleFile      string
+	outfile         string
+	skipValidation  bool
+	pushLocalImages bool
 }
 
 func newBundleSignCmd(w io.Writer) *cobra.Command {
@@ -48,13 +50,18 @@ func newBundleSignCmd(w io.Writer) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return sign.signBundle(bundle, secring)
+			resolver, err := image.NewResolver(sign.pushLocalImages)
+			if err != nil {
+				return err
+			}
+			return sign.signBundle(bundle, secring, resolver)
 		},
 	}
 	cmd.Flags().StringVarP(&sign.identity, "user", "u", "", "the user ID of the key to use. Format is either email address or 'NAME (COMMENT) <EMAIL>'")
 	cmd.Flags().StringVarP(&sign.bundleFile, "file", "f", "", "path to bundle file to sign")
 	cmd.Flags().StringVarP(&sign.outfile, "output-file", "o", "", "the name of the output file")
 	cmd.Flags().BoolVar(&sign.skipValidation, "skip-validate", false, "do not validate the JSON before marshaling it.")
+	cmd.Flags().BoolVar(&sign.pushLocalImages, "push-local-images", false, "push docker local-only images to the registry.")
 
 	return cmd
 }
@@ -71,8 +78,7 @@ func bundleFileOrArg1(args []string, bundle string) (string, error) {
 	}
 	return bundle, nil
 }
-func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
-	def := home.DefaultRepository()
+func (bs *bundleSignCmd) signBundle(bundleFile, keyring string, containerImageResolver bundle.ContainerImageResolver) error {
 	// Verify that file exists
 	if fi, err := os.Stat(bundleFile); err != nil {
 		return fmt.Errorf("cannot find bundle file to sign: %v", err)
@@ -86,6 +92,13 @@ func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
 	}
 	b, err := bundle.Unmarshal(bdata)
 	if err != nil {
+		return err
+	}
+
+	if err := b.FixupContainerImages(containerImageResolver); err != nil {
+		if ok, image := image.IsErrImageLocalOnly(err); ok {
+			fmt.Fprintf(os.Stderr, "Image %q is only available locally. Please push it to the registry\n", image)
+		}
 		return err
 	}
 
@@ -141,7 +154,7 @@ func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
 	}
 
 	// TODO - write pkg method in bundle that writes file and records the reference
-	if err := recordBundleReference(bs.home, fmt.Sprintf("%s/%s", def, b.Name), b.Version, digest); err != nil {
+	if err := recordBundleReference(bs.home, b.Name, b.Version, digest); err != nil {
 		return err
 	}
 
