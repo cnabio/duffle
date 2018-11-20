@@ -20,7 +20,7 @@ For example, 'duffle create foo'  will create a directory structure that looks l
 
     foo/
         |
-        |- duffle.toml        # Contains metadata for bundle
+        |- duffle.yaml        # Contains metadata for bundle
         |
         |- cnab/              # Contains invocation image
                 |
