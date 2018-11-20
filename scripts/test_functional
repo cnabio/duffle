@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -eo pipefail
+
+function test_functional() {
+  bundle_and_version="${1}"
+  # split incoming string on ':' into an array
+  bundle_and_version_array=(${bundle_and_version//:/ })
+  # grab bundle name
+  bundle="${bundle_and_version_array[0]}"
+  # grab version, converting '.' characters to '-' characters for duffle bundle naming compliance
+  version="${bundle_and_version_array[1]//./-}"
+
+  # if either bundle or version empty, complain and return non-zero
+  if [[ -z "${bundle}" ]] || [[ -z "${version}" ]]; then
+    echo "Please supply full remote bundle name, e.g. bundle:0.1.0"
+    return 1
+  fi
+
+  # run tests
+  echo "Generating Creds for the ${bundle_and_version} bundle..."
+  duffle creds generate "${bundle}-${version}-test-creds" "library/${bundle_and_version}" --insecure -q
+  echo "Installing the ${bundle_and_version} bundle..."
+  duffle install -d debug "${bundle}-${version}-test" "library/${bundle_and_version}" --insecure -c "${bundle}-${version}-test-creds"
+}
+
+function main() {
+  # init first, otherwise auto-init output may interfere with subsequent duffle command parsing
+  duffle init
+
+  # if BUNDLE in env non-null, run only on this bundle
+  if [[ -n "${BUNDLE}" ]]; then
+    test_functional "${BUNDLE}"
+  else
+    # run against all bundles
+    duffle search -o json | jq -c '.[]' | while read bundle; do
+      name="$(echo "${bundle}" | jq -r '.name')"
+      version="$(echo "${bundle}" | jq -r '.version')"
+      test_functional "${name}:${version}"
+    done
+  fi
+}
+
+main

@@ -34,11 +34,53 @@ function build(e, project) {
   return build
 }
 
+// Separate docker build stage as there may be multiple consumers/publishers
+function goDockerBuild(e, p) {
+  // We build in a separate pod b/c AKS's Docker is too old to do multi-stage builds.
+  const goDockerBuild = new Job(`${projectName}-docker-build`, goImg);
+
+  goDockerBuild.storage.enabled = true;
+  goDockerBuild.env = {
+    "DEST_PATH": localPath,
+    "GOPATH": gopath
+  };
+  goDockerBuild.tasks = [
+    "cd /src",
+    `mkdir -p ${localPath}/bin`,
+    `mv /src/* ${localPath}`,
+    `cp -a /src/.git ${localPath}`,
+    `cd ${localPath}`,
+    "make bootstrap",
+    `make build-docker-bin`,
+    "mkdir -p /mnt/brigade/share/bin",
+    "cp -a ./bin/* /mnt/brigade/share/bin/"
+  ];
+
+  return goDockerBuild;
+}
+
+function testFunctional(e, project) {
+  tf = goDockerBuild(e, project);
+  tf.name =`${projectName}-test-functional`;
+  tf.env = {
+    CHECK: "which"
+  };
+
+  tf.tasks.push(
+    "make install",
+    // TODO: not all remote bundles are healthy; test just with one bundle for now
+    // Could iterate over CI-approved remote bundles?
+    "SHELL=/bin/sh BUNDLE=aks:0.2.0 make test-functional"
+  );
+
+  return tf
+}
+
 // Here we can add additional Check Runs, which will run in parallel and
 // report their results independently to GitHub
 function runSuite(e, p) {
-  // For now, this is the one-stop shop running build, lint and test targets
   runTests(e, p).catch(e => {console.error(e.toString())});
+  runFunctionalTests(e, p).catch(e => {console.error(e.toString())});
 }
 
 // runTests is a Check Run that is ran as part of a Checks Suite
@@ -54,6 +96,21 @@ function runTests(e, p) {
 
   // Send notification, then run, then send pass/fail notification
   return notificationWrap(build(e, p), note)
+}
+
+// runFunctionalTests is a Check Run that is ran as part of a Checks Suite
+function runFunctionalTests(e, p) {
+  console.log("Check requested")
+
+  // Create Notification object (which is just a Job to update GH using the Checks API)
+  var note = new Notification(`functional-tests`, e, p);
+  note.conclusion = "";
+  note.title = "Run Functional Tests";
+  note.summary = "Running the functional tests for " + e.revision.commit;
+  note.text = "This will ensure functional tests pass."
+
+  // Send notification, then run, then send pass/fail notification
+  return notificationWrap(testFunctional(e, p), note)
 }
 
 // A GitHub Check Suite notification
@@ -171,31 +228,6 @@ function release(project, tag) {
   ])
 }
 
-// Separate docker build stage as there may be multiple consumers/publishers
-function goDockerBuild(e, p) {
-  // We build in a separate pod b/c AKS's Docker is too old to do multi-stage builds.
-  const goDockerBuild = new Job(`${projectName}-docker-build`, goImg);
-
-  goDockerBuild.storage.enabled = true;
-  goDockerBuild.env = {
-    "DEST_PATH": localPath,
-    "GOPATH": gopath
-  };
-  goDockerBuild.tasks = [
-    "cd /src",
-    `mkdir -p ${localPath}/bin`,
-    `mv /src/* ${localPath}`,
-    `cp -a /src/.git ${localPath}`,
-    `cd ${localPath}`,
-    "make bootstrap",
-    `make build-docker-bin`,
-    "mkdir -p /mnt/brigade/share/bin",
-    "cp -a ./bin/* /mnt/brigade/share/bin/"
-  ];
-
-  return goDockerBuild;
-}
-
 // Not being used yet, but most likely will be once repo/image public
 function dockerhubPublish(project, tag) {
   const publisher = new Job(`${projectName}-dockerhub-publish`, "docker");
@@ -283,6 +315,10 @@ events.on("push", (e, p) => {
   if (release) {
     release(p, tag)
   }
+})
+
+events.on("test-functional", (e, p) => {
+  testFunctional(e, p).run()
 })
 
 events.on("check_suite:requested", runSuite)

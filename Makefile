@@ -7,6 +7,8 @@ LDFLAGS         := -w -s
 TESTFLAGS       :=
 INSTALL_DIR     := /usr/local/bin
 
+BASE_DIR        := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
 ifeq ($(OS),Windows_NT)
 	TARGET = $(PROJECT).exe
 	SHELL  = cmd.exe
@@ -14,10 +16,11 @@ ifeq ($(OS),Windows_NT)
 else
 	TARGET = $(PROJECT)
 	SHELL  ?= bash
-	CHECK  = command -v
+	CHECK  ?= command -v
 endif
 
-GIT_TAG   := $(shell git describe --tags --always)
+GIT       ?= git
+GIT_TAG   := $(shell $(GIT) describe --tags --always)
 VERSION   ?= ${GIT_TAG}
 # Replace + with -, for Docker image tag compliance
 IMAGE_TAG ?= $(subst +,-,$(VERSION))
@@ -68,6 +71,18 @@ docker-push:
 .PHONY: test
 test:
 	go test $(TESTFLAGS) ./...
+
+.PHONY: test-functional
+test-functional:
+	./scripts/test_functional
+
+.PHONY: test-functional-docker
+test-functional-docker:
+	docker run --rm \
+		-v ${BASE_DIR}:/src \
+		-w /src \
+		-e BUNDLE=$(BUNDLE) \
+		$(DOCKER_REGISTRY)/$(PROJECT):$(IMAGE_TAG) ./scripts/test_functional
 
 .PHONY: lint
 lint:
