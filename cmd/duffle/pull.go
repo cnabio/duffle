@@ -171,7 +171,7 @@ func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {
 	// Issue #439: Errors that come back from the loader can be
 	// pretty opaque.
 	var bun *bundle.Bundle
-	if bun, err := l.Load(bundleFile); err != nil {
+	if bun, err = l.Load(bundleFile); err != nil {
 		if err.Error() == "no signature block in data" {
 			return bun, errors.New("bundle is not signed")
 		}
