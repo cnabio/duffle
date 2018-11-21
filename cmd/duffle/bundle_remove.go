@@ -16,7 +16,7 @@ import (
 const bundleRemoveDesc = `Remove a bundle from the local storage.
 
 This removes a bundle from the local storage so that it will no longer be locally
-available. Remote bundles can be re-fetched with 'duffle pull'.
+available. Bundles can be rebuilt with 'duffle build'.
 
 If a SemVer range is provided with '--version'/'-r' then only releases that match
 that range will be removed.

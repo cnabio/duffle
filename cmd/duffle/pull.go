@@ -29,9 +29,10 @@ Example:
 
 	var insecure bool
 	cmd := &cobra.Command{
-		Use:   "pull",
-		Short: "pull a CNAB bundle from a repository",
-		Long:  usage,
+		Hidden: true,
+		Use:    "pull",
+		Short:  "pull a CNAB bundle from a repository",
+		Long:   usage,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path, err := pullBundle(args[0], insecure)
 			if err != nil {

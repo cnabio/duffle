@@ -12,15 +12,15 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
     ```
 
 2. Clone this repo:
-    ```
-    cd $GOPATH/src/github.com/deis/
-    git clone git@github.com:deis/duffle.git
-    cd duffle
+    ```console
+    $ cd $GOPATH/src/github.com/deis/
+    $ git clone git@github.com:deis/duffle.git
+    $ cd duffle
     ```
 
 3. Vendor dependencies and build the `duffle` binary:
-    ```
-    make bootstrap build
+    ```console
+    $ make bootstrap build
     ```
 
 4. Run the command to set duffle up on your machine:
@@ -37,27 +37,13 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
     ==> repo added in 1.096263107s
     ```
 
-5. Search for available bundles:
+5. Build and install your first bundle:
+
     ```console
-    $ duffle search
-    NAME      	REPOSITORY                 	VERSION
-    helloazure	github.com/deis/bundles.git	0.1.0
-    hellohelm 	github.com/deis/bundles.git	0.1.0
-    helloworld	github.com/deis/bundles.git	1.0
-    ```
-    
-    *Notes:*
-    * The source code for these bundles are in the [bundles repo](https://github.com/deis/bundles) on github, and are built and hosted by <https://hub.cnlabs.io>.
-    * Learn more about what a bundle is and its components [here](https://github.com/deis/duffle/blob/master/docs/100-CNAB.md).
-    * Get a feel for what CNAB bundles look like by referencing the [examples](examples/) directory.
-
-6. Build and install your first bundle:
-
-    ```console 
     $ duffle build ./examples/helloworld/
     Duffle Build Started: 'helloworld': 01CS02FNS3FTM9907V83GAQQMT
     helloworld: Building CNAB components: SUCCESS ⚓  (1.0090s)
-    
+
     $ duffle credentials generate helloworld-creds -f examples/helloworld/cnab/bundle.json
     name: helloworld-creds
     credentials:
@@ -66,13 +52,18 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
         value: EMPTY
       destination:
         path: pquux
-    
+
     $ duffle install helloworld-demo -c helloworld-creds -f examples/helloworld/cnab/bundle.json
     Executing install action...
-    
+
     Install action
     Action install complete for helloworld-demo
     ```
 
+    *Notes:*
+    * Learn more about what a bundle is and its components [here](https://github.com/deislabs/cnab-spec/blob/master/100-CNAB.md).
+    * Get a feel for what CNAB bundles look like by referencing the [bundles repo](https://github.com/deis/bundles) on github.
+
 # Debugging using VS Code
+
 For instructions on using VS Code to debug the Duffle binary, see [the debugging document](docs/001-debugging.md).

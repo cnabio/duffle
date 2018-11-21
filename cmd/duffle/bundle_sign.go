@@ -67,12 +67,11 @@ func bundleFileOrArg1(args []string, bundle string) (string, error) {
 		return "", errors.New("please specify a BUNDLE or use -f for a file")
 	case len(args) == 1:
 		// passing insecure: true, as currently we can only sign an unsinged bundle
-		return loadOrPullBundle(args[0], true)
+		return getBundleFilepath(args[0], true)
 	}
 	return bundle, nil
 }
 func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
-	def := home.DefaultRepository()
 	// Verify that file exists
 	if fi, err := os.Stat(bundleFile); err != nil {
 		return fmt.Errorf("cannot find bundle file to sign: %v", err)
@@ -141,7 +140,7 @@ func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
 	}
 
 	// TODO - write pkg method in bundle that writes file and records the reference
-	if err := recordBundleReference(bs.home, fmt.Sprintf("%s/%s", def, b.Name), b.Version, digest); err != nil {
+	if err := recordBundleReference(bs.home, b.Name, b.Version, digest); err != nil {
 		return err
 	}
 

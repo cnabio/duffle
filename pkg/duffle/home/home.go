@@ -91,8 +91,3 @@ func DefaultHome() string {
 
 	return filepath.Join(homeEnvPath, ".duffle")
 }
-
-// DefaultRepository returns the name of the default repository.
-func DefaultRepository() string {
-	return "hub.cnlabs.io"
-}

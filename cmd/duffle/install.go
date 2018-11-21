@@ -49,7 +49,7 @@ Windows Example:
 For unpublished CNAB bundles, you can also load the bundle.json directly:
 
 	$ duffle install dev_bundle -f path/to/bundle.json
-	
+
 
 Verifying and --insecure:
 
@@ -165,7 +165,7 @@ func bundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) (st
 	case len(args) < 2 && bun == "":
 		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return loadOrPullBundle(args[1], insecure)
+		return getBundleFilepath(args[1], insecure)
 	}
 	return bun, nil
 }
@@ -183,12 +183,12 @@ func optBundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) 
 		// No bundle provided
 		return "", nil
 	case len(args) == 2:
-		return pullBundle(args[1], insecure)
+		return getBundleFilepath(args[1], insecure)
 	}
 	return bun, nil
 }
 
-func loadOrPullBundle(bun string, insecure bool) (string, error) {
+func getBundleFilepath(bun string, insecure bool) (string, error) {
 	home := home.Home(homePath())
 	ref, err := getReference(bun)
 	if err != nil {
@@ -202,12 +202,10 @@ func loadOrPullBundle(bun string, insecure bool) (string, error) {
 	}
 
 	digest, err := index.Get(ref.Name(), ref.Tag())
-	if err == nil {
-		return filepath.Join(home.Bundles(), digest), nil
+	if err != nil {
+		return "", fmt.Errorf("could not find %s:%s in %s: %v", ref.Name(), ref.Tag(), home.Repositories(), err)
 	}
-
-	// the bundle was not found locally, so we pull it
-	return pullBundle(bun, insecure)
+	return filepath.Join(home.Bundles(), digest), nil
 }
 
 // overrides parses the --set data and returns values that should override other params.

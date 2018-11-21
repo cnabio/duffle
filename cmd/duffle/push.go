@@ -17,10 +17,11 @@ func newPushCmd(out io.Writer) *cobra.Command {
 	const usage = `Pushes a CNAB bundle to a repository.`
 
 	cmd := &cobra.Command{
-		Use:   "push NAME",
-		Short: "push a CNAB bundle to a repository",
-		Long:  usage,
-		Args:  cobra.ExactArgs(1),
+		Hidden: true,
+		Use:    "push NAME",
+		Short:  "push a CNAB bundle to a repository",
+		Long:   usage,
+		Args:   cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			home := home.Home(homePath())
 			bundleName := args[0]
