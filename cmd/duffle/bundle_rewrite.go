@@ -20,9 +20,7 @@ import (
 type bundleRewriteCmd struct {
 	out            io.Writer
 	home           home.Home
-	identity       string
 	bundleFile     string
-	outfile        string
 	skipValidation bool
 	signer         string
 }
