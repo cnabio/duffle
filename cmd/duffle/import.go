@@ -21,6 +21,7 @@ type importCmd struct {
 	out      io.Writer
 	home     home.Home
 	insecure bool
+	verbose  bool
 }
 
 func newImportCmd(w io.Writer) *cobra.Command {
@@ -46,6 +47,7 @@ func newImportCmd(w io.Writer) *cobra.Command {
 	f := cmd.Flags()
 	f.StringVarP(&importc.dest, "destination", "d", "", "Location to unpack bundle")
 	f.BoolVarP(&importc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
+	f.BoolVarP(&importc.verbose, "verbose", "v", false, "Verbose output")
 
 	return cmd
 }
@@ -66,7 +68,7 @@ func (im *importCmd) run() error {
 		return err
 	}
 
-	imp, err := packager.NewImporter(source, dest, l)
+	imp, err := packager.NewImporter(source, dest, l, im.verbose)
 	if err != nil {
 		return err
 	}
