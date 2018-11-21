@@ -43,14 +43,6 @@ Status takes a claim's installation name, looks up a claim, and executes the sta
 
 The `duffle list` command lists all claims. It serves as a record of installed (but not uninstalled) applications.
 
-## Pushing images to a registry with `duffle push`
-
-The `duffle push` command pushes a built CNAB bundle's images into the pre-configured container registry. It also pushes a `bundle.json` to its registry. Depending on configuration, it _should_ sign the bundle before pushing.
-
-## Fetching CNAB bundles with `duffle pull`
-
-The `duffle pull` command will pull a named CNAB bundle from a registry. It may also fetch associated images.
-
 ## Exporting a CNAB bundle with `duffle export`
 
 The `duffle export` command exports a invocation image together with all of its associated images, generating a single gzipped tar file as output.
@@ -97,6 +89,7 @@ For operations that execute this installation image (install, upgrade, etc.), th
 The following items remain to be specified:
 
 - How `duffle init` works
+- How Duffle interacts with an image registry (logging in, pushing/pulling bundles)
 - Whether Duffle will support multi-runtimes in a single image.
 
 | Method | Description |
@@ -106,4 +99,3 @@ The following items remain to be specified:
 | automatic | A CNAB bundle may expose multiple runtimes, but automatically choose which applies to the current config |
 
 Next section: [credential set](201-credentialset.md)
-

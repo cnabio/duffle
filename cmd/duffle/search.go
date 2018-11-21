@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/repo/remote"
 )
 
@@ -40,8 +39,9 @@ func newSearchCmd(w io.Writer) *cobra.Command {
 	var output string
 
 	cmd := &cobra.Command{
-		Use:   "search",
-		Short: "perform a fuzzy search on available bundles",
+		Hidden: true,
+		Use:    "search",
+		Short:  "perform a fuzzy search on available bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			output, err := validOutputOrErr(output, cmd.OutOrStdout())
 			if err != nil {
@@ -99,7 +99,7 @@ func search(keywords []string) (BundleList, error) {
 
 	url := &url.URL{
 		Scheme: "https",
-		Host:   home.DefaultRepository(),
+		Host:   "hub.cnlabs.io",
 		Path:   remote.IndexPath,
 	}
 
