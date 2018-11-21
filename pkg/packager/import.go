@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,6 +26,7 @@ type Importer struct {
 	Destination string
 	Client      *client.Client
 	Loader      loader.Loader
+	Verbose     bool
 }
 
 // NewImporter creates a new secure *Importer
@@ -32,7 +34,7 @@ type Importer struct {
 // source is the filesystem path to the archive.
 // destination is the directory to unpack the contents.
 // load is a loader.Loader preconfigured for loading secure or insecure bundles.
-func NewImporter(source, destination string, load loader.Loader) (*Importer, error) {
+func NewImporter(source, destination string, load loader.Loader, verbose bool) (*Importer, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
@@ -47,6 +49,7 @@ func NewImporter(source, destination string, load loader.Loader) (*Importer, err
 		Destination: destination,
 		Client:      cli,
 		Loader:      load,
+		Verbose:     verbose,
 	}, nil
 }
 
@@ -97,13 +100,27 @@ func (im *Importer) Import() error {
 			if err != nil {
 				return err
 			}
+
+			if info.IsDir() {
+				return nil
+			}
+
 			file, err := os.Open(path)
 			if err != nil {
 				return err
 			}
 			defer file.Close()
-			_, err = im.Client.ImageLoad(context.Background(), file, true) // quiet = true
-			return err
+			out, err := im.Client.ImageLoad(context.Background(), file, false)
+			if err != nil {
+				return err
+			}
+			defer out.Body.Close()
+
+			if im.Verbose {
+				io.Copy(os.Stdout, out.Body)
+			}
+
+			return nil
 		})
 	}
 
