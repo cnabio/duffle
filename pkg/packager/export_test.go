@@ -21,6 +21,7 @@ func TestExport(t *testing.T) {
 	ex := Exporter{
 		Source: source,
 		Full:   false,
+		Logs:   filepath.Join(tempDir, "export-logs"),
 	}
 
 	tempPWD, err := ioutil.TempDir("", "duffle-export-test")
@@ -60,6 +61,7 @@ func TestExportCreatesFileProperly(t *testing.T) {
 		Source:      "testdata/examplebun",
 		Destination: filepath.Join(tempDir, "random-directory", "examplebun-whatev.tgz"),
 		Full:        false,
+		Logs:        filepath.Join(tempDir, "export-logs"),
 	}
 
 	if err := ex.Export(); err == nil {
