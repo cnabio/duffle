@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	survey "gopkg.in/AlecAivazis/survey.v1"
@@ -108,6 +109,10 @@ func genCredentialSet(name string, creds map[string]bundle.Location, fn credenti
 		Name: name,
 	}
 	cs.Credentials = []credentials.CredentialStrategy{}
+
+	if strings.ContainsAny(name, "./\\") {
+		return cs, fmt.Errorf("credentialset name '%s' cannot contain the following characters: './\\'", name)
+	}
 
 	for name := range creds {
 		c, err := fn(name)
