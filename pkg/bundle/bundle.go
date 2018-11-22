@@ -153,6 +153,36 @@ func (b Bundle) Validate() error {
 	return nil
 }
 
+func fixupImage(image *BaseImage, resolver ContainerImageResolver) error {
+	if image.ImageType != "docker" && image.ImageType != "oci" {
+		return nil
+	}
+	imageName, digest, err := resolver.Resolve(image.Image, image.Digest)
+	if err != nil {
+		return err
+	}
+	image.Image = imageName
+	image.Digest = digest
+	return nil
+}
+
+// FixupContainerImages makes sure all references to container images are immutable
+func (b *Bundle) FixupContainerImages(resolver ContainerImageResolver) error {
+	for ix, image := range b.InvocationImages {
+		if err := fixupImage(&image.BaseImage, resolver); err != nil {
+			return err
+		}
+		b.InvocationImages[ix] = image
+	}
+	for ix, image := range b.Images {
+		if err := fixupImage(&image.BaseImage, resolver); err != nil {
+			return err
+		}
+		b.Images[ix] = image
+	}
+	return nil
+}
+
 // Validate the image contents.
 func (img InvocationImage) Validate() error {
 	switch img.ImageType {
@@ -168,4 +198,9 @@ func validateDockerish(s string) error {
 		return errors.New("tag is required")
 	}
 	return nil
+}
+
+// ContainerImageResolver resolves an image digest and optionaly digested reference
+type ContainerImageResolver interface {
+	Resolve(originalImageRef, originalDigest string) (string, string, error)
 }

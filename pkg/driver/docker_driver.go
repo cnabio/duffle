@@ -10,15 +10,14 @@ import (
 
 	"github.com/docker/cli/cli/command"
 	cliflags "github.com/docker/cli/cli/flags"
-	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/docker/docker/registry"
+
+	"github.com/deis/duffle/pkg/image"
 )
 
 // DockerDriver is capable of running Docker invocation images using Docker itself.
@@ -51,38 +50,6 @@ func (d *DockerDriver) SetConfig(settings map[string]string) {
 	d.config = settings
 }
 
-func pullImage(ctx context.Context, cli command.Cli, image string) error {
-	ref, err := reference.ParseNormalizedNamed(image)
-	if err != nil {
-		return err
-	}
-
-	// Resolve the Repository name from fqn to RepositoryInfo
-	repoInfo, err := registry.ParseRepositoryInfo(ref)
-	if err != nil {
-		return err
-	}
-	authConfig := command.ResolveAuthConfig(ctx, cli, repoInfo.Index)
-	encodedAuth, err := command.EncodeAuthToBase64(authConfig)
-	if err != nil {
-		return err
-	}
-	options := types.ImagePullOptions{
-		RegistryAuth: encodedAuth,
-	}
-	responseBody, err := cli.Client().ImagePull(ctx, image, options)
-	if err != nil {
-		return err
-	}
-	defer responseBody.Close()
-	return jsonmessage.DisplayJSONMessagesStream(
-		responseBody,
-		cli.Out(),
-		cli.Out().FD(),
-		cli.Out().IsTerminal(),
-		nil)
-}
-
 func (d *DockerDriver) exec(op *Operation) error {
 	ctx := context.Background()
 	cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false)
@@ -93,7 +60,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 		return nil
 	}
 	if d.config["PULL_ALWAYS"] == "1" {
-		if err := pullImage(ctx, cli, op.Image); err != nil {
+		if err := image.PullImage(ctx, cli, op.Image); err != nil {
 			return err
 		}
 	}
@@ -121,7 +88,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 	switch {
 	case client.IsErrNotFound(err):
 		fmt.Fprintf(cli.Err(), "Unable to find image '%s' locally\n", op.Image)
-		if err := pullImage(ctx, cli, op.Image); err != nil {
+		if err := image.PullImage(ctx, cli, op.Image); err != nil {
 			return err
 		}
 		if resp, err = cli.Client().ContainerCreate(ctx, cfg, hostCfg, nil, ""); err != nil {
