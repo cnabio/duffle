@@ -255,7 +255,7 @@ func (i *initCmd) loadOrCreatePublicKeyRing(dest string, privateKeys *signature.
 		i.printUserID(k)
 	}
 
-	return ring, ring.SavePublic(dest, false)
+	return ring, ring.SavePublic(dest, false, false)
 }
 
 func (i *initCmd) printUserID(k *signature.Key) {

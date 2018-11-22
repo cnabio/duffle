@@ -182,7 +182,7 @@ func TestKeyRing_SavePublic(t *testing.T) {
 	kr, err := LoadKeyRingFetcher(keyringFile, testPassphraseFetch)
 	is.NoError(err)
 
-	is.Error(kr.SavePublic("testdata/noclobber.empty", false))
+	is.Error(kr.SavePublic("testdata/noclobber.empty", false, false))
 
 	dirname, err := ioutil.TempDir("", "signature-")
 	if err != nil {
@@ -195,7 +195,7 @@ func TestKeyRing_SavePublic(t *testing.T) {
 	newfile := filepath.Join(dirname, "save.gpg")
 	// We do this to verify that the clobber flag is working.
 	is.NoError(ioutil.WriteFile(newfile, []byte(" "), 0755))
-	is.NoError(kr.SavePublic(newfile, true))
+	is.NoError(kr.SavePublic(newfile, true, false))
 
 	// Finally, we test loading the newly saved keyring
 	kr2, err := LoadKeyRing(newfile)
@@ -210,6 +210,47 @@ func TestKeyRing_SavePublic(t *testing.T) {
 	// Test that the key does NOT have a private component
 	_, err = kk.bestPrivateKey()
 	is.Error(err)
+}
+
+func TestKeyRing_ArmoredRoundTrip(t *testing.T) {
+	// Test to make sure that we can both export and import ASCII Armored keys
+	is := assert.New(t)
+	kr, err := LoadKeyRingFetcher(keyringFile, testPassphraseFetch)
+	_ = !is.NoError(err) && is.FailNow("failed keyring load: %s", err)
+
+	uid, err := ParseUserID("New Key <newkey@example.com>")
+	is.NoError(err)
+	newkey, err := CreateKey(uid)
+	is.NoError(err)
+	kr.AddKey(newkey)
+
+	td, err := ioutil.TempDir("", "duffle-testkeyring")
+	is.NoError(err)
+	defer os.RemoveAll(td)
+
+	dest := filepath.Join(td, "tkr_art.ascii")
+	is.NoError(kr.SavePublic(dest, false, true))
+
+	kr2 := CreateKeyRing(testPassphraseFetch)
+	handle, err := os.Open(dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer handle.Close()
+
+	is.NoError(kr2.Add(handle, true))
+
+	for i, k := range kr2.Keys() {
+		uid, err := k.UserID()
+		is.NoError(err)
+		t.Logf("%d: %q", i, uid.String())
+	}
+
+	is.Equal(3, kr2.Len())
+
+	k2, err := kr2.Key("newkey@example.com")
+	is.NoError(err)
+	is.Equal(k2.Fingerprint(), newkey.Fingerprint())
 }
 
 func TestKeyRing_PrivateKeys(t *testing.T) {
