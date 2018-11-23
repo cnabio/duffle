@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/docker/distribution/reference"
 	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
 
@@ -13,45 +14,44 @@ import (
 	"github.com/deis/duffle/pkg/repo"
 )
 
-// NamedRepositoryList is a list of bundle references.
+// ReferenceToDigestList is a list of bundle references.
 // Implements a sorter on Name.
-type NamedRepositoryList []*NamedRepository
+type ReferenceToDigestList []*ReferenceToDigest
 
 // Len returns the length.
-func (bl NamedRepositoryList) Len() int { return len(bl) }
+func (bl ReferenceToDigestList) Len() int { return len(bl) }
 
 // Swap swaps the position of two items in the versions slice.
-func (bl NamedRepositoryList) Swap(i, j int) { bl[i], bl[j] = bl[j], bl[i] }
+func (bl ReferenceToDigestList) Swap(i, j int) { bl[i], bl[j] = bl[j], bl[i] }
 
 // Less returns true if the version of entry a is less than the version of entry b.
-func (bl NamedRepositoryList) Less(a, b int) bool {
-	return strings.Compare(bl[a].Name(), bl[b].Name()) < 1
+func (bl ReferenceToDigestList) Less(a, b int) bool {
+	return strings.Compare(reference.FamiliarString(bl[a].ref), reference.FamiliarString(bl[a].ref)) < 1
 }
 
-// NamedRepository is a reference to a repository with a name, tag and digest.
-type NamedRepository struct {
-	name   string
-	tag    string
+// ReferenceToDigest is a reference to a repository with a name, tag and digest.
+type ReferenceToDigest struct {
+	ref    reference.NamedTagged
 	digest string
 }
 
 // Name returns the full name.
-func (n *NamedRepository) String() string {
-	return n.name + ":" + n.tag
+func (n *ReferenceToDigest) String() string {
+	return reference.FamiliarString(n.ref)
 }
 
 // Name returns the name.
-func (n *NamedRepository) Name() string {
-	return n.name
+func (n *ReferenceToDigest) Name() string {
+	return reference.FamiliarName(n.ref)
 }
 
 // Tag returns the tag.
-func (n *NamedRepository) Tag() string {
-	return n.tag
+func (n *ReferenceToDigest) Tag() string {
+	return n.ref.Tag()
 }
 
 // Digest returns the digest.
-func (n *NamedRepository) Digest() string {
+func (n *ReferenceToDigest) Digest() string {
 	return n.digest
 }
 
@@ -79,7 +79,7 @@ func newBundleListCmd(w io.Writer) *cobra.Command {
 			}
 
 			for _, ref := range references {
-				fmt.Println(ref.Name())
+				fmt.Println(ref)
 			}
 
 			return nil
@@ -90,8 +90,8 @@ func newBundleListCmd(w io.Writer) *cobra.Command {
 	return cmd
 }
 
-func searchLocal(home home.Home) (NamedRepositoryList, error) {
-	references := NamedRepositoryList{}
+func searchLocal(home home.Home) (ReferenceToDigestList, error) {
+	references := ReferenceToDigestList{}
 
 	index, err := repo.LoadIndex(home.Repositories())
 	if err != nil {
@@ -99,11 +99,18 @@ func searchLocal(home home.Home) (NamedRepositoryList, error) {
 	}
 
 	for repo, tagList := range index {
+		named, err := reference.ParseNormalizedNamed(repo)
+		if err != nil {
+			return nil, err
+		}
 		for tag, digest := range tagList {
-			references = append(references, &NamedRepository{
-				repo,
-				tag,
-				digest,
+			tagged, err := reference.WithTag(named, tag)
+			if err != nil {
+				return nil, err
+			}
+			references = append(references, &ReferenceToDigest{
+				ref:    tagged,
+				digest: digest,
 			})
 		}
 	}
