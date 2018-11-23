@@ -14,6 +14,7 @@ import (
 	dockerdebug "github.com/docker/cli/cli/debug"
 	dockerflags "github.com/docker/cli/cli/flags"
 	"github.com/docker/cli/opts"
+	"github.com/docker/distribution/reference"
 	"github.com/docker/go-connections/tlsconfig"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -133,16 +134,25 @@ func (b *buildCmd) run() (err error) {
 		return err
 	}
 
+	named, err := reference.ParseNormalizedNamed(bf.Name)
+	if err != nil {
+		return err
+	}
+	versioned, err := reference.WithTag(named, bf.Version)
+	if err != nil {
+		return err
+	}
+
 	digest, err := b.writeBundle(bf)
 	if err != nil {
 		return err
 	}
 
 	// record the new bundle in repositories.json
-	if err := recordBundleReference(b.home, bf.Name, bf.Version, digest); err != nil {
+	if err := recordBundleReference(b.home, versioned, digest); err != nil {
 		return fmt.Errorf("could not record bundle: %v", err)
 	}
-	ohai.Fsuccessf(b.out, "Successfully built bundle %s:%s\n", bf.Name, bf.Version)
+	ohai.Fsuccessf(b.out, "Successfully built bundle %s\n", versioned)
 
 	return nil
 }
@@ -222,14 +232,14 @@ func dockerPreRun(opts *dockerflags.ClientOptions) {
 	}
 }
 
-func recordBundleReference(home home.Home, name, version, digest string) error {
+func recordBundleReference(home home.Home, ref reference.NamedTagged, digest string) error {
 	// record the new bundle in repositories.json
 	index, err := repo.LoadIndex(home.Repositories())
 	if err != nil {
 		return fmt.Errorf("cannot create or open %s: %v", home.Repositories(), err)
 	}
 
-	index.Add(name, version, digest)
+	index.Add(ref, digest)
 
 	if err := index.WriteFile(home.Repositories(), 0644); err != nil {
 		return fmt.Errorf("could not write to %s: %v", home.Repositories(), err)

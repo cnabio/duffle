@@ -9,12 +9,21 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/docker/distribution/reference"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/deis/duffle/pkg/duffle/home"
 	"github.com/deis/duffle/pkg/repo"
 	"github.com/deis/duffle/pkg/signature"
 )
+
+func namedOrDie(v string) reference.Named {
+	res, err := reference.ParseNormalizedNamed(v)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
 
 func TestBuild(t *testing.T) {
 	testHome := CreateTestHome(t)
@@ -70,7 +79,7 @@ func TestBuild(t *testing.T) {
 	}
 
 	// since we've only built one bundle, let's just fetch the latest version
-	digest, err := index.Get("testbundle", "")
+	digest, err := index.Get(namedOrDie("testbundle"), "")
 	if err != nil {
 		t.Fatalf("could not find bundle: %v", err)
 	}

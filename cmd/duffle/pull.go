@@ -10,14 +10,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/loader"
-	"github.com/deis/duffle/pkg/reference"
-
+	"github.com/docker/distribution/reference"
 	"github.com/spf13/cobra"
 
+	"github.com/deis/duffle/pkg/bundle"
 	"github.com/deis/duffle/pkg/crypto/digest"
 	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deis/duffle/pkg/loader"
 )
 
 func newPullCmd(w io.Writer) *cobra.Command {
@@ -94,7 +93,7 @@ func pullBundle(bundleName string, insecure bool) (string, error) {
 		return "", fmt.Errorf("failed to write bundle: %v", err)
 	}
 
-	return bundleFilepath, recordBundleReference(home, ref.Name(), ref.Tag(), digest)
+	return bundleFilepath, recordBundleReference(home, ref, digest)
 }
 
 func getLoader(insecure bool) (loader.Loader, error) {
