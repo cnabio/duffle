@@ -52,7 +52,7 @@ func (d *DockerDriver) SetConfig(settings map[string]string) {
 
 func (d *DockerDriver) exec(op *Operation) error {
 	ctx := context.Background()
-	cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false)
+	cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false, nil)
 	if err := cli.Initialize(cliflags.NewClientOptions()); err != nil {
 		return err
 	}

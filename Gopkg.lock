@@ -72,7 +72,8 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:c7e3c5c72a68d36cca80e9a8934bb7f7c7148290112b12bcefca0dbc9e03851d"
+  branch = "docker-app-fork"
+  digest = "1:b08eb2105e9957accbbf487d8459f1494b392fc5281d7d429639b62114b43e70"
   name = "github.com/docker/cli"
   packages = [
     "cli",
@@ -81,6 +82,11 @@
     "cli/config",
     "cli/config/configfile",
     "cli/config/credentials",
+    "cli/connhelper",
+    "cli/connhelper/ssh",
+    "cli/context",
+    "cli/context/docker",
+    "cli/context/store",
     "cli/debug",
     "cli/flags",
     "cli/manifest/store",
@@ -88,10 +94,11 @@
     "cli/registry/client",
     "cli/trust",
     "opts",
+    "types",
   ]
   pruneopts = "NUT"
-  revision = "7178075fdad68c953431cab5989dbe08bdcb94ac"
-  version = "v18.06.0-ce-rc3"
+  revision = "9b7aa16be3461dfa8dc0c6822a49ebcb977b8a0d"
+  source = "github.com/simonferquel/cli"
 
 [[projects]]
   digest = "1:1cb756deb458cb9be52d2e3fe67a19a7185b8c8453c691ba5eb0c7db00a51205"
@@ -289,6 +296,14 @@
   ]
   pruneopts = "NUT"
   revision = "36ee7e946282a3fb1cfecd476ddc9b35d8847e42"
+
+[[projects]]
+  digest = "1:0b06ffe0c0764e413a6738e3f045d6bb14117359aef80a09f8c60fbff2ecad6b"
+  name = "github.com/hashicorp/go-version"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "b5a281d3160aa11950a6182bd9a9dc2cb1e02d50"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:11c6c696067d3127ecf332b10f89394d386d9083f82baf71f40f2da31841a009"
@@ -713,8 +728,6 @@
     "github.com/docker/cli/cli/flags",
     "github.com/docker/cli/opts",
     "github.com/docker/distribution",
-    "github.com/docker/distribution/digestset",
-    "github.com/docker/distribution/manifest",
     "github.com/docker/distribution/manifest/schema2",
     "github.com/docker/distribution/reference",
     "github.com/docker/docker/api/types",

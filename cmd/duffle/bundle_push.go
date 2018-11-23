@@ -46,7 +46,7 @@ func newBundlePushCmd(w io.Writer) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false)
+			cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false, nil)
 			if err := cli.Initialize(flags.NewClientOptions()); err != nil {
 				return err
 			}

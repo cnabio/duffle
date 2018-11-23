@@ -24,7 +24,7 @@ func newBundlePullCmd(w io.Writer) *cobra.Command {
 		Short: "pull a bundle from an image registry",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false)
+			cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false, nil)
 			if err := cli.Initialize(flags.NewClientOptions()); err != nil {
 				return err
 			}

@@ -20,7 +20,8 @@
 
 [[constraint]]
   name = "github.com/docker/cli"
-  version = "v18.06.0-ce"
+  branch = "docker-app-fork"
+  source = "github.com/simonferquel/cli"
 
 [[override]]
   name = "github.com/docker/distribution"

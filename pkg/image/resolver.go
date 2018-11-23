@@ -65,7 +65,7 @@ func (r *Resolver) Resolve(image, digest string) (string, string, error) {
 
 // NewResolver creates a container image resolver
 func NewResolver(pushLocalImages bool) (*Resolver, error) {
-	cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false)
+	cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false, nil)
 	if err := cli.Initialize(flags.NewClientOptions()); err != nil {
 		return nil, err
 	}
