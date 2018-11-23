@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/Masterminds/semver"
+	"github.com/docker/distribution/reference"
 )
 
 var (
@@ -44,12 +45,12 @@ func LoadIndexBuffer(data []byte) (Index, error) {
 }
 
 // Add adds a new entry to the index
-func (i Index) Add(name, version string, digest string) {
-	if tags, ok := i[name]; ok {
-		tags[version] = digest
+func (i Index) Add(ref reference.NamedTagged, digest string) {
+	if tags, ok := i[reference.FamiliarName(ref)]; ok {
+		tags[ref.Tag()] = digest
 	} else {
-		i[name] = map[string]string{
-			version: digest,
+		i[reference.FamiliarName(ref)] = map[string]string{
+			ref.Tag(): digest,
 		}
 	}
 }
@@ -57,10 +58,10 @@ func (i Index) Add(name, version string, digest string) {
 // Delete removes a bundle from the index.
 //
 // Returns false if no record was found to delete.
-func (i Index) Delete(name string) bool {
-	_, ok := i[name]
+func (i Index) DeleteAll(ref reference.Named) bool {
+	_, ok := i[reference.FamiliarName(ref)]
 	if ok {
-		delete(i, name)
+		delete(i, reference.FamiliarName(ref))
 	}
 	return ok
 }
@@ -68,29 +69,29 @@ func (i Index) Delete(name string) bool {
 // DeleteVersion removes a single version of a given bundle from the index.
 //
 // Returns false if the name or version is not found.
-func (i Index) DeleteVersion(name, version string) bool {
-	sub, ok := i[name]
+func (i Index) DeleteVersion(ref reference.NamedTagged) bool {
+	sub, ok := i[reference.FamiliarName(ref)]
 	if !ok {
 		return false
 	}
-	_, ok = sub[version]
+	_, ok = sub[ref.Tag()]
 	if ok {
-		delete(sub, version)
+		delete(sub, ref.Tag())
 	}
 	return ok
 }
 
 // Has returns true if the index has an entry for a bundle with the given name and exact version.
-func (i Index) Has(name, version string) bool {
-	_, err := i.Get(name, version)
+func (i Index) Has(ref reference.NamedTagged) bool {
+	_, err := i.GetExactly(ref)
 	return err == nil
 }
 
 // Get returns the digest for the given name.
 //
 // If version is empty, this will return the digest for the bundle with the highest version.
-func (i Index) Get(name, version string) (string, error) {
-	vs, ok := i[name]
+func (i Index) Get(ref reference.Named, versionQuery string) (string, error) {
+	vs, ok := i[reference.FamiliarName(ref)]
 	if !ok {
 		return "", ErrNoBundleName
 	}
@@ -99,11 +100,11 @@ func (i Index) Get(name, version string) (string, error) {
 	}
 
 	var constraint *semver.Constraints
-	if len(version) == 0 {
+	if len(versionQuery) == 0 {
 		constraint, _ = semver.NewConstraint("*")
 	} else {
 		var err error
-		constraint, err = semver.NewConstraint(version)
+		constraint, err = semver.NewConstraint(versionQuery)
 		if err != nil {
 			return "", err
 		}
@@ -122,13 +123,26 @@ func (i Index) Get(name, version string) (string, error) {
 	return "", ErrNoBundleVersion
 }
 
+// GetExactly returns the hash of the exact specified version
+func (i Index) GetExactly(ref reference.NamedTagged) (string, error) {
+	vs, ok := i[reference.FamiliarName(ref)]
+	if !ok {
+		return "", ErrNoBundleName
+	}
+	v, ok := vs[ref.Tag()]
+	if !ok {
+		return "", ErrNoBundleVersion
+	}
+	return v, nil
+}
+
 // GetVersions gets all of the versions for the given name.
 //
 // The versions are returned as hash keys, where the values are the SHAs
 //
 // If the name is not found, this will return false.
-func (i Index) GetVersions(name string) (map[string]string, bool) {
-	ret, ok := i[name]
+func (i Index) GetVersions(ref reference.Named) (map[string]string, bool) {
+	ret, ok := i[reference.FamiliarName(ref)]
 	return ret, ok
 }
 
@@ -149,14 +163,23 @@ func (i Index) WriteFile(dest string, mode os.FileMode) error {
 //
 // If one of the entries in the destination index does _not_ already exist, it is added.
 // In all other cases, the existing record is preserved.
-func (i *Index) Merge(src Index) {
+func (i *Index) Merge(src Index) error {
 	for name, versionMap := range src {
 		for version, digest := range versionMap {
-			if !i.Has(name, version) {
-				i.Add(name, version, digest)
+			named, err := reference.ParseNamed(name)
+			if err != nil {
+				return err
+			}
+			versioned, err := reference.WithTag(named, version)
+			if err != nil {
+				return err
+			}
+			if !i.Has(versioned) {
+				i.Add(versioned, digest)
 			}
 		}
 	}
+	return nil
 }
 
 // loadIndex loads an index file and does minimal validity checking.

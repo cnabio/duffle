@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/docker/distribution/reference"
 	"github.com/spf13/cobra"
 
 	"github.com/deis/duffle/pkg/bundle"
@@ -135,12 +136,22 @@ func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
 		}
 	}
 
+	named, err := reference.ParseNormalizedNamed(b.Name)
+	if err != nil {
+		return err
+	}
+
+	versioned, err := reference.WithTag(named, b.Version)
+	if err != nil {
+		return err
+	}
+
 	if err := ioutil.WriteFile(filepath.Join(bs.home.Bundles(), digest), data, 0644); err != nil {
 		return err
 	}
 
 	// TODO - write pkg method in bundle that writes file and records the reference
-	if err := recordBundleReference(bs.home, b.Name, b.Version, digest); err != nil {
+	if err := recordBundleReference(bs.home, versioned, digest); err != nil {
 		return err
 	}
 

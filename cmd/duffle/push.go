@@ -37,7 +37,7 @@ func newPushCmd(out io.Writer) *cobra.Command {
 				return fmt.Errorf("cannot open %s: %v", home.Repositories(), err)
 			}
 
-			digest, err := index.Get(ref.Name(), ref.Tag())
+			digest, err := index.GetExactly(ref)
 			if err != nil {
 				return err
 			}
