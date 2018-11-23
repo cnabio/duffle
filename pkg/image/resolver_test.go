@@ -80,7 +80,7 @@ func TestResolveImage(t *testing.T) {
 	is.Equal("sha256:test-digest", resolvedDigest)
 
 	testee.dockerCli = &fakeDockerCli{
-		DockerCli: *command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false),
+		DockerCli: *command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false, nil),
 		client: fakeDockerClient{
 			localImagesDigests: map[string][]string{
 				"test-image": {"test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341"},
@@ -92,7 +92,7 @@ func TestResolveImage(t *testing.T) {
 	is.Equal("test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341", resolvedImage)
 	is.Equal("sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341", resolvedDigest)
 	testee.dockerCli = &fakeDockerCli{
-		DockerCli: *command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false),
+		DockerCli: *command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false, nil),
 		client: fakeDockerClient{
 			localImagesDigests: map[string][]string{},
 			pulledImagesDigests: map[string][]string{
@@ -106,7 +106,7 @@ func TestResolveImage(t *testing.T) {
 	is.Equal("sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341", resolvedDigest)
 
 	testee.dockerCli = &fakeDockerCli{
-		DockerCli: *command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false),
+		DockerCli: *command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false, nil),
 		client: fakeDockerClient{
 			localImagesDigests: map[string][]string{
 				"test-image": nil,
