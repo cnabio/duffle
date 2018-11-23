@@ -42,6 +42,11 @@
   name = "gopkg.in/yaml.v2"
   version = "2.2.1"
 
+# TODO - if PR is merged, change to revision from samfoo/mdcat
+[[override]]
+  name = "github.com/radu-matei/mdcat"
+  branch = "mdcat-pkg"
+
 [prune]
   non-go = true
   unused-packages = true

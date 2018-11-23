@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 
 	"github.com/deis/duffle/pkg/driver"
 
-	"github.com/russross/blackfriday"
+	"github.com/radu-matei/mdcat/renderer"
 
-	"github.com/samfoo/mdcat/renderer"
+	"github.com/russross/blackfriday"
 
 	"github.com/spf13/cobra"
 )
@@ -44,6 +45,7 @@ func newBundleDocsCmd(w io.Writer) *cobra.Command {
 				return fmt.Errorf("cannot create temp file for bundle doc: %v", err)
 			}
 			defer tmp.Close()
+			defer os.Remove(tmp.Name())
 
 			var image string
 			for _, ii := range bun.InvocationImages {

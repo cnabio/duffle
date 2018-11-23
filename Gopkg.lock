@@ -119,7 +119,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f4fff0c3c247502a13bde71b41f5b5ff373e4ba2aab32802e334d89382b57d4b"
+  digest = "1:d79af33e877079dedbea448d930d659b077011f761a255f10c2fddd4859a2c87"
   name = "github.com/docker/docker"
   packages = [
     "api",
@@ -484,12 +484,44 @@
   revision = "418d78d0b9a7b7de3a6bbc8a23def624cc977bb2"
 
 [[projects]]
+  branch = "mdcat-pkg"
+  digest = "1:d98d4d84e38f37df847131059aaeb4857d99f05b896751393c115c2161ddc6ef"
+  name = "github.com/radu-matei/mdcat"
+  packages = ["renderer"]
+  pruneopts = "NUT"
+  revision = "2698873f8a91380392293de264a1782aee80b463"
+
+[[projects]]
   digest = "1:3fd3d634f6815f19ac4b2c5e16d28ec9aa4584d0bba25d1ee6c424d813cca22a"
   name = "github.com/renstrom/fuzzysearch"
   packages = ["fuzzy"]
   pruneopts = "NUT"
   revision = "b18e754edff4833912ef4dce9eaca885bd3f0de1"
   version = "v1.0.1"
+
+[[projects]]
+  digest = "1:926cba3a3c1cddfcfad996917e5d72fb4726536dbdc7264fa936e8c99890e558"
+  name = "github.com/russross/blackfriday"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "d3b5b032dc8e8927d31a5071b56e14c89f045135"
+  version = "v2.0.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:70675d26a4cb6facd3647a20175a4f4ade5fe950cde512ae9ae5ca3050b597e6"
+  name = "github.com/samfoo/ansi"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "b6bd2ded7189ce35bc02233b554eb56a5146af73"
+
+[[projects]]
+  branch = "master"
+  digest = "1:debf1a119378d059b68925f1796851b6855bfc2f55419a50d634ecce3eabd8e8"
+  name = "github.com/shurcooL/sanitized_anchor_name"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "86672fcb3f950f35f2e675df2240550f2a50762f"
 
 [[projects]]
   digest = "1:01252cd79aac70f16cac02a72a1067dd136e0ad6d5b597d0129cf74c739fd8d1"
@@ -705,7 +737,9 @@
     "github.com/gosuri/uitable",
     "github.com/oklog/ulid",
     "github.com/opencontainers/go-digest",
+    "github.com/radu-matei/mdcat/renderer",
     "github.com/renstrom/fuzzysearch/fuzzy",
+    "github.com/russross/blackfriday",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
