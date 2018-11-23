@@ -51,7 +51,8 @@ func (d *DockerDriver) SetConfig(settings map[string]string) {
 	d.config = settings
 }
 
-func pullImage(ctx context.Context, cli command.Cli, image string) error {
+// PullImage pulls a Docker image from a registry
+func PullImage(ctx context.Context, cli command.Cli, image string) error {
 	ref, err := reference.ParseNormalizedNamed(image)
 	if err != nil {
 		return err
@@ -93,7 +94,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 		return nil
 	}
 	if d.config["PULL_ALWAYS"] == "1" {
-		if err := pullImage(ctx, cli, op.Image); err != nil {
+		if err := PullImage(ctx, cli, op.Image); err != nil {
 			return err
 		}
 	}
@@ -121,7 +122,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 	switch {
 	case client.IsErrNotFound(err):
 		fmt.Fprintf(cli.Err(), "Unable to find image '%s' locally\n", op.Image)
-		if err := pullImage(ctx, cli, op.Image); err != nil {
+		if err := PullImage(ctx, cli, op.Image); err != nil {
 			return err
 		}
 		if resp, err = cli.Client().ContainerCreate(ctx, cfg, hostCfg, nil, ""); err != nil {
@@ -200,4 +201,40 @@ func generateTar(files map[string]string) (io.Reader, error) {
 		w.Close()
 	}()
 	return r, nil
+}
+
+// CopyFromContainer copies a file from the container to the host
+func CopyFromContainer(image, src string, file *os.File) error {
+	ctx := context.Background()
+	cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false)
+
+	if err := cli.Initialize(cliflags.NewClientOptions()); err != nil {
+		return err
+	}
+	cfg := &container.Config{Image: image}
+	resp, err := cli.Client().ContainerCreate(ctx, cfg, nil, nil, "")
+	switch {
+	case client.IsErrNotFound(err):
+		fmt.Fprintf(cli.Err(), "Unable to find image '%s' locally\n", image)
+		if err := PullImage(ctx, cli, image); err != nil {
+			return err
+		}
+		if resp, err = cli.Client().ContainerCreate(ctx, cfg, nil, nil, ""); err != nil {
+			return fmt.Errorf("cannot create container: %v", err)
+		}
+	case err != nil:
+		return fmt.Errorf("cannot create container: %v", err)
+	}
+	rc, _, err := cli.Client().CopyFromContainer(ctx, resp.ID, src)
+	if err != nil {
+		return fmt.Errorf("cannot copy from container: %v", err)
+	}
+	defer cli.Client().ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
+
+	_, err = io.Copy(file, rc)
+	if err != nil {
+		return fmt.Errorf("cannot copy into file: %v", err)
+	}
+
+	return nil
 }
