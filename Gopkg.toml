@@ -42,6 +42,10 @@
   name = "gopkg.in/yaml.v2"
   version = "2.2.1"
 
+[[constraint]]
+  name = "github.com/russross/blackfriday"
+  branch = "master"
+
 # TODO - if PR is merged, change to revision from samfoo/mdcat
 [[override]]
   name = "github.com/radu-matei/mdcat"

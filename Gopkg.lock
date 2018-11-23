@@ -500,12 +500,12 @@
   version = "v1.0.1"
 
 [[projects]]
-  digest = "1:926cba3a3c1cddfcfad996917e5d72fb4726536dbdc7264fa936e8c99890e558"
+  branch = "master"
+  digest = "1:d9afa09f6a45f68ec50047f8187c9d273b1fbf507858a104064bb6d9eb2e2795"
   name = "github.com/russross/blackfriday"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "d3b5b032dc8e8927d31a5071b56e14c89f045135"
-  version = "v2.0.1"
+  revision = "abafa45cd843f4f4935c29a2e8f3d73a01820fc3"
 
 [[projects]]
   branch = "master"
@@ -514,14 +514,6 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "b6bd2ded7189ce35bc02233b554eb56a5146af73"
-
-[[projects]]
-  branch = "master"
-  digest = "1:debf1a119378d059b68925f1796851b6855bfc2f55419a50d634ecce3eabd8e8"
-  name = "github.com/shurcooL/sanitized_anchor_name"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "86672fcb3f950f35f2e675df2240550f2a50762f"
 
 [[projects]]
   digest = "1:01252cd79aac70f16cac02a72a1067dd136e0ad6d5b597d0129cf74c739fd8d1"
