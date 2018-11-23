@@ -54,7 +54,7 @@ func verifySig(filename, public, private string, out io.Writer) error {
 		return err
 	}
 
-	ring, err := signature.LoadKeyRing(public)
+	ring, err := signature.LoadKeyRing(public, false)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func verifySig(filename, public, private string, out io.Writer) error {
 	// We want the private keyring because a user should be able to verify
 	// any bundles that they signed, and their signing key is in the
 	// private keyring.
-	priv, err := signature.LoadKeyRing(private)
+	priv, err := signature.LoadKeyRing(private, false)
 	if err != nil {
 		return err
 	}

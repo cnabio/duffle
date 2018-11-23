@@ -56,7 +56,7 @@ func newKeyListCmd(w io.Writer) *cobra.Command {
 }
 
 func listKeys(out io.Writer, long bool, rings ...string) error {
-	kr, err := signature.LoadKeyRings(rings...)
+	kr, err := signature.LoadKeyRings(false, rings...)
 	if err != nil {
 		return err
 	}

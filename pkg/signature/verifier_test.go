@@ -18,7 +18,7 @@ func TestVerifier_Verify(t *testing.T) {
 	data, err := ioutil.ReadFile(signedFile)
 	is.NoError(err)
 
-	keyring, err := LoadKeyRing(keyringFile)
+	keyring, err := LoadKeyRing(keyringFile, false)
 	is.NoError(err)
 
 	v := NewVerifier(keyring)
@@ -32,7 +32,7 @@ func TestVerifier_VerifyFail(t *testing.T) {
 	data, err := ioutil.ReadFile(failedSignedFile)
 	is.NoError(err)
 
-	keyring, err := LoadKeyRing(keyringFile)
+	keyring, err := LoadKeyRing(keyringFile, false)
 	is.NoError(err)
 
 	// The file was signed by a user not in the keyring, so should fail.
@@ -48,7 +48,7 @@ func TestVerifier_Extract(t *testing.T) {
 	data, err := ioutil.ReadFile(signedFile)
 	is.NoError(err)
 
-	keyring, err := LoadKeyRing(keyringFile)
+	keyring, err := LoadKeyRing(keyringFile, false)
 	is.NoError(err)
 	v := NewVerifier(keyring)
 
@@ -64,7 +64,7 @@ func TestVerifier_ExtractFail(t *testing.T) {
 	data, err := ioutil.ReadFile(failedSignedFile)
 	is.NoError(err)
 
-	keyring, err := LoadKeyRing(keyringFile)
+	keyring, err := LoadKeyRing(keyringFile, false)
 	is.NoError(err)
 	v := NewVerifier(keyring)
 

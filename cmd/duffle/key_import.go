@@ -59,7 +59,7 @@ func addKeys(file, ring string, private, armored bool) error {
 		return err
 	}
 	defer reader.Close()
-	kring, err := signature.LoadKeyRing(ring)
+	kring, err := signature.LoadKeyRing(ring, false)
 	if err != nil {
 		return err
 	}
@@ -70,5 +70,5 @@ func addKeys(file, ring string, private, armored bool) error {
 	if private {
 		return kring.SavePrivate(ring, true)
 	}
-	return kring.SavePublic(ring, true)
+	return kring.SavePublic(ring, true, armored)
 }

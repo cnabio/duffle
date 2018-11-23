@@ -94,7 +94,7 @@ func loadCredentials(files []string, b *bundle.Bundle) (map[string]string, error
 // This includes all the keys in the public key file and in the secret key file.
 func loadVerifyingKeyRings(homedir string) (*signature.KeyRing, error) {
 	hp := home.Home(homedir)
-	return signature.LoadKeyRings(hp.PublicKeyRing(), hp.SecretKeyRing())
+	return signature.LoadKeyRings(false, hp.PublicKeyRing(), hp.SecretKeyRing())
 }
 
 // isPathy checks to see if a name looks like a path.

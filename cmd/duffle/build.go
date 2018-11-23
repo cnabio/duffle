@@ -148,7 +148,7 @@ func (b *buildCmd) run() (err error) {
 }
 
 func (b *buildCmd) writeBundle(bf *bundle.Bundle) (string, error) {
-	kr, err := signature.LoadKeyRing(b.home.SecretKeyRing())
+	kr, err := signature.LoadKeyRing(b.home.SecretKeyRing(), false)
 	if err != nil {
 		return "", fmt.Errorf("cannot load keyring: %s", err)
 	}

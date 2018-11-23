@@ -18,7 +18,7 @@ var (
 
 func TestSecureLoader(t *testing.T) {
 	is := assert.New(t)
-	kr, err := signature.LoadKeyRing(testPublicRing)
+	kr, err := signature.LoadKeyRing(testPublicRing, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestSecureLoader(t *testing.T) {
 
 func TestSecureLoader_FailSignature(t *testing.T) {
 	is := assert.New(t)
-	kr, err := signature.LoadKeyRing(testPublicRing)
+	kr, err := signature.LoadKeyRing(testPublicRing, false)
 	if err != nil {
 		t.Fatal(err)
 	}

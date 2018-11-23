@@ -84,7 +84,7 @@ func (s *Signer) Attest(signedBlock []byte) ([]byte, error) {
 	}
 
 	// We clearsign instead of using the openpgp.ArmoredDetachedSignText because the
-	// later does not handle subkeys at all. It ONLY allows using the private key on
+	// latter does not handle subkeys at all. It ONLY allows using the private key on
 	// the main entity. Yet all the helper methods for that are unexported. Thus it
 	// is more expedient to use the clearsign package and then extract the detached
 	// signature from the block.

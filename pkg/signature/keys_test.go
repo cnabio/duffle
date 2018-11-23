@@ -18,7 +18,7 @@ const (
 
 func TestKey(t *testing.T) {
 	is := assert.New(t)
-	k, err := LoadKeyRing(keyringFile)
+	k, err := LoadKeyRing(keyringFile, false)
 	is.NoError(err)
 	key, err := k.Key("test1@example.com")
 	is.NoError(err)
@@ -48,7 +48,7 @@ func TestCreateKey(t *testing.T) {
 
 func TestKey_NoKeyFound(t *testing.T) {
 	is := assert.New(t)
-	k, err := LoadKeyRing(keyringFile)
+	k, err := LoadKeyRing(keyringFile, false)
 	is.NoError(err)
 	_, err = k.Key("test1111@example.com")
 	is.Error(err)
@@ -56,7 +56,7 @@ func TestKey_NoKeyFound(t *testing.T) {
 
 func TestKey_NoPassphrase(t *testing.T) {
 	is := assert.New(t)
-	k, err := LoadKeyRing(keyringFile)
+	k, err := LoadKeyRing(keyringFile, false)
 	is.NoError(err)
 	key, err := k.Key("test2@example.com")
 	is.NoError(err)
@@ -78,7 +78,7 @@ func TestKey_NoPassphrase(t *testing.T) {
 
 func TestKey_UserID(t *testing.T) {
 	is := assert.New(t)
-	k, err := LoadKeyRing(keyringFile)
+	k, err := LoadKeyRing(keyringFile, false)
 	is.NoError(err)
 	key, err := k.Key("test2@example.com")
 	is.NoError(err)
@@ -99,7 +99,7 @@ func TestKey_Fingerprint(t *testing.T) {
 	expect := "5D76 712C E625 988A 272A 7E28 9B79 91DD 4037 8340"
 
 	is := assert.New(t)
-	k, err := LoadKeyRing(keyringFile)
+	k, err := LoadKeyRing(keyringFile, false)
 	is.NoError(err)
 	key, err := k.Key("test2@example.com")
 	is.NoError(err)

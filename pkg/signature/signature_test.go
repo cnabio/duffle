@@ -28,7 +28,7 @@ func TestSigner_Sign(t *testing.T) {
 	is.NotEmpty(sig1)
 
 	// Verify that the returned identities are the same
-	ring, err := LoadKeyRing(keyringFile)
+	ring, err := LoadKeyRing(keyringFile, false)
 	is.NoError(err)
 	v := NewVerifier(ring)
 	signedBy, err := v.Verify(sig1)
@@ -60,7 +60,7 @@ func TestSigner_Attest(t *testing.T) {
 }
 
 func getKey(keyname string, t *testing.T) *Key {
-	k, err := LoadKeyRing(keyringFile)
+	k, err := LoadKeyRing(keyringFile, false)
 	assert.NoError(t, err)
 
 	key, err := k.Key(keyname)

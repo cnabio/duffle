@@ -155,7 +155,7 @@ func ensureFiles(files []string) error {
 func (i *initCmd) loadOrCreateSecretKeyRing(dest string) (*signature.KeyRing, error) {
 	if _, err := os.Stat(dest); err == nil {
 		// Since this is non-mutating, we can do this in a dry-run.
-		return signature.LoadKeyRing(dest)
+		return signature.LoadKeyRing(dest, false)
 	} else if !os.IsNotExist(err) {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (i *initCmd) loadOrCreateSecretKeyRing(dest string) (*signature.KeyRing, er
 func (i *initCmd) loadOrCreatePublicKeyRing(dest string, privateKeys *signature.KeyRing) (*signature.KeyRing, error) {
 	if _, err := os.Stat(dest); err == nil {
 		// Since this is non-mutating, we can do this in a dry-run.
-		return signature.LoadKeyRing(dest)
+		return signature.LoadKeyRing(dest, false)
 	} else if !os.IsNotExist(err) {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (i *initCmd) loadOrCreatePublicKeyRing(dest string, privateKeys *signature.
 		i.printUserID(k)
 	}
 
-	return ring, ring.SavePublic(dest, false)
+	return ring, ring.SavePublic(dest, false, false)
 }
 
 func (i *initCmd) printUserID(k *signature.Key) {

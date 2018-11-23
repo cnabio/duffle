@@ -95,7 +95,7 @@ func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
 	}
 
 	// Load keyring
-	kr, err := signature.LoadKeyRing(keyring)
+	kr, err := signature.LoadKeyRing(keyring, false)
 	if err != nil {
 		return err
 	}

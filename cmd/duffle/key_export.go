@@ -22,8 +22,11 @@ If no key name is given, the default signing key is exported.
 `
 
 func newKeyExportCmd(w io.Writer) *cobra.Command {
-	var dest string
-	var keyname string
+	var (
+		armored bool
+		dest    string
+		keyname string
+	)
 	cmd := &cobra.Command{
 		Use:   "export FILE",
 		Short: "export the public key of a signing key",
@@ -33,7 +36,7 @@ func newKeyExportCmd(w io.Writer) *cobra.Command {
 			h := home.Home(homePath())
 			dest = args[0]
 
-			ring, err := signature.LoadKeyRing(h.SecretKeyRing())
+			ring, err := signature.LoadKeyRing(h.SecretKeyRing(), false)
 			if err != nil {
 				return err
 			}
@@ -65,14 +68,14 @@ func newKeyExportCmd(w io.Writer) *cobra.Command {
 			if fi, err := os.Stat(dest); os.IsNotExist(err) {
 				kr := signature.CreateKeyRing(passwordFetcher)
 				kr.AddKey(key)
-				return kr.SavePublic(dest, true)
+				return kr.SavePublic(dest, true, armored)
 			} else if err != nil {
 				return err
 			} else if fi.IsDir() {
 				return errors.New("destination cannot be a directory")
 			}
 
-			kr, err := signature.LoadKeyRing(dest)
+			kr, err := signature.LoadKeyRing(dest, armored)
 			if err != nil {
 				return err
 			}
@@ -82,10 +85,11 @@ func newKeyExportCmd(w io.Writer) *cobra.Command {
 				uid, _ := k.UserID()
 				println(uid.String())
 			}
-			return kr.SavePublic(dest, true)
+			return kr.SavePublic(dest, true, armored)
 
 		},
 	}
 	cmd.Flags().StringVarP(&keyname, "user", "u", "", "the user ID of the key to export")
+	cmd.Flags().BoolVarP(&armored, "armored", "a", false, "Export an ASCII armored key")
 	return cmd
 }
