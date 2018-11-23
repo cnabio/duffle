@@ -122,7 +122,7 @@ func TestReferenceParse(t *testing.T) {
 		},
 		{
 			input:      strings.Repeat("a/", 127) + "a:tag-puts-this-over-max",
-			domain:     "a",
+			domain:     "",
 			repository: strings.Repeat("a/", 127) + "a",
 			tag:        "tag-puts-this-over-max",
 		},
@@ -167,7 +167,7 @@ func TestReferenceParse(t *testing.T) {
 		},
 		{
 			input:      "foo/foo_bar.com:8080",
-			domain:     "foo",
+			domain:     "",
 			repository: "foo/foo_bar.com",
 			tag:        "8080",
 		},
@@ -602,30 +602,33 @@ func TestParseNamed(t *testing.T) {
 			name:   "foo",
 		},
 		{
-			input: "test_com/foo",
-			err:   ErrNameNotCanonical,
+			input:  "test_com/foo",
+			domain: "",
+			name:   "test_com/foo",
 		},
 		{
-			input: "test.com",
-			err:   ErrNameNotCanonical,
+			input:  "test.com",
+			domain: "",
+			name:   "test.com",
 		},
 		{
-			input: "foo",
-			err:   ErrNameNotCanonical,
+			input:  "foo",
+			domain: "",
+			name:   "foo",
 		},
 		{
-			input: "library/foo",
-			err:   ErrNameNotCanonical,
-		},
-		{
-			input:  "hub.cnlabs.io/library/foo",
-			domain: "hub.cnlabs.io",
+			input:  "library/foo",
+			domain: "",
 			name:   "library/foo",
 		},
-		// Ambiguous case, parser will add "library/" to foo
 		{
-			input:  "hub.cnlabs.io/foo",
-			domain: "hub.cnlabs.io",
+			input:  "docker.io/library/foo",
+			domain: "docker.io",
+			name:   "library/foo",
+		},
+		{
+			input:  "docker.io/foo",
+			domain: "docker.io",
 			name:   "foo",
 		},
 	}

@@ -9,9 +9,8 @@ import (
 	"github.com/opencontainers/go-digest"
 )
 
-var (
-	defaultDomain = "hub.cnlabs.io"
-	defaultTag    = "latest"
+const (
+	defaultTag = "latest"
 )
 
 // normalizedNamed represents a name which has been
@@ -43,7 +42,11 @@ func ParseNormalizedNamed(s string) (Named, error) {
 		return nil, errors.New("in a reference name, the repository part must be lowercase")
 	}
 
-	ref, err := Parse(domain + "/" + remainder)
+	rem := domain + "/" + remainder
+	if domain == "" {
+		rem = remainder
+	}
+	ref, err := Parse(rem)
 	if err != nil {
 		return nil, err
 	}
@@ -60,57 +63,11 @@ func ParseNormalizedNamed(s string) (Named, error) {
 func splitDockerDomain(name string) (domain, remainder string) {
 	i := strings.IndexRune(name, '/')
 	if i == -1 || (!strings.ContainsAny(name[:i], ".:") && name[:i] != "localhost") {
-		domain, remainder = defaultDomain, name
+		domain, remainder = "", name
 	} else {
 		domain, remainder = name[:i], name[i+1:]
 	}
 	return
-}
-
-// familiarizeName returns a shortened version of the name familiar
-// to to the Duffle UI. Familiar names have the default domain
-// "hub.cnlabs.io" prefix removed.
-// For example, "hub.cnlabs.io/redis" will have the familiar
-// name "redis" and "hub.cnlabs.io/dmcgowan/myapp" will be "dmcgowan/myapp".
-// This differs compared to Docker in that "hub.cnlabs.io/library/redis"
-// will be "library/redis" rather than "redis".
-// Returns a familiarized named only reference.
-func familiarizeName(named namedRepository) repository {
-	repo := repository{
-		domain: named.Domain(),
-		path:   named.Path(),
-	}
-
-	if repo.domain == defaultDomain {
-		repo.domain = ""
-	}
-	return repo
-}
-
-func (r reference) Familiar() Named {
-	return reference{
-		namedRepository: familiarizeName(r.namedRepository),
-		tag:             r.tag,
-		digest:          r.digest,
-	}
-}
-
-func (r repository) Familiar() Named {
-	return familiarizeName(r)
-}
-
-func (t taggedReference) Familiar() Named {
-	return taggedReference{
-		namedRepository: familiarizeName(t.namedRepository),
-		tag:             t.tag,
-	}
-}
-
-func (c canonicalReference) Familiar() Named {
-	return canonicalReference{
-		namedRepository: familiarizeName(c.namedRepository),
-		digest:          c.digest,
-	}
 }
 
 // TagNameOnly adds the default tag "latest" to a reference if it only has

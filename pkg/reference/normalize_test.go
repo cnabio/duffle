@@ -13,9 +13,12 @@ func TestValidateReferenceName(t *testing.T) {
 		"docker/docker",
 		"library/debian",
 		"debian",
-		"hub.cnlabs.io/docker/docker",
-		"hub.cnlabs.io/library/debian",
-		"hub.cnlabs.io/debian",
+		"docker.io/docker/docker",
+		"docker.io/library/debian",
+		"docker.io/debian",
+		"index.docker.io/docker/docker",
+		"index.docker.io/library/debian",
+		"index.docker.io/debian",
 		"127.0.0.1:5000/docker/docker",
 		"127.0.0.1:5000/library/debian",
 		"127.0.0.1:5000/debian",
@@ -24,17 +27,17 @@ func TestValidateReferenceName(t *testing.T) {
 		// This test case was moved from invalid to valid since it is valid input
 		// when specified with a hostname, it removes the ambiguity from about
 		// whether the value is an identifier or repository name
-		"hub.cnlabs.io/1a3f5e7d9c1b3a5f7e9d1c3b5a7f9e1d3c5b7a9f1e3d5d7c9b1a3f5e7d9c1b3a",
+		"docker.io/1a3f5e7d9c1b3a5f7e9d1c3b5a7f9e1d3c5b7a9f1e3d5d7c9b1a3f5e7d9c1b3a",
 	}
 	invalidRepoNames := []string{
 		"https://github.com/docker/docker",
 		"docker/Docker",
 		"-docker",
 		"-docker/docker",
-		"-hub.cnlabs.io/docker/docker",
+		"-docker.io/docker/docker",
 		"docker///docker",
-		"hub.cnlabs.io/docker/Docker",
-		"hub.cnlabs.io/docker///docker",
+		"docker.io/docker/Docker",
+		"docker.io/docker///docker",
 		"1a3f5e7d9c1b3a5f7e9d1c3b5a7f9e1d3c5b7a9f1e3d5d7c9b1a3f5e7d9c1b3a",
 	}
 
@@ -131,37 +134,30 @@ func TestParseRepositoryInfo(t *testing.T) {
 		{
 			RemoteName:    "fooo/bar",
 			FamiliarName:  "fooo/bar",
-			FullName:      "hub.cnlabs.io/fooo/bar",
-			AmbiguousName: "hub.cnlabs.io/fooo/bar",
-			Domain:        "hub.cnlabs.io",
+			FullName:      "fooo/bar",
+			AmbiguousName: "fooo/bar",
+			Domain:        "",
 		},
 		{
 			RemoteName:    "library/ubuntu",
 			FamiliarName:  "library/ubuntu",
-			FullName:      "hub.cnlabs.io/library/ubuntu",
+			FullName:      "library/ubuntu",
 			AmbiguousName: "library/ubuntu",
-			Domain:        "hub.cnlabs.io",
-		},
-		{
-			RemoteName:    "ubuntu",
-			FamiliarName:  "ubuntu",
-			FullName:      "hub.cnlabs.io/ubuntu",
-			AmbiguousName: "ubuntu",
-			Domain:        "hub.cnlabs.io",
+			Domain:        "",
 		},
 		{
 			RemoteName:    "nonlibrary/ubuntu",
 			FamiliarName:  "nonlibrary/ubuntu",
-			FullName:      "hub.cnlabs.io/nonlibrary/ubuntu",
+			FullName:      "nonlibrary/ubuntu",
 			AmbiguousName: "",
-			Domain:        "hub.cnlabs.io",
+			Domain:        "",
 		},
 		{
 			RemoteName:    "other/library",
 			FamiliarName:  "other/library",
-			FullName:      "hub.cnlabs.io/other/library",
+			FullName:      "other/library",
 			AmbiguousName: "",
-			Domain:        "hub.cnlabs.io",
+			Domain:        "",
 		},
 		{
 			RemoteName:    "private/moonbase",
@@ -208,30 +204,30 @@ func TestParseRepositoryInfo(t *testing.T) {
 		{
 			RemoteName:    "library/ubuntu-12.04-base",
 			FamiliarName:  "library/ubuntu-12.04-base",
-			FullName:      "hub.cnlabs.io/library/ubuntu-12.04-base",
-			AmbiguousName: "hub.cnlabs.io/library/ubuntu-12.04-base",
-			Domain:        "hub.cnlabs.io",
+			FullName:      "library/ubuntu-12.04-base",
+			AmbiguousName: "library/ubuntu-12.04-base",
+			Domain:        "",
 		},
 		{
-			RemoteName:    "library/foo",
-			FamiliarName:  "library/foo",
-			FullName:      "hub.cnlabs.io/library/foo",
-			AmbiguousName: "hub.cnlabs.io/library/foo",
-			Domain:        "hub.cnlabs.io",
+			RemoteName:    "foo",
+			FamiliarName:  "foo",
+			FullName:      "foo",
+			AmbiguousName: "foo",
+			Domain:        "",
 		},
 		{
 			RemoteName:    "library/foo/bar",
 			FamiliarName:  "library/foo/bar",
-			FullName:      "hub.cnlabs.io/library/foo/bar",
+			FullName:      "library/foo/bar",
 			AmbiguousName: "",
-			Domain:        "hub.cnlabs.io",
+			Domain:        "",
 		},
 		{
 			RemoteName:    "store/foo/bar",
 			FamiliarName:  "store/foo/bar",
-			FullName:      "hub.cnlabs.io/store/foo/bar",
+			FullName:      "store/foo/bar",
 			AmbiguousName: "",
-			Domain:        "hub.cnlabs.io",
+			Domain:        "",
 		},
 	}
 
@@ -274,7 +270,7 @@ func TestParseReferenceWithTagAndDigest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if expected, actual := "hub.cnlabs.io/"+shortRef, ref.String(); actual != expected {
+	if expected, actual := shortRef, ref.String(); actual != expected {
 		t.Fatalf("Invalid parsed reference for %q: expected %q, got %q", ref, expected, actual)
 	}
 
@@ -340,43 +336,43 @@ func TestParseAnyReference(t *testing.T) {
 	}{
 		{
 			Reference:  "redis",
-			Equivalent: "hub.cnlabs.io/redis",
+			Equivalent: "redis",
 		},
 		{
 			Reference:  "redis:latest",
-			Equivalent: "hub.cnlabs.io/redis:latest",
+			Equivalent: "redis:latest",
 		},
 		{
-			Reference:  "hub.cnlabs.io/library/redis:latest",
-			Equivalent: "hub.cnlabs.io/library/redis:latest",
+			Reference:  "docker.io/library/redis:latest",
+			Equivalent: "docker.io/library/redis:latest",
 		},
 		{
 			Reference:  "redis@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
-			Equivalent: "hub.cnlabs.io/redis@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
+			Equivalent: "redis@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
 		},
 		{
-			Reference:  "hub.cnlabs.io/library/redis@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
-			Equivalent: "hub.cnlabs.io/library/redis@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
+			Reference:  "docker.io/library/redis@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
+			Equivalent: "docker.io/library/redis@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
 		},
 		{
 			Reference:  "dmcgowan/myapp",
-			Equivalent: "hub.cnlabs.io/dmcgowan/myapp",
+			Equivalent: "dmcgowan/myapp",
 		},
 		{
 			Reference:  "dmcgowan/myapp:latest",
-			Equivalent: "hub.cnlabs.io/dmcgowan/myapp:latest",
+			Equivalent: "dmcgowan/myapp:latest",
 		},
 		{
-			Reference:  "hub.cnlabs.io/mcgowan/myapp:latest",
-			Equivalent: "hub.cnlabs.io/mcgowan/myapp:latest",
+			Reference:  "docker.io/mcgowan/myapp:latest",
+			Equivalent: "docker.io/mcgowan/myapp:latest",
 		},
 		{
 			Reference:  "dmcgowan/myapp@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
-			Equivalent: "hub.cnlabs.io/dmcgowan/myapp@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
+			Equivalent: "dmcgowan/myapp@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
 		},
 		{
-			Reference:  "hub.cnlabs.io/dmcgowan/myapp@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
-			Equivalent: "hub.cnlabs.io/dmcgowan/myapp@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
+			Reference:  "docker.io/dmcgowan/myapp@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
+			Equivalent: "docker.io/dmcgowan/myapp@sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
 		},
 		{
 			Reference:  "dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c",
@@ -390,7 +386,7 @@ func TestParseAnyReference(t *testing.T) {
 		},
 		{
 			Reference:  "dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9",
-			Equivalent: "hub.cnlabs.io/dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9",
+			Equivalent: "dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9",
 		},
 		{
 			Reference:  "dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9",
@@ -403,7 +399,7 @@ func TestParseAnyReference(t *testing.T) {
 		},
 		{
 			Reference:  "dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9",
-			Equivalent: "hub.cnlabs.io/dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9",
+			Equivalent: "dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9",
 			Digests: []digest.Digest{
 				digest.Digest("sha256:abcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c"),
 			},
@@ -419,7 +415,7 @@ func TestParseAnyReference(t *testing.T) {
 		},
 		{
 			Reference:  "dbcc1",
-			Equivalent: "hub.cnlabs.io/dbcc1",
+			Equivalent: "dbcc1",
 			Digests: []digest.Digest{
 				digest.Digest("sha256:dbcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c"),
 				digest.Digest("sha256:abcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c"),
@@ -427,7 +423,7 @@ func TestParseAnyReference(t *testing.T) {
 		},
 		{
 			Reference:  "dbcc1c",
-			Equivalent: "hub.cnlabs.io/dbcc1c",
+			Equivalent: "dbcc1c",
 			Digests: []digest.Digest{
 				digest.Digest("sha256:abcc1c35ac38df41fd2f5e4130b32ffdb93ebae8b3dbe638c23575912276fc9c"),
 			},
@@ -481,12 +477,12 @@ func TestNormalizedSplitHostname(t *testing.T) {
 		},
 		{
 			input:  "test_com/foo",
-			domain: "hub.cnlabs.io",
+			domain: "",
 			name:   "test_com/foo",
 		},
 		{
 			input:  "docker/migrator",
-			domain: "hub.cnlabs.io",
+			domain: "",
 			name:   "docker/migrator",
 		},
 		{
@@ -501,7 +497,7 @@ func TestNormalizedSplitHostname(t *testing.T) {
 		},
 		{
 			input:  "foo",
-			domain: "hub.cnlabs.io",
+			domain: "",
 			name:   "foo",
 		},
 		{
@@ -515,18 +511,18 @@ func TestNormalizedSplitHostname(t *testing.T) {
 			name:   "foo",
 		},
 		{
-			input:  "hub.cnlabs.io/foo",
-			domain: "hub.cnlabs.io",
+			input:  "docker.io/foo",
+			domain: "docker.io",
 			name:   "foo",
 		},
 		{
-			input:  "hub.cnlabs.io/library/foo",
-			domain: "hub.cnlabs.io",
+			input:  "docker.io/library/foo",
+			domain: "docker.io",
 			name:   "library/foo",
 		},
 		{
-			input:  "hub.cnlabs.io/library/foo/bar",
-			domain: "hub.cnlabs.io",
+			input:  "docker.io/library/foo/bar",
+			domain: "docker.io",
 			name:   "library/foo/bar",
 		},
 	}
