@@ -70,5 +70,5 @@ func addKeys(file, ring string, private, armored bool) error {
 	if private {
 		return kring.SavePrivate(ring, true)
 	}
-	return kring.SavePublic(ring, true)
+	return kring.SavePublic(ring, true, false)
 }
