@@ -14,7 +14,7 @@ ifeq ($(OS),Windows_NT)
 else
 	TARGET = $(PROJECT)
 	SHELL  ?= bash
-	CHECK  = command -v
+	CHECK  ?= which
 endif
 
 GIT_TAG   := $(shell git describe --tags --always)
