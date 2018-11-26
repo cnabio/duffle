@@ -13,7 +13,6 @@ import (
 
 	"github.com/deis/duffle/pkg/builder"
 	"github.com/deis/duffle/pkg/duffle/manifest"
-
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/docker/api/types"
@@ -23,15 +22,15 @@ import (
 	"github.com/docker/docker/pkg/fileutils"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-
 	"github.com/sirupsen/logrus"
-
 	"golang.org/x/net/context"
 )
 
 const (
 	// DockerignoreFilename is the filename for Docker's ignore file.
 	DockerignoreFilename = ".dockerignore"
+	// DockerFilename is the default Dockerfile name
+	DockerFilename = "Dockerfile"
 )
 
 // Component contains all information to build a container image
@@ -39,6 +38,7 @@ type Component struct {
 	name         string
 	Image        string
 	Dockerfile   string
+	contextDir   string
 	BuildContext io.ReadCloser
 
 	dockerBuilder dockerBuilder
@@ -68,10 +68,23 @@ func (dc Component) Digest() string {
 
 // NewComponent returns a new Docker component based on the manifest
 func NewComponent(c *manifest.Component, cli *command.DockerCli) *Component {
+	var (
+		contextDir string
+		dockerfile = DockerFilename
+	)
+
+	if v, ok := c.Configuration["context"]; ok {
+		contextDir = v
+	}
+	if v, ok := c.Configuration["dockerfile"]; ok {
+		dockerfile = v
+	}
+
 	return &Component{
 		name: c.Name,
 		// TODO - handle different Dockerfile names
-		Dockerfile:    "Dockerfile",
+		Dockerfile:    dockerfile,
+		contextDir:    contextDir,
 		dockerBuilder: dockerBuilder{DockerClient: cli},
 	}
 }
@@ -83,7 +96,14 @@ type dockerBuilder struct {
 
 // PrepareBuild archives the component directory and loads it as Docker context
 func (dc *Component) PrepareBuild(ctx *builder.Context) error {
-	if err := archiveSrc(filepath.Join(ctx.AppDir, dc.name), dc); err != nil {
+	ctxDir := dc.contextDir
+	switch {
+	case ctxDir == "":
+		ctxDir = filepath.Join(ctx.AppDir, dc.name)
+	case !filepath.IsAbs(ctxDir):
+		ctxDir = filepath.Join(ctx.AppDir, ctxDir)
+	}
+	if err := archiveSrc(ctxDir, dc); err != nil {
 		return err
 	}
 
@@ -139,7 +159,7 @@ func (dc Component) Build(ctx context.Context, app *builder.AppContext) error {
 }
 
 func archiveSrc(contextPath string, component *Component) error {
-	contextDir, relDockerfile, err := build.GetContextFromLocalDir(contextPath, "")
+	contextDir, relDockerfile, err := build.GetContextFromLocalDir(contextPath, filepath.Join(contextPath, component.Dockerfile))
 	if err != nil {
 		return fmt.Errorf("unable to prepare docker context: %s", err)
 	}
@@ -189,7 +209,6 @@ func archiveSrc(contextPath string, component *Component) error {
 		return err
 	}
 
-	component.name = filepath.Base(contextDir)
 	component.BuildContext = dockerArchive
 	component.Dockerfile = relDockerfile
 
