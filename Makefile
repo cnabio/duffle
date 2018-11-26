@@ -44,7 +44,7 @@ build-release:
 		for arch in $(CX_ARCHS); do \
 			GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 go build -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)-$$os-$$arch github.com/$(ORG)/$(PROJECT)/cmd/...; \
 		done; \
-		if [ $$os == 'windows' ]; then \
+		if [ $$os = 'windows' ]; then \
 			mv $(BINDIR)/$(PROJECT)-$$os-$$arch $(BINDIR)/$(PROJECT)-$$os-$$arch.exe; \
 		fi; \
 	done

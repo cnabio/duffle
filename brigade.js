@@ -132,18 +132,18 @@ function release(project, tag) {
   }
 
   // Cross-compile binaries for a given release and upload them to GitHub.
-  var release = new Job(`${projectName}-release`, goImg)
+  var releaseJob = new Job(`${projectName}-release`, goImg)
 
   parts = project.repo.name.split("/", 2)
 
-  release.env = {
+  releaseJob.env = {
     GITHUB_USER: parts[0],
     GITHUB_REPO: parts[1],
     GITHUB_TOKEN: project.secrets.ghToken,
     GOPATH: gopath
   }
 
-  release.tasks = [
+  releaseJob.tasks = [
     "go get github.com/aktau/github-release",
     `cd /src`,
     `git checkout ${tag}`,
@@ -165,10 +165,7 @@ function release(project, tag) {
 
   console.log(`release at https://github.com/${project.repo.name}/releases/tag/${tag}`);
 
-  return Group.runEach([
-    release,
-    slackNotify("Duffle Release", `${tag} release now on GitHub! <https://github.com/${project.repo.name}/releases/tag/${tag}>`, project)
-  ])
+  return releaseJob
 }
 
 // Separate docker build stage as there may be multiple consumers/publishers
@@ -226,7 +223,8 @@ function acrBuild(project, tag) {
     `az login --service-principal -u ${project.secrets.acrName} -p '${project.secrets.acrToken}' --tenant ${project.secrets.acrTenant}`,
     `cd /src`,
     `cp -av /mnt/brigade/share/bin ./`,
-    `az acr build -r ${registry} -t ${projectOrg}/${projectName}:${tag} .`
+    // Note: git tag may have a '+' character, which is not allowed in docker tag names, hence the substitution
+    `az acr build -r ${registry} -t ${projectOrg}/${projectName}:${tag.replace("+","-")} .`
   ];
 
   return builder;
@@ -259,29 +257,37 @@ events.on("exec", (e, p) => {
 // Although a GH App will trigger 'check_suite:requested' on a push to master event,
 // it will not for a tag push, hence the need for this handler
 events.on("push", (e, p) => {
-  let publish = false;
-  let release = false;
+  let doPublish = false;
+  let doRelease = false;
   let tag = "";
+  let jobs = [];
 
   if (e.revision.ref.includes("refs/heads/master")) {
-    publish = true;
+    doPublish = true;
     tag = "latest"
   } else if (e.revision.ref.startsWith("refs/tags/")) {
-    publish = true;
-    release = true;
+    doPublish = true;
+    doRelease = true;
     let parts = e.revision.ref.split("/", 3)
     tag = parts[2]
   }
 
-  if (publish) {
-    Group.runEach([
+  if (doPublish) {
+    jobs.push(
       goDockerBuild(e, p),
       acrBuild(p, tag)
-    ])
+    )
   }
 
-  if (release) {
-    release(p, tag)
+  if (doRelease) {
+    jobs.push(
+      release(p, tag),
+      slackNotify("Duffle Release", `${tag} release now on GitHub! <https://github.com/${p.repo.name}/releases/tag/${tag}>`, p)
+    )
+  }
+
+  if (jobs.length) {
+    Group.runEach(jobs)
   }
 })
 
