@@ -12,7 +12,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 
-	"github.com/deis/duffle/pkg/loader"
+	"github.com/deislabs/duffle/pkg/loader"
 )
 
 var (

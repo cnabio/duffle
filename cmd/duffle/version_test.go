@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/deis/duffle/pkg/version"
+	"github.com/deislabs/duffle/pkg/version"
 
 	"github.com/stretchr/testify/assert"
 )

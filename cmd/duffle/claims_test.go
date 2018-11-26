@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/claim"
+	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/claim"
 
 	"github.com/stretchr/testify/assert"
 )

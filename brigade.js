@@ -1,6 +1,6 @@
 const { events, Job, Group } = require("brigadier")
 
-const projectOrg = "deis"
+const projectOrg = "deislabs"
 const projectName = "duffle"
 
 const goImg = "golang:1.11"

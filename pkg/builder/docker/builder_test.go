@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deis/duffle/pkg/builder"
+	"github.com/deislabs/duffle/pkg/builder"
 )
 
 func TestArchiveSrc(t *testing.T) {

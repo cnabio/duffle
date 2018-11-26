@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deis/duffle/pkg/signature"
+	"github.com/deislabs/duffle/pkg/signature"
 
 	"github.com/stretchr/testify/assert"
 )

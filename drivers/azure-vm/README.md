@@ -38,7 +38,7 @@ Note that `imageType` is `azure-image` (indicating that it must be looked up in 
 ## Usage
 
 1. Run `make build-drivers`
-2. Add `$GOPATH/src/github.com/deis/duffle/bin` to your path
+2. Add `$GOPATH/src/github.com/deislabs/duffle/bin` to your path
 3. On the Duffle commands, set the driver to `azvm`
 
 ```console

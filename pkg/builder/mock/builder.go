@@ -3,8 +3,8 @@ package mock
 import (
 	"context"
 
-	"github.com/deis/duffle/pkg/builder"
-	"github.com/deis/duffle/pkg/duffle/manifest"
+	"github.com/deislabs/duffle/pkg/builder"
+	"github.com/deislabs/duffle/pkg/duffle/manifest"
 )
 
 // Component represents a mock component
