@@ -50,7 +50,7 @@ func Scaffold(path string) error {
 				URL:   "https://example.com",
 			},
 		},
-		Components: map[string]*Component{
+		InvocationImages: map[string]*InvocationImage{
 			"cnab": {
 				Name:    "cnab",
 				Builder: "docker",

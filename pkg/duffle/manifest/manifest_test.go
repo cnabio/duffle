@@ -10,7 +10,7 @@ func TestNew(t *testing.T) {
 	m := New()
 	// Testing to make sure maps are initialized
 	is := assert.New(t)
-	is.Len(m.Components, 0)
+	is.Len(m.InvocationImages, 0)
 	is.Len(m.Parameters, 0)
 	is.Len(m.Credentials, 0)
 
@@ -45,12 +45,12 @@ func TestLoad(t *testing.T) {
 				t.Errorf("expected Name to be %q but got %q", wantName, m.Name)
 			}
 
-			if len(m.Components) != 1 {
-				t.Fatalf("expected 1 component but got %d", len(m.Components))
+			if len(m.InvocationImages) != 1 {
+				t.Fatalf("expected 1 component but got %d", len(m.InvocationImages))
 			}
 
-			if _, ok := m.Components["cnab"]; !ok {
-				t.Errorf("expected a component named cnab but got %v", m.Components)
+			if _, ok := m.InvocationImages["cnab"]; !ok {
+				t.Errorf("expected a component named cnab but got %v", m.InvocationImages)
 			}
 
 			if len(m.Parameters) != 1 {

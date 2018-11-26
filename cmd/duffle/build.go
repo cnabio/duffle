@@ -194,7 +194,7 @@ func (b *buildCmd) writeBundle(bf *bundle.Bundle) (string, error) {
 func lookupComponents(mfst *manifest.Manifest, cmd *buildCmd) ([]builder.Component, error) {
 
 	var components []builder.Component
-	for _, c := range mfst.Components {
+	for _, c := range mfst.InvocationImages {
 		switch c.Builder {
 		case "docker":
 			// setup docker
