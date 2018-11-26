@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/deis/duffle/pkg/claim"
+	"github.com/deislabs/duffle/pkg/claim"
 
 	"github.com/spf13/cobra"
 )

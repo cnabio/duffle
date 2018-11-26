@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/deis/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/bundle"
 
 	"github.com/stretchr/testify/assert"
 )

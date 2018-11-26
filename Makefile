@@ -1,5 +1,5 @@
 PROJECT         := duffle
-ORG             := deis
+ORG             := deislabs
 DOCKER_REGISTRY ?= brigade.azurecr.io/deis
 BINDIR          := $(CURDIR)/bin
 GOFLAGS         :=

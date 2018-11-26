@@ -18,16 +18,16 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/deis/duffle/pkg/builder"
-	"github.com/deis/duffle/pkg/builder/docker"
-	"github.com/deis/duffle/pkg/builder/mock"
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/crypto/digest"
-	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/duffle/manifest"
-	"github.com/deis/duffle/pkg/ohai"
-	"github.com/deis/duffle/pkg/repo"
-	"github.com/deis/duffle/pkg/signature"
+	"github.com/deislabs/duffle/pkg/builder"
+	"github.com/deislabs/duffle/pkg/builder/docker"
+	"github.com/deislabs/duffle/pkg/builder/mock"
+	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/crypto/digest"
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/duffle/manifest"
+	"github.com/deislabs/duffle/pkg/ohai"
+	"github.com/deislabs/duffle/pkg/repo"
+	"github.com/deislabs/duffle/pkg/signature"
 )
 
 const buildDesc = `

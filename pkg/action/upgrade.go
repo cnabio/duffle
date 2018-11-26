@@ -3,9 +3,9 @@ package action
 import (
 	"io"
 
-	"github.com/deis/duffle/pkg/claim"
-	"github.com/deis/duffle/pkg/credentials"
-	"github.com/deis/duffle/pkg/driver"
+	"github.com/deislabs/duffle/pkg/claim"
+	"github.com/deislabs/duffle/pkg/credentials"
+	"github.com/deislabs/duffle/pkg/driver"
 )
 
 // Upgrade runs an upgrade action

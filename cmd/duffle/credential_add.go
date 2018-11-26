@@ -11,8 +11,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/deis/duffle/pkg/credentials"
-	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/credentials"
+	"github.com/deislabs/duffle/pkg/duffle/home"
 )
 
 const credentialAddDesc = `

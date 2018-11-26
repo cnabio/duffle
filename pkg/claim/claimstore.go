@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/deis/duffle/pkg/utils/crud"
+	"github.com/deislabs/duffle/pkg/utils/crud"
 )
 
 // ErrClaimNotFound represents a claim not found in claim storage

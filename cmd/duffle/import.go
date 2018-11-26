@@ -5,8 +5,8 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/packager"
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/packager"
 
 	"github.com/spf13/cobra"
 )

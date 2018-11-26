@@ -12,8 +12,8 @@ import (
 
 	"github.com/Masterminds/semver"
 
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/duffle/manifest"
+	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/duffle/manifest"
 )
 
 // Builder defines how to interact with a bundle builder

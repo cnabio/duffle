@@ -11,9 +11,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/repo"
-	"github.com/deis/duffle/pkg/signature"
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/repo"
+	"github.com/deislabs/duffle/pkg/signature"
 )
 
 func TestBuild(t *testing.T) {

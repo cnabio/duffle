@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/version"
+	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/version"
 )
 
 func TestHelpWrittenToStdout(t *testing.T) {

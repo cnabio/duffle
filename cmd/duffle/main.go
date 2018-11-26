@@ -6,16 +6,16 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/deis/duffle/pkg/signature"
+	"github.com/deislabs/duffle/pkg/signature"
 
 	"github.com/spf13/cobra"
 
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/claim"
-	"github.com/deis/duffle/pkg/credentials"
-	"github.com/deis/duffle/pkg/driver"
-	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/utils/crud"
+	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/claim"
+	"github.com/deislabs/duffle/pkg/credentials"
+	"github.com/deislabs/duffle/pkg/driver"
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/utils/crud"
 )
 
 var (

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deis/duffle/pkg/claim"
-	"github.com/deis/duffle/pkg/driver"
+	"github.com/deislabs/duffle/pkg/claim"
+	"github.com/deislabs/duffle/pkg/driver"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/duffle/home"
 )
 
 func TestCredentialList(t *testing.T) {
