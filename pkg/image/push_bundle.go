@@ -140,6 +140,11 @@ func initiateUpload(r *reg.Registry, repoName string) (string, string, error) {
 		return "", "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		errMsg, err := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(errMsg), err)
+		return "", "", fmt.Errorf("failed to initiate config upload %q, status code is %d", repoName, resp.StatusCode)
+	}
 	token := resp.Header.Get("Request-Token")
 	location := resp.Header.Get("Location")
 	return location, token, nil
