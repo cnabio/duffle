@@ -1,7 +1,10 @@
 package credentials
 
 import (
+	"fmt"
 	"os"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/deislabs/duffle/pkg/bundle"
@@ -16,7 +19,11 @@ func TestCredentialSet(t *testing.T) {
 	}
 	defer os.Unsetenv("TEST_USE_VAR")
 
-	credset, err := Load("testdata/staging.yaml")
+	goos := "unix"
+	if runtime.GOOS == "windows" {
+		goos = runtime.GOOS
+	}
+	credset, err := Load(fmt.Sprintf("testdata/staging-%s.yaml", goos))
 	is.NoError(err)
 
 	results, err := credset.Resolve()
@@ -32,7 +39,7 @@ func TestCredentialSet(t *testing.T) {
 		expect string
 		path   string
 	}{
-		{name: "run_program", key: "TEST_RUN_PROGRAM", expect: "wildebeest\n"},
+		{name: "run_program", key: "TEST_RUN_PROGRAM", expect: "wildebeest"},
 		{name: "use_var", key: "TEST_USE_VAR", expect: "kakapu"},
 		{name: "read_file", key: "TEST_READ_FILE", expect: "serval"},
 		{name: "fallthrough", key: "TEST_FALLTHROUGH", expect: "quokka", path: "/animals/quokka.txt"},
@@ -40,7 +47,7 @@ func TestCredentialSet(t *testing.T) {
 	} {
 		dest, ok := results[tt.name]
 		is.True(ok)
-		is.Equal(tt.expect, dest)
+		is.Equal(tt.expect, strings.TrimSpace(dest))
 	}
 }
 
