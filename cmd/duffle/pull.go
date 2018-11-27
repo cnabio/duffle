@@ -13,6 +13,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var ErrNotSigned = errors.New("bundle is not signed")
+
 func newPullCmd(w io.Writer) *cobra.Command {
 	const usage = `Pulls a CNAB bundle into the cache without installing it.
 
@@ -95,7 +97,7 @@ func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {
 	var bun *bundle.Bundle
 	if bun, err = l.Load(bundleFile); err != nil {
 		if err.Error() == "no signature block in data" {
-			return bun, errors.New("bundle is not signed")
+			return bun, ErrNotSigned
 		}
 		// Dear Go, Y U NO TERNARY, kthxbye
 		secflag := "secure"
