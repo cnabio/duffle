@@ -36,7 +36,7 @@ func newBundlePullCmd(w io.Writer) *cobra.Command {
 			if !ok {
 				return fmt.Errorf("%q is not a tagged reference. Please specify a version", args[0])
 			}
-			signedBundle, err := image.PullBundle(context.TODO(), cli, tagged.String())
+			signedBundle, err := image.PullBundle(context.TODO(), cli, false, tagged.String())
 			if err != nil {
 				return err
 			}

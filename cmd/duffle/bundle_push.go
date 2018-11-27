@@ -50,7 +50,7 @@ func newBundlePushCmd(w io.Writer) *cobra.Command {
 			if err := cli.Initialize(flags.NewClientOptions()); err != nil {
 				return err
 			}
-			digest, err := image.PushBundle(context.TODO(), cli, data, tagged.String())
+			digest, err := image.PushBundle(context.TODO(), cli, false, data, tagged.String())
 			if err != nil {
 				return err
 			}
