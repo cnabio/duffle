@@ -15,8 +15,8 @@ function build(e, project) {
 
   // Set a few environment variables.
   build.env = {
-    "DEST_PATH": localPath,
-    "GOPATH": gopath
+    DEST_PATH: localPath,
+    GOPATH: gopath
   };
 
   // Run Go unit tests
@@ -175,8 +175,8 @@ function goDockerBuild(e, p) {
 
   goDockerBuild.storage.enabled = true;
   goDockerBuild.env = {
-    "DEST_PATH": localPath,
-    "GOPATH": gopath
+    DEST_PATH: localPath,
+    GOPATH: gopath
   };
   goDockerBuild.tasks = [
     "cd /src",
@@ -199,6 +199,12 @@ function dockerhubPublish(project, tag) {
   let dockerRegistry = project.secrets.dockerhubRegistry || "docker.io";
   let dockerOrg = project.secrets.dockerhubOrg || "deis";
 
+  publisher.env = {
+    SHELL: "/bin/sh",
+    DOCKER_REGISTRY: dockerOrg,
+    VERSION: tag
+  }
+
   publisher.docker.enabled = true;
   publisher.storage.enabled = true;
   publisher.tasks = [
@@ -206,7 +212,7 @@ function dockerhubPublish(project, tag) {
     `docker login ${dockerRegistry} -u ${project.secrets.dockerhubUsername} -p ${project.secrets.dockerhubPassword}`,
     "cd /src",
     "cp -av /mnt/brigade/share/bin ./",
-    `SHELL=/bin/sh DOCKER_REGISTRY=${dockerOrg} VERSION=${tag} make docker-build docker-push`,
+    `make docker-build docker-push`,
     `docker logout ${dockerRegistry}`
   ];
 
