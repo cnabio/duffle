@@ -53,7 +53,7 @@ func resolve(cli command.Cli, image, digest string, pushLocalImages bool) (strin
 
 	digestedRef, err := getFirstMatchingDigest(image, result.RepoDigests)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("could not resolve image %q with digest %q: %s", image, digest, err)
 	}
 	return digestedRef, strings.Split(digestedRef, "@")[1], nil
 }
