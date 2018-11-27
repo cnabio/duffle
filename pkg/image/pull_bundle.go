@@ -8,13 +8,13 @@ import (
 )
 
 // PullBundle pulls a signed bundle from an image registry.
-func PullBundle(ctx context.Context, cli command.Cli, ref string) ([]byte, error) {
+func PullBundle(ctx context.Context, cli command.Cli, nonSSL bool, ref string) ([]byte, error) {
 	named, repoName, tag, err := parseBundleReference(ref)
 	if err != nil {
 		return nil, err
 	}
 
-	regClient, err := makeRegClient(ctx, cli, named)
+	regClient, err := makeRegClient(ctx, cli, nonSSL, named)
 	if err != nil {
 		return nil, err
 	}

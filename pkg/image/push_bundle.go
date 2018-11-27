@@ -22,13 +22,13 @@ import (
 const MediaTypeCnabConfig = schema2.MediaTypeImageConfig //"application/vnd.oci.cnab.image.v1beta1+pgp"
 
 // PushBundle pushes a signed bundle as a special image manifest in a registry
-func PushBundle(ctx context.Context, cli command.Cli, signedBundle []byte, ref string) (string, error) {
+func PushBundle(ctx context.Context, cli command.Cli, nonSSL bool, signedBundle []byte, ref string) (string, error) {
 	named, repoName, tag, err := parseBundleReference(ref)
 	if err != nil {
 		return "", err
 	}
 
-	regClient, err := makeRegClient(ctx, cli, named)
+	regClient, err := makeRegClient(ctx, cli, nonSSL, named)
 	if err != nil {
 		return "", err
 	}
@@ -50,7 +50,7 @@ func parseBundleReference(ref string) (named reference.Named, repoName string, t
 	return
 }
 
-func makeRegClient(ctx context.Context, cli command.Cli, named reference.Named) (*reg.Registry, error) {
+func makeRegClient(ctx context.Context, cli command.Cli, nonSSL bool, named reference.Named) (*reg.Registry, error) {
 	repoInfo, err := registry.ParseRepositoryInfo(named)
 	if err != nil {
 		return nil, err
@@ -63,6 +63,7 @@ func makeRegClient(ctx context.Context, cli command.Cli, named reference.Named) 
 	return reg.New(authConfig, reg.Opt{
 		Domain:   domain,
 		SkipPing: true,
+		NonSSL:   nonSSL,
 	})
 }
 
