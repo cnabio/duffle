@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -9,6 +10,7 @@ import (
 func newInspectCmd(w io.Writer) *cobra.Command {
 	var (
 		insecure bool
+		raw      bool
 	)
 
 	const usage = ` Returns information about an application bundle.
@@ -33,6 +35,16 @@ func newInspectCmd(w io.Writer) *cobra.Command {
 				return err
 			}
 
+			if raw {
+				f, err := os.Open(bundleFile)
+				if err != nil {
+					return err
+				}
+				defer f.Close()
+				_, err = io.Copy(w, f)
+				return err
+			}
+
 			bun, err := loadBundle(bundleFile, insecure)
 			if err != nil {
 				return err
@@ -46,6 +58,7 @@ func newInspectCmd(w io.Writer) *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.BoolVarP(&insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
+	flags.BoolVarP(&raw, "raw", "r", false, "Display the raw bundle manifest")
 
 	return cmd
 }
