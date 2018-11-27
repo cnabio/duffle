@@ -350,6 +350,7 @@ func LoadKeyRingFetcher(path string, fetcher PassphraseFetcher) (*KeyRing, error
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 	entities, err := openpgp.ReadKeyRing(f)
 	if err != nil {
 		return nil, err
