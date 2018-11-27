@@ -8,6 +8,7 @@ import (
 )
 
 func TestSearch(t *testing.T) {
+	t.Skip("under construction")
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
