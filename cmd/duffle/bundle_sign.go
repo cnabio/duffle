@@ -71,6 +71,7 @@ func bundleFileOrArg1(args []string, bundle string) (string, error) {
 	}
 	return bundle, nil
 }
+
 func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
 	// Verify that file exists
 	if fi, err := os.Stat(bundleFile); err != nil {
@@ -114,6 +115,12 @@ func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
 		k = all[0]
 	}
 
+	// Be sure userID is parseable before attempting to sign
+	userID, err := k.UserID()
+	if err != nil {
+		return err
+	}
+
 	// Sign the file
 	s := signature.NewSigner(k)
 	data, err := s.Clearsign(b)
@@ -144,10 +151,6 @@ func (bs *bundleSignCmd) signBundle(bundleFile, keyring string) error {
 		return err
 	}
 
-	userID, err := k.UserID()
-	if err != nil {
-		return err
-	}
 	fmt.Fprintf(bs.out, "Signed by %s %s \n", userID.String(), k.Fingerprint())
 	return nil
 }

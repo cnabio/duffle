@@ -20,11 +20,13 @@ func defaultUserID() signature.UserID {
 
 	if account, err := user.Current(); err != nil {
 		name = "user"
+		username = name
 	} else {
 		name = account.Name
 		username = account.Username
 	}
-	// on Windows, account name are prefixed with '<machinename>\' which makes the generated email invalid
+
+	// on Windows, account names are prefixed with '<machinename>\' which makes the generated email invalid
 	// and makes the key user identity parser fail
 	if ix := strings.Index(username, "\\"); ix != -1 {
 		username = username[ix+1:]

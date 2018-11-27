@@ -199,7 +199,6 @@ func (i *initCmd) loadOrCreateSecretKeyRing(dest string) (*signature.KeyRing, er
 			}
 		} else {
 			user = defaultUserID()
-
 		}
 		// Generate the key
 		fmt.Fprintf(i.w, "==> Generating a new signing key with ID %s\n", user.String())
