@@ -70,7 +70,7 @@ func newInitCmd(w io.Writer) *cobra.Command {
 	return cmd
 }
 
-// autoInit is called by the root command for all calls except init.
+// autoInit is called by the root command for all calls except init and version.
 func autoInit(w io.Writer, verbose bool) error {
 	i := initCmd{
 		w:       w,

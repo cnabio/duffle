@@ -24,7 +24,7 @@ func newRootCmd(outputRedirect io.Writer) *cobra.Command {
 			if verbose {
 				log.SetLevel(log.DebugLevel)
 			}
-			if cmd.Name() == "init" {
+			if cmd.Name() == "init" || cmd.Name() == "version" {
 				return nil
 			}
 			err := autoInit(cmd.OutOrStdout(), false)
