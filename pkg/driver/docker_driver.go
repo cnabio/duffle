@@ -60,7 +60,7 @@ func (nullWriter) Write(b []byte) (int, error) {
 func (d *DockerDriver) exec(op *Operation) error {
 	ctx := context.Background()
 	var cliout, clierr io.Writer = os.Stdout, os.Stderr
-	if _, ok := d.config["DOCKER_DRIVER_QUIET"]; ok {
+	if d.config["DOCKER_DRIVER_QUIET"] == "1" {
 		cliout = nullWriter{}
 		clierr = nullWriter{}
 	}
@@ -89,9 +89,11 @@ func (d *DockerDriver) exec(op *Operation) error {
 		},
 	}
 	cfg := &container.Config{
-		Image:      op.Image,
-		Env:        env,
-		Entrypoint: strslice.StrSlice{"/cnab/app/run"},
+		Image:        op.Image,
+		Env:          env,
+		Entrypoint:   strslice.StrSlice{"/cnab/app/run"},
+		AttachStderr: true,
+		AttachStdout: true,
 	}
 
 	hostCfg := &container.HostConfig{Mounts: mounts, AutoRemove: true}
