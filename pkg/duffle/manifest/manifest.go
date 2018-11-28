@@ -11,21 +11,21 @@ import (
 
 // Manifest represents a duffle manifest.
 type Manifest struct {
-	Name        string                                `mapstructure:"name"`
-	Version     string                                `mapstructure:"version"`
-	Description string                                `mapstructure:"description"`
-	Keywords    []string                              `mapstructure:"keywords"`
-	Maintainers []bundle.Maintainer                   `mapstructure:"maintainers"`
-	Components  map[string]*Component                 `mapstructure:"components"`
-	Parameters  map[string]bundle.ParameterDefinition `mapstructure:"parameters"`
-	Credentials map[string]bundle.Location            `mapstructure:"credentials"`
+	Name        string                                `json:"name" mapstructure:"name"`
+	Version     string                                `json:"version" mapstructure:"version"`
+	Description string                                `json:"description" mapstructure:"description"`
+	Keywords    []string                              `json:"keywords" mapstructure:"keywords"`
+	Maintainers []bundle.Maintainer                   `json:"maintainers" mapstructure:"maintainers"`
+	Components  map[string]*Component                 `json:"components" mapstructure:"components"`
+	Parameters  map[string]bundle.ParameterDefinition `json:"parameters" mapstructure:"parameters"`
+	Credentials map[string]bundle.Location            `json:"credentials" mapstructure:"credentials"`
 }
 
 // Component represents a component of a CNAB bundle
 type Component struct {
-	Name          string            `mapstructure:"name"`
-	Builder       string            `mapstructure:"builder"`
-	Configuration map[string]string `mapstructure:"configuration"`
+	Name          string            `json:"name" mapstructure:"name"`
+	Builder       string            `json:"builder" mapstructure:"builder"`
+	Configuration map[string]string `json:"configuration" mapstructure:"configuration"`
 }
 
 // New creates a new manifest with the Environments intialized.
