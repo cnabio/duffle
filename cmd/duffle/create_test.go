@@ -29,9 +29,9 @@ func TestCreateCmd(t *testing.T) {
 		t.Fatalf("%s is not a directory", path)
 	}
 
-	m, err := manifest.Load("duffle.yaml", path)
+	m, err := manifest.Load("duffle.json", path)
 	if err != nil {
-		t.Errorf("Unable to load duffle.yaml file: %s", err)
+		t.Errorf("Unable to load duffle.json file: %s", err)
 	}
 
 	if m.Name != name {

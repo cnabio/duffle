@@ -1,11 +1,10 @@
 package manifest
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-
-	yaml "gopkg.in/yaml.v2"
 )
 
 const runContent = `#!/bin/bash
@@ -28,7 +27,7 @@ COPY app /cnab/app
 CMD ["/cnab/app/run"]
 `
 
-// Scaffold takes a path and creates a minimal duffle manifest (duffle.yaml)
+// Scaffold takes a path and creates a minimal duffle manifest (duffle.json)
 //  and scaffolds the components in that manifest
 func Scaffold(path string) error {
 	name := filepath.Base(path)
@@ -47,12 +46,12 @@ func Scaffold(path string) error {
 		},
 	}
 
-	d, err := yaml.Marshal(m)
+	d, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(path, "duffle.yaml"), d, 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(path, "duffle.json"), d, 0644); err != nil {
 		return err
 	}
 	cnabPath := filepath.Join(path, "cnab")
