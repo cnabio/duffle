@@ -63,7 +63,7 @@ func (n *NamedRepository) IsSigned() bool {
 }
 
 func newBundleListCmd(w io.Writer) *cobra.Command {
-	var long bool
+	var short bool
 	cmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
@@ -75,24 +75,24 @@ func newBundleListCmd(w io.Writer) *cobra.Command {
 				return err
 			}
 			sort.Sort(references)
-			if long {
-				table := uitable.New()
-				table.AddRow("NAME", "VERSION", "DIGEST", "SIGNED?")
+			if short {
 				for _, ref := range references {
-					table.AddRow(ref.Name(), ref.Tag(), ref.Digest(), ref.IsSigned())
+					fmt.Println(ref.Name())
 				}
-				fmt.Fprintln(w, table)
 				return nil
 			}
 
+			table := uitable.New()
+			table.AddRow("NAME", "VERSION", "DIGEST", "SIGNED?")
 			for _, ref := range references {
-				fmt.Println(ref.Name())
+				table.AddRow(ref.Name(), ref.Tag(), ref.Digest(), ref.IsSigned())
 			}
+			fmt.Fprintln(w, table)
 
 			return nil
 		},
 	}
-	cmd.Flags().BoolVarP(&long, "long", "l", false, "output longer listing format")
+	cmd.Flags().BoolVarP(&short, "short", "s", false, "output shorter listing format")
 
 	return cmd
 }
