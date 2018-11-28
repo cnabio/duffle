@@ -122,9 +122,11 @@ func (d *DockerDriver) exec(op *Operation) error {
 		},
 	}
 	cfg := &container.Config{
-		Image:      op.Image,
-		Env:        env,
-		Entrypoint: strslice.StrSlice{"/cnab/app/run"},
+		Image:        op.Image,
+		Env:          env,
+		Entrypoint:   strslice.StrSlice{"/cnab/app/run"},
+		AttachStderr: true,
+		AttachStdout: true,
 	}
 
 	hostCfg := &container.HostConfig{Mounts: mounts, AutoRemove: true}
