@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newInspectCmd(w io.Writer) *cobra.Command {
+func newShowCmd(w io.Writer) *cobra.Command {
 	var (
 		insecure bool
 		raw      bool
@@ -16,14 +16,14 @@ func newInspectCmd(w io.Writer) *cobra.Command {
 	const usage = ` Returns information about an application bundle.
 
 	Example:
-		$ duffle inspect duffle/example:0.1.0
+		$ duffle show duffle/example:0.1.0
 
-	To inspect unsigned bundles, pass the --insecure flag:
-		$ duffle inspect duffle/unsinged-example:0.1.0 --insecure
+	To display unsigned bundles, pass the --insecure flag:
+		$ duffle show duffle/unsinged-example:0.1.0 --insecure
 `
 
 	cmd := &cobra.Command{
-		Use:   "inspect NAME",
+		Use:   "show NAME",
 		Short: "return low-level information on application bundles",
 		Long:  usage,
 		Args:  cobra.ExactArgs(1),
