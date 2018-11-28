@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -28,11 +29,12 @@ func (bl NamedRepositoryList) Less(a, b int) bool {
 	return strings.Compare(bl[a].Name(), bl[b].Name()) < 1
 }
 
-// NamedRepository is a reference to a repository with a name, tag and digest.
+// NamedRepository is a reference to a repository.
 type NamedRepository struct {
 	name   string
 	tag    string
 	digest string
+	signed bool
 }
 
 // Name returns the full name.
@@ -55,6 +57,11 @@ func (n *NamedRepository) Digest() string {
 	return n.digest
 }
 
+// IsSigned determines whether or not the bundle is signed.
+func (n *NamedRepository) IsSigned() bool {
+	return n.signed
+}
+
 func newBundleListCmd(w io.Writer) *cobra.Command {
 	var long bool
 	cmd := &cobra.Command{
@@ -70,9 +77,9 @@ func newBundleListCmd(w io.Writer) *cobra.Command {
 			sort.Sort(references)
 			if long {
 				table := uitable.New()
-				table.AddRow("NAME", "VERSION", "DIGEST")
+				table.AddRow("NAME", "VERSION", "DIGEST", "SIGNED?")
 				for _, ref := range references {
-					table.AddRow(ref.Name(), ref.Tag(), ref.Digest())
+					table.AddRow(ref.Name(), ref.Tag(), ref.Digest(), ref.IsSigned())
 				}
 				fmt.Fprintln(w, table)
 				return nil
@@ -100,10 +107,16 @@ func searchLocal(home home.Home) (NamedRepositoryList, error) {
 
 	for repo, tagList := range index {
 		for tag, digest := range tagList {
+			isSigned := true
+			_, err := loadBundle(filepath.Join(home.Bundles(), digest), true)
+			if err == ErrNotSigned {
+				isSigned = false
+			}
 			references = append(references, &NamedRepository{
 				repo,
 				tag,
 				digest,
+				isSigned,
 			})
 		}
 	}
