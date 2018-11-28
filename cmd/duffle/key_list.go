@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/signature"
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/signature"
 
 	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"

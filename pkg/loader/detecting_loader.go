@@ -1,7 +1,7 @@
 package loader
 
 import (
-	"github.com/deis/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/bundle"
 
 	"golang.org/x/crypto/openpgp/clearsign"
 )

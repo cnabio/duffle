@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deis/duffle/pkg/loader"
+	"github.com/deislabs/duffle/pkg/loader"
 )
 
 func TestImport(t *testing.T) {

@@ -1,5 +1,5 @@
 PROJECT         := duffle
-ORG             := deis
+ORG             := deislabs
 DOCKER_REGISTRY ?= brigade.azurecr.io/deis
 BINDIR          := $(CURDIR)/bin
 GOFLAGS         :=
@@ -14,7 +14,7 @@ ifeq ($(OS),Windows_NT)
 else
 	TARGET = $(PROJECT)
 	SHELL  ?= bash
-	CHECK  = command -v
+	CHECK  ?= which
 endif
 
 GIT_TAG   := $(shell git describe --tags --always)
@@ -44,7 +44,7 @@ build-release:
 		for arch in $(CX_ARCHS); do \
 			GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 go build -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)-$$os-$$arch github.com/$(ORG)/$(PROJECT)/cmd/...; \
 		done; \
-		if [ $$os == 'windows' ]; then \
+		if [ $$os = 'windows' ]; then \
 			mv $(BINDIR)/$(PROJECT)-$$os-$$arch $(BINDIR)/$(PROJECT)-$$os-$$arch.exe; \
 		fi; \
 	done

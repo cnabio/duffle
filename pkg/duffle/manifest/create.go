@@ -20,6 +20,8 @@ fi
 
 const dockerfileContent = `FROM alpine:latest
 
+RUN apk add -u bash
+
 COPY Dockerfile /cnab/Dockerfile
 COPY app /cnab/app
 

@@ -1,27 +1,29 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/deis/duffle/pkg/signature"
+	"github.com/deislabs/duffle/pkg/signature"
 
 	"github.com/spf13/cobra"
 
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/claim"
-	"github.com/deis/duffle/pkg/credentials"
-	"github.com/deis/duffle/pkg/driver"
-	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/utils/crud"
+	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/claim"
+	"github.com/deislabs/duffle/pkg/credentials"
+	"github.com/deislabs/duffle/pkg/driver"
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/utils/crud"
 )
 
 var (
 	// duffleHome depicts the home directory where all duffle config is stored.
-	duffleHome string
-	rootCmd    *cobra.Command
+	duffleHome           string
+	rootCmd              *cobra.Command
+	ErrUnderConstruction = errors.New("under construction")
 )
 
 func main() {

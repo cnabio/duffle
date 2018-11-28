@@ -1,8 +1,8 @@
 package loader
 
 import (
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/signature"
+	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/signature"
 )
 
 // SecureLoader loads signed bundles.

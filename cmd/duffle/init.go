@@ -9,9 +9,9 @@ import (
 
 	"gopkg.in/AlecAivazis/survey.v1"
 
-	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/ohai"
-	"github.com/deis/duffle/pkg/signature"
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/ohai"
+	"github.com/deislabs/duffle/pkg/signature"
 
 	"github.com/spf13/cobra"
 )
@@ -70,7 +70,7 @@ func newInitCmd(w io.Writer) *cobra.Command {
 	return cmd
 }
 
-// autoInit is called by the root command for all calls except init.
+// autoInit is called by the root command for all calls except init and version.
 func autoInit(w io.Writer, verbose bool) error {
 	i := initCmd{
 		w:       w,
@@ -199,7 +199,6 @@ func (i *initCmd) loadOrCreateSecretKeyRing(dest string) (*signature.KeyRing, er
 			}
 		} else {
 			user = defaultUserID()
-
 		}
 		// Generate the key
 		fmt.Fprintf(i.w, "==> Generating a new signing key with ID %s\n", user.String())
@@ -255,7 +254,7 @@ func (i *initCmd) loadOrCreatePublicKeyRing(dest string, privateKeys *signature.
 		i.printUserID(k)
 	}
 
-	return ring, ring.SavePublic(dest, false)
+	return ring, ring.SavePublic(dest, false, false)
 }
 
 func (i *initCmd) printUserID(k *signature.Key) {

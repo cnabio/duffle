@@ -7,7 +7,7 @@
 #
 # Note that STDIN gets passed to python, which injects it into the script.
 ############
-pydir=$GOPATH/src/github.com/deis/duffle/drivers/azure-vm
+pydir=$GOPATH/src/github.com/deislabs/duffle/drivers/azure-vm
 
 if [[ $1 == "--handles" ]]; then
   echo -n "azure-image"

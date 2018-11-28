@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/deis/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/bundle"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -35,5 +35,21 @@ func TestGenCredentialSet(t *testing.T) {
 	is.Len(found, 2)
 	for k, v := range found {
 		is.True(v, "%q not found", k)
+	}
+}
+
+func TestGenCredentialSetBadName(t *testing.T) {
+	testcases := []string{
+		"period.",
+		"forwardslash/",
+		"backslash\\",
+		"all.of.the/above\\",
+	}
+	for _, tc := range testcases {
+		t.Run(tc, func(t *testing.T) {
+			is := assert.New(t)
+			_, err := genCredentialSet(tc, nil, genEmptyCredentials)
+			is.Error(err)
+		})
 	}
 }

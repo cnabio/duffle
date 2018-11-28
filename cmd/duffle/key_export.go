@@ -6,8 +6,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/signature"
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/signature"
 
 	"github.com/spf13/cobra"
 )
@@ -22,8 +22,11 @@ If no key name is given, the default signing key is exported.
 `
 
 func newKeyExportCmd(w io.Writer) *cobra.Command {
-	var dest string
-	var keyname string
+	var (
+		dest    string
+		keyname string
+		armored bool
+	)
 	cmd := &cobra.Command{
 		Use:   "export FILE",
 		Short: "export the public key of a signing key",
@@ -65,7 +68,7 @@ func newKeyExportCmd(w io.Writer) *cobra.Command {
 			if fi, err := os.Stat(dest); os.IsNotExist(err) {
 				kr := signature.CreateKeyRing(passwordFetcher)
 				kr.AddKey(key)
-				return kr.SavePublic(dest, true)
+				return kr.SavePublic(dest, true, armored)
 			} else if err != nil {
 				return err
 			} else if fi.IsDir() {
@@ -82,10 +85,12 @@ func newKeyExportCmd(w io.Writer) *cobra.Command {
 				uid, _ := k.UserID()
 				println(uid.String())
 			}
-			return kr.SavePublic(dest, true)
+			return kr.SavePublic(dest, true, armored)
 
 		},
 	}
-	cmd.Flags().StringVarP(&keyname, "user", "u", "", "the user ID of the key to export")
+	flags := cmd.Flags()
+	flags.StringVarP(&keyname, "user", "u", "", "The user ID of the key to export")
+	flags.BoolVarP(&armored, "armored", "a", false, "Export an ASCII armored key")
 	return cmd
 }

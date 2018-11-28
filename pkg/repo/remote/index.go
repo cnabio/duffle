@@ -12,7 +12,7 @@ import (
 
 	"github.com/Masterminds/semver"
 
-	"github.com/deis/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/bundle"
 )
 
 const (

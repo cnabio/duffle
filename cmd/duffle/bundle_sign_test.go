@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/duffle/home"
 )
 
 type noopResolver struct {

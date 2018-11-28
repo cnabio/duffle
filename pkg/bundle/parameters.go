@@ -125,10 +125,10 @@ func (pd ParameterDefinition) validateStringParameterValue(value interface{}) er
 		return errors.New("value is not a string")
 	}
 	if pd.MinLength != nil && len(s) < *pd.MinLength {
-		return fmt.Errorf("value is too short: minimum length is %d", pd.MinLength)
+		return fmt.Errorf("value is too short: minimum length is %d", *pd.MinLength)
 	}
 	if pd.MaxLength != nil && len(s) > *pd.MaxLength {
-		return fmt.Errorf("value is too long: maximum length is %d", pd.MaxLength)
+		return fmt.Errorf("value is too long: maximum length is %d", *pd.MaxLength)
 	}
 	return nil
 }

@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/deis/duffle/pkg/action"
+	"github.com/deislabs/duffle/pkg/action"
 )
 
 const usage = `Uninstalls an installation of a CNAB bundle.

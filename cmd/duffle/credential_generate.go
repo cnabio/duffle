@@ -6,14 +6,15 @@ import (
 	"io"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/credentials"
-	"github.com/deis/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/credentials"
+	"github.com/deislabs/duffle/pkg/duffle/home"
 )
 
 const credentialGenerateHelp = `Generate credentials from a CNAB bundle
@@ -108,6 +109,10 @@ func genCredentialSet(name string, creds map[string]bundle.Location, fn credenti
 		Name: name,
 	}
 	cs.Credentials = []credentials.CredentialStrategy{}
+
+	if strings.ContainsAny(name, "./\\") {
+		return cs, fmt.Errorf("credentialset name '%s' cannot contain the following characters: './\\'", name)
+	}
 
 	for name := range creds {
 		c, err := fn(name)
