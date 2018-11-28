@@ -46,12 +46,11 @@ var (
 )
 
 type buildCmd struct {
-	out             io.Writer
-	src             string
-	home            home.Home
-	signer          string
-	outputFile      string
-	pushLocalImages bool
+	out        io.Writer
+	src        string
+	home       home.Home
+	signer     string
+	outputFile string
 
 	// options common to the docker client and the daemon.
 	dockerClientOptions *dockerflags.ClientOptions
@@ -96,8 +95,6 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 	f.BoolVar(&build.dockerClientOptions.Common.TLSVerify, fmt.Sprintf("docker-%s", dockerflags.FlagTLSVerify), defaultDockerTLSVerify(), "Use TLS and verify the remote")
 	f.StringVar(&build.dockerClientOptions.ConfigDir, "docker-config", cliconfig.Dir(), "Location of client config files")
 
-	f.BoolVar(&build.pushLocalImages, "push-local-images", true, "push docker local-only images to the registry.")
-
 	build.dockerClientOptions.Common.TLSOptions = &tlsconfig.Options{
 		CAFile:   filepath.Join(dockerCertPath, dockerflags.DefaultCaFile),
 		CertFile: filepath.Join(dockerCertPath, dockerflags.DefaultCertFile),
@@ -139,7 +136,8 @@ func (b *buildCmd) run() (err error) {
 		return err
 	}
 
-	resolver, err := image.NewResolver(b.pushLocalImages)
+	// when building, push local images so we can get their digests
+	resolver, err := image.NewResolver(true)
 	if err != nil {
 		return err
 	}

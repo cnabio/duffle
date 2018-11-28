@@ -61,7 +61,7 @@ func newBundleSignCmd(w io.Writer) *cobra.Command {
 	cmd.Flags().StringVarP(&sign.bundleFile, "file", "f", "", "path to bundle file to sign")
 	cmd.Flags().StringVarP(&sign.outfile, "output-file", "o", "", "the name of the output file")
 	cmd.Flags().BoolVar(&sign.skipValidation, "skip-validate", false, "do not validate the JSON before marshaling it.")
-	cmd.Flags().BoolVar(&sign.pushLocalImages, "push-local-images", true, "push docker local-only images to the registry.")
+	cmd.Flags().BoolVar(&sign.pushLocalImages, "push-local-images", false, "push docker local-only images to the registry.")
 
 	return cmd
 }
