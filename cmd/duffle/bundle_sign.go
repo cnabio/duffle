@@ -10,12 +10,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-
-	"github.com/deis/duffle/pkg/bundle"
-	"github.com/deis/duffle/pkg/crypto/digest"
-	"github.com/deis/duffle/pkg/duffle/home"
-	"github.com/deis/duffle/pkg/image"
-	"github.com/deis/duffle/pkg/signature"
+	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/crypto/digest"
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/image"
+	"github.com/deislabs/duffle/pkg/signature"
 )
 
 const bundleSignDesc = `Clear-sign a bundle.

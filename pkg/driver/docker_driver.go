@@ -17,7 +17,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 
-	"github.com/deis/duffle/pkg/image"
+	"github.com/deislabs/duffle/pkg/image"
 )
 
 // DockerDriver is capable of running Docker invocation images using Docker itself.
