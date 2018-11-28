@@ -50,6 +50,7 @@ type buildCmd struct {
 	src             string
 	home            home.Home
 	signer          string
+	outputFile      string
 	pushLocalImages bool
 
 	// options common to the docker client and the daemon.
@@ -87,6 +88,7 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 
 	f = cmd.Flags()
 	f.StringVarP(&build.signer, "user", "u", "", "the user ID of the signing key to use. Format is either email address or 'NAME (COMMENT) <EMAIL>'")
+	f.StringVarP(&build.outputFile, "output-file", "o", "", "If set, writes the bundle to this file in addition to saving it to the local store")
 
 	f.BoolVar(&build.dockerClientOptions.Common.Debug, "docker-debug", false, "Enable debug mode")
 	f.StringVar(&build.dockerClientOptions.Common.LogLevel, "docker-log-level", "info", `Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")`)
@@ -192,6 +194,12 @@ func (b *buildCmd) writeBundle(bf *bundle.Bundle) (string, error) {
 	digest, err := digest.OfBuffer(data)
 	if err != nil {
 		return "", fmt.Errorf("cannot compute digest from bundle: %v", err)
+	}
+
+	if b.outputFile != "" {
+		if err := ioutil.WriteFile(b.outputFile, data, 0644); err != nil {
+			return "", fmt.Errorf("cannot write bundle to %s: %v", b.outputFile, err)
+		}
 	}
 
 	return digest, ioutil.WriteFile(filepath.Join(b.home.Bundles(), digest), data, 0644)
