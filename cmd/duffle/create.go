@@ -14,13 +14,13 @@ import (
 )
 
 const createDesc = `
-This command creates a bundle directory along with a minimal duffle.toml file and a cnab directory with a Dockerfile for the invocation image
+This command creates a bundle directory along with a minimal duffle.json file and a cnab directory with a Dockerfile for the invocation image
 
 For example, 'duffle create foo'  will create a directory structure that looks like this:
 
     foo/
         |
-        |- duffle.yaml        # Contains metadata for bundle
+        |- duffle.json        # The build definition file
         |
         |- cnab/              # Contains invocation image
                 |
