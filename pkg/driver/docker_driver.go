@@ -40,8 +40,9 @@ func (d *DockerDriver) Handles(dt string) bool {
 // Config returns the Docker driver configuration options
 func (d *DockerDriver) Config() map[string]string {
 	return map[string]string{
-		"VERBOSE":     "Increase verbosity. true, false are supported values",
-		"PULL_ALWAYS": "Always pull image, even if locally available (0|1)",
+		"VERBOSE":             "Increase verbosity. true, false are supported values",
+		"PULL_ALWAYS":         "Always pull image, even if locally available (0|1)",
+		"DOCKER_DRIVER_QUIET": "Make the Docker driver quiet (only print container stdout/stderr)",
 	}
 }
 
@@ -50,9 +51,20 @@ func (d *DockerDriver) SetConfig(settings map[string]string) {
 	d.config = settings
 }
 
+type nullWriter struct{}
+
+func (nullWriter) Write(b []byte) (int, error) {
+	return len(b), nil
+}
+
 func (d *DockerDriver) exec(op *Operation) error {
 	ctx := context.Background()
-	cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false)
+	var cliout, clierr io.Writer = os.Stdout, os.Stderr
+	if d.config["DOCKER_DRIVER_QUIET"] == "1" {
+		cliout = nullWriter{}
+		clierr = nullWriter{}
+	}
+	cli := command.NewDockerCli(os.Stdin, cliout, clierr, false)
 	if err := cli.Initialize(cliflags.NewClientOptions()); err != nil {
 		return err
 	}
@@ -77,9 +89,11 @@ func (d *DockerDriver) exec(op *Operation) error {
 		},
 	}
 	cfg := &container.Config{
-		Image:      op.Image,
-		Env:        env,
-		Entrypoint: strslice.StrSlice{"/cnab/app/run"},
+		Image:        op.Image,
+		Env:          env,
+		Entrypoint:   strslice.StrSlice{"/cnab/app/run"},
+		AttachStderr: true,
+		AttachStdout: true,
 	}
 
 	hostCfg := &container.HostConfig{Mounts: mounts, AutoRemove: true}
