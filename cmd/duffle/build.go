@@ -25,6 +25,7 @@ import (
 	"github.com/deislabs/duffle/pkg/crypto/digest"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/duffle/manifest"
+	"github.com/deislabs/duffle/pkg/image"
 	"github.com/deislabs/duffle/pkg/ohai"
 	"github.com/deislabs/duffle/pkg/repo"
 	"github.com/deislabs/duffle/pkg/signature"
@@ -45,10 +46,11 @@ var (
 )
 
 type buildCmd struct {
-	out    io.Writer
-	src    string
-	home   home.Home
-	signer string
+	out             io.Writer
+	src             string
+	home            home.Home
+	signer          string
+	pushLocalImages bool
 
 	// options common to the docker client and the daemon.
 	dockerClientOptions *dockerflags.ClientOptions
@@ -92,6 +94,8 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 	f.BoolVar(&build.dockerClientOptions.Common.TLSVerify, fmt.Sprintf("docker-%s", dockerflags.FlagTLSVerify), defaultDockerTLSVerify(), "Use TLS and verify the remote")
 	f.StringVar(&build.dockerClientOptions.ConfigDir, "docker-config", cliconfig.Dir(), "Location of client config files")
 
+	f.BoolVar(&build.pushLocalImages, "push-local-images", true, "push docker local-only images to the registry.")
+
 	build.dockerClientOptions.Common.TLSOptions = &tlsconfig.Options{
 		CAFile:   filepath.Join(dockerCertPath, dockerflags.DefaultCaFile),
 		CertFile: filepath.Join(dockerCertPath, dockerflags.DefaultCertFile),
@@ -130,6 +134,18 @@ func (b *buildCmd) run() (err error) {
 	}
 
 	if err := bldr.Build(ctx, app); err != nil {
+		return err
+	}
+
+	resolver, err := image.NewResolver(b.pushLocalImages)
+	if err != nil {
+		return err
+	}
+
+	if err := bf.FixupContainerImages(resolver); err != nil {
+		if ok, image := image.IsErrImageLocalOnly(err); ok {
+			fmt.Fprintf(os.Stderr, "Image %q is only available locally. Please push it to the registry\n", image)
+		}
 		return err
 	}
 
