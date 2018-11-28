@@ -46,7 +46,7 @@ func Scaffold(path string) error {
 		},
 	}
 
-	d, err := json.MarshalIndent(m, "", "  ")
+	d, err := json.MarshalIndent(m, "", "    ")
 	if err != nil {
 		return err
 	}

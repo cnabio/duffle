@@ -37,4 +37,32 @@ func TestCreateCmd(t *testing.T) {
 	if m.Name != name {
 		t.Errorf("Expected name of bundle to be %s, got %s", name, m.Name)
 	}
+
+	// also test the output of duffle.json, since manifest.Load won't necessarily catch that
+	mbytes, err := ioutil.ReadFile(filepath.Join(path, "duffle.json"))
+	if err != nil {
+		t.Error(err)
+	}
+
+	expected := `{
+    "name": "test-bundle",
+    "version": "0.1.0",
+    "description": "A short description of your bundle",
+    "keywords": null,
+    "maintainers": null,
+    "components": {
+        "cnab": {
+            "name": "cnab",
+            "builder": "docker",
+            "configuration": {
+                "registry": "microsoft"
+            }
+        }
+    },
+    "parameters": null,
+    "credentials": null
+}`
+	if string(mbytes) != expected {
+		t.Errorf("Expected duffle.json output to look like this:\n\n%s\n\nGot:\n\n%s", expected, string(mbytes))
+	}
 }
