@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/flags"
 	"github.com/docker/distribution/reference"
 	"github.com/spf13/cobra"
 
@@ -51,10 +53,11 @@ func newBundleSignCmd(w io.Writer) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			resolver, err := image.NewResolver(sign.pushLocalImages)
-			if err != nil {
+			cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false, nil)
+			if err := cli.Initialize(flags.NewClientOptions()); err != nil {
 				return err
 			}
+			resolver := image.NewResolver(sign.pushLocalImages, cli)
 			return sign.signBundle(bundle, secring, resolver)
 		},
 	}

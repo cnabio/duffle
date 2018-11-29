@@ -4,11 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/docker/cli/cli/command"
-	"github.com/docker/cli/cli/flags"
 	"github.com/docker/docker/client"
 )
 
@@ -60,12 +58,8 @@ func (r *Resolver) Resolve(image, digest string) (string, string, error) {
 }
 
 // NewResolver creates a container image resolver
-func NewResolver(pushLocalImages bool) (*Resolver, error) {
-	cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false, nil)
-	if err := cli.Initialize(flags.NewClientOptions()); err != nil {
-		return nil, err
-	}
-	return &Resolver{dockerCli: cli, pushLocalImages: pushLocalImages}, nil
+func NewResolver(pushLocalImages bool, dockerCli command.Cli) *Resolver {
+	return &Resolver{dockerCli: dockerCli, pushLocalImages: pushLocalImages}
 }
 
 func getFirstMatchingDigest(image string, digestedRefs []string) (string, error) {
