@@ -70,7 +70,7 @@ func TestCreateCmd(t *testing.T) {
             "name": "cnab",
             "builder": "docker",
             "configuration": {
-                "registry": "microsoft"
+                "registry": "deislabs"
             }
         }
     },

@@ -55,7 +55,7 @@ func Scaffold(path string) error {
 				Name:    "cnab",
 				Builder: "docker",
 				Configuration: map[string]string{
-					"registry": "microsoft",
+					"registry": "deislabs",
 				},
 			},
 		},
