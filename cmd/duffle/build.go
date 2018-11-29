@@ -135,9 +135,12 @@ func (b *buildCmd) run() (err error) {
 	if err := bldr.Build(ctx, app); err != nil {
 		return err
 	}
-
+	cli := command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false)
+	if err := cli.Initialize(dockerflags.NewClientOptions()); err != nil {
+		return err
+	}
 	// when building, push local images so we can get their digests
-	resolver, err := image.NewResolver(true)
+	resolver, err := image.NewResolver(true, cli)
 	if err != nil {
 		return err
 	}
