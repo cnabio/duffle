@@ -49,8 +49,9 @@ func TestCredentialListEmpty(t *testing.T) {
 
 	out := bytes.NewBuffer(nil)
 	cmd := &credentialListCmd{
-		home: home.Home(duffleHome),
-		out:  out,
+		home:  home.Home(duffleHome),
+		out:   out,
+		short: true,
 	}
 
 	if err := cmd.run(); err != nil {
@@ -66,8 +67,9 @@ func TestCredentialListErrors(t *testing.T) {
 	duffleHome = "testdata/malformedhome"
 	out := bytes.NewBuffer(nil)
 	cmd := &credentialListCmd{
-		home: home.Home(duffleHome),
-		out:  out,
+		home:  home.Home(duffleHome),
+		out:   out,
+		short: true,
 	}
 
 	if err := cmd.run(); err != nil {

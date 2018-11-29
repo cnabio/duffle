@@ -15,9 +15,9 @@ import (
 )
 
 type credentialListCmd struct {
-	out  io.Writer
-	home home.Home
-	long bool
+	out   io.Writer
+	home  home.Home
+	short bool
 }
 
 func newCredentialListCmd(w io.Writer) *cobra.Command {
@@ -35,7 +35,7 @@ func newCredentialListCmd(w io.Writer) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.BoolVarP(&list.long, "long", "l", false, "output longer listing format")
+	f.BoolVarP(&list.short, "short", "s", false, "output shorter listing format")
 
 	return cmd
 }
@@ -44,23 +44,23 @@ func (ls *credentialListCmd) run() error {
 	credentialPath := ls.home.Credentials()
 	creds := findCredentialSets(credentialPath)
 
-	if ls.long {
-		table := uitable.New()
-		table.MaxColWidth = 80
-		table.Wrap = true
-
-		table.AddRow("NAME", "PATH")
-		for _, cred := range creds {
-			table.AddRow(cred.name, cred.path)
+	if ls.short {
+		for _, item := range creds {
+			fmt.Fprintln(ls.out, item.name)
 		}
-
-		fmt.Fprintln(ls.out, table)
 		return nil
 	}
 
-	for _, item := range creds {
-		fmt.Fprintln(ls.out, item.name)
+	table := uitable.New()
+	table.MaxColWidth = 80
+	table.Wrap = true
+
+	table.AddRow("NAME", "PATH")
+	for _, cred := range creds {
+		table.AddRow(cred.name, cred.path)
 	}
+
+	fmt.Fprintln(ls.out, table)
 	return nil
 }
 
