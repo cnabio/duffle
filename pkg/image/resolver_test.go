@@ -126,4 +126,20 @@ func TestResolveImage(t *testing.T) {
 	is.NoError(err)
 	is.Equal("test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341", resolvedImage)
 	is.Equal("sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341", resolvedDigest)
+
+	testee.dockerCli = &fakeDockerCli{
+		DockerCli: *command.NewDockerCli(os.Stdin, os.Stdout, os.Stderr, false, nil),
+		client: fakeDockerClient{
+			localImagesDigests: map[string][]string{
+				"test-image": {"other-registry:5000/namespace/test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341"},
+			},
+			pushedImagesDigests: map[string][]string{
+				"test-image": {"test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341"},
+			},
+		},
+	}
+	resolvedImage, resolvedDigest, err = testee.Resolve("test-image", "")
+	is.NoError(err)
+	is.Equal("test-image@sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341", resolvedImage)
+	is.Equal("sha256:d59a1aa7866258751a261bae525a1842c7ff0662d4f34a355d5f36826abc0341", resolvedDigest)
 }

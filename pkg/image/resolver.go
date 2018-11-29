@@ -41,7 +41,8 @@ func resolve(cli command.Cli, image, digest string, pushLocalImages bool) (strin
 		return "", "", err
 	}
 
-	if len(result.RepoDigests) == 0 {
+	digestedRef, err := getFirstMatchingDigest(image, result.RepoDigests)
+	if err != nil {
 		if pushLocalImages {
 			if err := pushImage(ctx, cli, image); err != nil {
 				return "", "", err
@@ -49,11 +50,6 @@ func resolve(cli command.Cli, image, digest string, pushLocalImages bool) (strin
 			return resolve(cli, image, digest, false)
 		}
 		return "", "", imageLocalOnlyError{name: image}
-	}
-
-	digestedRef, err := getFirstMatchingDigest(image, result.RepoDigests)
-	if err != nil {
-		return "", "", fmt.Errorf("could not resolve image %q with digest %q: %s", image, digest, err)
 	}
 	return digestedRef, strings.Split(digestedRef, "@")[1], nil
 }
