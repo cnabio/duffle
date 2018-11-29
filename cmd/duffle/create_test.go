@@ -48,8 +48,23 @@ func TestCreateCmd(t *testing.T) {
     "name": "test-bundle",
     "version": "0.1.0",
     "description": "A short description of your bundle",
-    "keywords": null,
-    "maintainers": null,
+    "keywords": [
+        "test-bundle",
+        "cnab",
+        "tutorial"
+    ],
+    "maintainers": [
+        {
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "url": "https://example.com"
+        },
+        {
+            "name": "Jane Doe",
+            "email": "jane.doe@example.com",
+            "url": "https://example.com"
+        }
+    ],
     "components": {
         "cnab": {
             "name": "cnab",

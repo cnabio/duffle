@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/deislabs/duffle/pkg/bundle"
 )
 
 const runContent = `#!/bin/bash
@@ -35,6 +37,19 @@ func Scaffold(path string) error {
 		Name:        name,
 		Version:     "0.1.0",
 		Description: "A short description of your bundle",
+		Keywords:    []string{name, "cnab", "tutorial"},
+		Maintainers: []bundle.Maintainer{
+			{
+				Name:  "John Doe",
+				Email: "john.doe@example.com",
+				URL:   "https://example.com",
+			},
+			{
+				Name:  "Jane Doe",
+				Email: "jane.doe@example.com",
+				URL:   "https://example.com",
+			},
+		},
 		Components: map[string]*Component{
 			"cnab": {
 				Name:    "cnab",
