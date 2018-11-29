@@ -1,7 +1,8 @@
 FROM alpine:latest
 
-COPY app/run /cnab/app/run
-COPY bundle.json /cnab/bundle.json
-COPY Dockerfile cnab/Dockerfile
+RUN apk add -u bash
 
-CMD [ "/cnab/app/run" ]
+COPY Dockerfile /cnab/Dockerfile
+COPY app /cnab/app
+
+CMD ["/cnab/app/run"]
