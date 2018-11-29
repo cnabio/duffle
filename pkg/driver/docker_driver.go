@@ -24,7 +24,8 @@ import (
 type DockerDriver struct {
 	config map[string]string
 	// If true, this will not actually run Docker
-	Simulate bool
+	Simulate  bool
+	dockerCli command.Cli
 }
 
 // Run executes the Docker driver
@@ -46,6 +47,28 @@ func (d *DockerDriver) Config() map[string]string {
 	}
 }
 
+// SetDockerCli makes the driver use an already initialized cli
+func (d *DockerDriver) SetDockerCli(dockerCli command.Cli) {
+	d.dockerCli = dockerCli
+}
+
+func (d *DockerDriver) initializeDockerCli() (command.Cli, error) {
+	if d.dockerCli != nil {
+		return d.dockerCli, nil
+	}
+	var cliout, clierr io.Writer = os.Stdout, os.Stderr
+	if d.config["DOCKER_DRIVER_QUIET"] == "1" {
+		cliout = nullWriter{}
+		clierr = nullWriter{}
+	}
+	cli := command.NewDockerCli(os.Stdin, cliout, clierr, false, nil)
+	if err := cli.Initialize(cliflags.NewClientOptions()); err != nil {
+		return nil, err
+	}
+	d.dockerCli = cli
+	return cli, nil
+}
+
 // SetConfig sets Docker driver configuration
 func (d *DockerDriver) SetConfig(settings map[string]string) {
 	d.config = settings
@@ -59,13 +82,8 @@ func (nullWriter) Write(b []byte) (int, error) {
 
 func (d *DockerDriver) exec(op *Operation) error {
 	ctx := context.Background()
-	var cliout, clierr io.Writer = os.Stdout, os.Stderr
-	if d.config["DOCKER_DRIVER_QUIET"] == "1" {
-		cliout = nullWriter{}
-		clierr = nullWriter{}
-	}
-	cli := command.NewDockerCli(os.Stdin, cliout, clierr, false, nil)
-	if err := cli.Initialize(cliflags.NewClientOptions()); err != nil {
+	cli, err := d.initializeDockerCli()
+	if err != nil {
 		return err
 	}
 	if d.Simulate {
