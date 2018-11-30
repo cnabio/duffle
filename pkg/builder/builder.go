@@ -108,6 +108,7 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 		} else {
 			bundleImage := bundle.Image{Description: c.Name()}
 			bundleImage.Image = c.URI()
+			bundleImage.ImageType = c.Type()
 			bf.Images = append(bf.Images, bundleImage)
 		}
 	}
