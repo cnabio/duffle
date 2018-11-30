@@ -4,11 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/docker/cli/cli/command"
-	"github.com/docker/cli/cli/flags"
 	"github.com/docker/docker/client"
 )
 

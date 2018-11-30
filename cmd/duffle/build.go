@@ -140,10 +140,7 @@ func (b *buildCmd) run() (err error) {
 		return err
 	}
 	// when building, push local images so we can get their digests
-	resolver, err := image.NewResolver(true, cli)
-	if err != nil {
-		return err
-	}
+	resolver := image.NewResolver(true, cli)
 
 	if err := bf.FixupContainerImages(resolver); err != nil {
 		if ok, image := image.IsErrImageLocalOnly(err); ok {

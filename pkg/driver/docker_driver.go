@@ -82,11 +82,6 @@ func (nullWriter) Write(b []byte) (int, error) {
 
 func (d *DockerDriver) exec(op *Operation) error {
 	ctx := context.Background()
-	var cliout, clierr io.Writer = os.Stdout, os.Stderr
-	if d.config["DOCKER_DRIVER_QUIET"] == "1" {
-		cliout = nullWriter{}
-		clierr = nullWriter{}
-	}
 	cli, err := d.initializeDockerCli()
 	if err != nil {
 		return err

@@ -56,10 +56,8 @@ func newBundleSignCmd(w io.Writer) *cobra.Command {
 			if err := cli.Initialize(flags.NewClientOptions()); err != nil {
 				return err
 			}
-			resolver, err := image.NewResolver(sign.pushLocalImages, cli)
-			if err != nil {
-				return err
-			}
+			resolver := image.NewResolver(sign.pushLocalImages, cli)
+
 			return sign.signBundle(bundle, secring, resolver)
 		},
 	}
