@@ -144,10 +144,6 @@ func (d *DockerDriver) exec(op *Operation) error {
 		return fmt.Errorf("error copying to / in container: %s", err)
 	}
 
-	if err = cli.Client().ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return fmt.Errorf("cannot start container: %v", err)
-	}
-
 	attach, err := cli.Client().ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
 		Stream: true,
 		Stdout: true,
@@ -167,13 +163,23 @@ func (d *DockerDriver) exec(op *Operation) error {
 		}
 	}()
 
-	statusc, errc := cli.Client().ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	statusc, errc := cli.Client().ContainerWait(ctx, resp.ID, container.WaitConditionRemoved)
+	if err = cli.Client().ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return fmt.Errorf("cannot start container: %v", err)
+	}
 	select {
 	case err := <-errc:
 		if err != nil {
 			return fmt.Errorf("error in container: %v", err)
 		}
-	case <-statusc:
+	case s := <-statusc:
+		if s.StatusCode == 0 {
+			return nil
+		}
+		if s.Error != nil {
+			return fmt.Errorf("error in container: %v", s.Error.Message)
+		}
+		return fmt.Errorf("container exit code: %d", s.StatusCode)
 	}
 	return err
 }
