@@ -201,7 +201,12 @@ func getBundleFilepath(bun string, insecure bool) (string, error) {
 		return "", fmt.Errorf("cannot open %s: %v", home.Repositories(), err)
 	}
 
-	digest, err := index.Get(ref.Name(), ref.Tag())
+	tag := ref.Tag()
+	if ref.Tag() == "latest" {
+		tag = ""
+	}
+
+	digest, err := index.Get(ref.Name(), tag)
 	if err != nil {
 		return "", fmt.Errorf("could not find %s:%s in %s: %v", ref.Name(), ref.Tag(), home.Repositories(), err)
 	}

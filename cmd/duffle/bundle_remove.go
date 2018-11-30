@@ -52,16 +52,12 @@ func newBundleRemoveCmd(w io.Writer) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				deletions := map[string]string{}
-				for ver, sha := range vers {
-					sv, err := semver.NewVersion(ver)
-					if err != nil {
-						fmt.Fprintf(w, "WARNING: %q is not a semantic version", ver)
-					}
-					if ok, _ := matcher.Validate(sv); ok {
+				deletions := []repo.BundleVersion{}
+				for _, ver := range vers {
+					if ok, _ := matcher.Validate(ver.Version); ok {
 						fmt.Fprintf(w, "Version %s matches constraint %q\n", ver, versions)
-						deletions[ver] = sha
-						index.DeleteVersion(bname, ver)
+						deletions = append(deletions, ver)
+						index.DeleteVersion(bname, ver.Version.String())
 						// If there are no more versions, remove the entire entry.
 						if vers, ok := index.GetVersions(bname); ok && len(vers) == 0 {
 							index.Delete(bname)
@@ -101,9 +97,9 @@ func newBundleRemoveCmd(w io.Writer) *cobra.Command {
 // deleteBundleVersions removes the given SHAs from bundle storage
 //
 // It warns, but does not fail, if a given SHA is not found.
-func deleteBundleVersions(vers map[string]string, index repo.Index, h home.Home, w io.Writer) {
-	for _, sha := range vers {
-		fpath := filepath.Join(h.Bundles(), sha)
+func deleteBundleVersions(vers []repo.BundleVersion, index repo.Index, h home.Home, w io.Writer) {
+	for _, ver := range vers {
+		fpath := filepath.Join(h.Bundles(), ver.Digest)
 		if err := os.Remove(fpath); err != nil {
 			fmt.Fprintf(w, "WARNING: could not delete stake record %q", fpath)
 		}
