@@ -1,0 +1,33 @@
+{
+    "name": "helloworld",
+    "version": "0.1.0",
+    "description": "A short description of your bundle",
+    "keywords": [
+        "helloworld",
+        "cnab",
+        "tutorial"
+    ],
+    "maintainers": [
+        {
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "url": "https://example.com"
+        },
+        {
+            "name": "Jane Doe",
+            "email": "jane.doe@example.com",
+            "url": "https://example.com"
+        }
+    ],
+    "components": {
+        "cnab": {
+            "name": "cnab",
+            "builder": "docker",
+            "configuration": {
+                "registry": "deislabs"
+            }
+        }
+    },
+    "parameters": null,
+    "credentials": null
+}

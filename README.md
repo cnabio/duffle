@@ -41,23 +41,47 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
 
     ```console
     $ duffle build ./examples/helloworld/
-    Duffle Build Started: 'helloworld': 01CS02FNS3FTM9907V83GAQQMT
-    helloworld: Building CNAB components: SUCCESS ⚓  (1.0090s)
+    Step 1/5 : FROM alpine:latest
+    ---> 196d12cf6ab1
+    Step 2/5 : RUN apk add -u bash
+    ---> Using cache
+    ---> 54b3a85c5c2e
+    Step 3/5 : COPY Dockerfile /cnab/Dockerfile
+    ---> Using cache
+    ---> cd6f4ff8d83d
+    Step 4/5 : COPY app /cnab/app
+    ---> 38a482447ffd
+    Step 5/5 : CMD ["/cnab/app/run"]
+    ---> Running in 8b22055f0a37
+    ---> e5c795c2a1f4
+    Successfully built e5c795c2a1f4
+    Successfully tagged deislabs/helloworld-cnab:64dfc7c4d825fe87506dbaba6ab038eafe2a486d
+    ==> Successfully built bundle helloworld:0.1.0
 
-    $ duffle credentials generate helloworld-creds -f examples/helloworld/cnab/bundle.json
-    name: helloworld-creds
-    credentials:
-    - name: quux
-      source:
-        value: EMPTY
-      destination:
-        path: pquux
+6. Check that it was built:
+    ```console
+    $ duffle bundle list
+    NAME            VERSION DIGEST                                          SIGNED?
+    helloworld      0.1.0   b2747e5c36369f4c102f4f879caa94e607e5db7e        true
+    ```
 
-    $ duffle install helloworld-demo -c helloworld-creds -f examples/helloworld/cnab/bundle.json
+7. Now run it:
+    ```console
+    $ duffle credentials generate helloworld-creds helloworld:0.1.0
+    $ duffle install helloworld-demo -c helloworld-creds helloworld:0.1.0
     Executing install action...
-
+    hello world
     Install action
     Action install complete for helloworld-demo
+    ```
+
+8. Clean up:
+    ```console
+    $ duffle uninstall helloworld-demo
+    Executing uninstall action...
+    hello world
+    uninstall action
+    Action uninstall complete for helloworld-demo
     ```
 
     *Notes:*
