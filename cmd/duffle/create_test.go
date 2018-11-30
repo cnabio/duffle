@@ -73,9 +73,7 @@ func TestCreateCmd(t *testing.T) {
                 "registry": "deislabs"
             }
         }
-    },
-    "parameters": null,
-    "credentials": null
+    }
 }`
 	if string(mbytes) != expected {
 		t.Errorf("Expected duffle.json output to look like this:\n\n%s\n\nGot:\n\n%s", expected, string(mbytes))
