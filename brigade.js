@@ -193,10 +193,10 @@ function goDockerBuild(e, p) {
   return goDockerBuild;
 }
 
-// Not being used yet, but most likely will be once repo/image public
 function dockerhubPublish(project, tag) {
   const publisher = new Job(`${projectName}-dockerhub-publish`, "docker");
   let dockerRegistry = project.secrets.dockerhubRegistry || "docker.io";
+  // TODO: push to deislabs org (update Brigade project as well)
   let dockerOrg = project.secrets.dockerhubOrg || "deis";
 
   publisher.env = {
@@ -230,7 +230,7 @@ function acrBuild(project, tag) {
     `cd /src`,
     `cp -av /mnt/brigade/share/bin ./`,
     // Note: git tag may have a '+' character, which is not allowed in docker tag names, hence the substitution
-    `az acr build -r ${registry} -t ${projectOrg}/${projectName}:${tag.replace("+","-")} .`
+    `az acr build -r ${registry} -t public/${projectOrg}/${projectName}:${tag.replace("+","-")} .`
   ];
 
   return builder;
@@ -281,6 +281,7 @@ events.on("push", (e, p) => {
   if (doPublish) {
     jobs.push(
       goDockerBuild(e, p),
+      dockerhubPublish(e, p),
       acrBuild(p, tag)
     )
   }
@@ -304,6 +305,7 @@ events.on("check_run:rerequested", runSuite)
 events.on("publish", (e, p) => {
   Group.runEach([
     goDockerBuild(e, p),
+    dockerhubPublish(p, "latest"),
     acrBuild(p, "latest")
   ])
 })
