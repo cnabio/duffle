@@ -46,3 +46,6 @@
   non-go = true
   unused-packages = true
   go-tests = true
+[[constraint]]
+  name = "k8s.io/client-go"
+  version = "9.0.0"
