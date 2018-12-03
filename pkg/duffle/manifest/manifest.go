@@ -11,18 +11,18 @@ import (
 
 // Manifest represents a duffle manifest.
 type Manifest struct {
-	Name        string                                `json:"name" mapstructure:"name"`
-	Version     string                                `json:"version" mapstructure:"version"`
-	Description string                                `json:"description" mapstructure:"description"`
-	Keywords    []string                              `json:"keywords" mapstructure:"keywords"`
-	Maintainers []bundle.Maintainer                   `json:"maintainers" mapstructure:"maintainers"`
-	Components  map[string]*Component                 `json:"components" mapstructure:"components"`
-	Parameters  map[string]bundle.ParameterDefinition `json:"parameters" mapstructure:"parameters"`
-	Credentials map[string]bundle.Location            `json:"credentials" mapstructure:"credentials"`
+	Name             string                                `json:"name" mapstructure:"name"`
+	Version          string                                `json:"version" mapstructure:"version"`
+	Description      string                                `json:"description" mapstructure:"description"`
+	Keywords         []string                              `json:"keywords" mapstructure:"keywords"`
+	Maintainers      []bundle.Maintainer                   `json:"maintainers" mapstructure:"maintainers"`
+	InvocationImages map[string]*InvocationImage           `json:"invocationImages" mapstructure:"invocationImages"`
+	Parameters       map[string]bundle.ParameterDefinition `json:"parameters" mapstructure:"parameters"`
+	Credentials      map[string]bundle.Location            `json:"credentials" mapstructure:"credentials"`
 }
 
-// Component represents a component of a CNAB bundle
-type Component struct {
+// InvocationImage represents an invocation image component of a CNAB bundle
+type InvocationImage struct {
 	Name          string            `json:"name" mapstructure:"name"`
 	Builder       string            `json:"builder" mapstructure:"builder"`
 	Configuration map[string]string `json:"configuration" mapstructure:"configuration"`

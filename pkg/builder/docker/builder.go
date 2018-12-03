@@ -67,7 +67,7 @@ func (dc Component) Digest() string {
 }
 
 // NewComponent returns a new Docker component based on the manifest
-func NewComponent(c *manifest.Component, cli *command.DockerCli) *Component {
+func NewComponent(c *manifest.InvocationImage, cli *command.DockerCli) *Component {
 	return &Component{
 		name: c.Name,
 		// TODO - handle different Dockerfile names
@@ -101,7 +101,7 @@ func (dc *Component) PrepareBuild(ctx *builder.Context) error {
 	// equivalent of `shasum build.tar.gz | awk '{print $1}'`.
 	ctxtID := h.Sum(nil)
 	imgtag := fmt.Sprintf("%.20x", ctxtID)
-	imageRepository := path.Join(ctx.Manifest.Components[dc.Name()].Configuration["registry"], fmt.Sprintf("%s-%s", ctx.Manifest.Name, dc.Name()))
+	imageRepository := path.Join(ctx.Manifest.InvocationImages[dc.Name()].Configuration["registry"], fmt.Sprintf("%s-%s", ctx.Manifest.Name, dc.Name()))
 	dc.Image = fmt.Sprintf("%s:%s", imageRepository, imgtag)
 
 	dc.BuildContext = ioutil.NopCloser(buf)

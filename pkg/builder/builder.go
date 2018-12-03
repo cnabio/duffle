@@ -73,6 +73,7 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 		Components: components,
 		Manifest:   mfst,
 	}
+
 	bf := &bundle.Bundle{
 		Name:        ctx.Manifest.Name,
 		Description: ctx.Manifest.Description,

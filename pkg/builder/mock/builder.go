@@ -32,7 +32,7 @@ func (dc Component) Digest() string {
 }
 
 // NewComponent returns a new mock component
-func NewComponent(c *manifest.Component) *Component {
+func NewComponent(c *manifest.InvocationImage) *Component {
 	return &Component{}
 }
 
