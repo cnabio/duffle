@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"sort"
 
 	"github.com/Masterminds/semver"
 )
@@ -19,6 +21,19 @@ var (
 	// ErrNoBundleName indicates that a bundle with the given name is not found.
 	ErrNoBundleName = errors.New("no bundle name found")
 )
+
+type BundleVersion struct {
+	Version *semver.Version
+	Digest  string
+}
+
+// ByVersion implements sort.Interface for []BundleVersion based on
+// the version field.
+type ByVersion []BundleVersion
+
+func (a ByVersion) Len() int           { return len(a) }
+func (a ByVersion) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByVersion) Less(i, j int) bool { return a[i].Version.LessThan(a[j].Version) }
 
 // Index defines a list of bundle repositories, each repository's respective tags and the digest reference.
 type Index map[string]map[string]string
@@ -90,13 +105,16 @@ func (i Index) Has(name, version string) bool {
 //
 // If version is empty, this will return the digest for the bundle with the highest version.
 func (i Index) Get(name, version string) (string, error) {
-	vs, ok := i[name]
+	var versions ByVersion
+	versions, ok := i.GetVersions(name)
 	if !ok {
 		return "", ErrNoBundleName
 	}
-	if len(vs) == 0 {
+	if len(versions) == 0 {
 		return "", ErrNoBundleVersion
 	}
+
+	sort.Sort(sort.Reverse(versions))
 
 	var constraint *semver.Constraints
 	if len(version) == 0 {
@@ -109,14 +127,9 @@ func (i Index) Get(name, version string) (string, error) {
 		}
 	}
 
-	for ver, digest := range vs {
-		test, err := semver.NewVersion(ver)
-		if err != nil {
-			continue
-		}
-
-		if constraint.Check(test) {
-			return digest, nil
+	for _, ver := range versions {
+		if constraint.Check(ver.Version) {
+			return ver.Digest, nil
 		}
 	}
 	return "", ErrNoBundleVersion
@@ -124,12 +137,23 @@ func (i Index) Get(name, version string) (string, error) {
 
 // GetVersions gets all of the versions for the given name.
 //
-// The versions are returned as hash keys, where the values are the SHAs
-//
 // If the name is not found, this will return false.
-func (i Index) GetVersions(name string) (map[string]string, bool) {
+func (i Index) GetVersions(name string) ([]BundleVersion, bool) {
 	ret, ok := i[name]
-	return ret, ok
+	rawversions := []string{}
+	for ver := range ret {
+		rawversions = append(rawversions, ver)
+	}
+
+	bv := make([]BundleVersion, len(ret))
+	for i, r := range rawversions {
+		v, err := semver.NewVersion(r)
+		if err != nil {
+			panic(fmt.Sprintf("found a version in the index that is not semver compatible: %s\n", r))
+		}
+		bv[i] = BundleVersion{Version: v, Digest: ret[r]}
+	}
+	return bv, ok
 }
 
 // WriteFile writes an index file to the given destination path.
