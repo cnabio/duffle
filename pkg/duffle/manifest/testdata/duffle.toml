@@ -1,6 +1,6 @@
 name = "testbundle"
-[components]
-    [components.cnab]
+[invocationImages]
+    [invocationImages.cnab]
         name = "cnab"
         builder = "docker"
         configuration = { registry = "microsoft" }

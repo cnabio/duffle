@@ -1,5 +1,5 @@
 name: testbundle
-components:
+invocationImages:
   cnab:
     name: cnab
     builder: docker

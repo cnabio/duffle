@@ -65,7 +65,7 @@ func TestCreateCmd(t *testing.T) {
             "url": "https://example.com"
         }
     ],
-    "components": {
+    "invocationImages": {
         "cnab": {
             "name": "cnab",
             "builder": "docker",
