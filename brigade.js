@@ -63,8 +63,7 @@ class Notification {
     this.payload = e.payload;
     this.name = name;
     this.externalID = e.buildID;
-    // TODO: add Kashti link when available
-    // this.detailsURL = `https://<kashti domain>/kashti/builds/${ e.buildID }`;
+    this.detailsURL = `https://azure.github.io/kashti/builds/${ e.buildID }`;
     this.title = "running check";
     this.text = "";
     this.summary = "";
@@ -89,8 +88,7 @@ class Notification {
       CHECK_PAYLOAD: this.payload,
       CHECK_SUMMARY: this.summary,
       CHECK_TEXT: this.text,
-      // TODO: add when applicable
-      // CHECK_DETAILS_URL: this.detailsURL,
+      CHECK_DETAILS_URL: this.detailsURL,
       CHECK_EXTERNAL_ID: this.externalID
     }
     return j.run();
@@ -196,8 +194,7 @@ function goDockerBuild(e, p) {
 function dockerhubPublish(project, tag) {
   const publisher = new Job(`${projectName}-dockerhub-publish`, "docker");
   let dockerRegistry = project.secrets.dockerhubRegistry || "docker.io";
-  // TODO: push to deislabs org (update Brigade project as well)
-  let dockerOrg = project.secrets.dockerhubOrg || "deis";
+  let dockerOrg = project.secrets.dockerhubOrg || projectOrg;
 
   publisher.env = {
     SHELL: "/bin/sh",
