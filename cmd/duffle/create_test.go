@@ -74,6 +74,7 @@ func TestCreateCmd(t *testing.T) {
             }
         }
     },
+    "images": null,
     "parameters": null,
     "credentials": null
 }`
