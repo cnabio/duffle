@@ -29,13 +29,15 @@ type Exporter struct {
 	Client      *client.Client
 	Context     context.Context
 	Logs        string
+	Loader      loader.Loader
+	Unsigned    bool
 }
 
 // NewExporter returns an *Exporter given information about where a bundle
 //  lives, where the compressed bundle should be exported to,
 //  and what form a bundle should be exported in (thin or thick/full). It also
 //  sets up a docker client to work with images.
-func NewExporter(source, dest, logsDir string, full bool) (*Exporter, error) {
+func NewExporter(source, dest, logsDir string, l loader.Loader, full, unsigned bool) (*Exporter, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
@@ -55,6 +57,8 @@ func NewExporter(source, dest, logsDir string, full bool) (*Exporter, error) {
 		Client:      cli,
 		Context:     ctx,
 		Logs:        logs,
+		Loader:      l,
+		Unsigned:    unsigned,
 	}, nil
 }
 
@@ -64,7 +68,6 @@ func NewExporter(source, dest, logsDir string, full bool) (*Exporter, error) {
 //  If the any part of the destination path doesn't, it will be created.
 //  exist
 func (ex *Exporter) Export() error {
-	l := loader.NewUnsignedLoader() // TODO: switch on flag
 
 	//prepare log file for this export
 	logsf, err := os.Create(ex.Logs)
@@ -73,23 +76,55 @@ func (ex *Exporter) Export() error {
 	}
 	defer logsf.Close()
 
-	bun, err := l.Load(filepath.Join(ex.Source, "bundle.json"))
+	bundlefile := "bundle.cnab"
+	if ex.Unsigned {
+		bundlefile = "bundle.json"
+	}
+
+	bundlefilepath := filepath.Join(ex.Source, bundlefile)
+	fi, err := os.Stat(bundlefilepath)
+	if err != nil && os.IsNotExist(err) {
+		return fmt.Errorf("Bundle manifest not found at %s", bundlefilepath)
+	}
+	if fi.IsDir() {
+		return fmt.Errorf("Bundle manifest %s is a directory, should be a file", bundlefilepath)
+	}
+
+	bun, err := ex.Loader.Load(bundlefilepath)
 	if err != nil {
 		return fmt.Errorf("Error loading bundle: %s", err)
 	}
+	name := bun.Name + "-" + bun.Version
+	archiveDir := name + "-export"
+	if err := os.MkdirAll(archiveDir, 0755); err != nil {
+		return err
+	}
+	defer os.RemoveAll(archiveDir)
+
+	from, err := os.Open(bundlefilepath)
+	if err != nil {
+		return err
+	}
+	defer from.Close()
+
+	to, err := os.OpenFile(filepath.Join(archiveDir, bundlefile), os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer to.Close()
+
+	_, err = io.Copy(to, from)
+	if err != nil {
+		return err
+	}
 
 	if ex.Full {
-		if err := ex.prepareArtifacts(bun, logsf); err != nil {
+		if err := ex.prepareArtifacts(bun, archiveDir, logsf); err != nil {
 			return fmt.Errorf("Error preparing artifacts: %s", err)
 		}
 	}
 
-	name := bun.Name + "-" + bun.Version
-
-	dest := name + ".tgz"
-	if ex.Destination != "" {
-		dest = ex.Destination
-	}
+	dest := filepath.Join(ex.Destination, name+".tgz")
 
 	writer, err := os.Create(dest)
 	if err != nil {
@@ -103,7 +138,7 @@ func (ex *Exporter) Export() error {
 		IncludeFiles:     []string{"."},
 		IncludeSourceDir: true,
 	}
-	rc, err := archive.TarWithOptions(ex.Source, tarOptions)
+	rc, err := archive.TarWithOptions(archiveDir, tarOptions)
 	if err != nil {
 		return err
 	}
@@ -115,8 +150,8 @@ func (ex *Exporter) Export() error {
 
 // prepareArtifacts pulls all images, verifies their digests (TODO: verify digest) and
 //  saves them to a directory called artifacts/ in the bundle directory
-func (ex *Exporter) prepareArtifacts(bun *bundle.Bundle, logs io.Writer) error {
-	artifactsDir := filepath.Join(ex.Source, "artifacts")
+func (ex *Exporter) prepareArtifacts(bun *bundle.Bundle, archiveDir string, logs io.Writer) error {
+	artifactsDir := filepath.Join(archiveDir, "artifacts")
 	if err := os.MkdirAll(artifactsDir, 0755); err != nil {
 		return err
 	}

@@ -26,12 +26,13 @@ the --output-file flag.
 `
 
 type exportCmd struct {
-	dest    string
-	path    string
-	home    home.Home
-	out     io.Writer
-	full    bool
-	verbose bool
+	dest     string
+	path     string
+	home     home.Home
+	out      io.Writer
+	full     bool
+	verbose  bool
+	insecure bool
 }
 
 func newExportCmd(w io.Writer) *cobra.Command {
@@ -56,6 +57,7 @@ func newExportCmd(w io.Writer) *cobra.Command {
 	f.StringVarP(&export.dest, "output-file", "o", "", "Save exported bundle to file path")
 	f.BoolVarP(&export.full, "full", "u", true, "Save bundle with all associated images")
 	f.BoolVarP(&export.verbose, "verbose", "v", false, "Verbose output")
+	f.BoolVarP(&export.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }
@@ -66,7 +68,12 @@ func (ex *exportCmd) run() error {
 		return err
 	}
 
-	exp, err := packager.NewExporter(source, ex.dest, ex.home.Logs(), ex.full)
+	l, err := getLoader(ex.insecure)
+	if err != nil {
+		return err
+	}
+
+	exp, err := packager.NewExporter(source, ex.dest, ex.home.Logs(), l, ex.full, ex.insecure)
 	if err != nil {
 		return fmt.Errorf("Unable to set up exporter: %s", err)
 	}
