@@ -17,6 +17,7 @@ type Manifest struct {
 	Keywords         []string                              `json:"keywords" mapstructure:"keywords"`
 	Maintainers      []bundle.Maintainer                   `json:"maintainers" mapstructure:"maintainers"`
 	InvocationImages map[string]*InvocationImage           `json:"invocationImages" mapstructure:"invocationImages"`
+	Actions          map[string]bundle.Action              `json:"actions,omitempty" mapstructure:"actions,omitempty"`
 	Parameters       map[string]bundle.ParameterDefinition `json:"parameters" mapstructure:"parameters"`
 	Credentials      map[string]bundle.Location            `json:"credentials" mapstructure:"credentials"`
 }
