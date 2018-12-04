@@ -19,7 +19,7 @@
             "url": "https://example.com"
         }
     ],
-    "components": {
+    "invocationImages": {
         "cnab": {
             "name": "cnab",
             "builder": "docker",
