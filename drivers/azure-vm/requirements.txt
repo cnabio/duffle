@@ -9,7 +9,7 @@ invoke==1.1.1
 msgpack==0.5.6
 msgpack-python==0.4.8
 neovim==0.2.6
-paramiko==2.4.1
+paramiko==2.4.2
 pyasn1==0.4.4
 pycparser==2.18
 PyNaCl==1.2.1
