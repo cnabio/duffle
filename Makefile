@@ -1,6 +1,6 @@
 PROJECT         := duffle
 ORG             := deislabs
-DOCKER_REGISTRY ?= brigade.azurecr.io/deis
+DOCKER_REGISTRY ?= $(ORG)
 BINDIR          := $(CURDIR)/bin
 GOFLAGS         :=
 LDFLAGS         := -w -s
