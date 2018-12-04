@@ -1,0 +1,32 @@
+{
+    "name": "multi-component",
+    "version": "0.1.0",
+    "description": "A quick demonstration of duffle with multiple invocation images",
+    "keywords": [
+        "multi-component",
+        "tutorial"
+    ],
+    "invocationImages": {
+        "cnab": {
+            "name": "cnab",
+            "builder": "docker",
+            "configuration": {
+                "registry": "deislabs"
+            }
+        },
+        "image-a": {
+            "name": "image-a",
+            "builder": "docker",
+            "configuration": {
+                "registry": "deislabs"
+            }
+        },
+        "image-b": {
+            "name": "image-b",
+            "builder": "docker",
+            "configuration": {
+                "registry": "deislabs"
+            }
+        }
+    }
+}
