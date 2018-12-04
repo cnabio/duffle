@@ -278,7 +278,7 @@ events.on("push", (e, p) => {
   if (doPublish) {
     jobs.push(
       goDockerBuild(e, p),
-      dockerhubPublish(e, p),
+      dockerhubPublish(p, tag),
       acrBuild(p, tag)
     )
   }
