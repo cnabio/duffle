@@ -13,13 +13,13 @@ import (
 type Manifest struct {
 	Name             string                                `json:"name" mapstructure:"name"`
 	Version          string                                `json:"version" mapstructure:"version"`
-	Description      string                                `json:"description" mapstructure:"description"`
-	Keywords         []string                              `json:"keywords" mapstructure:"keywords"`
-	Maintainers      []bundle.Maintainer                   `json:"maintainers" mapstructure:"maintainers"`
-	InvocationImages map[string]*InvocationImage           `json:"invocationImages" mapstructure:"invocationImages"`
+	Description      string                                `json:"description,omitempty" mapstructure:"description,omitempty"`
+	Keywords         []string                              `json:"keywords,omitempty" mapstructure:"keywords,omitempty"`
+	Maintainers      []bundle.Maintainer                   `json:"maintainers,omitempty" mapstructure:"maintainers,omitempty"`
+	InvocationImages map[string]*InvocationImage           `json:"invocationImages,omitempty" mapstructure:"invocationImages,omitempty"`
 	Actions          map[string]bundle.Action              `json:"actions,omitempty" mapstructure:"actions,omitempty"`
-	Parameters       map[string]bundle.ParameterDefinition `json:"parameters" mapstructure:"parameters"`
-	Credentials      map[string]bundle.Location            `json:"credentials" mapstructure:"credentials"`
+	Parameters       map[string]bundle.ParameterDefinition `json:"parameters,omitempty" mapstructure:"parameters,omitempty"`
+	Credentials      map[string]bundle.Location            `json:"credentials,omitempty" mapstructure:"credentials,omitempty"`
 }
 
 // InvocationImage represents an invocation image component of a CNAB bundle
