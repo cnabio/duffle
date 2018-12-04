@@ -9,8 +9,8 @@ import (
 )
 
 type listCmd struct {
-	out  io.Writer
-	long bool
+	out   io.Writer
+	short bool
 }
 
 func newListCmd(out io.Writer) *cobra.Command {
@@ -24,13 +24,13 @@ func newListCmd(out io.Writer) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.BoolVarP(&list.long, "long", "l", false, "output longer listing format")
+	f.BoolVarP(&list.short, "short", "s", false, "output shorter listing format")
 
 	return cmd
 }
 
 func (l *listCmd) run() error {
-	if !l.long {
+	if l.short {
 		claims, err := claimStorage().List()
 		if err != nil {
 			return err

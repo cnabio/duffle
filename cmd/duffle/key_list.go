@@ -28,7 +28,7 @@ func newKeyListCmd(w io.Writer) *cobra.Command {
 	var (
 		privateOnly bool
 		publicOnly  bool
-		long        bool
+		short       bool
 	)
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -45,23 +45,23 @@ func newKeyListCmd(w io.Writer) *cobra.Command {
 			if publicOnly {
 				rings = []string{h.PublicKeyRing()}
 			}
-			return listKeys(cmd.OutOrStdout(), long, rings...)
+			return listKeys(cmd.OutOrStdout(), short, rings...)
 		},
 	}
 	cmd.Flags().BoolVarP(&privateOnly, "signing", "s", false, "show private (sign-or-verify) keys")
 	cmd.Flags().BoolVarP(&publicOnly, "verify-only", "p", false, "show public (verify-only) keys")
-	cmd.Flags().BoolVarP(&long, "long", "l", false, "show additional details")
+	cmd.Flags().BoolVar(&short, "short", false, "show less details")
 
 	return cmd
 }
 
-func listKeys(out io.Writer, long bool, rings ...string) error {
+func listKeys(out io.Writer, short bool, rings ...string) error {
 	kr, err := signature.LoadKeyRings(rings...)
 	if err != nil {
 		return err
 	}
 
-	if !long {
+	if short {
 		for _, k := range kr.Keys() {
 			name, err := k.UserID()
 			if err != nil {

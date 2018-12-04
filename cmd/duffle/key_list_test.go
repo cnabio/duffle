@@ -11,7 +11,7 @@ import (
 func TestListKeys(t *testing.T) {
 	out := bytes.NewBuffer(nil)
 	ring := "../../pkg/signature/testdata/public.gpg"
-	if err := listKeys(out, false, ring); err != nil {
+	if err := listKeys(out, true, ring); err != nil {
 		t.Fatal(err)
 	}
 
@@ -21,7 +21,7 @@ func TestListKeys(t *testing.T) {
 	is.Contains(out.String(), "test2@example.com")
 
 	out.Reset()
-	if err := listKeys(out, true, ring); err != nil {
+	if err := listKeys(out, false, ring); err != nil {
 		t.Fatal(err)
 	}
 	lines = strings.Split(out.String(), "\n")

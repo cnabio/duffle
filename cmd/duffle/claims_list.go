@@ -14,13 +14,13 @@ func newClaimListCmd(out io.Writer) *cobra.Command {
 		Aliases: []string{"ls"},
 		Short:   "list available claims",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			l := &listCmd{out: out, long: list.long}
+			l := &listCmd{out: out, short: list.short}
 			return l.run()
 		},
 	}
 
 	f := cmd.Flags()
-	f.BoolVarP(&list.long, "long", "l", false, "output longer listing format")
+	f.BoolVarP(&list.short, "short", "s", false, "output shorter listing format")
 
 	return cmd
 }
