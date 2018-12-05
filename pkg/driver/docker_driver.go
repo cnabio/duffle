@@ -188,7 +188,10 @@ func (d *DockerDriver) exec(op *Operation) error {
 		if err != nil {
 			return fmt.Errorf("error in container: %v", err)
 		}
-	case <-statusc:
+	case containerWaitOKBody := <-statusc:
+		if containerWaitOKBody.StatusCode != 0 {
+			return fmt.Errorf("container exited with status code: %v", containerWaitOKBody.StatusCode)
+		}
 	}
 	return err
 }
