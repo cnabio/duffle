@@ -21,8 +21,11 @@ directory along with an artifacts.json file which describes the contents of arti
 
 By default, this command will use the name and version information of the bundle to create
 a compressed archive file called <name>-<version>.tgz in the current directory. This
-behavior can be augmented by specifying a file path to save the compressed bundle to using
+destination can be updated by specifying a file path to save the compressed bundle to using
 the --output-file flag.
+
+If you want to export only the bundle manifest without the invocation images and referenced 
+images, use the --thin flag.
 `
 
 type exportCmd struct {
@@ -30,7 +33,7 @@ type exportCmd struct {
 	path     string
 	home     home.Home
 	out      io.Writer
-	full     bool
+	thin     bool
 	verbose  bool
 	insecure bool
 }
@@ -55,7 +58,7 @@ func newExportCmd(w io.Writer) *cobra.Command {
 
 	f := cmd.Flags()
 	f.StringVarP(&export.dest, "output-file", "o", "", "Save exported bundle to file path")
-	f.BoolVarP(&export.full, "full", "u", true, "Save bundle with all associated images")
+	f.BoolVarP(&export.thin, "thin", "t", false, "Export only the bundle manifest")
 	f.BoolVarP(&export.verbose, "verbose", "v", false, "Verbose output")
 	f.BoolVarP(&export.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
@@ -73,7 +76,7 @@ func (ex *exportCmd) run() error {
 		return err
 	}
 
-	exp, err := packager.NewExporter(source, ex.dest, ex.home.Logs(), l, ex.full, ex.insecure)
+	exp, err := packager.NewExporter(source, ex.dest, ex.home.Logs(), l, ex.thin, ex.insecure)
 	if err != nil {
 		return fmt.Errorf("Unable to set up exporter: %s", err)
 	}

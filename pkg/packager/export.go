@@ -25,7 +25,7 @@ var (
 type Exporter struct {
 	Source      string
 	Destination string
-	Full        bool
+	Thin        bool
 	Client      *client.Client
 	Context     context.Context
 	Logs        string
@@ -37,7 +37,7 @@ type Exporter struct {
 //  lives, where the compressed bundle should be exported to,
 //  and what form a bundle should be exported in (thin or thick/full). It also
 //  sets up a docker client to work with images.
-func NewExporter(source, dest, logsDir string, l loader.Loader, full, unsigned bool) (*Exporter, error) {
+func NewExporter(source, dest, logsDir string, l loader.Loader, thin, unsigned bool) (*Exporter, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func NewExporter(source, dest, logsDir string, l loader.Loader, full, unsigned b
 	return &Exporter{
 		Source:      source,
 		Destination: dest,
-		Full:        full,
+		Thin:        thin,
 		Client:      cli,
 		Context:     ctx,
 		Logs:        logs,
@@ -118,7 +118,7 @@ func (ex *Exporter) Export() error {
 		return err
 	}
 
-	if ex.Full {
+	if !ex.Thin {
 		if err := ex.prepareArtifacts(bun, archiveDir, logsf); err != nil {
 			return fmt.Errorf("Error preparing artifacts: %s", err)
 		}

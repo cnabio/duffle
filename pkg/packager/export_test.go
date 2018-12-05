@@ -42,7 +42,7 @@ func TestExportSigned(t *testing.T) {
 	ex := Exporter{
 		Source:      tempDir,
 		Destination: destination,
-		Full:        false,
+		Thin:        true,
 		Logs:        filepath.Join(tempDir, "export-logs"),
 		Loader:      loader.NewSecureLoader(kr),
 		Unsigned:    false,
@@ -77,7 +77,7 @@ func TestExport(t *testing.T) {
 
 	ex := Exporter{
 		Source:   source,
-		Full:     false,
+		Thin:     true,
 		Logs:     filepath.Join(tempDir, "export-logs"),
 		Loader:   loader.NewDetectingLoader(),
 		Unsigned: true,
@@ -106,7 +106,7 @@ func TestExportCreatesFileProperly(t *testing.T) {
 	ex := Exporter{
 		Source:      "testdata/examplebun",
 		Destination: filepath.Join(tempDir, "random-directory", "examplebun-whatev.tgz"),
-		Full:        false,
+		Thin:        true,
 		Logs:        filepath.Join(tempDir, "export-logs"),
 		Unsigned:    true,
 		Loader:      loader.NewDetectingLoader(),
