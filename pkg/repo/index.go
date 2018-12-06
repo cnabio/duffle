@@ -149,7 +149,7 @@ func (i Index) GetVersions(name string) ([]BundleVersion, bool) {
 	for _, r := range rawversions {
 		v, err := semver.NewVersion(r)
 		if err != nil {
-			log.Warningf("found a version in the index that is not semver compatible: '%s'\n", r)
+			log.Debugf("found a version in the index that is not semver compatible: '%s'\n", r)
 			continue
 		}
 		bv = append(bv, BundleVersion{Version: v, Digest: ret[r]})
