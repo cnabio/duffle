@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"sort"
 
 	"github.com/Masterminds/semver"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -145,13 +145,14 @@ func (i Index) GetVersions(name string) ([]BundleVersion, bool) {
 		rawversions = append(rawversions, ver)
 	}
 
-	bv := make([]BundleVersion, len(ret))
-	for i, r := range rawversions {
+	bv := []BundleVersion{}
+	for _, r := range rawversions {
 		v, err := semver.NewVersion(r)
 		if err != nil {
-			panic(fmt.Sprintf("found a version in the index that is not semver compatible: %s\n", r))
+			log.Warningf("found a version in the index that is not semver compatible: '%s'\n", r)
+			continue
 		}
-		bv[i] = BundleVersion{Version: v, Digest: ret[r]}
+		bv = append(bv, BundleVersion{Version: v, Digest: ret[r]})
 	}
 	return bv, ok
 }
