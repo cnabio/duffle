@@ -12,9 +12,9 @@ import (
 const runContent = `#!/bin/bash
 action=$CNAB_ACTION
 
-if [[ action == "install" ]]; then
+if [[ $action == "install" ]]; then
 echo "hey I am installing things over here"
-elif [[ action == "uninstall" ]]; then
+elif [[ $action == "uninstall" ]]; then
 echo "hey I am uninstalling things now"
 fi
 `
