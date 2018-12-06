@@ -183,7 +183,7 @@ func (ex *Exporter) archiveImage(image, artifactsDir string, logs io.Writer) (st
 	imagePullOptions := types.ImagePullOptions{} //TODO: add platform info
 	pullLogs, err := ex.Client.ImagePull(ctx, image, imagePullOptions)
 	if err != nil {
-		return "", fmt.Errorf("Error pulling image: %s", err)
+		return "", fmt.Errorf("Error pulling image %s: %s", image, err)
 	}
 	defer pullLogs.Close()
 	io.Copy(logs, pullLogs)
