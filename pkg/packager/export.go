@@ -95,7 +95,10 @@ func (ex *Exporter) Export() error {
 		return fmt.Errorf("Error loading bundle: %s", err)
 	}
 	name := bun.Name + "-" + bun.Version
-	archiveDir := name + "-export"
+	archiveDir, err := filepath.Abs(name + "-export")
+	if err != nil {
+		return err
+	}
 	if err := os.MkdirAll(archiveDir, 0755); err != nil {
 		return err
 	}
