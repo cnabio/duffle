@@ -8,15 +8,13 @@ Duffle is intended to perform the following tasks:
 
 - Build Duffle images from resources
 - Push and pull CNAB bundles to image registries
-- Install, upgrade, and delete CNAB images
+- Install, upgrade, and delete CNAB bundles
 - Import and export CNAB bundles (e.g. for moving CNABs offline)
-- Managing the duffle environment
+- Managing the Duffle environment
 
 ## Building packages with `duffle build`
 
-the `duffle build` command takes a file-based representation of a CNAB bundle, combined with Duffle configuration, and builds a CNAB bundle.
-
-It builds invocation images. When a Duffle application is multi-container, it also will build those images.
+The `duffle build` command takes a file-based representation of a CNAB bundle, combined with Duffle configuration, and builds a CNAB bundle, together with the declared invocation images.
 
 The behavior of `duffle build` is described in [Duffle Build](203-duffle-build.md).
 
@@ -61,12 +59,12 @@ For thin images, it will (if necessary) pull the dependent images from a registr
 
 ## Passing Parameters into the Invocation Image
 
-CNAB includes a method for declaring user-facing parameters that can be changed during certain operations (like installation). Parameters are specified in the `bundle.json` file. Duffle processes these as follows:
+CNAB includes a method for declaring user-facing parameters that can be changed during certain operations (like installation). Parameters are specified in the build manifest (the `bundle.json` file). Duffle processes these as follows:
 
 - The user may specify values when invoking `duffle install` or similar commands.
 - Prior to executing the image, Duffle will read the manifest file, extract the parameter definitions, and then merge specified values and defaults into one set of finalized parameters
 - During startup of the image, Duffle will inject each parameter as an environment variable, following the conversion method determined by CNAB:
-  - The variable name will be: `CNAB_P_` plus the uppercased variable name (e.g. `CNAB_P_SERVER_PORT`), and the value will be a string representation of the value.
+  - The variable name will be: `CNAB_P_` plus the uppercased variable name - e.g. `CNAB_P_SERVER_PORT` (unless the `destination` field is set for the parameter), and the value will be a string representation of the value.
 
 ## The Invocation Image Lifecycle
 
