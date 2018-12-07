@@ -94,7 +94,7 @@ $ duffle build .
 After the bundle has been built, we can inspect the bundle:
 
 ```console
-$ duffle show helloworld:0.1.0
+$ duffle show helloworld:0.1.0 -r
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA256
 
