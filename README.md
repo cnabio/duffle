@@ -18,14 +18,14 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
     $ cd duffle
     ```
 
-3. Vendor dependencies and build the `duffle` binary:
+3. Vendor dependencies, build the `duffle` binary and install onto your system:
     ```console
     $ make bootstrap build
+    $ sudo make install
     ```
 
 4. Run the command to set duffle up on your machine:
     ```console
-    $ cd bin
     $ duffle init
     The following new directories will be created:
     /Users/janedoe/.duffle
