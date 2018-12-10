@@ -6,18 +6,18 @@ import (
 )
 
 // Ohai displays an informative message.
-func Ohai(a ...interface{}) (int, error) {
-	return Ohaif("%s", a...)
+func Ohai(w io.Writer, a ...interface{}) (int, error) {
+	return Ohaif(w, "%s", a...)
 }
 
 // Ohaif displays an informative message.
-func Ohaif(format string, a ...interface{}) (int, error) {
-	return fmt.Printf(fmt.Sprintf("==> %s", format), a...)
+func Ohaif(w io.Writer, format string, a ...interface{}) (int, error) {
+	return fmt.Fprintf(w, fmt.Sprintf("==> %s", format), a...)
 }
 
 // Ohailn displays an informative message.
-func Ohailn(a ...interface{}) (int, error) {
-	return Ohaif("%s\n", a...)
+func Ohailn(w io.Writer, a ...interface{}) (int, error) {
+	return Ohaif(w, "%s\n", a...)
 }
 
 // Fohai displays an informative message.
@@ -36,18 +36,18 @@ func Fohailn(w io.Writer, a ...interface{}) (int, error) {
 }
 
 // Success displays a success message.
-func Success(a ...interface{}) (int, error) {
-	return Successf("%s", a...)
+func Success(w io.Writer, a ...interface{}) (int, error) {
+	return Successf(w, "%s", a...)
 }
 
 // Successf displays a success message.
-func Successf(format string, a ...interface{}) (int, error) {
-	return fmt.Printf(fmt.Sprintf("✓✓✓ %s", format), a...)
+func Successf(w io.Writer, format string, a ...interface{}) (int, error) {
+	return fmt.Fprintf(w, fmt.Sprintf("✓✓✓ %s", format), a...)
 }
 
 // Successln displays a success message.
-func Successln(a ...interface{}) (int, error) {
-	return Successf("%s\n", a...)
+func Successln(w io.Writer, a ...interface{}) (int, error) {
+	return Successf(w, "%s\n", a...)
 }
 
 // Fsuccess displays an informative message.
