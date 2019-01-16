@@ -30,7 +30,7 @@ func newShowCmd(w io.Writer) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			bundleName := args[0]
 
-			bundleFile, err := getBundleFilepath(bundleName, insecure)
+			bundleFile, err := getBundleFilepath(bundleName, homePath(), insecure)
 			if err != nil {
 				return err
 			}

@@ -6,12 +6,12 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/deislabs/duffle/pkg/credentials"
-	"github.com/deislabs/duffle/pkg/duffle/home"
-
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
-	"gopkg.in/AlecAivazis/survey.v1"
+	survey "gopkg.in/AlecAivazis/survey.v1"
+
+	"github.com/deislabs/duffle/pkg/credentials"
+	"github.com/deislabs/duffle/pkg/duffle/home"
 )
 
 const credentialEditDesc = `

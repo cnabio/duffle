@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/docker/distribution/digestset"
-	"github.com/opencontainers/go-digest"
+	digest "github.com/opencontainers/go-digest"
 )
 
 const (

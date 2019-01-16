@@ -7,13 +7,12 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/AlecAivazis/survey.v1"
+	"github.com/spf13/cobra"
+	survey "gopkg.in/AlecAivazis/survey.v1"
 
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/ohai"
 	"github.com/deislabs/duffle/pkg/signature"
-
-	"github.com/spf13/cobra"
 )
 
 const (
