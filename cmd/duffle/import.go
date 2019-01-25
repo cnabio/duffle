@@ -58,12 +58,12 @@ func (im *importCmd) run() error {
 		return err
 	}
 
-	dest, err := filepath.Abs(im.dest) //TODO: double check
+	dest, err := filepath.Abs(im.dest)
 	if err != nil {
 		return err
 	}
 
-	l, err := getLoader(im.insecure)
+	l, err := getLoader(im.home.String(), im.insecure)
 	if err != nil {
 		return err
 	}

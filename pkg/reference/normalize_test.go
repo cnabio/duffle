@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/docker/distribution/digestset"
-	"github.com/opencontainers/go-digest"
+	digest "github.com/opencontainers/go-digest"
 )
 
 func TestValidateReferenceName(t *testing.T) {

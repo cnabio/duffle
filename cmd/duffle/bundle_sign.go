@@ -67,7 +67,7 @@ func bundleFileOrArg1(args []string, bundle string) (string, error) {
 		return "", errors.New("please specify a BUNDLE or use -f for a file")
 	case len(args) == 1:
 		// passing insecure: true, as currently we can only sign an unsinged bundle
-		return getBundleFilepath(args[0], true)
+		return getBundleFilepath(args[0], homePath(), true)
 	}
 	return bundle, nil
 }

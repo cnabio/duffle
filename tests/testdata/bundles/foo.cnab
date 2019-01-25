@@ -1,0 +1,63 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+{
+  "name": "foo",
+  "version": "1.0",
+  "description": "",
+  "invocationImages": [
+    {
+      "imageType": "docker",
+      "image": "technosophos/helloworld:0.1.0"
+    }
+  ],
+  "images": [
+    {
+      "imageType": "",
+      "image": "urn:image1uri",
+      "description": "image1",
+      "refs": [
+        {
+          "path": "image1path",
+          "field": "image.1.field"
+        }
+      ]
+    },
+    {
+      "imageType": "",
+      "image": "",
+      "description": "",
+      "refs": [
+        {
+          "path": "image2path",
+          "field": "image.2.field"
+        }
+      ]
+    }
+  ],
+  "parameters": null,
+  "credentials": {
+    "bar": {
+      "path": "",
+      "env": "ebar"
+    },
+    "foo": {
+      "path": "pfoo",
+      "env": ""
+    },
+    "quux": {
+      "path": "pquux",
+      "env": "equux"
+    }
+  }
+}
+-----BEGIN PGP SIGNATURE-----
+
+wsBcBAEBCAAQBQJcPkjpCRCbeZHdQDeDQAAAzhsIAHtvCD5Tcr3v+Rqk1doZsDcD
+R0IwdtmZBuLzRMFBnJv7PzEWhqGEzX2NO2ZIxWferlgRgNhaBZw4DeID2YDqVQVm
+lwN1g8+XFVEAJQbf4JlEzeYBOxOhAUnkz3RYjgq1uWF1ViLYJlxD+ww/Uh5hASs0
+q01cRJyB0iyKlweJekQkwadF8vl8N1o7pS+8YQ04Mc7UCqhgpZGrBVs9e+ZG+gdZ
+plbeUMjRsWUZDBgKHn0syJMd/BHk/V686c2jIq/nYfACzFAyT4Cdt1x25kSPWzxo
+qbnWDmE4G5SjPsWn8yI0bZcg4rCWxhhJ5970ZB+DPli7JCZEr/FHOpxVyJdVNVo=
+=Isim
+-----END PGP SIGNATURE-----

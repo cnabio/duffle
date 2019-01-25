@@ -40,7 +40,7 @@ func TestExportSigned(t *testing.T) {
 
 	destination := "example-cool-bundle-0.1.0.tgz"
 	ex := Exporter{
-		Source:      tempDir,
+		Source:      filepath.Join(tempDir, "bundle.cnab"),
 		Destination: destination,
 		Thin:        true,
 		Logs:        filepath.Join(tempDir, "export-logs"),
@@ -61,7 +61,7 @@ func TestExportSigned(t *testing.T) {
 }
 
 func TestExport(t *testing.T) {
-	source, err := filepath.Abs(filepath.Join("testdata", "examplebun"))
+	source, err := filepath.Abs(filepath.Join("testdata", "examplebun", "bundle.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func TestExportCreatesFileProperly(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	ex := Exporter{
-		Source:      "testdata/examplebun",
+		Source:      "testdata/examplebun/bundle.json",
 		Destination: filepath.Join(tempDir, "random-directory", "examplebun-whatev.tgz"),
 		Thin:        true,
 		Logs:        filepath.Join(tempDir, "export-logs"),

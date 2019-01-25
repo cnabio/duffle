@@ -29,7 +29,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/opencontainers/go-digest"
+	digest "github.com/opencontainers/go-digest"
 )
 
 const (

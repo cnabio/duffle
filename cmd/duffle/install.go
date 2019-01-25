@@ -165,7 +165,7 @@ func bundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) (st
 	case len(args) < 2 && bun == "":
 		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return getBundleFilepath(args[1], insecure)
+		return getBundleFilepath(args[1], homePath(), insecure)
 	}
 	return bun, nil
 }
@@ -183,13 +183,13 @@ func optBundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) 
 		// No bundle provided
 		return "", nil
 	case len(args) == 2:
-		return getBundleFilepath(args[1], insecure)
+		return getBundleFilepath(args[1], homePath(), insecure)
 	}
 	return bun, nil
 }
 
-func getBundleFilepath(bun string, insecure bool) (string, error) {
-	home := home.Home(homePath())
+func getBundleFilepath(bun, homePath string, insecure bool) (string, error) {
+	home := home.Home(homePath)
 	ref, err := getReference(bun)
 	if err != nil {
 		return "", fmt.Errorf("could not parse reference for %s: %v", bun, err)

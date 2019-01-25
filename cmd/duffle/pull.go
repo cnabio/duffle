@@ -38,12 +38,12 @@ Example:
 	return cmd
 }
 
-func getLoader(insecure bool) (loader.Loader, error) {
+func getLoader(home string, insecure bool) (loader.Loader, error) {
 	var load loader.Loader
 	if insecure {
 		load = loader.NewDetectingLoader()
 	} else {
-		kr, err := loadVerifyingKeyRings(homePath())
+		kr, err := loadVerifyingKeyRings(home)
 		if err != nil {
 			return nil, fmt.Errorf("cannot securely load bundle: %s", err)
 		}
@@ -88,7 +88,7 @@ func getReference(bundleName string) (reference.NamedTagged, error) {
 }
 
 func loadBundle(bundleFile string, insecure bool) (*bundle.Bundle, error) {
-	l, err := getLoader(insecure)
+	l, err := getLoader(homePath(), insecure)
 	if err != nil {
 		return nil, err
 	}

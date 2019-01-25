@@ -76,21 +76,15 @@ func (ex *Exporter) Export() error {
 	}
 	defer logsf.Close()
 
-	bundlefile := "bundle.cnab"
-	if ex.Unsigned {
-		bundlefile = "bundle.json"
-	}
-
-	bundlefilepath := filepath.Join(ex.Source, bundlefile)
-	fi, err := os.Stat(bundlefilepath)
+	fi, err := os.Stat(ex.Source)
 	if err != nil && os.IsNotExist(err) {
-		return fmt.Errorf("Bundle manifest not found at %s", bundlefilepath)
+		return fmt.Errorf("Bundle manifest not found at %s", ex.Source)
 	}
 	if fi.IsDir() {
-		return fmt.Errorf("Bundle manifest %s is a directory, should be a file", bundlefilepath)
+		return fmt.Errorf("Bundle manifest %s is a directory, should be a file", ex.Source)
 	}
 
-	bun, err := ex.Loader.Load(bundlefilepath)
+	bun, err := ex.Loader.Load(ex.Source)
 	if err != nil {
 		return fmt.Errorf("Error loading bundle: %s", err)
 	}
@@ -104,12 +98,16 @@ func (ex *Exporter) Export() error {
 	}
 	defer os.RemoveAll(archiveDir)
 
-	from, err := os.Open(bundlefilepath)
+	from, err := os.Open(ex.Source)
 	if err != nil {
 		return err
 	}
 	defer from.Close()
 
+	bundlefile := "bundle.cnab"
+	if ex.Unsigned {
+		bundlefile = "bundle.json"
+	}
 	to, err := os.OpenFile(filepath.Join(archiveDir, bundlefile), os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return err
