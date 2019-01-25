@@ -19,12 +19,12 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/deislabs/duffle/pkg/builder"
-	"github.com/deislabs/duffle/pkg/builder/docker"
-	"github.com/deislabs/duffle/pkg/builder/mock"
 	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/crypto/digest"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/duffle/manifest"
+	"github.com/deislabs/duffle/pkg/imagebuilder/docker"
+	"github.com/deislabs/duffle/pkg/imagebuilder/mock"
 	"github.com/deislabs/duffle/pkg/ohai"
 	"github.com/deislabs/duffle/pkg/repo"
 	"github.com/deislabs/duffle/pkg/signature"
@@ -112,6 +112,26 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 	return cmd
 }
 
+// prepareImageBuilders returns the configured image builder components that the builder will need
+func (b *buildCmd) prepareImageBuilders(mfst *manifest.Manifest) ([]builder.Component, error) {
+	var components []builder.Component
+	for _, image := range mfst.InvocationImages {
+		switch image.Builder {
+		case "docker":
+			// setup docker
+			cli := &command.DockerCli{}
+			if err := cli.Initialize(b.dockerClientOptions); err != nil {
+				return components, fmt.Errorf("failed to create docker client: %v", err)
+			}
+			components = append(components, docker.NewComponent(image, cli))
+
+		case "mock":
+			components = append(components, mock.NewComponent(image))
+		}
+	}
+	return components, nil
+}
+
 func (b *buildCmd) run() (err error) {
 	ctx := context.Background()
 	bldr := builder.New()
@@ -122,12 +142,12 @@ func (b *buildCmd) run() (err error) {
 		return err
 	}
 
-	c, err := lookupComponents(mfst, b)
+	imagebuilders, err := b.prepareImageBuilders(mfst)
 	if err != nil {
-		return fmt.Errorf("cannot lookup components: %v", err)
+		return fmt.Errorf("cannot configure necessary image builders: %v", err)
 	}
 
-	app, bf, err := bldr.PrepareBuild(bldr, mfst, b.src, c)
+	app, bf, err := bldr.PrepareBuild(bldr, mfst, b.src, imagebuilders)
 	if err != nil {
 		return fmt.Errorf("cannot prepare build: %v", err)
 	}
@@ -188,27 +208,6 @@ func (b *buildCmd) writeBundle(bf *bundle.Bundle) (string, error) {
 	}
 
 	return digest, ioutil.WriteFile(filepath.Join(b.home.Bundles(), digest), data, 0644)
-}
-
-// lookupComponents returns a builder component given its builder type
-func lookupComponents(mfst *manifest.Manifest, cmd *buildCmd) ([]builder.Component, error) {
-
-	var components []builder.Component
-	for _, c := range mfst.InvocationImages {
-		switch c.Builder {
-		case "docker":
-			// setup docker
-			cli := &command.DockerCli{}
-			if err := cli.Initialize(cmd.dockerClientOptions); err != nil {
-				return components, fmt.Errorf("failed to create docker client: %v", err)
-			}
-			components = append(components, docker.NewComponent(c, cli))
-
-		case "mock":
-			components = append(components, mock.NewComponent(c))
-		}
-	}
-	return components, nil
 }
 
 func defaultDockerTLS() bool {
