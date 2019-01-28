@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	unix_path "path"
 
@@ -84,20 +85,16 @@ func pullImage(ctx context.Context, cli command.Cli, image string) error {
 		nil)
 }
 
-type nullWriter struct{}
-
-func (nullWriter) Write(b []byte) (int, error) {
-	return len(b), nil
-}
-
 func (d *DockerDriver) exec(op *Operation) error {
 	ctx := context.Background()
-	var cliout, clierr io.Writer = os.Stdout, os.Stderr
-	if d.config["DOCKER_DRIVER_QUIET"] == "1" {
-		cliout = nullWriter{}
-		clierr = nullWriter{}
+
+	cli, err := command.NewDockerCli()
+	if err != nil {
+		return err
 	}
-	cli := command.NewDockerCli(os.Stdin, cliout, clierr, false)
+	if d.config["DOCKER_DRIVER_QUIET"] == "1" {
+		cli.Apply(command.WithCombinedStreams(ioutil.Discard))
+	}
 	if err := cli.Initialize(cliflags.NewClientOptions()); err != nil {
 		return err
 	}
