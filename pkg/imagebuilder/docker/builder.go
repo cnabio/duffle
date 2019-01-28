@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/deislabs/duffle/pkg/builder"
 	"github.com/deislabs/duffle/pkg/duffle/manifest"
 
 	"github.com/docker/cli/cli/command"
@@ -34,8 +33,8 @@ const (
 	DockerignoreFilename = ".dockerignore"
 )
 
-// Component contains all information to build a container image
-type Component struct {
+// Builder contains all information to build a docker container image
+type Builder struct {
 	name         string
 	Image        string
 	Dockerfile   string
@@ -44,31 +43,36 @@ type Component struct {
 	dockerBuilder dockerBuilder
 }
 
-// Name is the component name
-func (dc Component) Name() string {
-	return dc.name
+// Builder contains information about the Docker build environment
+type dockerBuilder struct {
+	DockerClient command.Cli
 }
 
-// Type represents the component type
-func (dc Component) Type() string {
+// Name is the name of the image to build
+func (db Builder) Name() string {
+	return db.name
+}
+
+// Type represents the image type to build
+func (db Builder) Type() string {
 	return "docker"
 }
 
 // URI returns the image in the format <registry>/<image>
-func (dc Component) URI() string {
-	return dc.Image
+func (db Builder) URI() string {
+	return db.Image
 }
 
-// Digest returns the name of a Docker component, which will give the image name
+// Digest returns the name of a Docker Builder, which will give the image name
 //
 // TODO - return the actual digest
-func (dc Component) Digest() string {
-	return strings.Split(dc.Image, ":")[1]
+func (db Builder) Digest() string {
+	return strings.Split(db.Image, ":")[1]
 }
 
-// NewComponent returns a new Docker component based on the manifest
-func NewComponent(c *manifest.InvocationImage, cli *command.DockerCli) *Component {
-	return &Component{
+// NewBuilder returns a new Docker builder based on the manifest
+func NewBuilder(c *manifest.InvocationImage, cli *command.DockerCli) *Builder {
+	return &Builder{
 		name: c.Name,
 		// TODO - handle different Dockerfile names
 		Dockerfile:    "Dockerfile",
@@ -76,24 +80,19 @@ func NewComponent(c *manifest.InvocationImage, cli *command.DockerCli) *Componen
 	}
 }
 
-// Builder contains information about the Docker build environment
-type dockerBuilder struct {
-	DockerClient command.Cli
-}
-
-// PrepareBuild archives the component directory and loads it as Docker context
-func (dc *Component) PrepareBuild(ctx *builder.Context) error {
-	if err := archiveSrc(filepath.Join(ctx.AppDir, dc.name), dc); err != nil {
+// PrepareBuild archives the app directory and loads it as Docker context
+func (db *Builder) PrepareBuild(appDir, registry, name string) error {
+	if err := archiveSrc(filepath.Join(appDir, db.name), db); err != nil {
 		return err
 	}
 
-	defer dc.BuildContext.Close()
+	defer db.BuildContext.Close()
 
 	// write each build context to a buffer so we can also write to the sha256 hash.
 	buf := new(bytes.Buffer)
 	h := sha256.New()
 	w := io.MultiWriter(buf, h)
-	if _, err := io.Copy(w, dc.BuildContext); err != nil {
+	if _, err := io.Copy(w, db.BuildContext); err != nil {
 		return err
 	}
 
@@ -101,44 +100,44 @@ func (dc *Component) PrepareBuild(ctx *builder.Context) error {
 	// equivalent of `shasum build.tar.gz | awk '{print $1}'`.
 	ctxtID := h.Sum(nil)
 	imgtag := fmt.Sprintf("%.20x", ctxtID)
-	imageRepository := path.Join(ctx.Manifest.InvocationImages[dc.Name()].Configuration["registry"], fmt.Sprintf("%s-%s", ctx.Manifest.Name, dc.Name()))
-	dc.Image = fmt.Sprintf("%s:%s", imageRepository, imgtag)
+	imageRepository := path.Join(registry, fmt.Sprintf("%s-%s", name, db.Name()))
+	db.Image = fmt.Sprintf("%s:%s", imageRepository, imgtag)
 
-	dc.BuildContext = ioutil.NopCloser(buf)
+	db.BuildContext = ioutil.NopCloser(buf)
 
 	return nil
 }
 
 // Build builds the docker images.
-func (dc Component) Build(ctx context.Context, app *builder.AppContext) error {
-	defer dc.BuildContext.Close()
+func (db Builder) Build(ctx context.Context, log io.WriteCloser) error {
+	defer db.BuildContext.Close()
 	buildOpts := types.ImageBuildOptions{
-		Tags:       []string{dc.Image},
-		Dockerfile: dc.Dockerfile,
+		Tags:       []string{db.Image},
+		Dockerfile: db.Dockerfile,
 	}
 
-	resp, err := dc.dockerBuilder.DockerClient.Client().ImageBuild(ctx, dc.BuildContext, buildOpts)
+	resp, err := db.dockerBuilder.DockerClient.Client().ImageBuild(ctx, db.BuildContext, buildOpts)
 	if err != nil {
-		return fmt.Errorf("error building component %v with builder %v: %v", dc.Name(), dc.Type(), err)
+		return fmt.Errorf("error building image builder %v with builder %v: %v", db.Name(), db.Type(), err)
 	}
 
 	defer resp.Body.Close()
-	outFd, isTerm := term.GetFdInfo(dc.BuildContext)
-	if err := jsonmessage.DisplayJSONMessagesStream(resp.Body, app.Log, outFd, isTerm, nil); err != nil {
-		return fmt.Errorf("error streaming messages for component %v with builder %v: %v", dc.Name(), dc.Type(), err)
+	outFd, isTerm := term.GetFdInfo(db.BuildContext)
+	if err := jsonmessage.DisplayJSONMessagesStream(resp.Body, log, outFd, isTerm, nil); err != nil {
+		return fmt.Errorf("error streaming messages for image builder %v with builder %v: %v", db.Name(), db.Type(), err)
 	}
 
-	if _, _, err = dc.dockerBuilder.DockerClient.Client().ImageInspectWithRaw(ctx, dc.Image); err != nil {
+	if _, _, err = db.dockerBuilder.DockerClient.Client().ImageInspectWithRaw(ctx, db.Image); err != nil {
 		if dockerclient.IsErrNotFound(err) {
-			return fmt.Errorf("could not locate image for %s: %v", dc.Name(), err)
+			return fmt.Errorf("could not locate image for %s: %v", db.Name(), err)
 		}
-		return fmt.Errorf("imageInspectWithRaw error for component %v: %v", dc.Name(), err)
+		return fmt.Errorf("imageInspectWithRaw error for image builder %v: %v", db.Name(), err)
 	}
 
 	return nil
 }
 
-func archiveSrc(contextPath string, component *Component) error {
+func archiveSrc(contextPath string, b *Builder) error {
 	contextDir, relDockerfile, err := build.GetContextFromLocalDir(contextPath, "")
 	if err != nil {
 		return fmt.Errorf("unable to prepare docker context: %s", err)
@@ -189,9 +188,9 @@ func archiveSrc(contextPath string, component *Component) error {
 		return err
 	}
 
-	component.name = filepath.Base(contextDir)
-	component.BuildContext = dockerArchive
-	component.Dockerfile = relDockerfile
+	b.name = filepath.Base(contextDir)
+	b.BuildContext = dockerArchive
+	b.Dockerfile = relDockerfile
 
 	return nil
 }

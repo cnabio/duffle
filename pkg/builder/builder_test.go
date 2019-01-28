@@ -2,12 +2,13 @@ package builder
 
 import (
 	"context"
+	"io"
 	"reflect"
 	"testing"
 
 	"github.com/deislabs/duffle/pkg/bundle"
-
 	"github.com/deislabs/duffle/pkg/duffle/manifest"
+	"github.com/deislabs/duffle/pkg/imagebuilder"
 )
 
 // testImage represents a mock invocation image
@@ -39,12 +40,12 @@ func (tc testImage) Digest() string {
 }
 
 // PrepareBuild is no-op for a mock invocation image
-func (tc *testImage) PrepareBuild(ctx *Context) error {
+func (tc *testImage) PrepareBuild(appDir, registry, name string) error {
 	return nil
 }
 
 // Build is no-op for a mock invocation image
-func (tc testImage) Build(ctx context.Context, app *AppContext) error {
+func (tc testImage) Build(ctx context.Context, log io.WriteCloser) error {
 	return nil
 }
 
@@ -54,6 +55,12 @@ func TestPrepareBuild(t *testing.T) {
 		Version:     "0.1.0",
 		Description: "description",
 		Keywords:    []string{"test"},
+		InvocationImages: map[string]*manifest.InvocationImage{
+			"cnab": {
+				Name:          "cnab",
+				Configuration: map[string]string{"registry": "registry"},
+			},
+		},
 		Maintainers: []bundle.Maintainer{
 			{
 				Name:  "test",
@@ -63,17 +70,11 @@ func TestPrepareBuild(t *testing.T) {
 		},
 	}
 
-	components := []Component{
+	components := []imagebuilder.ImageBuilder{
 		&testImage{
 			Nam:   "cnab",
 			Typ:   "docker",
 			UR:    "cnab:0.1.0",
-			Diges: "",
-		},
-		&testImage{
-			Nam:   "component1",
-			Typ:   "docker",
-			UR:    "component1:0.1.0",
 			Diges: "",
 		},
 	}
@@ -84,14 +85,14 @@ func TestPrepareBuild(t *testing.T) {
 		t.Error(err)
 	}
 
-	if len(b.Images) != 1 {
+	if len(b.InvocationImages) != 1 {
 		t.Fatalf("expected there to be 1 image, got %d. Full output: %v", len(b.Images), b)
 	}
 
-	expected := bundle.Image{Description: "component1"}
-	expected.Image = "component1:0.1.0"
+	expected := bundle.InvocationImage{}
+	expected.Image = "cnab:0.1.0"
 	expected.ImageType = "docker"
-	if !reflect.DeepEqual(b.Images[0], expected) {
-		t.Errorf("expected %v, got %v", expected, b.Images[0])
+	if !reflect.DeepEqual(b.InvocationImages[0], expected) {
+		t.Errorf("expected %v, got %v", expected, b.InvocationImages[0])
 	}
 }

@@ -14,6 +14,7 @@ import (
 
 	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/duffle/manifest"
+	"github.com/deislabs/duffle/pkg/imagebuilder"
 )
 
 // Builder defines how to interact with a bundle builder
@@ -24,6 +25,7 @@ type Builder struct {
 	// Example:
 	//   0.1.2+2c3c59e8a5adad62d2245cbb7b2a8685b1a9a717
 	VersionWithBuildMetadata bool
+	ImageBuilders            []imagebuilder.ImageBuilder
 }
 
 // New returns a new Builder
@@ -42,20 +44,8 @@ func (b *Builder) Logs(appName string) string {
 
 // Context contains information about the application
 type Context struct {
-	Manifest   *manifest.Manifest
-	AppDir     string
-	Components []Component
-}
-
-// Component contains the information of a built component
-type Component interface {
-	Name() string
-	Type() string
-	URI() string
-	Digest() string
-
-	PrepareBuild(*Context) error
-	Build(context.Context, *AppContext) error
+	Manifest *manifest.Manifest
+	AppDir   string
 }
 
 // AppContext contains state information carried across various duffle stage boundaries
@@ -67,11 +57,12 @@ type AppContext struct {
 }
 
 // PrepareBuild prepares a build
-func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir string, components []Component) (*AppContext, *bundle.Bundle, error) {
+func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir string, imageBuilders []imagebuilder.ImageBuilder) (*AppContext, *bundle.Bundle, error) {
+	b.ImageBuilders = imageBuilders
+
 	ctx := &Context{
-		AppDir:     appDir,
-		Components: components,
-		Manifest:   mfst,
+		AppDir:   appDir,
+		Manifest: mfst,
 	}
 
 	bf := &bundle.Bundle{
@@ -85,32 +76,26 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 		Credentials: ctx.Manifest.Credentials,
 	}
 
-	for _, c := range ctx.Components {
-		if err := c.PrepareBuild(ctx); err != nil {
+	for _, imb := range imageBuilders {
+		registry := ctx.Manifest.InvocationImages[imb.Name()].Configuration["registry"]
+		if err := imb.PrepareBuild(ctx.AppDir, registry, ctx.Manifest.Name); err != nil {
 			return nil, nil, err
 		}
 
-		if c.Name() == "cnab" {
-			ii := bundle.InvocationImage{}
-			ii.Image = c.URI()
-			ii.ImageType = c.Type()
-			bf.InvocationImages = []bundle.InvocationImage{ii}
-			//bf.Version = strings.Split(c.URI(), ":")[1]
-			baseVersion := mfst.Version
-			if baseVersion == "" {
-				baseVersion = "0.1.0"
-			}
-			newver, err := b.version(baseVersion, strings.Split(c.URI(), ":")[1])
-			if err != nil {
-				return nil, nil, err
-			}
-			bf.Version = newver
-		} else {
-			bundleImage := bundle.Image{Description: c.Name()}
-			bundleImage.Image = c.URI()
-			bundleImage.ImageType = c.Type()
-			bf.Images = append(bf.Images, bundleImage)
+		ii := bundle.InvocationImage{}
+		ii.Image = imb.URI()
+		ii.ImageType = imb.Type()
+		bf.InvocationImages = append(bf.InvocationImages, ii)
+
+		baseVersion := mfst.Version
+		if baseVersion == "" {
+			baseVersion = "0.1.0"
 		}
+		newver, err := b.version(baseVersion, strings.Split(imb.URI(), ":")[1])
+		if err != nil {
+			return nil, nil, err
+		}
+		bf.Version = newver
 	}
 
 	app := &AppContext{
@@ -142,26 +127,26 @@ func (b *Builder) version(baseVersion, sha string) (string, error) {
 
 // Build passes the context of each component to its respective builder
 func (b *Builder) Build(ctx context.Context, app *AppContext) error {
-	if err := buildComponents(ctx, app); err != nil {
-		return fmt.Errorf("error building components: %v", err)
+	if err := buildInvocationImages(ctx, b.ImageBuilders, app); err != nil {
+		return fmt.Errorf("error building image: %v", err)
 	}
 	return nil
 }
 
-func buildComponents(ctx context.Context, app *AppContext) (err error) {
+func buildInvocationImages(ctx context.Context, imageBuilders []imagebuilder.ImageBuilder, app *AppContext) (err error) {
 	errc := make(chan error)
 
 	go func() {
 		defer close(errc)
 		var wg sync.WaitGroup
-		wg.Add(len(app.Ctx.Components))
+		wg.Add(len(imageBuilders))
 
-		for _, c := range app.Ctx.Components {
-			go func(c Component) {
+		for _, c := range imageBuilders {
+			go func(c imagebuilder.ImageBuilder) {
 				defer wg.Done()
-				err = c.Build(ctx, app)
+				err = c.Build(ctx, app.Log)
 				if err != nil {
-					errc <- fmt.Errorf("error building component %v: %v", c.Name(), err)
+					errc <- fmt.Errorf("error building image %v: %v", c.Name(), err)
 				}
 			}(c)
 		}
