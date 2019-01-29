@@ -1,6 +1,7 @@
 package action
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"strings"
@@ -70,6 +71,14 @@ func mockBundle() *bundle.Bundle {
 		Actions: map[string]bundle.Action{
 			"test": {Modifies: true},
 		},
+		Images: map[string]bundle.Image{
+			"image-a": {
+				BaseImage: bundle.BaseImage{
+					Image: "foo/bar:0.1.0", ImageType: "docker",
+				},
+				Description: "description",
+			},
+		},
 	}
 
 }
@@ -106,6 +115,10 @@ func TestOpFromClaim(t *testing.T) {
 	is.Equal(op.Environment["CNAB_P_PARAM_ONE"], "oneval")
 	is.Equal(op.Files["/secret/two"], "I'm also a secret")
 	is.Equal(op.Files["/param/three"], "threeval")
+	is.Contains(op.Files, "/cnab/app/image-map.json")
+	var imgMap map[string]bundle.Image
+	is.NoError(json.Unmarshal([]byte(op.Files["/cnab/app/image-map.json"]), &imgMap))
+	is.Equal(c.Bundle.Images, imgMap)
 	is.Len(op.Parameters, 3)
 	is.Equal(os.Stdout, op.Out)
 }
