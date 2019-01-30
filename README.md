@@ -1,5 +1,7 @@
 # Duffle: The CNAB Installer
 ![Build Status](http://badges.technosophos.me/v1/github/build/deislabs/duffle/badge.svg?branch=master)
+[![Waffle.io - Columns and their card count](https://badge.waffle.io/deislabs/duffle.svg?columns=In%20Progress,Needs%20Review,Done)](https://waffle.io/deislabs/duffle)
+
 
 Duffle is a command line tool that allows you to install and manage CNAB bundles. To learn more about about CNAB and duffle, check out the [docs](docs/README.md).
 
