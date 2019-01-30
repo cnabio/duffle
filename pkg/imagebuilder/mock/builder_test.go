@@ -3,9 +3,10 @@ package mock
 import (
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/builder"
+	"github.com/deislabs/duffle/pkg/imagebuilder"
 )
 
-func TestComponent_implComponent(t *testing.T) {
-	var _ builder.Component = (*Component)(nil)
+// test mock Builder is assignable to the imagebuilder.ImageBuilder interface
+func TestBuilder_implBuilder(t *testing.T) {
+	var _ imagebuilder.ImageBuilder = (*Builder)(nil)
 }

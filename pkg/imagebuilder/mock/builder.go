@@ -2,46 +2,46 @@ package mock
 
 import (
 	"context"
+	"io"
 
-	"github.com/deislabs/duffle/pkg/builder"
 	"github.com/deislabs/duffle/pkg/duffle/manifest"
 )
 
-// Component represents a mock component
-type Component struct {
+// Builder represents a mock builder
+type Builder struct {
 }
 
-// Name represents the name of a mock component
-func (dc Component) Name() string {
+// Name represents the name of an image the mock builder will build
+func (b Builder) Name() string {
 	return "cnab"
 }
 
-// Type represents the type of a mock component
-func (dc Component) Type() string {
+// Type represents the type of a mock builder
+func (b Builder) Type() string {
 	return "mock-type"
 }
 
-// URI represents the URI of the artefact of a mock component
-func (dc Component) URI() string {
+// URI represents the URI of the artefact of a mock builder
+func (b Builder) URI() string {
 	return "mock-uri:1.0.0"
 }
 
-// Digest represents the digest of a mock component
-func (dc Component) Digest() string {
+// Digest represents the digest of a mock builder
+func (b Builder) Digest() string {
 	return "mock-digest"
 }
 
-// NewComponent returns a new mock component
-func NewComponent(c *manifest.InvocationImage) *Component {
-	return &Component{}
+// NewBuilder returns a new mock builder
+func NewBuilder(c *manifest.InvocationImage) *Builder {
+	return &Builder{}
 }
 
-// PrepareBuild is no-op for a mock component
-func (dc *Component) PrepareBuild(ctx *builder.Context) error {
+// PrepareBuild is no-op for a mock builder
+func (b *Builder) PrepareBuild(appDir, registry, name string) error {
 	return nil
 }
 
-// Build is no-op for a mock component
-func (dc Component) Build(ctx context.Context, app *builder.AppContext) error {
+// Build is no-op for a mock builder
+func (b Builder) Build(ctx context.Context, log io.WriteCloser) error {
 	return nil
 }

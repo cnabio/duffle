@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/builder"
+	"github.com/deislabs/duffle/pkg/imagebuilder"
 )
 
 func TestArchiveSrc(t *testing.T) {
-	c := &Component{}
+	c := &Builder{}
 	err := archiveSrc(filepath.Join("..", "..", "..", "tests", "testdata", "builder", "simple"), c)
 	if err != nil {
 		t.Error(err)
@@ -27,6 +27,7 @@ func TestArchiveSrc(t *testing.T) {
 	}
 }
 
-func TestComponent_implComponent(t *testing.T) {
-	var _ builder.Component = (*Component)(nil)
+// tests that Builder implements imagebuilder.ImageBuilder interface
+func TestBuilder_implBuilder(t *testing.T) {
+	var _ imagebuilder.ImageBuilder = (*Builder)(nil)
 }

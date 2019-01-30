@@ -23,6 +23,7 @@ import (
 	"github.com/deislabs/duffle/pkg/crypto/digest"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/duffle/manifest"
+	"github.com/deislabs/duffle/pkg/imagebuilder"
 	"github.com/deislabs/duffle/pkg/imagebuilder/docker"
 	"github.com/deislabs/duffle/pkg/imagebuilder/mock"
 	"github.com/deislabs/duffle/pkg/ohai"
@@ -110,26 +111,6 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 	f.Var(hostOpt, "docker-host", "Daemon socket(s) to connect to")
 
 	return cmd
-}
-
-// prepareImageBuilders returns the configured image builder components that the builder will need
-func (b *buildCmd) prepareImageBuilders(mfst *manifest.Manifest) ([]builder.Component, error) {
-	var components []builder.Component
-	for _, image := range mfst.InvocationImages {
-		switch image.Builder {
-		case "docker":
-			// setup docker
-			cli := &command.DockerCli{}
-			if err := cli.Initialize(b.dockerClientOptions); err != nil {
-				return components, fmt.Errorf("failed to create docker client: %v", err)
-			}
-			components = append(components, docker.NewComponent(image, cli))
-
-		case "mock":
-			components = append(components, mock.NewComponent(image))
-		}
-	}
-	return components, nil
 }
 
 func (b *buildCmd) run() (err error) {
@@ -228,6 +209,26 @@ func dockerPreRun(opts *dockerflags.ClientOptions) {
 	if opts.Common.Debug {
 		dockerdebug.Enable()
 	}
+}
+
+// prepareImageBuilders returns the configured image builders that the bundle builder will need to build invocation images
+func (b *buildCmd) prepareImageBuilders(mfst *manifest.Manifest) ([]imagebuilder.ImageBuilder, error) {
+	var imagebuilders []imagebuilder.ImageBuilder
+	for _, image := range mfst.InvocationImages {
+		switch image.Builder {
+		case "docker":
+			// setup docker
+			cli := &command.DockerCli{}
+			if err := cli.Initialize(b.dockerClientOptions); err != nil {
+				return imagebuilders, fmt.Errorf("failed to create docker client: %v", err)
+			}
+			imagebuilders = append(imagebuilders, docker.NewBuilder(image, cli))
+
+		case "mock":
+			imagebuilders = append(imagebuilders, mock.NewBuilder(image))
+		}
+	}
+	return imagebuilders, nil
 }
 
 func recordBundleReference(home home.Home, name, version, digest string) error {
