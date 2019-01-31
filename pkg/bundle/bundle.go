@@ -59,18 +59,19 @@ func (b Bundle) WriteTo(w io.Writer) (int64, error) {
 
 // LocationRef specifies a location within the invocation package
 type LocationRef struct {
-	Path  string `json:"path" mapstructure:"path"`
-	Field string `json:"field" mapstructure:"field"`
+	Path      string `json:"path" mapstructure:"path"`
+	Field     string `json:"field" mapstructure:"field"`
+	MediaType string `json:"mediaType" mapstructure:"mediaType"`
 }
 
 // BaseImage contains fields shared across image types
 type BaseImage struct {
-	ImageType string `json:"imageType" mapstructure:"imageType"`
-	Image     string `json:"image" mapstructure:"image"`
-	Digest    string `json:"digest,omitempty" mapstructure:"digest"`
-	Size      uint64 `json:"size,omitempty" mapstructure:"size"`
-	Platform  string `json:"platform,omitempty" mapstructure:"platform"`
-	MediaType string `json:"mediaType,omitempty" mapstructure:"mediaType"`
+	ImageType string        `json:"imageType" mapstructure:"imageType"`
+	Image     string        `json:"image" mapstructure:"image"`
+	Digest    string        `json:"digest,omitempty" mapstructure:"digest"`
+	Size      uint64        `json:"size,omitempty" mapstructure:"size"`
+	Platform  ImagePlatform `json:"platform,omitempty" mapstructure:"platform"`
+	MediaType string        `json:"mediaType,omitempty" mapstructure:"mediaType"`
 }
 
 // ImagePlatform indicates what type of platform an image is built for
