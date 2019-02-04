@@ -41,17 +41,7 @@ func TestExportSetup(t *testing.T) {
 	}
 	defer os.Remove(tempDuffleHome)
 
-	signedBundle := filepath.Join("..", "..", "tests", "testdata", "bundles", "foo.cnab")
-	outfile := "foo-1.0.0.cnab"
-	if err = copyFile(signedBundle, filepath.Join(tempDuffleHome, "bundles", outfile)); err != nil {
-		t.Fatal(err)
-	}
-	var jsonBlob = []byte(`{
-    "foo": {
-        "1.0.0": "foo-1.0.0.cnab"
-        }
-    } `)
-	if err := ioutil.WriteFile(filepath.Join(tempDuffleHome, "repositories.json"), jsonBlob, 0644); err != nil {
+	if err := copySignedTestBundle(tempDuffleHome); err != nil {
 		t.Fatal(err)
 	}
 
@@ -109,4 +99,18 @@ func copyFile(src, dst string) (err error) {
 		return nil
 	}
 	return nil
+}
+
+func copySignedTestBundle(tempDuffleHome string) error {
+	signedBundle := filepath.Join("..", "..", "tests", "testdata", "bundles", "foo.cnab")
+	outfile := "foo-1.0.0.cnab"
+	if err := copyFile(signedBundle, filepath.Join(tempDuffleHome, "bundles", outfile)); err != nil {
+		return err
+	}
+	var jsonBlob = []byte(`{
+    "foo": {
+        "1.0.0": "foo-1.0.0.cnab"
+        }
+    } `)
+	return ioutil.WriteFile(filepath.Join(tempDuffleHome, "repositories.json"), jsonBlob, 0644)
 }
