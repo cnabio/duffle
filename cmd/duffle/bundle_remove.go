@@ -18,80 +18,93 @@ const bundleRemoveDesc = `Remove a bundle from the local storage.
 This removes a bundle from the local storage so that it will no longer be locally
 available. Bundles can be rebuilt with 'duffle build'.
 
+Ex. $ duffle bundle remove foo  # removes all versions of foo from local store
+
 If a SemVer range is provided with '--version'/'-r' then only releases that match
 that range will be removed.
 `
 
+type bundleRemoveCmd struct {
+	bundleRef string
+	home      home.Home
+	out       io.Writer
+	versions  string
+}
+
 func newBundleRemoveCmd(w io.Writer) *cobra.Command {
-	var versions string
+	remove := &bundleRemoveCmd{out: w}
+
 	cmd := &cobra.Command{
-		Use:     "remove BUNDLE",
+		Use:     "remove [BUNDLE]",
 		Aliases: []string{"rm"},
 		Short:   "remove a bundle from the local storage",
 		Long:    bundleRemoveDesc,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bname := args[0]
-
-			h := home.Home(homePath())
-			index, err := repo.LoadIndex(h.Repositories())
-			if err != nil {
-				return err
-			}
-
-			vers, ok := index.GetVersions(bname)
-			if !ok {
-				fmt.Fprintf(w, "Bundle %q not found. Nothing deleted.", bname)
-				return nil
-			}
-
-			// If versions is set, we short circuit and only delete specific versions.
-			if versions != "" {
-				fmt.Fprintln(w, "Only deleting versions")
-				matcher, err := semver.NewConstraint(versions)
-				if err != nil {
-					return err
-				}
-				deletions := []repo.BundleVersion{}
-				for _, ver := range vers {
-					if ok, _ := matcher.Validate(ver.Version); ok {
-						fmt.Fprintf(w, "Version %s matches constraint %q\n", ver, versions)
-						deletions = append(deletions, ver)
-						index.DeleteVersion(bname, ver.Version.String())
-						// If there are no more versions, remove the entire entry.
-						if vers, ok := index.GetVersions(bname); ok && len(vers) == 0 {
-							index.Delete(bname)
-						}
-
-					}
-				}
-				// We can skip writing the file if there is nothing to delete.
-				if len(deletions) == 0 {
-					return nil
-				}
-				if err := index.WriteFile(h.Repositories(), 0644); err != nil {
-					return err
-				}
-				deleteBundleVersions(deletions, index, h, w)
-				return nil
-			}
-
-			// If no version was specified, delete entire record
-			if !index.Delete(bname) {
-				fmt.Fprintf(w, "Bundle %q not found. Nothing deleted.", bname)
-				return nil
-			}
-			if err := index.WriteFile(h.Repositories(), 0644); err != nil {
-				return err
-			}
-
-			deleteBundleVersions(vers, index, h, w)
-			return nil
+			remove.bundleRef = args[0]
+			remove.home = home.Home(homePath())
+			return remove.run()
 		},
 	}
-	cmd.Flags().StringVarP(&versions, "version", "r", "", "A version or SemVer2 version range")
+	cmd.Flags().StringVar(&remove.versions, "version", "", "A version or SemVer2 version range")
 
 	return cmd
+}
+
+func (rm *bundleRemoveCmd) run() error {
+	index, err := repo.LoadIndex(rm.home.Repositories())
+	if err != nil {
+		return err
+	}
+
+	vers, ok := index.GetVersions(rm.bundleRef)
+	if !ok {
+		fmt.Fprintf(rm.out, "Bundle %q not found. Nothing deleted.", rm.bundleRef)
+		return nil
+	}
+
+	// If versions is set, we short circuit and only delete specific versions.
+	if rm.versions != "" {
+		fmt.Fprintln(rm.out, "Only deleting versions")
+		matcher, err := semver.NewConstraint(rm.versions)
+		if err != nil {
+			return err
+		}
+		deletions := []repo.BundleVersion{}
+		for _, ver := range vers {
+			if ok, _ := matcher.Validate(ver.Version); ok {
+				fmt.Fprintf(rm.out, "Version %s matches constraint %q\n", ver, rm.versions)
+				deletions = append(deletions, ver)
+				index.DeleteVersion(rm.bundleRef, ver.Version.String())
+				// If there are no more versions, remove the entire entry.
+				if vers, ok := index.GetVersions(rm.bundleRef); ok && len(vers) == 0 {
+					index.Delete(rm.bundleRef)
+				}
+
+			}
+		}
+
+		if len(deletions) == 0 {
+			return nil
+		}
+		if err := index.WriteFile(rm.home.Repositories(), 0644); err != nil {
+			return err
+		}
+		deleteBundleVersions(deletions, index, rm.home, rm.out)
+		return nil
+	}
+
+	// If no version was specified, delete entire record
+	if !index.Delete(rm.bundleRef) {
+		fmt.Fprintf(rm.out, "Bundle %q not found. Nothing deleted.", rm.bundleRef)
+		return nil
+	}
+	if err := index.WriteFile(rm.home.Repositories(), 0644); err != nil {
+		return err
+	}
+
+	deleteBundleVersions(vers, index, rm.home, rm.out)
+	return nil
 }
 
 // deleteBundleVersions removes the given SHAs from bundle storage
