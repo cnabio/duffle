@@ -1,5 +1,5 @@
-PROJECT         := duffle
-ORG             := deislabs
+PROJECT         := ruffle
+ORG             := scothis
 DOCKER_REGISTRY ?= $(ORG)
 BINDIR          := $(CURDIR)/bin
 GOFLAGS         :=

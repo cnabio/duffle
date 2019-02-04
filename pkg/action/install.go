@@ -3,9 +3,9 @@ package action
 import (
 	"io"
 
-	"github.com/deislabs/duffle/pkg/claim"
-	"github.com/deislabs/duffle/pkg/credentials"
-	"github.com/deislabs/duffle/pkg/driver"
+	"github.com/scothis/ruffle/pkg/claim"
+	"github.com/scothis/ruffle/pkg/credentials"
+	"github.com/scothis/ruffle/pkg/driver"
 )
 
 // Install describes an installation action

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/credentials"
+	"github.com/scothis/ruffle/pkg/credentials"
 )
 
 func TestPrintCredentials(t *testing.T) {

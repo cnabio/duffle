@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/bundle"
 
 	"github.com/technosophos/moniker"
 )

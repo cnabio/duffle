@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/deislabs/duffle/pkg/duffle"
+	"github.com/scothis/ruffle/pkg/duffle"
 )
 
 // Load opens the named file for reading. If successful, the manifest is returned.

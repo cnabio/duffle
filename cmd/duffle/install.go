@@ -11,11 +11,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/deislabs/duffle/pkg/action"
-	"github.com/deislabs/duffle/pkg/bundle"
-	"github.com/deislabs/duffle/pkg/claim"
-	"github.com/deislabs/duffle/pkg/duffle/home"
-	"github.com/deislabs/duffle/pkg/repo"
+	"github.com/scothis/ruffle/pkg/action"
+	"github.com/scothis/ruffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/claim"
+	"github.com/scothis/ruffle/pkg/duffle/home"
+	"github.com/scothis/ruffle/pkg/repo"
 )
 
 func newInstallCmd() *cobra.Command {

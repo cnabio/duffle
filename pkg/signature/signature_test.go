@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/bundle"
 )
 
 func TestSigner_Sign(t *testing.T) {

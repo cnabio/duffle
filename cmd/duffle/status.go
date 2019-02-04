@@ -8,8 +8,8 @@ import (
 	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
 
-	"github.com/deislabs/duffle/pkg/action"
-	"github.com/deislabs/duffle/pkg/claim"
+	"github.com/scothis/ruffle/pkg/action"
+	"github.com/scothis/ruffle/pkg/claim"
 )
 
 func newStatusCmd(w io.Writer) *cobra.Command {

@@ -11,8 +11,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/deislabs/duffle/pkg/bundle"
-	"github.com/deislabs/duffle/pkg/repo/remote"
+	"github.com/scothis/ruffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/repo/remote"
 )
 
 // BundleList is a list of bundle references.

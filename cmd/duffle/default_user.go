@@ -6,7 +6,7 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/deislabs/duffle/pkg/signature"
+	"github.com/scothis/ruffle/pkg/signature"
 )
 
 // defaultUserID returns the default user name.

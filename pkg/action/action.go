@@ -6,10 +6,10 @@ import (
 	"io"
 	"strings"
 
-	"github.com/deislabs/duffle/pkg/bundle"
-	"github.com/deislabs/duffle/pkg/claim"
-	"github.com/deislabs/duffle/pkg/credentials"
-	"github.com/deislabs/duffle/pkg/driver"
+	"github.com/scothis/ruffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/claim"
+	"github.com/scothis/ruffle/pkg/credentials"
+	"github.com/scothis/ruffle/pkg/driver"
 )
 
 // Action describes one of the primary actions that can be executed in CNAB.

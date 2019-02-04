@@ -6,9 +6,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/deislabs/duffle/pkg/bundle"
-	"github.com/deislabs/duffle/pkg/loader"
-	"github.com/deislabs/duffle/pkg/reference"
+	"github.com/scothis/ruffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/loader"
+	"github.com/scothis/ruffle/pkg/reference"
 
 	"github.com/spf13/cobra"
 )

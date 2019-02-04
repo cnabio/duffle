@@ -7,7 +7,7 @@ import (
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/clearsign"
 
-	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/bundle"
 )
 
 // Verifier provides tools to verify a signed bundle.

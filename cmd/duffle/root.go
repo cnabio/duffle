@@ -16,7 +16,7 @@ func newRootCmd(outputRedirect io.Writer) *cobra.Command {
 	const usage = `The CNAB installer`
 
 	cmd := &cobra.Command{
-		Use:          "duffle",
+		Use:          "ruffle",
 		Short:        usage,
 		SilenceUsage: true,
 		Long:         usage,

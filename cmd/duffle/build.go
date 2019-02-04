@@ -18,17 +18,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/deislabs/duffle/pkg/builder"
-	"github.com/deislabs/duffle/pkg/bundle"
-	"github.com/deislabs/duffle/pkg/crypto/digest"
-	"github.com/deislabs/duffle/pkg/duffle/home"
-	"github.com/deislabs/duffle/pkg/duffle/manifest"
-	"github.com/deislabs/duffle/pkg/imagebuilder"
-	"github.com/deislabs/duffle/pkg/imagebuilder/docker"
-	"github.com/deislabs/duffle/pkg/imagebuilder/mock"
-	"github.com/deislabs/duffle/pkg/ohai"
-	"github.com/deislabs/duffle/pkg/repo"
-	"github.com/deislabs/duffle/pkg/signature"
+	"github.com/scothis/ruffle/pkg/builder"
+	"github.com/scothis/ruffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/crypto/digest"
+	"github.com/scothis/ruffle/pkg/duffle/home"
+	"github.com/scothis/ruffle/pkg/duffle/manifest"
+	"github.com/scothis/ruffle/pkg/imagebuilder"
+	"github.com/scothis/ruffle/pkg/imagebuilder/docker"
+	"github.com/scothis/ruffle/pkg/imagebuilder/mock"
+	"github.com/scothis/ruffle/pkg/ohai"
+	"github.com/scothis/ruffle/pkg/repo"
+	"github.com/scothis/ruffle/pkg/signature"
 )
 
 const buildDesc = `

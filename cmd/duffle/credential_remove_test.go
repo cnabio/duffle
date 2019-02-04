@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/scothis/ruffle/pkg/duffle/home"
 )
 
 func TestCredentialRemove(t *testing.T) {

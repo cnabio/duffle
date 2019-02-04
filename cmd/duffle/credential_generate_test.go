@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/bundle"
 
 	"github.com/stretchr/testify/assert"
 )

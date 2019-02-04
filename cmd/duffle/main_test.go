@@ -6,13 +6,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/bundle"
-	"github.com/deislabs/duffle/pkg/credentials"
+	"github.com/scothis/ruffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/credentials"
 
 	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/scothis/ruffle/pkg/duffle/home"
 )
 
 func CreateTestHome(t *testing.T) home.Home {

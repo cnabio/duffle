@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 
-	"github.com/deislabs/duffle/pkg/credentials"
-	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/scothis/ruffle/pkg/credentials"
+	"github.com/scothis/ruffle/pkg/duffle/home"
 )
 
 const credentialEditDesc = `

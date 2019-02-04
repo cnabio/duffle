@@ -12,9 +12,9 @@ import (
 	survey "gopkg.in/AlecAivazis/survey.v1"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/deislabs/duffle/pkg/bundle"
-	"github.com/deislabs/duffle/pkg/credentials"
-	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/scothis/ruffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/credentials"
+	"github.com/scothis/ruffle/pkg/duffle/home"
 )
 
 const credentialGenerateHelp = `Generate credentials from a CNAB bundle

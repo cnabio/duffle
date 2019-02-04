@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/deislabs/duffle/pkg/action"
+	"github.com/scothis/ruffle/pkg/action"
 
 	"github.com/spf13/cobra"
 )

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/loader"
-	"github.com/deislabs/duffle/pkg/signature"
+	"github.com/scothis/ruffle/pkg/loader"
+	"github.com/scothis/ruffle/pkg/signature"
 )
 
 func TestExportSigned(t *testing.T) {

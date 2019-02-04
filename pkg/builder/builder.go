@@ -12,9 +12,9 @@ import (
 
 	"github.com/Masterminds/semver"
 
-	"github.com/deislabs/duffle/pkg/bundle"
-	"github.com/deislabs/duffle/pkg/duffle/manifest"
-	"github.com/deislabs/duffle/pkg/imagebuilder"
+	"github.com/scothis/ruffle/pkg/bundle"
+	"github.com/scothis/ruffle/pkg/duffle/manifest"
+	"github.com/scothis/ruffle/pkg/imagebuilder"
 )
 
 // Builder defines how to interact with a bundle builder

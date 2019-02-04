@@ -4,8 +4,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/deislabs/duffle/pkg/duffle/home"
-	"github.com/deislabs/duffle/pkg/signature"
+	"github.com/scothis/ruffle/pkg/duffle/home"
+	"github.com/scothis/ruffle/pkg/signature"
 
 	"github.com/spf13/cobra"
 )
