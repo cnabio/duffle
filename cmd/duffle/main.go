@@ -43,6 +43,10 @@ func homePath() string {
 }
 
 func defaultDuffleHome() string {
+	return filepath.Join(homeEnvPath(), ".duffle")
+}
+
+func homeEnvPath() string {
 	if home := os.Getenv(home.HomeEnvVar); home != "" {
 		return home
 	}
@@ -52,13 +56,17 @@ func defaultDuffleHome() string {
 		homeEnvPath = os.Getenv("USERPROFILE")
 	}
 
-	return filepath.Join(homeEnvPath, ".duffle")
+	return homeEnvPath
 }
 
 // claimStorage returns a claim store for accessing claims.
 func claimStorage() claim.Store {
-	h := home.Home(homePath())
-	return claim.NewClaimStore(crud.NewFileSystemStore(h.Claims(), "json"))
+	kubeconfig := filepath.Join(homeEnvPath(), ".kube/config")
+	store, err := crud.NewK8sConfigMapStore(kubeconfig, "", "kube-system", "ruffle")
+	if err != nil {
+		panic(err)
+	}
+	return claim.NewClaimStore(store)
 }
 
 // loadCredentials loads a set of credentials from HOME.
