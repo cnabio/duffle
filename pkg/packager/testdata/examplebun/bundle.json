@@ -7,18 +7,18 @@
             "image": "mock/examplebun:0.1.0"
         }
     ],
-    "images": [
-        {
+    "images": {
+        "image-a":{
             "name": "image-a",
             "uri": "mock/image-a:58326809e0p19b79054015bdd4e93e84b71ae1ta",
             "refs": null
         },
-        {
+        "image-b":{
             "name": "image-b",
             "uri": "mock/image-b:88426103e0p19b38554015bd34e93e84b71de2fc",
             "refs": null
         }
-    ],
+    },
     "parameters": null,
     "credentials": null
 }

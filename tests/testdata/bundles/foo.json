@@ -7,8 +7,8 @@
             "image": "technosophos/helloworld:0.1.0"
         }
     ],
-    "images": [
-        {
+    "images": {
+        "image1":{
             "description": "image1",
             "image": "urn:image1uri",
             "refs": [
@@ -18,7 +18,7 @@
                 }
             ]
         },
-        {
+        "image2":{
             "name": "image2",
             "uri": "urn:image2uri",
             "refs": [
@@ -28,7 +28,7 @@
                 }
             ]
         }
-    ],
+    },
     "credentials": {
         "foo": {
             "path": "pfoo"
