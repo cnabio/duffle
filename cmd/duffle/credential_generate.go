@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -114,7 +115,14 @@ func genCredentialSet(name string, creds map[string]bundle.Location, fn credenti
 		return cs, fmt.Errorf("credentialset name '%s' cannot contain the following characters: './\\'", name)
 	}
 
+	var credentialNames []string
 	for name := range creds {
+		credentialNames = append(credentialNames, name)
+	}
+
+	sort.Strings(credentialNames)
+
+	for _, name := range credentialNames {
 		c, err := fn(name)
 		if err != nil {
 			return cs, err

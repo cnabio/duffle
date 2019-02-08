@@ -18,21 +18,28 @@ func TestGenCredentialSet(t *testing.T) {
 			EnvironmentVariable: "SECOND_VAR",
 			Path:                "/second/path",
 		},
+		"third": {
+			Path: "/third/path",
+		},
 	}
 	is := assert.New(t)
 	creds, err := genCredentialSet(name, credlocs, genEmptyCredentials)
 	is.NoError(err)
 	is.Equal(creds.Name, name)
-	is.Len(creds.Credentials, 2)
+	is.Len(creds.Credentials, 3)
 
-	found := map[string]bool{"first": false, "second": false}
+	found := map[string]bool{"first": false, "second": false, "third": false}
 
+	var assignmentOrder []string
 	for _, cred := range creds.Credentials {
+		assignmentOrder = append(assignmentOrder, cred.Name)
 		found[cred.Name] = true
 		is.Equal(cred.Source.Value, "EMPTY")
 	}
 
-	is.Len(found, 2)
+	is.Equal([]string{"first", "second", "third"}, assignmentOrder)
+
+	is.Len(found, 3)
 	for k, v := range found {
 		is.True(v, "%q not found", k)
 	}
