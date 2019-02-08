@@ -66,18 +66,18 @@ func Fsuccessln(w io.Writer, a ...interface{}) (int, error) {
 }
 
 // Warning displays a warning message.
-func Warning(a ...interface{}) (int, error) {
-	return Warningf("%s", a...)
+func Warning(w io.Writer, a ...interface{}) (int, error) {
+	return Warningf(w, "%s", a...)
 }
 
 // Warningf displays a warning message.
-func Warningf(format string, a ...interface{}) (int, error) {
-	return fmt.Printf(fmt.Sprintf("!!! %s", format), a...)
+func Warningf(w io.Writer, format string, a ...interface{}) (int, error) {
+	return fmt.Fprintf(w, fmt.Sprintf("!!! %s", format), a...)
 }
 
 // Warningln displays a warning message.
-func Warningln(a ...interface{}) (int, error) {
-	return Warningf("%s\n", a...)
+func Warningln(w io.Writer, a ...interface{}) (int, error) {
+	return Warningf(w, "%s\n", a...)
 }
 
 // Fwarning displays an informative message.
