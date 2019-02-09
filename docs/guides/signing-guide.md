@@ -46,9 +46,15 @@ The `duffle build` command will automatically sign your bundle with the first ke
 $ duffle build -u test1@example.com
 ```
 
+NOTE: In the future, `duffle build` will also calculate and write out each Docker image's digest for the bundle, which is important to ensure that the docker image referenced in a bundle has not been tampered with. [Issue #563](https://github.com/deislabs/duffle/issues/563) discusses a solution for computing the digest when building or signing a bundle.
+
 ## Verifying Bundles
 
-Just as with signing bundles, Duffle does its best to automatically verify a bundle as well. Above, we used `duffle build` to create a bundle. Since we signed it with our own key, we can also easily verify it. And this happens automatically when we do things like `duffle install` or `duffle upgrade`:
+Just as with signing bundles, Duffle does its best to automatically verify a bundle as well.
+
+NOTE: In the future, `duffle install` or `duffle upgrade` will also validate each Docker image's digest in a bundle, which is important to ensure that the docker images have not been tampered with. [Issue #392](https://github.com/deislabs/duffle/issues/392) discusses a solution for enforcing digest validation when installing or upgrading a bundle.
+
+Above, we used `duffle build` to create a bundle. Since we signed it with our own key, we can also easily verify it. And this happens automatically when we do things like `duffle install` or `duffle upgrade`:
 
 ```console
 $ duffle install myrelease mybundle
