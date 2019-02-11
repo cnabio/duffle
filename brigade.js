@@ -27,8 +27,8 @@ function build(e, project) {
     `cp -a /src/.git ${localPath}`,
     `cd ${localPath}`,
     "make bootstrap",
+    "make test",
     "make lint",
-    "make test"
   ];
 
   return build
