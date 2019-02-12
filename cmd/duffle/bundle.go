@@ -19,6 +19,7 @@ func newBundleCmd(w io.Writer) *cobra.Command {
 	}
 	cmd.AddCommand(
 		newBundleListCmd(w),
+		newBundleShowCmd(w),
 		newBundleSignCmd(w),
 		newBundleVerifyCmd(w),
 		newBundleRemoveCmd(w),
