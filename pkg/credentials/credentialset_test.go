@@ -73,7 +73,7 @@ func TestCredentialSet_Expand(t *testing.T) {
 		"third":  "third",
 	}
 
-	env, path, err := cs.Expand(b)
+	env, path, err := cs.Expand(b, false)
 	is := assert.New(t)
 	is.NoError(err)
 	for k, v := range b.Credentials {
@@ -84,4 +84,20 @@ func TestCredentialSet_Expand(t *testing.T) {
 			is.Equal(path[v.Path], cs[k])
 		}
 	}
+}
+
+func TestCredentialSetMissingCred(t *testing.T) {
+	b := &bundle.Bundle{
+		Name: "knapsack",
+		Credentials: map[string]bundle.Location{
+			"first": {
+				EnvironmentVariable: "FIRST_VAR",
+			},
+		},
+	}
+	cs := Set{}
+	_, _, err := cs.Expand(b, false)
+	assert.EqualError(t, err, `credential "first" is missing from the user-supplied credentials`)
+	_, _, err = cs.Expand(b, true)
+	assert.NoError(t, err)
 }

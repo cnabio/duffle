@@ -48,8 +48,8 @@ func getImageMap(b *bundle.Bundle) ([]byte, error) {
 	return json.Marshal(imgs)
 }
 
-func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) (*driver.Operation, error) {
-	env, files, err := creds.Expand(c.Bundle)
+func opFromClaim(action string, stateless bool, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) (*driver.Operation, error) {
+	env, files, err := creds.Expand(c.Bundle, stateless)
 	if err != nil {
 		return nil, err
 	}
