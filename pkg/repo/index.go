@@ -140,21 +140,34 @@ func (i Index) Get(name, version string) (string, error) {
 // If the name is not found, this will return false.
 func (i Index) GetVersions(name string) ([]BundleVersion, bool) {
 	ret, ok := i[name]
-	rawversions := []string{}
-	for ver := range ret {
-		rawversions = append(rawversions, ver)
+	if !ok {
+		ret, ok = i.versionsWithDigest(name)
 	}
 
-	bv := []BundleVersion{}
-	for _, r := range rawversions {
-		v, err := semver.NewVersion(r)
+	var bv []BundleVersion
+	for version, digest := range ret {
+		v, err := semver.NewVersion(version)
 		if err != nil {
-			log.Debugf("found a version in the index that is not semver compatible: '%s'\n", r)
+			log.Debugf("found a version in the index that is not semver compatible: '%s'\n", version)
 			continue
 		}
-		bv = append(bv, BundleVersion{Version: v, Digest: ret[r]})
+
+		bv = append(bv, BundleVersion{Version: v, Digest: digest})
 	}
+
 	return bv, ok
+}
+
+func (i Index) versionsWithDigest(digest string) (map[string]string, bool) {
+	for _, versions := range i {
+		for v, d := range versions {
+			if d == digest {
+				return map[string]string{v: d}, true
+			}
+		}
+	}
+
+	return nil, false
 }
 
 // WriteFile writes an index file to the given destination path.
