@@ -116,7 +116,7 @@ type Action struct {
 	// Modifies indicates whether this action modifies the release.
 	//
 	// If it is possible that an action modify a release, this must be set to true.
-	Modifies bool
+	Modifies bool `json:"modifies" mapstructure:"modifies"`
 }
 
 // ValuesOrDefaults returns parameter values or the default parameter values
