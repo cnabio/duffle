@@ -2,7 +2,6 @@ package packager
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -16,10 +15,6 @@ import (
 
 	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/loader"
-)
-
-var (
-	ErrDestinationNotDirectory = errors.New("Destination not directory")
 )
 
 type Exporter struct {
@@ -77,8 +72,8 @@ func (ex *Exporter) Export() error {
 	defer logsf.Close()
 
 	fi, err := os.Stat(ex.Source)
-	if err != nil && os.IsNotExist(err) {
-		return fmt.Errorf("Bundle manifest not found at %s", ex.Source)
+	if os.IsNotExist(err) {
+		return err
 	}
 	if fi.IsDir() {
 		return fmt.Errorf("Bundle manifest %s is a directory, should be a file", ex.Source)

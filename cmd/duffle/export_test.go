@@ -53,15 +53,15 @@ func TestExportSetup(t *testing.T) {
 
 	duffleHome := home.Home(tempDuffleHome)
 	exp := &exportCmd{
-		bundleRef: "foo:1.0.0",
-		dest:      tempDir,
-		home:      duffleHome,
-		out:       out,
+		bundle: "foo:1.0.0",
+		dest:   tempDir,
+		home:   duffleHome,
+		out:    out,
 	}
 
 	source, _, err := exp.setup()
 	if err != nil {
-		t.Fatal(err)
+		t.Errorf("Did not expect error but got %s", err)
 	}
 
 	expectedSource := filepath.Join(tempDuffleHome, "bundles", "foo-1.0.0.cnab")
@@ -70,16 +70,32 @@ func TestExportSetup(t *testing.T) {
 	}
 
 	expFail := &exportCmd{
-		bundleRef: "bar:1.0.0",
-		dest:      tempDir,
-		home:      duffleHome,
-		out:       out,
+		bundle: "bar:1.0.0",
+		dest:   tempDir,
+		home:   duffleHome,
+		out:    out,
 	}
 	_, _, err = expFail.setup()
 	if err == nil {
 		t.Error("Expected error, got none")
 	}
 
+	bundlepath := filepath.Join("..", "..", "tests", "testdata", "bundles", "foo.json")
+	expFile := &exportCmd{
+		bundle:       bundlepath,
+		dest:         tempDir,
+		home:         duffleHome,
+		out:          out,
+		sourceIsFile: true,
+	}
+	source, _, err = expFile.setup()
+	if err != nil {
+		t.Errorf("Did not expect error but got %s", err)
+	}
+
+	if source != bundlepath {
+		t.Errorf("Expected bundle file path to be %s, got %s", bundlepath, source)
+	}
 }
 
 func copyFile(src, dst string) (err error) {
