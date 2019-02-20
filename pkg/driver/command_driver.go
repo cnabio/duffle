@@ -45,18 +45,6 @@ func (d *CommandDriver) exec(op *Operation) error {
 	// to pass that data on to the image it invokes. So we do some data
 	// duplication.
 
-	// Construct an environment for the subprocess by cloning our
-	// environment and adding in all the extra env vars.
-	pairs := os.Environ()
-	added := []string{}
-	for k, v := range op.Environment {
-		pairs = append(pairs, fmt.Sprintf("%s=%s", k, v))
-		added = append(added, k)
-	}
-	// DUFFLE_VARS is a list of variables we added to the env. This is to make
-	// it easier for shell script drivers to clone the env vars.
-	pairs = append(pairs, fmt.Sprintf("DUFFLE_VARS=%s", strings.Join(added, ",")))
-
 	data, err := json.Marshal(op)
 	if err != nil {
 		return err
@@ -67,7 +55,6 @@ func (d *CommandDriver) exec(op *Operation) error {
 	if err != nil {
 		return err
 	}
-	cmd.Env = pairs
 	cmd.Stdin = bytes.NewBuffer(data)
 	out, err := cmd.CombinedOutput()
 	fmt.Fprintln(op.Out, string(out))

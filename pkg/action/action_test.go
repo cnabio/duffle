@@ -1,7 +1,6 @@
 package action
 
 import (
-	"encoding/json"
 	"errors"
 	"os"
 	"strings"
@@ -106,20 +105,16 @@ func TestOpFromClaim(t *testing.T) {
 
 	is := assert.New(t)
 
-	is.Equal(c.Name, op.Installation)
-	is.Equal(c.Revision, op.Revision)
+	is.Equal(c.Name, op.Input.Installation.Name)
+	is.Equal(c.Revision, op.Input.Installation.Revision)
 	is.Equal(invocImage.Image, op.Image)
 	is.Equal(driver.ImageTypeDocker, op.ImageType)
-	is.Equal(op.Environment["SECRET_ONE"], "I'm a secret")
-	is.Equal(op.Environment["PARAM_TWO"], "twoval")
-	is.Equal(op.Environment["CNAB_P_PARAM_ONE"], "oneval")
-	is.Equal(op.Files["/secret/two"], "I'm also a secret")
-	is.Equal(op.Files["/param/three"], "threeval")
-	is.Contains(op.Files, "/cnab/app/image-map.json")
-	var imgMap map[string]bundle.Image
-	is.NoError(json.Unmarshal([]byte(op.Files["/cnab/app/image-map.json"]), &imgMap))
-	is.Equal(c.Bundle.Images, imgMap)
-	is.Len(op.Parameters, 3)
+	is.Equal(op.Input.Credentials["secret_one"], "I'm a secret")
+	is.Equal(op.Input.Credentials["secret_two"], "I'm also a secret")
+	is.Equal(op.Input.Parameters["param_one"], "oneval")
+	is.Equal(op.Input.Parameters["param_two"], "twoval")
+	is.Equal(op.Input.Parameters["param_three"], "threeval")
+	is.Equal(op.Input.Bundle, *c.Bundle)
 	is.Equal(os.Stdout, op.Out)
 }
 

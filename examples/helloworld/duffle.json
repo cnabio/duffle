@@ -1,33 +1,49 @@
 {
-    "name": "helloworld",
-    "version": "0.1.0",
-    "description": "A short description of your bundle",
-    "keywords": [
-        "helloworld",
-        "cnab",
-        "tutorial"
-    ],
-    "maintainers": [
-        {
-            "name": "John Doe",
-            "email": "john.doe@example.com",
-            "url": "https://example.com"
-        },
-        {
-            "name": "Jane Doe",
-            "email": "jane.doe@example.com",
-            "url": "https://example.com"
-        }
-    ],
-    "invocationImages": {
-        "cnab": {
-            "name": "cnab",
-            "builder": "docker",
-            "configuration": {
-                "registry": "deislabs"
-            }
-        }
-    },
-    "parameters": null,
-    "credentials": null
+   "description" : "A short description of your bundle",
+   "parameters" : {
+      "greeting" : {
+         "type" : "string",
+         "defaultValue" : "hello",
+         "description" : "the greeting echoed by the invocation image"
+      },
+      "names": {
+        "type": "array",
+        "defaultValue": ["world"],
+        "description": "the list of names to greet"
+      }
+   },
+   "actions" : {
+      "status" : {
+         "modifies" : false
+      }
+   },
+   "credentials" : {},
+   "name" : "helloworld",
+   "invocationImages" : {
+      "cnab" : {
+         "name" : "cnab",
+         "configuration" : {
+            "registry" : "deislabs"
+         },
+         "builder" : "docker"
+      }
+   },
+   "keywords" : [
+      "helloworld",
+      "cnab",
+      "tutorial"
+   ],
+   "maintainers" : [
+      {
+         "name" : "John Doe",
+         "url" : "https://example.com",
+         "email" : "john.doe@example.com"
+      },
+      {
+         "name" : "Jane Doe",
+         "email" : "jane.doe@example.com",
+         "url" : "https://example.com"
+      }
+   ],
+   "version" : "0.1.0"
 }

@@ -33,10 +33,9 @@ func TestDebugDriver_Run(t *testing.T) {
 	is.NotNil(d)
 
 	op := &Operation{
-		Installation: "test",
-		Image:        "test:1.2.3",
-		ImageType:    "oci",
-		Out:          ioutil.Discard,
+		Image:     "test:1.2.3",
+		ImageType: "oci",
+		Out:       ioutil.Discard,
 	}
 	is.NoError(d.Run(op))
 }
@@ -62,12 +61,9 @@ func TestDockerDriver_Run(t *testing.T) {
 	is.NotNil(d)
 
 	op := &Operation{
-		Installation: "test",
-		Image:        "test:1.2.3",
-		ImageType:    "oci",
-		Environment:  map[string]string{},
-		Files:        map[string]string{},
-		Out:          ioutil.Discard,
+		Image:     "test:1.2.3",
+		ImageType: "oci",
+		Out:       ioutil.Discard,
 	}
 	is.NoError(d.Run(op))
 }

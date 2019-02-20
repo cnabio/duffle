@@ -2,11 +2,19 @@
 
 #set -eo pipefail
 
-action=$CNAB_ACTION
-name=$CNAB_INSTALLATION_NAME
-param=${CNAB_P_HELLO:-hello}
+inputs="$(jq -r . < /dev/stdin)"
 
-echo "$param world"
+echo "inputs: $inputs"
+
+action="$(echo "$inputs" | jq -r .installation.action)"
+name="$(echo "$inputs" | jq -r .installation.name)"
+greeting="$(echo "$inputs" | jq -r .parameters.greeting)"
+names="$(echo "$inputs" | jq -r .parameters.names[])"
+
+for name in $names; do
+  echo "$greeting $name"
+done
+
 case $action in
     install)
     echo "Install action"

@@ -1,13 +1,11 @@
 package driver
 
 import (
-	"archive/tar"
 	"context"
+	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
-	unix_path "path"
 
 	"github.com/docker/cli/cli/command"
 	cliflags "github.com/docker/cli/cli/flags"
@@ -122,10 +120,6 @@ func (d *DockerDriver) exec(op *Operation) error {
 			return err
 		}
 	}
-	var env []string
-	for k, v := range op.Environment {
-		env = append(env, fmt.Sprintf("%s=%v", k, v))
-	}
 
 	mounts := []mount.Mount{
 		{
@@ -135,9 +129,11 @@ func (d *DockerDriver) exec(op *Operation) error {
 		},
 	}
 	cfg := &container.Config{
+		OpenStdin:    true,
+		StdinOnce:    true,
 		Image:        op.Image,
-		Env:          env,
 		Entrypoint:   strslice.StrSlice{"/cnab/app/run"},
+		AttachStdin:  true,
 		AttachStderr: true,
 		AttachStdout: true,
 	}
@@ -158,22 +154,9 @@ func (d *DockerDriver) exec(op *Operation) error {
 		return fmt.Errorf("cannot create container: %v", err)
 	}
 
-	tarContent, err := generateTar(op.Files)
-	if err != nil {
-		return fmt.Errorf("error staging files: %s", err)
-	}
-	options := types.CopyToContainerOptions{
-		AllowOverwriteDirWithFile: false,
-	}
-	// This copies the tar to the root of the container. The tar has been assembled using the
-	// path from the given file, starting at the /.
-	err = cli.Client().CopyToContainer(ctx, resp.ID, "/", tarContent, options)
-	if err != nil {
-		return fmt.Errorf("error copying to / in container: %s", err)
-	}
-
 	attach, err := cli.Client().ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
 		Stream: true,
+		Stdin:  true,
 		Stdout: true,
 		Stderr: true,
 		Logs:   true,
@@ -181,6 +164,15 @@ func (d *DockerDriver) exec(op *Operation) error {
 	if err != nil {
 		return fmt.Errorf("unable to retrieve logs: %v", err)
 	}
+
+	go func() {
+		defer attach.CloseWrite()
+
+		if err := json.NewEncoder(attach.Conn).Encode(op.Input); err != nil {
+			panic(err)
+		}
+	}()
+
 	go func() {
 		defer attach.Close()
 		for {
@@ -210,27 +202,4 @@ func (d *DockerDriver) exec(op *Operation) error {
 		return fmt.Errorf("container exit code: %d", s.StatusCode)
 	}
 	return err
-}
-
-func generateTar(files map[string]string) (io.Reader, error) {
-	r, w := io.Pipe()
-	tw := tar.NewWriter(w)
-	for path := range files {
-		if !unix_path.IsAbs(path) {
-			return nil, fmt.Errorf("destination path %s should be an absolute unix path", path)
-		}
-	}
-	go func() {
-		for path, content := range files {
-			hdr := &tar.Header{
-				Name: path,
-				Mode: 0644,
-				Size: int64(len(content)),
-			}
-			tw.WriteHeader(hdr)
-			tw.Write([]byte(content))
-		}
-		w.Close()
-	}()
-	return r, nil
 }

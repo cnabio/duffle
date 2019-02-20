@@ -4,7 +4,34 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+
+	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/duffle/pkg/credentials"
 )
+
+// Input describes the input configuration available on stdin from within the invocation image
+type Input struct {
+	// Installation is the details of the installation
+	Installation InputInstallation `json:"installation"`
+	// InvocationImage is the details of the image that is being invoked
+	InvocationImage bundle.InvocationImage `json:"invocation_image"`
+	// Bundle is the entire contents of the bundle.json
+	Bundle bundle.Bundle `json:"bundle"`
+	// Parameters is the set of resolved parameters
+	Parameters map[string]interface{} `json:"parameters"`
+	// Credentials is the set of resolved credentials
+	Credentials credentials.Set `json:"credentials"`
+}
+
+// InputInstallation describes the name, action, revision for the installation
+type InputInstallation struct {
+	// Name is the name of the installation
+	Name string `json:"name"`
+	// Action is the action to be performed
+	Action string `json:"action"`
+	// Revision is the revision ID for this installation
+	Revision string `json:"revision"`
+}
 
 // ImageType constants provide some of the image types supported
 // TODO: I think we can remove all but Docker, since the rest are supported externally
@@ -28,24 +55,14 @@ func Lookup(name string) (Driver, error) {
 
 // Operation describes the data passed into the driver to run an operation
 type Operation struct {
-	// Installation is the name of this installation
-	Installation string `json:"installation_name"`
-	// The revision ID for this installation
-	Revision string `json:"revision"`
-	// Action is the action to be performed
-	Action string `json:"action"`
-	// Parameters are the parameters to be injected into the container
-	Parameters map[string]interface{} `json:"parameters"`
 	// Image is the invocation image
 	Image string `json:"image"`
 	// ImageType is the type of image.
 	ImageType string `json:"image_type"`
-	// Environment contains environment variables that should be injected into the invocation image
-	Environment map[string]string `json:"environment"`
-	// Files contains files that should be injected into the invocation image.
-	Files map[string]string `json:"files"`
 	// Output stream for log messages from the driver
 	Out io.Writer
+
+	Input Input `json:"input"`
 }
 
 // ResolvedCred is a credential that has been resolved and is ready for injection into the runtime.
