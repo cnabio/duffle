@@ -18,8 +18,6 @@ parameters with the new ones supplied (even if the new set is an empty set). If 
 be re-used.
 `
 
-var BundleAndBundleFileError = errors.New("Both --bundle and --bundle-file flags cannot be set")
-
 type uninstallCmd struct {
 	out              io.Writer
 	name             string
@@ -40,20 +38,11 @@ func newUninstallCmd(w io.Writer) *cobra.Command {
 		Short: "uninstall CNAB installation",
 		Long:  uninstallUsage,
 		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return uninstall.setup()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			uninstall.name = args[0]
-			if uninstall.bundle != "" && uninstall.bundleFile != "" {
-				return BundleAndBundleFileError
-			}
-
-			if uninstall.bundle != "" {
-				bundleFile, err := getBundleFilepath(uninstall.bundle, homePath(), uninstall.insecure)
-				if err != nil {
-					return err
-				}
-				uninstall.bundleFile = bundleFile
-			}
-
 			return uninstall.run()
 		},
 	}
@@ -63,11 +52,21 @@ func newUninstallCmd(w io.Writer) *cobra.Command {
 	flags.StringArrayVarP(&uninstall.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
 	flags.StringVarP(&uninstall.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringVarP(&uninstall.bundle, "bundle", "b", "", "bundle to uninstall")
-	flags.StringVar(&uninstall.bundleFile, "bundle-file", "", "path to a bundle file to upgrade")
+	flags.StringVar(&uninstall.bundleFile, "bundle-file", "", "path to a bundle file to uninstal")
 	flags.StringArrayVarP(&uninstall.setParams, "set", "s", []string{}, "set individual parameters as NAME=VALUE pairs")
 	flags.BoolVarP(&uninstall.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
+}
+
+func (un *uninstallCmd) setup() error {
+	bundleFile, err := prepareBundleFile(un.bundle, un.bundleFile, un.insecure)
+	if err != nil {
+		return err
+	}
+
+	un.bundleFile = bundleFile
+	return nil
 }
 
 func (un *uninstallCmd) run() error {

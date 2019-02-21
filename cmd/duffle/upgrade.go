@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/deislabs/duffle/pkg/action"
-
 	"github.com/spf13/cobra"
+
+	"github.com/deislabs/duffle/pkg/action"
 )
 
 const upgradeUsage = `perform the upgrade action in the CNAB bundle`
@@ -25,55 +25,63 @@ If no parameters are passed, the parameters from the previous release will be us
 are specified, the parameters there will be used (even if the resolved set is empty).
 `
 
-var upgradeDriver string
+var ErrBundleAndBundleFile = errors.New("Both --bundle and --bundle-file flags cannot be set")
 
 type upgradeCmd struct {
-	out        io.Writer
-	name       string
-	valuesFile string
-	setParams  []string
-	insecure   bool
-	setFiles   []string
+	out              io.Writer
+	name             string
+	driver           string
+	valuesFile       string
+	bundle           string
+	bundleFile       string
+	setParams        []string
+	insecure         bool
+	setFiles         []string
+	credentialsFiles []string
 }
 
 func newUpgradeCmd(w io.Writer) *cobra.Command {
-	uc := &upgradeCmd{out: w}
-
-	var (
-		credentialsFiles []string
-		bundleFile       string
-	)
+	upgrade := &upgradeCmd{out: w}
 
 	cmd := &cobra.Command{
-		Use:   "upgrade NAME [BUNDLE]",
+		Use:   "upgrade [NAME]",
 		Short: upgradeUsage,
 		Long:  upgradeLong,
+		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return upgrade.setup()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return errors.New("This command requires at least 1 argument: the name of the installation to upgrade")
-			}
-			uc.name = args[0]
-			bundleFile, err := optBundleFileOrArg2(args, bundleFile, uc.out, uc.insecure)
-			if err != nil {
-				return err
-			}
+			upgrade.name = args[0]
 
-			return uc.upgrade(credentialsFiles, bundleFile)
+			return upgrade.run()
 		},
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&bundleFile, "file", "f", "", "Set the bundle file to use for upgrading")
-	flags.StringVarP(&upgradeDriver, "driver", "d", "docker", "Specify a driver name")
-	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
-	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
-	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
-	flags.BoolVarP(&uc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
-	flags.StringArrayVarP(&uc.setFiles, "set-file", "i", []string{}, "Set individual parameters from file content as NAME=SOURCE-PATH pairs")
+	flags.StringVarP(&upgrade.driver, "driver", "d", "docker", "Specify a driver name")
+	flags.StringVarP(&upgrade.bundle, "bundle", "b", "", "bundle to use for upgrading")
+	flags.StringVar(&upgrade.bundleFile, "bundle-file", "", "path of the bundle file to use for upgrading")
+	flags.StringArrayVarP(&upgrade.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
+	flags.StringVarP(&upgrade.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
+	flags.StringArrayVarP(&upgrade.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
+	flags.BoolVarP(&upgrade.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
+	flags.StringArrayVarP(&upgrade.setFiles, "set-file", "i", []string{}, "Set individual parameters from file content as NAME=SOURCE-PATH pairs")
+
 	return cmd
 }
 
-func (up *upgradeCmd) upgrade(credentialsFiles []string, bundleFile string) error {
+func (up *upgradeCmd) setup() error {
+	bundleFile, err := prepareBundleFile(up.bundle, up.bundleFile, up.insecure)
+	if err != nil {
+		return err
+	}
+
+	up.bundleFile = bundleFile
+	return nil
+}
+
+func (up *upgradeCmd) run() error {
 
 	claim, err := claimStorage().Read(up.name)
 	if err != nil {
@@ -81,20 +89,20 @@ func (up *upgradeCmd) upgrade(credentialsFiles []string, bundleFile string) erro
 	}
 
 	// If the user specifies a bundle file, override the existing one.
-	if bundleFile != "" {
-		bun, err := loadBundle(bundleFile, up.insecure)
+	if up.bundleFile != "" {
+		bun, err := loadBundle(up.bundleFile, up.insecure)
 		if err != nil {
 			return err
 		}
 		claim.Bundle = bun
 	}
 
-	driverImpl, err := prepareDriver(upgradeDriver)
+	driverImpl, err := prepareDriver(up.driver)
 	if err != nil {
 		return err
 	}
 
-	creds, err := loadCredentials(credentialsFiles, claim.Bundle)
+	creds, err := loadCredentials(up.credentialsFiles, claim.Bundle)
 	if err != nil {
 		return err
 	}
@@ -119,4 +127,19 @@ func (up *upgradeCmd) upgrade(credentialsFiles []string, bundleFile string) erro
 		return fmt.Errorf("could not upgrade %q: %s", up.name, err)
 	}
 	return persistErr
+}
+
+func prepareBundleFile(bundle, bundleFile string, insecure bool) (string, error) {
+	if bundle != "" && bundleFile != "" {
+		return "", ErrBundleAndBundleFile
+	}
+
+	if bundle != "" {
+		bundleFile, err := getBundleFilepath(bundle, homePath(), insecure)
+		if err != nil {
+			return bundleFile, err
+		}
+	}
+
+	return bundleFile, nil
 }

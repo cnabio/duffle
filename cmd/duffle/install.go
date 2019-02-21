@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -165,25 +164,6 @@ func (i *installCmd) run() error {
 		return fmt.Errorf("Install step failed: %v", err)
 	}
 	return err2
-}
-
-//TODO: remove. this gets used in upgrade
-// optBundleFileOrArg2 optionally gets a bundle.
-// Returning an empty string with no error is a possible outcome.
-func optBundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) (string, error) {
-	switch {
-	case len(args) < 1:
-		// No bundle provided
-		return "", nil
-	case len(args) == 2 && bun != "":
-		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
-	case len(args) < 2 && bun == "":
-		// No bundle provided
-		return "", nil
-	case len(args) == 2:
-		return getBundleFilepath(args[1], homePath(), insecure)
-	}
-	return bun, nil
 }
 
 func getBundleFilepath(bun, homePath string, insecure bool) (string, error) {
