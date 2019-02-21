@@ -50,7 +50,7 @@ func newRootCmd(outputRedirect io.Writer) *cobra.Command {
 	cmd.AddCommand(newPushCmd(outLog))
 	cmd.AddCommand(newSearchCmd(outLog))
 	cmd.AddCommand(newVersionCmd(outLog))
-	cmd.AddCommand(newInstallCmd())
+	cmd.AddCommand(newInstallCmd(outLog))
 	cmd.AddCommand(newStatusCmd(outLog))
 	cmd.AddCommand(newUninstallCmd())
 	cmd.AddCommand(newUpgradeCmd())

@@ -27,8 +27,8 @@ Use the --thin flag to export the bundle manifest without the invocation
 images and referenced images.
 
 Pass in a path to a bundle file instead of a bundle in local storage by
-using the --source-is-file flag like below:
-$ duffle export [PATH] --source-is-file
+using the --bundle-is-file flag like below:
+$ duffle export [PATH] --bundle-is-file
 `
 
 type exportCmd struct {
@@ -39,7 +39,7 @@ type exportCmd struct {
 	thin         bool
 	verbose      bool
 	insecure     bool
-	sourceIsFile bool
+	bundleIsFile bool
 }
 
 func newExportCmd(w io.Writer) *cobra.Command {
@@ -60,7 +60,7 @@ func newExportCmd(w io.Writer) *cobra.Command {
 
 	f := cmd.Flags()
 	f.StringVarP(&export.dest, "output-file", "o", "", "Save exported bundle to file path")
-	f.BoolVarP(&export.sourceIsFile, "source-is-file", "s", false, "Indicates that the bundle source is a file path")
+	f.BoolVarP(&export.bundleIsFile, "bundle-is-file", "f", false, "Indicates that the bundle source is a file path")
 	f.BoolVarP(&export.thin, "thin", "t", false, "Export only the bundle manifest")
 	f.BoolVarP(&export.verbose, "verbose", "v", false, "Verbose output")
 	f.BoolVarP(&export.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
@@ -95,7 +95,7 @@ func (ex *exportCmd) Export(bundlefile string, l loader.Loader) error {
 }
 
 func (ex *exportCmd) setup() (string, loader.Loader, error) {
-	bundlefile, err := resolveBundleFilePath(ex.bundle, ex.home.String(), ex.sourceIsFile, ex.insecure)
+	bundlefile, err := resolveBundleFilePath(ex.bundle, ex.home.String(), ex.bundleIsFile, ex.insecure)
 	if err != nil {
 		return "", nil, err
 	}
@@ -108,9 +108,9 @@ func (ex *exportCmd) setup() (string, loader.Loader, error) {
 	return bundlefile, l, nil
 }
 
-func resolveBundleFilePath(bun, homePath string, sourceIsFile, insecure bool) (string, error) {
+func resolveBundleFilePath(bun, homePath string, bundleIsFile, insecure bool) (string, error) {
 
-	if sourceIsFile {
+	if bundleIsFile {
 		return bun, nil
 	}
 
