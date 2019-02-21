@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/deislabs/duffle/pkg/action"
 
@@ -27,7 +28,7 @@ are specified, the parameters there will be used (even if the resolved set is em
 var upgradeDriver string
 
 type upgradeCmd struct {
-	duffleCmd
+	out        io.Writer
 	name       string
 	valuesFile string
 	setParams  []string
@@ -35,8 +36,8 @@ type upgradeCmd struct {
 	setFiles   []string
 }
 
-func newUpgradeCmd() *cobra.Command {
-	uc := &upgradeCmd{}
+func newUpgradeCmd(w io.Writer) *cobra.Command {
+	uc := &upgradeCmd{out: w}
 
 	var (
 		credentialsFiles []string
@@ -44,17 +45,15 @@ func newUpgradeCmd() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:     "upgrade NAME [BUNDLE]",
-		Short:   upgradeUsage,
-		Long:    upgradeLong,
-		PreRunE: uc.Prepare(),
+		Use:   "upgrade NAME [BUNDLE]",
+		Short: upgradeUsage,
+		Long:  upgradeLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("This command requires at least 1 argument: the name of the installation to upgrade")
 			}
 			uc.name = args[0]
-			uc.Out = cmd.OutOrStdout()
-			bundleFile, err := optBundleFileOrArg2(args, bundleFile, uc.Out, uc.insecure)
+			bundleFile, err := optBundleFileOrArg2(args, bundleFile, uc.out, uc.insecure)
 			if err != nil {
 				return err
 			}
@@ -111,7 +110,7 @@ func (up *upgradeCmd) upgrade(credentialsFiles []string, bundleFile string) erro
 	upgr := &action.Upgrade{
 		Driver: driverImpl,
 	}
-	err = upgr.Run(&claim, creds, up.Out)
+	err = upgr.Run(&claim, creds, up.out)
 
 	// persist the claim, regardless of the success of the upgrade action
 	persistErr := claimStorage().Store(claim)

@@ -167,21 +167,6 @@ func (i *installCmd) run() error {
 	return err2
 }
 
-//TODO: remove. gets used in uninstall
-func bundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) (string, error) {
-	switch {
-	case len(args) < 1:
-		return "", errors.New("this command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
-	case len(args) == 2 && bun != "":
-		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
-	case len(args) < 2 && bun == "":
-		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
-	case len(args) == 2:
-		return getBundleFilepath(args[1], homePath(), insecure)
-	}
-	return bun, nil
-}
-
 //TODO: remove. this gets used in upgrade
 // optBundleFileOrArg2 optionally gets a bundle.
 // Returning an empty string with no error is a possible outcome.
