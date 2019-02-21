@@ -106,6 +106,12 @@ func TestGet(t *testing.T) {
 			ExpectedDigest: "efgh",
 			ExpectedErr:    nil,
 		},
+		{
+			Name:           "mnop",
+			Version:        "",
+			ExpectedDigest: "mnop",
+			ExpectedErr:    nil,
+		},
 	}
 
 	for _, tc := range testCases {
