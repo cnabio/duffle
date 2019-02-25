@@ -1,0 +1,11 @@
+{
+  "name": "helloworld",
+  "version": "0.1.0",
+  "parameters": {},
+  "invocationImages": [
+    {
+      "imageType": "azure-image",
+      "image": "duffle-dev/duffle-vm-example-0.1.1"
+    }
+  ]
+}

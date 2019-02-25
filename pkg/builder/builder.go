@@ -3,6 +3,7 @@ package builder
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -77,7 +78,11 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 	}
 
 	for _, imb := range imageBuilders {
-		registry := ctx.Manifest.InvocationImages[imb.Name()].Configuration["registry"]
+		invImage := ctx.Manifest.InvocationImages[imb.Name()]
+		if invImage == nil {
+			return nil, nil, errors.New(fmt.Sprintf("could not find an invocation image for %s", imb.Name()))
+		}
+		registry := invImage.Configuration["registry"]
 		if err := imb.PrepareBuild(ctx.AppDir, registry, ctx.Manifest.Name); err != nil {
 			return nil, nil, err
 		}

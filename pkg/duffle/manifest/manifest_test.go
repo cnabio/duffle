@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -86,6 +87,35 @@ func TestLoad(t *testing.T) {
 			maintainer := m.Maintainers[0]
 			if maintainer.Name != "sally" {
 				t.Errorf("expected maintainer to be sally but got %v", maintainer.Name)
+			}
+		})
+	}
+}
+
+func TestInvalidLoad(t *testing.T) {
+	testcases := []string{"invalid_duffle.json"}
+
+	for _, tc := range testcases {
+		t.Run(tc, func(t *testing.T) {
+			_, err := Load(tc, "testdata")
+			if err == nil {
+				t.Errorf("expected an error to be thrown")
+			}
+			if !strings.Contains(err.Error(), "error(s) decoding") {
+				t.Errorf("expected err to contain %s but was %s", "error(s) decoding", err.Error())
+			}
+		})
+	}
+}
+
+func TestExamples(t *testing.T) {
+	testcases := []string{"helloworld/duffle.json"}
+
+	for _, tc := range testcases {
+		t.Run(tc, func(t *testing.T) {
+			_, err := Load(tc, "../../../examples")
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
 			}
 		})
 	}

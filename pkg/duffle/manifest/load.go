@@ -24,6 +24,9 @@ func Load(name, dir string) (*Manifest, error) {
 	}
 
 	m := New()
-	v.Unmarshal(m)
+	err = v.Unmarshal(m)
+	if err != nil {
+		return nil, err
+	}
 	return m, nil
 }
