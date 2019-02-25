@@ -144,6 +144,10 @@ func (b Bundle) Validate() error {
 		return errors.New("at least one invocation image must be defined in the bundle")
 	}
 
+	if b.Version == "latest" {
+		return errors.New("'latest' is not a valid tag option")
+	}
+
 	for _, img := range b.InvocationImages {
 		err := img.Validate()
 		if err != nil {

@@ -169,6 +169,19 @@ func TestValuesOrDefaults_Required(t *testing.T) {
 	is.Equal(0, res["minimum"])
 }
 
+func TestValidateVersionTag(t *testing.T) {
+	is := assert.New(t)
+
+	img := InvocationImage{BaseImage{}}
+	b := Bundle{
+		Version:          "latest",
+		InvocationImages: []InvocationImage{img},
+	}
+
+	err := b.Validate()
+	is.EqualError(err, "'latest' is not a valid tag option")
+}
+
 func TestValidateBundle_RequiresInvocationImage(t *testing.T) {
 	b := Bundle{
 		Name:    "bar",
