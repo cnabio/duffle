@@ -3,13 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/spf13/cobra"
 
 	"github.com/deislabs/duffle/pkg/action"
 )
 
-const usage = `Uninstalls an installation of a CNAB bundle.
+const uninstallUsage = `Uninstalls an installation of a CNAB bundle.
 
 When using '--parameters' or '--set', the uninstall command will replace the old
 parameters with the new ones supplied (even if the new set is an empty set). If neither
@@ -17,57 +18,58 @@ parameters with the new ones supplied (even if the new set is an empty set). If 
 be re-used.
 `
 
-var uninstallDriver string
-
 type uninstallCmd struct {
-	duffleCmd
-	name       string
-	bundleFile string
-	valuesFile string
-	setParams  []string
-	insecure   bool
+	out              io.Writer
+	name             string
+	valuesFile       string
+	driver           string
+	bundle           string
+	bundleFile       string
+	setParams        []string
+	insecure         bool
+	credentialsFiles []string
 }
 
-func newUninstallCmd() *cobra.Command {
-	uc := &uninstallCmd{}
-
-	var (
-		credentialsFiles []string
-		bundleFile       string
-	)
+func newUninstallCmd(w io.Writer) *cobra.Command {
+	uninstall := &uninstallCmd{out: w}
 
 	cmd := &cobra.Command{
-		Use:     "uninstall [NAME]",
-		Short:   "uninstall CNAB installation",
-		Long:    usage,
-		PreRunE: uc.Prepare(),
+		Use:   "uninstall [NAME]",
+		Short: "uninstall CNAB installation",
+		Long:  uninstallUsage,
+		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return uninstall.setup()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			uc.name = args[0]
-			uc.Out = cmd.OutOrStdout()
-			bundleFile, err := bundleFileOrArg2(args, bundleFile, uc.Out, uc.insecure)
-			// If no bundle was found, we just wait for the claim system
-			// to load its bundleFile
-			if err == nil {
-				uc.bundleFile = bundleFile
-			}
-
-			return uc.uninstall(credentialsFiles)
+			uninstall.name = args[0]
+			return uninstall.run()
 		},
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&uninstallDriver, "driver", "d", "docker", "Specify a driver name")
-	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
-	flags.StringVarP(&bundleFile, "file", "f", "", "bundle file to install")
-	flags.StringVarP(&uc.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
-	flags.StringArrayVarP(&uc.setParams, "set", "s", []string{}, "set individual parameters as NAME=VALUE pairs")
-	flags.BoolVarP(&uc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
+	flags.StringVarP(&uninstall.driver, "driver", "d", "docker", "Specify a driver name")
+	flags.StringArrayVarP(&uninstall.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
+	flags.StringVarP(&uninstall.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
+	flags.StringVarP(&uninstall.bundle, "bundle", "b", "", "bundle to uninstall")
+	flags.StringVar(&uninstall.bundleFile, "bundle-file", "", "path to a bundle file to uninstal")
+	flags.StringArrayVarP(&uninstall.setParams, "set", "s", []string{}, "set individual parameters as NAME=VALUE pairs")
+	flags.BoolVarP(&uninstall.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }
 
-func (un *uninstallCmd) uninstall(credentialsFiles []string) error {
+func (un *uninstallCmd) setup() error {
+	bundleFile, err := prepareBundleFile(un.bundle, un.bundleFile, un.insecure)
+	if err != nil {
+		return err
+	}
 
+	un.bundleFile = bundleFile
+	return nil
+}
+
+func (un *uninstallCmd) run() error {
 	claim, err := claimStorage().Read(un.name)
 	if err != nil {
 		return fmt.Errorf("%v not found: %v", un.name, err)
@@ -94,12 +96,12 @@ func (un *uninstallCmd) uninstall(credentialsFiles []string) error {
 		claim.Parameters = params
 	}
 
-	driverImpl, err := prepareDriver(uninstallDriver)
+	driverImpl, err := prepareDriver(un.driver)
 	if err != nil {
 		return fmt.Errorf("could not prepare driver: %s", err)
 	}
 
-	creds, err := loadCredentials(credentialsFiles, claim.Bundle)
+	creds, err := loadCredentials(un.credentialsFiles, claim.Bundle)
 	if err != nil {
 		return fmt.Errorf("could not load credentials: %s", err)
 	}
@@ -108,8 +110,8 @@ func (un *uninstallCmd) uninstall(credentialsFiles []string) error {
 		Driver: driverImpl,
 	}
 
-	fmt.Fprintln(un.Out, "Executing uninstall action...")
-	if err := uninst.Run(&claim, creds, un.Out); err != nil {
+	fmt.Fprintln(un.out, "Executing uninstall action...")
+	if err := uninst.Run(&claim, creds, un.out); err != nil {
 		return fmt.Errorf("could not uninstall %q: %s", un.name, err)
 	}
 	return claimStorage().Delete(un.name)

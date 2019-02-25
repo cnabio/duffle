@@ -86,7 +86,7 @@ func TestExportSetup(t *testing.T) {
 		dest:         tempDir,
 		home:         duffleHome,
 		out:          out,
-		sourceIsFile: true,
+		bundleIsFile: true,
 	}
 	source, _, err = expFile.setup()
 	if err != nil {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -18,44 +17,42 @@ import (
 	"github.com/deislabs/duffle/pkg/repo"
 )
 
-func newInstallCmd() *cobra.Command {
-	const usage = `Installs a CNAB bundle.
+const installUsage = `Installs a CNAB bundle.
 
-This installs a CNAB bundle with a specific installation name. Once the install is complete,
-this bundle can be referenced by installation name.
-
+This command installs a CNAB bundle with a specific installation name.
+A claim (a record about the application installed) is created during
+the install process and can be referenced by the installation name.
 Example:
-	$ duffle install my_release duffle/example:0.1.0
+	$ duffle install my_release example:0.1.0
 	$ duffle status my_release
 
-Different drivers are available for executing the duffle invocation image. The following drivers
-are built-in:
+Different drivers are available for executing the duffle invocation
+image. The following drivers are built-in:
 
 	- docker: run the Docker client. Works for OCI and Docker images
-	- debug: fake a run of the invocation image, and print out what would have been sent
+	- debug: fake a run of the invocation image, and print out what
+        would have been sent
 
-Some drivers have additional configuration that can be passed via environment variable.
-
-	docker:
-	  - VERBOSE: "true" turns on extra output
+Some drivers have additional configuration that can be passed via
+environment variable. When using the Docker driver, the VERBOSE
+environment variable can be set to "true" to turn on extra output.
 
 UNIX Example:
-	$ VERBOSE=true duffle install -d docker my_release duffle/example:0.1.0
+	$ VERBOSE=true duffle install -d docker my_release example:0.1.0
 
 Windows Example:
 	$ $env:VERBOSE = true
-	$ duffle install -d docker my_release duffle/example:0.1.0
+	$ duffle install -d docker my_release example:0.1.0
 
-For unpublished CNAB bundles, you can also load the bundle.json directly:
+You can also load the bundle.json file directly:
 
-	$ duffle install dev_bundle -f path/to/bundle.json
-
+	$ duffle install dev_bundle path/to/bundle.json --bundle-is-file
 
 Verifying and --insecure:
-
-  When the --insecure flag is passed, verification steps will not be performed. This means
-  that Duffle will accept both unsigned (bundle.json) and signed (bundle.cnab) files, but
-  will not perform any validation. The following table illustrates this:
+When the --insecure flag is passed, verification steps will not be
+performed. This means that Duffle will accept both unsigned
+(bundle.json) and signed (bundle.cnab) files, but will not perform
+any validation. The following table illustrates this:
 
 	Bundle     Key known?    Flag            Result
 	------     ----------    -----------     ------
@@ -66,126 +63,107 @@ Verifying and --insecure:
 	Unsigned   N/A           None            Verification error
 	Unsigned   N/A           --insecure      Okay
 `
-	var (
-		installDriver    string
-		credentialsFiles []string
-		valuesFile       string
-		bundleFile       string
-		setParams        []string
-		insecure         bool
-		setFiles         []string
 
-		installationName string
-		bun              *bundle.Bundle
-	)
+type installCmd struct {
+	bundle string
+	home   home.Home
+	out    io.Writer
+
+	driver           string
+	credentialsFiles []string
+	valuesFile       string
+	setParams        []string
+	insecure         bool
+	setFiles         []string
+	bundleIsFile     bool
+	name             string
+}
+
+func newInstallCmd(w io.Writer) *cobra.Command {
+	install := &installCmd{out: w}
 
 	cmd := &cobra.Command{
-		Use:   "install NAME BUNDLE",
+		Use:   "install [NAME] [BUNDLE]",
 		Short: "install a CNAB bundle",
-		Long:  usage,
+		Long:  installUsage,
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bundleFile, err := bundleFileOrArg2(args, bundleFile, cmd.OutOrStdout(), insecure)
-			if err != nil {
-				return err
-			}
-			installationName = args[0]
-
-			// look in claims store for another claim with the same name
-			_, err = claimStorage().Read(installationName)
-			if err != claim.ErrClaimNotFound {
-				return fmt.Errorf("a claim with the name %v already exists", installationName)
-			}
-
-			bun, err = loadBundle(bundleFile, insecure)
-			if err != nil {
-				return err
-			}
-
-			if err = bun.Validate(); err != nil {
-				return err
-			}
-
-			driverImpl, err := prepareDriver(installDriver)
-			if err != nil {
-				return err
-			}
-
-			creds, err := loadCredentials(credentialsFiles, bun)
-			if err != nil {
-				return err
-			}
-
-			// Because this is an install, we create a new claim. For upgrades, we'd
-			// load the claim based on installationName
-			c, err := claim.New(installationName)
-			if err != nil {
-				return err
-			}
-
-			c.Bundle = bun
-			c.Parameters, err = calculateParamValues(bun, valuesFile, setParams, setFiles)
-			if err != nil {
-				return err
-			}
-
-			inst := &action.Install{
-				Driver: driverImpl,
-			}
-			fmt.Println("Executing install action...")
-			err = inst.Run(c, creds, cmd.OutOrStdout())
-
-			// Even if the action fails, we want to store a claim. This is because
-			// we cannot know, based on a failure, whether or not any resources were
-			// created. So we want to suggest that the user take investigative action.
-			err2 := claimStorage().Store(*c)
-			if err != nil {
-				return fmt.Errorf("Install step failed: %v", err)
-			}
-			return err2
+			install.bundle = args[1]
+			install.name = args[0]
+			install.home = home.Home(homePath())
+			return install.run()
 		},
 	}
 
-	flags := cmd.Flags()
-	flags.BoolVarP(&insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
-	flags.StringVarP(&installDriver, "driver", "d", "docker", "Specify a driver name")
-	flags.StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
-	flags.StringVarP(&bundleFile, "file", "f", "", "Bundle file to install")
-	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
-	flags.StringArrayVarP(&setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
-	flags.StringArrayVarP(&setFiles, "set-file", "i", []string{}, "Set individual parameters from file content as NAME=SOURCE-PATH pairs")
+	f := cmd.Flags()
+	f.BoolVarP(&install.bundleIsFile, "bundle-is-file", "f", false, "Indicates that the bundle source is a file path")
+	f.BoolVarP(&install.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
+	f.StringVarP(&install.driver, "driver", "d", "docker", "Specify a driver name")
+	f.StringVarP(&install.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
+	f.StringArrayVarP(&install.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
+	f.StringArrayVarP(&install.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
+	f.StringArrayVarP(&install.setFiles, "set-file", "i", []string{}, "Set individual parameters from file content as NAME=SOURCE-PATH pairs")
+
 	return cmd
 }
 
-func bundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) (string, error) {
-	switch {
-	case len(args) < 1:
-		return "", errors.New("this command requires at least one argument: NAME (name for the installation). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle install NAME BUNDLE\n\t$ duffle install NAME -f path-to-bundle.json")
-	case len(args) == 2 && bun != "":
-		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
-	case len(args) < 2 && bun == "":
-		return "", errors.New("required arguments are NAME (name of the installation) and BUNDLE (CNAB bundle name) or file")
-	case len(args) == 2:
-		return getBundleFilepath(args[1], homePath(), insecure)
+func (i *installCmd) run() error {
+	bundleFile, err := resolveBundleFilePath(i.bundle, i.home.String(), i.bundleIsFile, i.insecure)
+	if err != nil {
+		return err
 	}
-	return bun, nil
-}
+	// look in claims store for another claim with the same name
+	_, err = claimStorage().Read(i.name)
+	if err != claim.ErrClaimNotFound {
+		return fmt.Errorf("a claim with the name %v already exists", i.name)
+	}
 
-// optBundleFileOrArg2 optionally gets a bundle.
-// Returning an empty string with no error is a possible outcome.
-func optBundleFileOrArg2(args []string, bun string, w io.Writer, insecure bool) (string, error) {
-	switch {
-	case len(args) < 1:
-		// No bundle provided
-		return "", nil
-	case len(args) == 2 && bun != "":
-		return "", errors.New("please use either -f or specify a BUNDLE, but not both")
-	case len(args) < 2 && bun == "":
-		// No bundle provided
-		return "", nil
-	case len(args) == 2:
-		return getBundleFilepath(args[1], homePath(), insecure)
+	bun, err := loadBundle(bundleFile, i.insecure)
+	if err != nil {
+		return err
 	}
-	return bun, nil
+
+	if err = bun.Validate(); err != nil {
+		return err
+	}
+
+	driverImpl, err := prepareDriver(i.driver)
+	if err != nil {
+		return err
+	}
+
+	creds, err := loadCredentials(i.credentialsFiles, bun)
+	if err != nil {
+		return err
+	}
+
+	// Because this is an install, we create a new claim. For upgrades, we'd
+	// load the claim based on install name
+	c, err := claim.New(i.name)
+	if err != nil {
+		return err
+	}
+
+	c.Bundle = bun
+	c.Parameters, err = calculateParamValues(bun, i.valuesFile, i.setParams, i.setFiles)
+	if err != nil {
+		return err
+	}
+
+	inst := &action.Install{
+		Driver: driverImpl,
+	}
+	fmt.Fprintf(i.out, "Executing install action...\n")
+	err = inst.Run(c, creds, i.out)
+
+	// Even if the action fails, we want to store a claim. This is because
+	// we cannot know, based on a failure, whether or not any resources were
+	// created. So we want to suggest that the user take investigative action.
+	err2 := claimStorage().Store(*c)
+	if err != nil {
+		return fmt.Errorf("Install step failed: %v", err)
+	}
+	return err2
 }
 
 func getBundleFilepath(bun, homePath string, insecure bool) (string, error) {
