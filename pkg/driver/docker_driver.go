@@ -14,7 +14,6 @@ import (
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -127,13 +126,6 @@ func (d *DockerDriver) exec(op *Operation) error {
 		env = append(env, fmt.Sprintf("%s=%v", k, v))
 	}
 
-	mounts := []mount.Mount{
-		{
-			Type:   mount.TypeBind,
-			Source: "/var/run/docker.sock",
-			Target: "/var/run/docker.sock",
-		},
-	}
 	cfg := &container.Config{
 		Image:        op.Image,
 		Env:          env,
@@ -142,7 +134,7 @@ func (d *DockerDriver) exec(op *Operation) error {
 		AttachStdout: true,
 	}
 
-	hostCfg := &container.HostConfig{Mounts: mounts, AutoRemove: true}
+	hostCfg := &container.HostConfig{AutoRemove: true}
 
 	resp, err := cli.Client().ContainerCreate(ctx, cfg, hostCfg, nil, "")
 	switch {
