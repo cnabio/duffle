@@ -179,7 +179,7 @@ func TestValidateVersionTag(t *testing.T) {
 	}
 
 	err := b.Validate()
-	is.EqualError(err, "'latest' is not a valid tag option")
+	is.EqualError(err, "'latest' is not a valid bundle version")
 }
 
 func TestValidateBundle_RequiresInvocationImage(t *testing.T) {
