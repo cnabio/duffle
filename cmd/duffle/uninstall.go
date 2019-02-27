@@ -52,7 +52,7 @@ func newUninstallCmd(w io.Writer) *cobra.Command {
 	flags.StringArrayVarP(&uninstall.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
 	flags.StringVarP(&uninstall.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringVarP(&uninstall.bundle, "bundle", "b", "", "bundle to uninstall")
-	flags.StringVar(&uninstall.bundleFile, "bundle-file", "", "path to a bundle file to uninstal")
+	flags.StringVar(&uninstall.bundleFile, "bundle-file", "", "path to a bundle file to uninstall")
 	flags.StringArrayVarP(&uninstall.setParams, "set", "s", []string{}, "set individual parameters as NAME=VALUE pairs")
 	flags.BoolVarP(&uninstall.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
