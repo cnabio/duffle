@@ -54,6 +54,15 @@ func TestLoad(t *testing.T) {
 				t.Errorf("expected a component named cnab but got %v", m.InvocationImages)
 			}
 
+			if len(m.Images) != 1 {
+				t.Errorf("exp 1 but was \"%v\"", len(m.Images))
+			}
+
+			img := m.Images["istio"]
+			if !strings.EqualFold(img.ImageType, "docker") {
+				t.Errorf("exp docker but was \"%v\"", img.ImageType)
+			}
+
 			if len(m.Parameters) != 1 {
 				t.Fatalf("expected 1 parameter but got %d", len(m.Parameters))
 			}
