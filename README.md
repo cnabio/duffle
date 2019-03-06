@@ -7,41 +7,27 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
 
 ## Getting Started
 
-1. Ensure you're running the latest version of Go (1.11+) by running `$ go version`
-    ```console
-    $ go version
-    go version go1.11 darwin/amd64
-    ```
+1. [Get the latest Duffle release for your operating system](https://github.com/deislabs/duffle/releases).
 
-2. Clone this repo:
-    ```console
-    $ cd $GOPATH/src/github.com/deislabs/
-    $ git clone git@github.com:deislabs/duffle.git
-    $ cd duffle
-    ```
 
-3. Vendor dependencies, build the `duffle` binary and install onto your system:
-    ```console
-    $ make bootstrap build
-    $ sudo make install
-    ```
-
-4. Run the command to set duffle up on your machine:
+2. Run the command to set `duffle` up on your machine:
     ```console
     $ duffle init
-    The following new directories will be created:
-    /Users/janedoe/.duffle
-    /Users/janedoe/.duffle/logs
-    /Users/janedoe/.duffle/plugins
-    /Users/janedoe/.duffle/repositories
-    /Users/janedoe/.duffle/claims
-    /Users/janedoe/.duffle/credentials
-    ==> Installing default repositories...
-    ==> repo added in 1.096263107s
+    ==> The following new directories will be created:
+    /home/janedoe/.duffle
+    /home/janedoe/.duffle/bundles
+    /home/janedoe/.duffle/logs
+    /home/janedoe/.duffle/plugins
+    /home/janedoe/.duffle/claims
+    /home/janedoe/.duffle/credentials
+    ==> The following new files will be created:
+    /home/janedoe/.duffle/repositories.json
+    ==> Generating a new secret keyring at /home/janedoe/.duffle/secret.ring
+    ==> Generating a new signing key with ID janedoe <janedoe@computer>
+    ==> Generating a new public keyring at /home/janedoe/.duffle/public.ring
     ```
 
-5. Build and install your first bundle:
-
+3. Build and install your first bundle (you can find the `examples` directory in this repository):
     ```console
     $ duffle build ./examples/helloworld/
     Step 1/5 : FROM alpine:latest
@@ -60,15 +46,16 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
     Successfully built e5c795c2a1f4
     Successfully tagged deislabs/helloworld-cnab:64dfc7c4d825fe87506dbaba6ab038eafe2a486d
     ==> Successfully built bundle helloworld:0.1.0
+    ```
 
-6. Check that it was built:
+4. Check that it was built:
     ```console
     $ duffle bundle list
     NAME            VERSION DIGEST                                          SIGNED?
     helloworld      0.1.0   b2747e5c36369f4c102f4f879caa94e607e5db7e        true
     ```
 
-7. Now run it:
+5. Now run it:
     ```console
     $ duffle credentials generate helloworld-creds helloworld:0.1.0
     $ duffle install helloworld-demo -c helloworld-creds helloworld:0.1.0
@@ -78,7 +65,7 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
     Action install complete for helloworld-demo
     ```
 
-8. Clean up:
+6. Clean up:
     ```console
     $ duffle uninstall helloworld-demo
     Executing uninstall action...
@@ -88,6 +75,8 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
     ```
 
     *Notes:*
+    * To build and install bundles, you need access to a Docker engine - it can be Docker for Mac, Docker for Windows, Docker on Linux, or a remote Docker engine. Duffle uses the Docker engine to build the invocation images, as well as for running actions inside invocation images.
+    * Duffle has a driver architecture for different ways of executing actions inside invocation images, and more drivers will be available in the future.
     * Learn more about what a bundle is and its components [here](https://github.com/deislabs/cnab-spec/blob/master/100-CNAB.md).
     * Get a feel for what CNAB bundles look like by referencing the [bundles repo](https://github.com/deislabs/bundles) on github.
 
