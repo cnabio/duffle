@@ -3,23 +3,27 @@ package bundle
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
 
 // ParameterDefinition defines a single parameter for a CNAB bundle
 type ParameterDefinition struct {
-	DataType      string             `json:"type" mapstructure:"type"`
-	DefaultValue  interface{}        `json:"defaultValue,omitempty" mapstructure:"defaultValue"`
-	AllowedValues []interface{}      `json:"allowedValues,omitempty" mapstructure:"allowedValues"`
-	Required      bool               `json:"required,omitempty" mapstructure:"required"`
-	MinValue      *int               `json:"minValue,omitempty" mapstructure:"minValue"`
-	MaxValue      *int               `json:"maxValue,omitempty" mapstructure:"maxValue"`
-	MinLength     *int               `json:"minLength,omitempty" mapstructure:"minLength"`
-	MaxLength     *int               `json:"maxLength,omitempty" mapstructure:"maxLength"`
-	Metadata      *ParameterMetadata `json:"metadata,omitempty" mapstructure:"metadata"`
-	Destination   *Location          `json:"destination,omitemtpty" mapstructure:"destination"`
-	ApplyTo       []string           `json:"apply-to,omitempty" mapstructure:"apply-to,omitempty"`
+	DataType         string            `json:"type" mapstructure:"type"`
+	DefaultValue     interface{}       `json:"defaultValue,omitempty" mapstructure:"defaultValue,omitempty"`
+	Required         bool              `json:"required" mapstructure:"required"`
+	Minimum          *int              `json:"minimum,omitempty" mapstructure:"minimum,omitempty"`
+	Maximum          *int              `json:"maximum,omitempty" mapstructure:"maximum,omitempty"`
+	ExclusiveMinimum *int              `json:"exclusiveMinimum,omitempty" mapstructure:"exclusiveMinimum,omitempty"`
+	ExclusiveMaximum *int              `json:"exclusiveMaximum,omitempty" mapstructure:"exclusiveMaximum,omitempty"`
+	MinLength        *int              `json:"minLength,omitempty" mapstructure:"minLength,omitempty"`
+	MaxLength        *int              `json:"maxLength,omitempty" mapstructure:"maxLength,omitempty"`
+	Pattern          string            `json:"pattern,omitempty" mapstructure:"pattern,omitempty"`
+	Enum             []interface{}     `json:"enum,omitempty" mapstructure:"enum,omitempty"`
+	Metadata         ParameterMetadata `json:"metadata,omitempty" mapstructure:"metadata,omitempty"`
+	Destination      *Location         `json:"destination,omitemtpty" mapstructure:"destination,omitempty"`
+	ApplyTo          []string          `json:"apply-to,omitempty" mapstructure:"apply-to,omitempty"`
 }
 
 // ParameterMetadata contains metadata for a parameter definition.
@@ -50,7 +54,7 @@ func (pd ParameterDefinition) validateByType(value interface{}) error {
 }
 
 func (pd ParameterDefinition) validateAllowedValue(value interface{}) error {
-	if len(pd.AllowedValues) > 0 {
+	if len(pd.Enum) > 0 {
 		val := pd.CoerceValue(value)
 		if !isInCollection(val, pd.allowedValues()) {
 			return errors.New("value is not in the set of allowed values for this parameter")
@@ -61,9 +65,9 @@ func (pd ParameterDefinition) validateAllowedValue(value interface{}) error {
 
 func (pd ParameterDefinition) allowedValues() []interface{} {
 	if pd.DataType == "int" {
-		return intify(pd.AllowedValues)
+		return intify(pd.Enum)
 	}
-	return pd.AllowedValues
+	return pd.Enum
 }
 
 // "Allowed value" numeric collections loaded from JSON will be materialised
@@ -90,6 +94,7 @@ func (pd ParameterDefinition) CoerceValue(value interface{}) interface{} {
 		if ok {
 			i, ok := asInt(f)
 			if !ok {
+				// Explained here: https://github.com/deislabs/duffle/pull/660#discussion_r264377391
 				return f
 			}
 			return i
@@ -126,10 +131,19 @@ func (pd ParameterDefinition) validateStringParameterValue(value interface{}) er
 		return errors.New("value is not a string")
 	}
 	if pd.MinLength != nil && len(s) < *pd.MinLength {
-		return fmt.Errorf("value is too short: minimum length is %d", *pd.MinLength)
+		return fmt.Errorf("value is shorter than %d", *pd.MinLength)
 	}
 	if pd.MaxLength != nil && len(s) > *pd.MaxLength {
-		return fmt.Errorf("value is too long: maximum length is %d", *pd.MaxLength)
+		return fmt.Errorf("value is longer than %d", *pd.MaxLength)
+	}
+	if pd.Pattern != "" {
+		pat, err := regexp.Compile(pd.Pattern)
+		if err != nil {
+			return err
+		}
+		if !pat.MatchString(s) {
+			return fmt.Errorf("%q did not match pattern %q", s, pd.Pattern)
+		}
 	}
 	return nil
 }
@@ -146,13 +160,18 @@ func (pd ParameterDefinition) validateIntParameterValue(value interface{}) error
 			return errors.New("value is not an integer")
 		}
 	}
-	if pd.MinValue != nil && i < *pd.MinValue {
-		return fmt.Errorf("value is too low: minimum value is %d", *pd.MinValue)
+	switch {
+	case pd.Minimum != nil && i < *pd.Minimum:
+		return fmt.Errorf("value is lower than %d", *pd.Minimum)
+	case pd.ExclusiveMinimum != nil && i <= *pd.ExclusiveMinimum:
+		return fmt.Errorf("value is less than or equal to %d", *pd.ExclusiveMinimum)
+	case pd.Maximum != nil && i > *pd.Maximum:
+		return fmt.Errorf("value is higher than %d", *pd.Maximum)
+	case pd.ExclusiveMaximum != nil && i >= *pd.ExclusiveMaximum:
+		return fmt.Errorf("value is higher than or equal to %d", *pd.ExclusiveMaximum)
+	default:
+		return nil
 	}
-	if pd.MaxValue != nil && i > *pd.MaxValue {
-		return fmt.Errorf("value is too high: maximum value is %d", *pd.MaxValue)
-	}
-	return nil
 }
 
 func (pd ParameterDefinition) validateBoolParameterValue(value interface{}) error {

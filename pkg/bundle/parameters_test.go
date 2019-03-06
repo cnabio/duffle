@@ -30,12 +30,15 @@ func TestCanReadParameterNames(t *testing.T) {
 }
 
 func TestCanReadParameterDefinition(t *testing.T) {
+	is := assert.New(t)
 	dataType := "int"
 	defaultValue := "some default"
 	allowedValues0 := "foo"
 	allowedValues1 := "bar"
 	minValue := 100
 	maxValue := 200
+	exMin := 101
+	exMax := 199
 	minLength := 300
 	maxLength := 400
 	description := "some description"
@@ -47,9 +50,11 @@ func TestCanReadParameterDefinition(t *testing.T) {
 			"test": {
 				"type": "%s",
 				"defaultValue": "%s",
-				"allowedValues": [ "%s", "%s" ],
-				"minValue": %d,
-				"maxValue": %d,
+				"enum": [ "%s", "%s" ],
+				"minimum": %d,
+				"maximum": %d,
+				"exclusiveMinimum": %d,
+				"exclusiveMaximum": %d,
 				"minLength": %d,
 				"maxLength": %d,
 				"metadata": {
@@ -60,8 +65,7 @@ func TestCanReadParameterDefinition(t *testing.T) {
 		}
 	}`,
 		dataType, defaultValue, allowedValues0, allowedValues1,
-		minValue, maxValue, minLength, maxLength, description,
-		action0, action1)
+		minValue, maxValue, exMin, exMax, minLength, maxLength, description, action0, action1)
 
 	definitions, err := Unmarshal([]byte(json))
 	if err != nil {
@@ -69,45 +73,21 @@ func TestCanReadParameterDefinition(t *testing.T) {
 	}
 
 	p := definitions.Parameters["test"]
-	if p.DataType != dataType {
-		t.Errorf("Expected data type '%s' but got '%s'", dataType, p.DataType)
-	}
-	if p.DefaultValue != defaultValue {
-		t.Errorf("Expected default value '%s' but got '%s'", defaultValue, p.DefaultValue)
-	}
-	if len(p.AllowedValues) != 2 {
-		t.Errorf("Expected 2 allowed values but got %d", len(p.AllowedValues))
-	}
-	if p.AllowedValues[0] != allowedValues0 {
-		t.Errorf("Expected allowed value '%s' but got '%s'", allowedValues0, p.AllowedValues[0])
-	}
-	if p.AllowedValues[1] != allowedValues1 {
-		t.Errorf("Expected allowed value '%s' but got '%s'", allowedValues1, p.AllowedValues[1])
-	}
-	if *p.MinValue != minValue {
-		t.Errorf("Expected min value '%d' but got '%d'", minValue, p.MinValue)
-	}
-	if *p.MinLength != minLength {
-		t.Errorf("Expected min length '%d' but got '%d'", minLength, p.MinLength)
-	}
-	if *p.MaxValue != maxValue {
-		t.Errorf("Expected max value '%d' but got '%d'", maxValue, p.MaxValue)
-	}
-	if *p.MaxLength != maxLength {
-		t.Errorf("Expected max length '%d' but got '%d'", maxLength, p.MaxLength)
-	}
-	if p.Metadata.Description != description {
-		t.Errorf("Expected description '%s' but got '%s'", description, p.Metadata.Description)
-	}
-	if len(p.ApplyTo) != 2 {
-		t.Errorf("Expected 2 apply-to actions but got %d", len(p.ApplyTo))
-	}
-	if p.ApplyTo[0] != action0 {
-		t.Errorf("Expected action '%s' but got '%s'", action0, p.ApplyTo[0])
-	}
-	if p.ApplyTo[1] != action1 {
-		t.Errorf("Expected action '%s' but got '%s'", action1, p.ApplyTo[1])
-	}
+	is.Equal(dataType, p.DataType)
+	is.Equal(defaultValue, p.DefaultValue)
+	is.Len(p.Enum, 2)
+	is.Equal(allowedValues0, p.Enum[0])
+	is.Equal(allowedValues1, p.Enum[1])
+	is.Equal(minValue, *p.Minimum)
+	is.Equal(maxValue, *p.Maximum)
+	is.Equal(exMin, *p.ExclusiveMinimum)
+	is.Equal(exMax, *p.ExclusiveMaximum)
+	is.Equal(minLength, *p.MinLength)
+	is.Equal(maxLength, *p.MaxLength)
+	is.Equal(description, p.Metadata.Description)
+	is.Equal(p.ApplyTo[0], action0)
+	is.Equal(p.ApplyTo[1], action1)
+
 }
 
 func valueTestJSON(jsonRepresentation string) []byte {
@@ -115,43 +95,14 @@ func valueTestJSON(jsonRepresentation string) []byte {
 		"parameters": {
 			"test": {
 				"defaultValue": %s,
-				"allowedValues": [ %s ]
+				"Enum": [ %s ]
 			}
 		}
 	}`, jsonRepresentation, jsonRepresentation))
 }
 
-func expectString(desc string, expected string, o interface{}, t *testing.T) {
-	s, ok := o.(string)
-	if !ok {
-		t.Errorf("Expected string %s but didn't get one", desc)
-	}
-	if s != expected {
-		t.Errorf("Expected %s '%s' but got '%s'", desc, expected, s)
-	}
-}
-
-func expectInt(desc string, expected int, o interface{}, t *testing.T) {
-	i, ok := o.(float64)
-	if !ok {
-		t.Errorf("Expected int %s but didn't get one", desc)
-	}
-	if int(i) != expected {
-		t.Errorf("Expected %s '%d' but got '%d'", desc, expected, int(i))
-	}
-}
-
-func expectBool(desc string, expected bool, o interface{}, t *testing.T) {
-	b, ok := o.(bool)
-	if !ok {
-		t.Errorf("Expected bool %s but didn't get one", desc)
-	}
-	if b != expected {
-		t.Errorf("Expected %s '%t' but got '%t'", desc, expected, b)
-	}
-}
-
 func TestCanReadValues(t *testing.T) {
+	is := assert.New(t)
 	strValue := "\"some string\""
 	intValue := "123"
 	boolValue := "true"
@@ -160,189 +111,191 @@ func TestCanReadValues(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectString("default value", "some string", strDef.Parameters["test"].DefaultValue, t)
-	expectString("allowed value", "some string", strDef.Parameters["test"].AllowedValues[0], t)
+	is.Equal("some string", strDef.Parameters["test"].DefaultValue)
+	is.Equal("some string", strDef.Parameters["test"].Enum[0])
 
 	intDef, err := Unmarshal(valueTestJSON(intValue))
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectInt("default value", 123, intDef.Parameters["test"].DefaultValue, t)
-	expectInt("allowed value", 123, intDef.Parameters["test"].AllowedValues[0], t)
+	// Numerics are parsed as float64s
+	is.Equal(123.0, intDef.Parameters["test"].DefaultValue)
+	is.Equal(123.0, intDef.Parameters["test"].Enum[0])
 
 	boolDef, err := Unmarshal(valueTestJSON(boolValue))
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectBool("default value", true, boolDef.Parameters["test"].DefaultValue, t)
-	expectBool("allowed value", true, boolDef.Parameters["test"].AllowedValues[0], t)
+	is.True(boolDef.Parameters["test"].DefaultValue.(bool))
+	is.True(boolDef.Parameters["test"].Enum[0].(bool))
 }
 
 func TestValidateStringParameterValue_AnyAllowed(t *testing.T) {
+	is := assert.New(t)
 	pd := ParameterDefinition{
 		DataType: "string",
 	}
 
-	err := pd.ValidateParameterValue("foo")
-	if err != nil {
-		t.Errorf("Expected valid but got error %s", err)
-	}
-
-	err = pd.ValidateParameterValue(17)
-	if err == nil {
-		t.Errorf("Expected invalid type but got no error")
-	}
+	is.NoError(pd.ValidateParameterValue("foo"))
+	is.Error(pd.ValidateParameterValue(17))
 }
 
 func TestValidateStringParameterValue_AllowedOnly(t *testing.T) {
+	is := assert.New(t)
 	pd := ParameterDefinition{
-		DataType:      "string",
-		AllowedValues: []interface{}{"foo", "bar"},
+		DataType: "string",
+		Enum:     []interface{}{"foo", "bar"},
 	}
 
-	err := pd.ValidateParameterValue("foo")
-	if err != nil {
-		t.Errorf("Expected valid but got error %s", err)
-	}
-
-	err = pd.ValidateParameterValue("quux")
-	if err == nil {
-		t.Errorf("Expected disallowed value but got no error")
-	}
+	is.NoError(pd.ValidateParameterValue("foo"))
+	is.Error(pd.ValidateParameterValue("quux"))
 }
 
 func TestValidateStringParameterValue_MinLength(t *testing.T) {
+	is := assert.New(t)
 	pd := ParameterDefinition{
 		DataType:  "string",
 		MinLength: intPtr(5),
 	}
-
-	err := pd.ValidateParameterValue("foobar")
-	if err != nil {
-		t.Errorf("Expected valid but got error %s", err)
-	}
-
-	err = pd.ValidateParameterValue("foo")
-	if err == nil {
-		t.Errorf("Expected too-short value but got no error")
-	}
+	is.NoError(pd.ValidateParameterValue("foobar"))
+	is.Error(pd.ValidateParameterValue("foo"))
 }
 
 func TestValidateStringParameterValue_MaxLength(t *testing.T) {
+	is := assert.New(t)
 	pd := ParameterDefinition{
 		DataType:  "string",
 		MaxLength: intPtr(5),
 	}
+	is.NoError(pd.ValidateParameterValue("foo"))
+	is.Error(pd.ValidateParameterValue("foobar"))
+}
 
-	err := pd.ValidateParameterValue("foo")
-	if err != nil {
-		t.Errorf("Expected valid but got error %s", err)
+func TestValidateStringParameterValue_Pattern(t *testing.T) {
+	is := assert.New(t)
+	pd := ParameterDefinition{
+		DataType: "string",
+		Pattern:  "^he[l]+o$",
 	}
+	is.NoError(pd.ValidateParameterValue("hello"))
+	is.NoError(pd.ValidateParameterValue("helllllllo"))
+	is.Error(pd.ValidateParameterValue("yolo hello"))
 
-	err = pd.ValidateParameterValue("foobar")
-	if err == nil {
-		t.Errorf("Expected too-long value but got no error")
-	}
+	// Bad pattern
+	pd.Pattern = "hell[o"
+	is.Error(pd.ValidateParameterValue("hello"))
 }
 
 func TestValidateIntParameterValue_AnyAllowed(t *testing.T) {
+	is := assert.New(t)
 	pd := ParameterDefinition{
 		DataType: "int",
 	}
 
-	err := pd.ValidateParameterValue(17)
-	if err != nil {
-		t.Errorf("Expected valid but got error %s", err)
-	}
-
-	err = pd.ValidateParameterValue(float64(17))
-	if err != nil {
-		t.Errorf("Expected valid but got error %s", err)
-	}
-
-	err = pd.ValidateParameterValue(17.5)
-	if err == nil {
-		t.Errorf("Expected not an integer but got no error")
-	}
-
-	err = pd.ValidateParameterValue("17")
-	if err == nil {
-		t.Errorf("Expected invalid type but got no error")
-	}
+	is.NoError(pd.ValidateParameterValue(17))
+	is.NoError(pd.ValidateParameterValue(float64(17)))
+	is.Error(pd.ValidateParameterValue(17.5))
+	is.Error(pd.ValidateParameterValue("17"))
 }
 
 func TestValidateIntParameterValue_AllowedOnly(t *testing.T) {
-	pd := ParameterDefinition{
-		DataType:      "int",
-		AllowedValues: []interface{}{17, 23},
-	}
-
-	err := pd.ValidateParameterValue(17)
-	if err != nil {
-		t.Errorf("Expected valid but got error %s", err)
-	}
-
-	err = pd.ValidateParameterValue(58)
-	if err == nil {
-		t.Errorf("Expected disallowed value but got no error")
-	}
-}
-
-func TestValidateIntParameterValue_MinValue(t *testing.T) {
+	is := assert.New(t)
 	pd := ParameterDefinition{
 		DataType: "int",
-		MinValue: intPtr(5),
+		Enum:     []interface{}{17, 23},
 	}
 
-	err := pd.ValidateParameterValue(17)
-	if err != nil {
-		t.Errorf("Expected valid but got error %s", err)
-	}
-
-	err = pd.ValidateParameterValue(3)
-	if err == nil {
-		t.Errorf("Expected too-small value but got no error")
-	}
-	assert.Equal(t, "value is too low: minimum value is 5", err.Error())
+	is.NoError(pd.ValidateParameterValue(17))
+	is.Error(pd.ValidateParameterValue(58))
 }
 
-func TestValidateIntParameterValue_MaxValue(t *testing.T) {
+func TestValidateIntParameterValue_Minimum(t *testing.T) {
+	is := assert.New(t)
 	pd := ParameterDefinition{
 		DataType: "int",
-		MaxValue: intPtr(5),
+		Minimum:  intPtr(5),
+	}
+	is.NoError(pd.ValidateParameterValue(17))
+	is.NoError(pd.ValidateParameterValue(5))
+	is.Error(pd.ValidateParameterValue(3))
+	is.Equal("value is lower than 5", pd.ValidateParameterValue(3).Error())
+}
+func TestValidateIntParameterValue_ExclusiveMinimum(t *testing.T) {
+	is := assert.New(t)
+	pd := ParameterDefinition{
+		DataType:         "int",
+		ExclusiveMinimum: intPtr(5),
+	}
+	is.NoError(pd.ValidateParameterValue(17))
+	is.Error(pd.ValidateParameterValue(3))
+	is.Equal("value is less than or equal to 5", pd.ValidateParameterValue(5).Error())
+}
+
+func TestValidateIntParameterValue_Maximum(t *testing.T) {
+	is := assert.New(t)
+	pd := ParameterDefinition{
+		DataType: "int",
+		Maximum:  intPtr(5),
 	}
 
-	err := pd.ValidateParameterValue(3)
-	if err != nil {
-		t.Errorf("Expected valid but got error %s", err)
+	is.NoError(pd.ValidateParameterValue(3))
+	is.NoError(pd.ValidateParameterValue(5))
+	is.Error(pd.ValidateParameterValue(17))
+	is.Equal("value is higher than 5", pd.ValidateParameterValue(6).Error())
+}
+func TestValidateIntParameterValue_ExclusiveMaximum(t *testing.T) {
+	is := assert.New(t)
+	pd := ParameterDefinition{
+		DataType:         "int",
+		ExclusiveMaximum: intPtr(5),
 	}
 
-	err = pd.ValidateParameterValue(17)
-	if err == nil {
-		t.Errorf("Expected too-large value but got no error")
-	}
-	assert.Equal(t, "value is too high: maximum value is 5", err.Error())
+	is.NoError(pd.ValidateParameterValue(3))
+	is.Error(pd.ValidateParameterValue(17))
+	is.Error(pd.ValidateParameterValue(5))
+	is.Equal("value is higher than or equal to 5", pd.ValidateParameterValue(6).Error())
 }
 
 func TestValidateBoolParameterValue(t *testing.T) {
+	is := assert.New(t)
 	pd := ParameterDefinition{
 		DataType: "bool",
 	}
 
-	err := pd.ValidateParameterValue(true)
-	if err != nil {
-		t.Errorf("Expected valid but got error %s", err)
+	is.NoError(pd.ValidateParameterValue(true))
+	is.NoError(pd.ValidateParameterValue(false))
+	is.Error(pd.ValidateParameterValue(17))
+	is.Error(pd.ValidateParameterValue("true"))
+}
+
+func TestValidateIntParameterValue_MinimumMaximum(t *testing.T) {
+	is := assert.New(t)
+	pd := ParameterDefinition{
+		DataType: "int",
+		Minimum:  intPtr(1),
+		Maximum:  intPtr(5),
 	}
 
-	err = pd.ValidateParameterValue(17)
-	if err == nil {
-		t.Errorf("Expected invalid type but got no error")
+	is.NoError(pd.ValidateParameterValue(1))
+	is.NoError(pd.ValidateParameterValue(3))
+	is.NoError(pd.ValidateParameterValue(5))
+	is.Error(pd.ValidateParameterValue(0))
+	is.Error(pd.ValidateParameterValue(6))
+}
+
+func TestValidateIntParameterValue_ExclusiveMinimumMaximum(t *testing.T) {
+	is := assert.New(t)
+	pd := ParameterDefinition{
+		DataType:         "int",
+		ExclusiveMinimum: intPtr(1),
+		ExclusiveMaximum: intPtr(5),
 	}
 
-	err = pd.ValidateParameterValue("17")
-	if err == nil {
-		t.Errorf("Expected invalid type but got no error")
-	}
+	is.Error(pd.ValidateParameterValue(1))
+	is.NoError(pd.ValidateParameterValue(3))
+	is.Error(pd.ValidateParameterValue(5))
+	is.Error(pd.ValidateParameterValue(0))
+	is.Error(pd.ValidateParameterValue(6))
 }
 
 func TestConvertValue(t *testing.T) {
@@ -370,6 +323,22 @@ func TestConvertValue(t *testing.T) {
 
 	_, err = pd.ConvertValue("onetwothree")
 	is.Error(err)
+
+	pd.DataType = "chimpanzee"
+	_, err = pd.ConvertValue("onetwothree")
+	is.Error(err)
+}
+
+func TestCoerceValue(t *testing.T) {
+	is := assert.New(t)
+	pd := ParameterDefinition{
+		DataType: "int",
+	}
+	is.Equal(5, pd.CoerceValue(5))
+	is.Equal(5, pd.CoerceValue(5.0))
+	// So this is definitely what the code is designed to do. But this
+	// is not what the docs say it does.
+	is.Equal(5.1, pd.CoerceValue(5.1))
 }
 
 func intPtr(i int) *int {
