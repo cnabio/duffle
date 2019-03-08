@@ -25,8 +25,9 @@ import (
 type DockerDriver struct {
 	config map[string]string
 	// If true, this will not actually run Docker
-	Simulate  bool
-	dockerCli command.Cli
+	Simulate                   bool
+	dockerCli                  command.Cli
+	dockerConfigurationOptions []DockerConfigurationOption
 }
 
 // Run executes the Docker driver
@@ -37,6 +38,11 @@ func (d *DockerDriver) Run(op *Operation) error {
 // Handles indicates that the Docker driver supports "docker" and "oci"
 func (d *DockerDriver) Handles(dt string) bool {
 	return dt == ImageTypeDocker || dt == ImageTypeOCI
+}
+
+// AddConfigurationOptions adds configuration callbacks to the driver
+func (d *DockerDriver) AddConfigurationOptions(opts ...DockerConfigurationOption) {
+	d.dockerConfigurationOptions = append(d.dockerConfigurationOptions, opts...)
 }
 
 // Config returns the Docker driver configuration options
@@ -136,6 +142,12 @@ func (d *DockerDriver) exec(op *Operation) error {
 
 	hostCfg := &container.HostConfig{AutoRemove: true}
 
+	for _, opt := range d.dockerConfigurationOptions {
+		if err := opt(cfg, hostCfg); err != nil {
+			return err
+		}
+	}
+
 	resp, err := cli.Client().ContainerCreate(ctx, cfg, hostCfg, nil, "")
 	switch {
 	case client.IsErrNotFound(err):
@@ -226,3 +238,6 @@ func generateTar(files map[string]string) (io.Reader, error) {
 	}()
 	return r, nil
 }
+
+// DockerConfigurationOption is an option used to customize docker driver container and host config
+type DockerConfigurationOption func(*container.Config, *container.HostConfig) error
