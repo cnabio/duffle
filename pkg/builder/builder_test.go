@@ -3,12 +3,12 @@ package builder
 import (
 	"context"
 	"io"
-	"reflect"
 	"testing"
 
 	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/duffle/manifest"
 	"github.com/deislabs/duffle/pkg/imagebuilder"
+	"github.com/stretchr/testify/assert"
 )
 
 // testImage represents a mock invocation image
@@ -68,6 +68,13 @@ func TestPrepareBuild(t *testing.T) {
 				URL:   "https://test.com",
 			},
 		},
+		Actions: map[string]bundle.Action{
+			"hello": {
+				Description: "says hello",
+				Stateless:   true,
+				Modifies:    false,
+			},
+		},
 	}
 
 	components := []imagebuilder.ImageBuilder{
@@ -92,7 +99,7 @@ func TestPrepareBuild(t *testing.T) {
 	expected := bundle.InvocationImage{}
 	expected.Image = "cnab:0.1.0"
 	expected.ImageType = "docker"
-	if !reflect.DeepEqual(b.InvocationImages[0], expected) {
-		t.Errorf("expected %v, got %v", expected, b.InvocationImages[0])
-	}
+
+	assert.Equal(t, expected, b.InvocationImages[0])
+	assert.Equal(t, "says hello", b.Actions["hello"].Description)
 }

@@ -66,7 +66,7 @@ type LocationRef struct {
 
 // BaseImage contains fields shared across image types
 type BaseImage struct {
-	ImageType string        `json:"imageType" mapstructure:"imageType"`
+	ImageType string        `json:"imageType,omitempty" mapstructure:"imageType"`
 	Image     string        `json:"image" mapstructure:"image"`
 	Digest    string        `json:"digest,omitempty" mapstructure:"digest"`
 	Size      uint64        `json:"size,omitempty" mapstructure:"size"`
@@ -82,14 +82,14 @@ type ImagePlatform struct {
 
 // Image describes a container image in the bundle
 type Image struct {
-	BaseImage
+	BaseImage   `mapstructure:",squash"`
 	Description string        `json:"description" mapstructure:"description"` //TODO: change? see where it's being used? change to description?
 	Refs        []LocationRef `json:"refs" mapstructure:"refs"`
 }
 
 // InvocationImage contains the image type and location for the installation of a bundle
 type InvocationImage struct {
-	BaseImage
+	BaseImage `mapstructure:",squash"`
 }
 
 // Location provides the location where a value should be written in
@@ -116,7 +116,9 @@ type Action struct {
 	// Modifies indicates whether this action modifies the release.
 	//
 	// If it is possible that an action modify a release, this must be set to true.
-	Modifies bool `json:"modifies" mapstructure:"modifies"`
+	Modifies    bool   `json:"modifies,omitempty" mapstructure:"modifies"`
+	Stateless   bool   `json:"stateless,omitempty" mapstructure:"stateless"`
+	Description string `json:"description,omitempty" mapstructure:"description"`
 }
 
 // ValuesOrDefaults returns parameter values or the default parameter values

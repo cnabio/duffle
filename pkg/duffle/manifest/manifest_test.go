@@ -28,6 +28,7 @@ func TestGenerateName(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
+	is := assert.New(t)
 	testcases := []string{"", "duffle.toml", "duffle.json", "duffle.yaml"}
 
 	for _, tc := range testcases {
@@ -42,52 +43,31 @@ func TestLoad(t *testing.T) {
 			}
 
 			wantName := "testbundle"
-			if m.Name != wantName {
-				t.Errorf("expected Name to be %q but got %q", wantName, m.Name)
-			}
-
-			if len(m.InvocationImages) != 1 {
-				t.Fatalf("expected 1 component but got %d", len(m.InvocationImages))
-			}
-
+			is.Equal(wantName, m.Name)
+			is.Len(m.InvocationImages, 1)
 			if _, ok := m.InvocationImages["cnab"]; !ok {
-				t.Errorf("expected a component named cnab but got %v", m.InvocationImages)
+				t.Fatalf("expected a component named cnab but got %v", m.InvocationImages)
 			}
 
-			if len(m.Parameters) != 1 {
-				t.Fatalf("expected 1 parameter but got %d", len(m.Parameters))
-			}
-
+			is.Len(m.Parameters, 1)
 			param, ok := m.Parameters["foo"]
-			if !ok {
-				t.Errorf("expected a parameter named foo but got %v", m.Parameters)
-			}
-
-			if param.DataType != "string" {
-				t.Errorf("expected foo parameter to have a type of string but got %v", param.DataType)
-			}
-
-			if len(m.Credentials) != 1 {
-				t.Fatalf("expected 1 credential but got %d", len(m.Credentials))
-			}
+			is.True(ok, "param should exist")
+			is.Equal("string", param.DataType)
+			is.Len(m.Credentials, 1)
 
 			cred, ok := m.Credentials["bar"]
-			if !ok {
-				t.Errorf("expected a credential named bar but got %v", m.Credentials)
-			}
-
-			if cred.Path != "/tmp" {
-				t.Errorf("expected foo credential to have a path of /tmp but got %v", cred.Path)
-			}
-
-			if len(m.Maintainers) != 1 {
-				t.Fatalf("expected 1 maintainer but got %d", len(m.Maintainers))
-			}
+			is.True(ok, "expected credential")
+			is.Equal("/tmp", cred.Path)
+			is.Len(m.Maintainers, 1)
 
 			maintainer := m.Maintainers[0]
-			if maintainer.Name != "sally" {
-				t.Errorf("expected maintainer to be sally but got %v", maintainer.Name)
-			}
+			is.Equal("sally", maintainer.Name)
+
+			is.Len(m.Images, 1)
+			is.Equal("test:latest", m.Images["test"].Image)
+
+			is.Len(m.Actions, 1)
+			is.Equal("says hello", m.Actions["hello"].Description)
 		})
 	}
 }

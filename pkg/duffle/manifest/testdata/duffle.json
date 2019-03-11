@@ -23,5 +23,16 @@
     {
       "name": "sally"
     }
-  ]
+  ],
+  "actions": {
+    "hello": {
+      "description": "says hello",
+      "stateless": true
+    }
+  },
+  "images": {
+    "test": {
+      "image": "test:latest"
+    }
+  }
 }
