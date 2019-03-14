@@ -84,8 +84,7 @@ type ImagePlatform struct {
 // Image describes a container image in the bundle
 type Image struct {
 	BaseImage   `mapstructure:",squash"`
-	Description string        `json:"description" mapstructure:"description"` //TODO: change? see where it's being used? change to description?
-	Refs        []LocationRef `json:"refs" mapstructure:"refs"`
+	Description string `json:"description" mapstructure:"description"` //TODO: change? see where it's being used? change to description?
 }
 
 // InvocationImage contains the image type and location for the installation of a bundle
