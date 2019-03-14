@@ -1207,6 +1207,7 @@
     "github.com/docker/docker/pkg/term",
     "github.com/docker/docker/registry",
     "github.com/docker/go-connections/tlsconfig",
+    "github.com/docker/go/canonical/json",
     "github.com/ghodss/yaml",
     "github.com/gosuri/uitable",
     "github.com/oklog/ulid",

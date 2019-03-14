@@ -1,10 +1,11 @@
 package manifest
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/docker/go/canonical/json"
 
 	"github.com/deislabs/duffle/pkg/bundle"
 )
@@ -62,7 +63,7 @@ func Scaffold(path string) error {
 		},
 	}
 
-	d, err := json.MarshalIndent(m, "", "    ")
+	d, err := json.MarshalCanonical(m)
 	if err != nil {
 		return err
 	}

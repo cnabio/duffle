@@ -1,13 +1,14 @@
 package bundle
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/docker/go/canonical/json"
 )
 
 // Bundle is a CNAB metadata document
@@ -40,7 +41,7 @@ func ParseReader(r io.Reader) (Bundle, error) {
 // WriteFile serializes the bundle and writes it to a file as JSON.
 func (b Bundle) WriteFile(dest string, mode os.FileMode) error {
 	// FIXME: The marshal here should exactly match the Marshal in the signature code.
-	d, err := json.MarshalIndent(b, "", "    ")
+	d, err := json.MarshalCanonical(b)
 	if err != nil {
 		return err
 	}
@@ -49,7 +50,7 @@ func (b Bundle) WriteFile(dest string, mode os.FileMode) error {
 
 // WriteTo writes unsigned JSON to an io.Writer using the standard formatting.
 func (b Bundle) WriteTo(w io.Writer) (int64, error) {
-	d, err := json.MarshalIndent(b, "", "    ")
+	d, err := json.MarshalCanonical(b)
 	if err != nil {
 		return 0, err
 	}

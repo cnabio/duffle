@@ -1,9 +1,10 @@
 package driver
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
+
+	"github.com/docker/go/canonical/json"
 )
 
 // ImageType constants provide some of the image types supported
