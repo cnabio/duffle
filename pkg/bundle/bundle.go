@@ -118,6 +118,10 @@ type Action struct {
 	//
 	// If it is possible that an action modify a release, this must be set to true.
 	Modifies bool `json:"modifies" mapstructure:"modifies"`
+	// Stateless indicates that the action is purely informational, that credentials are not required, and that the runtime should not keep track of its invocation
+	Stateless bool `json:"stateless,omitempty" mapstructure:"stateless"`
+	// Description describes the action as a user-readable string
+	Description string `json:"description,omitempty" mapstructure:"description,omitempty"`
 }
 
 // ValuesOrDefaults returns parameter values or the default parameter values

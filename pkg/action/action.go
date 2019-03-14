@@ -13,6 +13,9 @@ import (
 	"github.com/deislabs/duffle/pkg/driver"
 )
 
+// notStateless is there just to make callers of opFromClaims more readable
+const notStateless = false
+
 // Action describes one of the primary actions that can be executed in CNAB.
 //
 // The actions are:
@@ -48,8 +51,8 @@ func getImageMap(b *bundle.Bundle) ([]byte, error) {
 	return json.Marshal(imgs)
 }
 
-func opFromClaim(action string, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) (*driver.Operation, error) {
-	env, files, err := creds.Expand(c.Bundle)
+func opFromClaim(action string, stateless bool, c *claim.Claim, ii bundle.InvocationImage, creds credentials.Set, w io.Writer) (*driver.Operation, error) {
+	env, files, err := creds.Expand(c.Bundle, stateless)
 	if err != nil {
 		return nil, err
 	}
