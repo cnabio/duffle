@@ -9,17 +9,17 @@ import (
 
 // ParameterDefinition defines a single parameter for a CNAB bundle
 type ParameterDefinition struct {
-	DataType      string            `json:"type" mapstructure:"type"`
-	DefaultValue  interface{}       `json:"defaultValue,omitempty" mapstructure:"defaultValue,omitempty"`
-	AllowedValues []interface{}     `json:"allowedValues,omitempty" mapstructure:"allowedValues,omitempty"`
-	Required      bool              `json:"required" mapstructure:"required"`
-	MinValue      *int              `json:"minValue,omitempty" mapstructure:"minValue,omitempty"`
-	MaxValue      *int              `json:"maxValue,omitempty" mapstructure:"maxValue,omitempty"`
-	MinLength     *int              `json:"minLength,omitempty" mapstructure:"minLength,omitempty"`
-	MaxLength     *int              `json:"maxLength,omitempty" mapstructure:"maxLength,omitempty"`
-	Metadata      ParameterMetadata `json:"metadata,omitempty" mapstructure:"metadata,omitempty"`
-	Destination   *Location         `json:"destination,omitempty" mapstructure:"destination,omitempty"`
-	ApplyTo       []string          `json:"apply-to,omitempty" mapstructure:"apply-to,omitempty"`
+	DataType      string             `json:"type" mapstructure:"type"`
+	DefaultValue  interface{}        `json:"defaultValue,omitempty" mapstructure:"defaultValue,omitempty"`
+	AllowedValues []interface{}      `json:"allowedValues,omitempty" mapstructure:"allowedValues,omitempty"`
+	Required      bool               `json:"required" mapstructure:"required"`
+	MinValue      *int               `json:"minValue,omitempty" mapstructure:"minValue,omitempty"`
+	MaxValue      *int               `json:"maxValue,omitempty" mapstructure:"maxValue,omitempty"`
+	MinLength     *int               `json:"minLength,omitempty" mapstructure:"minLength,omitempty"`
+	MaxLength     *int               `json:"maxLength,omitempty" mapstructure:"maxLength,omitempty"`
+	Metadata      *ParameterMetadata `json:"metadata,omitempty" mapstructure:"metadata,omitempty"`
+	Destination   *Location          `json:"destination,omitempty" mapstructure:"destination,omitempty"`
+	ApplyTo       []string           `json:"apply-to,omitempty" mapstructure:"apply-to,omitempty"`
 }
 
 // ParameterMetadata contains metadata for a parameter definition.
