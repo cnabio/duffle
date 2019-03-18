@@ -50,3 +50,10 @@
   non-go = true
   unused-packages = true
   go-tests = true
+[[constraint]]
+  name = "github.com/Azure/go-autorest"
+  version = "11.5.2"
+
+[[constraint]]
+  name = "github.com/Azure/azure-sdk-for-go"
+  version = "26.3.1"

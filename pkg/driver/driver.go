@@ -21,6 +21,8 @@ func Lookup(name string) (Driver, error) {
 		return &DockerDriver{}, nil
 	case "debug":
 		return &DebugDriver{}, nil
+	case "aci":
+		return &ACIDriver{}, nil
 	default:
 		return &CommandDriver{Name: name}, nil
 	}
