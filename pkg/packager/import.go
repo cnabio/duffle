@@ -41,7 +41,7 @@ func NewImporter(source, destination string, load loader.Loader, verbose bool) (
 	}
 	cli.NegotiateAPIVersion(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("cannot negotation Docker client version: %v", err)
+		return nil, fmt.Errorf("cannot negotiate Docker client version: %v", err)
 	}
 
 	return &Importer{
