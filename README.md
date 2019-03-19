@@ -80,6 +80,6 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
     * Learn more about what a bundle is and its components [here](https://github.com/deislabs/cnab-spec/blob/master/100-CNAB.md).
     * Get a feel for what CNAB bundles look like by referencing the [bundles repo](https://github.com/deislabs/bundles) on github.
 
-# Debugging using VS Code
+## Developing Duffle
 
-For instructions on using VS Code to debug the Duffle binary, see [the debugging document](docs/debugging.md).
+See the [Developer's Guide](docs/developing.md).
