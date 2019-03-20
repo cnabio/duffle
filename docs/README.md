@@ -11,4 +11,5 @@ The following documentation is available:
     3. [Duffle Build](./proposal/203-duffle-build.md)
     4. [Duffle Export/Import](./proposal/204-export-import.md)
 3. Developer Information
-    1. [Debugging](debugging.md)
+    1. [Developer's Guide](developing.md)
+    2. [Debugging Duffle using VS Code](debugging.md)
