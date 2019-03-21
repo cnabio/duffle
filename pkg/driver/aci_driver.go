@@ -209,6 +209,7 @@ func (d *ACIDriver) createACIInstance(op *Operation) error {
 	// GET ACI Config
 	aciRG := d.config["ACI_RESOURCE_GROUP"]
 	aciLocation := d.config["ACI_LOCATION"]
+	aciLocation = strings.ToLower(strings.Replace(aciLocation, " ", "", -1))
 	d.log("Resource Group:", aciRG)
 	d.log("Location:", aciLocation)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -533,7 +534,7 @@ func (d *ACIDriver) getContainerState(aciRG string, aciName string) (string, err
 }
 
 func locationIsAvailable(location string, locations []string) bool {
-	location = strings.ToLower(strings.Replace(location, " ", "", -1))
+
 	for _, l := range locations {
 		l = strings.ToLower(strings.Replace(l, " ", "", -1))
 		if l == location {
