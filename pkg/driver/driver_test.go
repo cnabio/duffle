@@ -55,7 +55,7 @@ func TestDockerDriver_Run(t *testing.T) {
 	d, err := Lookup("docker")
 
 	// Don't actually run Docker
-	d.(*DockerDriver).Simulate = true
+	d.(*DockerDriver).SetConfig(map[string]string{"SIMULATE": "1"})
 
 	is := assert.New(t)
 	is.NoError(err)
