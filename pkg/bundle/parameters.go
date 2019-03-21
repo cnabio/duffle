@@ -12,7 +12,7 @@ type ParameterDefinition struct {
 	DataType      string             `json:"type" mapstructure:"type"`
 	DefaultValue  interface{}        `json:"defaultValue,omitempty" mapstructure:"defaultValue"`
 	AllowedValues []interface{}      `json:"allowedValues,omitempty" mapstructure:"allowedValues"`
-	Required      bool               `json:"required" mapstructure:"required"`
+	Required      bool               `json:"required,omitempty" mapstructure:"required"`
 	MinValue      *int               `json:"minValue,omitempty" mapstructure:"minValue"`
 	MaxValue      *int               `json:"maxValue,omitempty" mapstructure:"maxValue"`
 	MinLength     *int               `json:"minLength,omitempty" mapstructure:"minLength"`
