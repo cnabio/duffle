@@ -106,9 +106,9 @@ type Maintainer struct {
 	// Name is a user name or organization name
 	Name string `json:"name" mapstructure:"name"`
 	// Email is an optional email address to contact the named maintainer
-	Email string `json:"email" mapstructure:"email"`
+	Email string `json:"email,omitempty" mapstructure:"email"`
 	// Url is an optional URL to an address for the named maintainer
-	URL string `json:"url" mapstructure:"url"`
+	URL string `json:"url,omitempty" mapstructure:"url"`
 }
 
 // Action describes a custom (non-core) action.
