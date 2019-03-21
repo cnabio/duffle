@@ -1,0 +1,48 @@
+#!/bin/sh
+
+#set -eo pipefail
+
+action=$CNAB_ACTION
+name=$CNAB_INSTALLATION_NAME
+param=${CNAB_P_HELLO:-hello}
+login_type="${CNAB_P_ACI_MSI_TYPE:-none}"
+
+
+echo "$(date) $param world"
+case $action in
+    install)
+    echo "$(date) Install action"
+    i=0
+    while [ $i -lt 6 ]
+    do 
+        echo "$(date) STDOUT:Running..."
+        (>&2 echo "$(date) STDERR:Running...")
+        sleep 10
+        i=$((i+1))
+    done
+    
+    if [[ "${login_type}" == "user" ]]; then
+        az login --identity -u "${CNAB_P_ACI_USER_MSI_RESOURCE_ID}"
+    fi
+    if [[ "${login_type}" == "system" ]]; then
+        az login --identity
+    fi
+    az group list
+    ;;
+    uninstall)
+    echo "uninstall action"
+    ;;
+    upgrade)
+    echo "Upgrade action"
+    ;;
+    downgrade)
+    echo "Downgrade action"
+    ;;
+    status)
+    echo "Status action"
+    ;;
+    *)
+    echo "No action for $action"
+    ;;
+esac
+echo "$(date) Action $action complete for $name"

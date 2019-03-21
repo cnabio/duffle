@@ -1,0 +1,35 @@
+{
+    "name": "helloworld-aci",
+    "version": "0.1.0",
+    "description": "A example bundle to be used with Azure ACI Driver",
+    "keywords": [
+        "helloworld",
+        "cnab",
+        "tutorial"
+    ],
+    "maintainers": [
+        {
+            "name": "Jane Doe",
+            "email": "jane.doe@example.com",
+            "url": "https://example.com"
+        }
+    ],
+    "invocationImages": {
+        "cnab": {
+            "name": "cnab",
+            "builder": "docker",
+            "configuration": {
+                "registry": "simongdavies"
+            }
+        }
+    },
+    "parameters":{
+        "ACI_MSI_TYPE":{
+            "type": "string"
+        },
+        "ACI_USER_MSI_RESOURCE_ID":{
+            "type": "string"
+        }
+    },
+    "credentials": null
+}

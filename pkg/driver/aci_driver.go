@@ -52,8 +52,8 @@ func (d *ACIDriver) Config() map[string]string {
 		"ACI_LOCATION":             "The location to create the ACI Instance in",
 		"ACI_NAME":                 "The name of the ACI instance to create - if not specified a name will be generated",
 		"ACI_DO_NOT_DELETE":        "Do not delete RG and ACI instance created - useful for debugging - only deletes RG if it was created by the driver",
-		"ACI_MSI_TYPE":             "If this is set to User or System the created ACI Container Group will be launched with MSI",
-		"ACI_SYSTEM_MSI_ROLE":      "The role to be asssigned to System MSI User - used if ACI_MSI_TYPE == System, if this is null or empty then the role defaults to contributor",
+		"ACI_MSI_TYPE":             "If this is set to user or system the created ACI Container Group will be launched with MSI",
+		"ACI_SYSTEM_MSI_ROLE":      "The role to be asssigned to System MSI User - used if ACI_MSI_TYPE == system, if this is null or empty then the role defaults to contributor",
 		"ACI_SYSTEM_MSI_SCOPE":     "The scope to apply the role to System MSI User - will attempt to set scope to the  Resource Group that the ACI Instance is being created in if not set",
 		"ACI_USER_MSI_RESOURCE_ID": "The resource Id of the MSI User - required if ACI_MSI_TYPE == User",
 	}
