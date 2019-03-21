@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
@@ -10,10 +11,12 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2015-11-01/subscriptions"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest"
+	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/uuid"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -128,7 +131,7 @@ func (d *ACIDriver) loginToAzure() error {
 		deviceConfig := auth.NewDeviceFlowConfig(applicationID, tenantID)
 		authorizer, err := deviceConfig.Authorizer()
 		if err != nil {
-			return fmt.Errorf("Attempt to login to azure with Device Code: %v", err)
+			return fmt.Errorf("Attempt to login to azure with Device Code failed: %v", err)
 		}
 
 		fmt.Println("Logged in with Device Code")
@@ -136,8 +139,20 @@ func (d *ACIDriver) loginToAzure() error {
 		return nil
 	}
 
+	// Attempt to use token from CloudShell
+	if d.inCloudShell {
+		d.log("Attempting to Login with CloudShell")
+		token, err := d.getCloudShellToken()
+		if err != nil {
+			return fmt.Errorf("Attempt to login to Azure with CloudShell failed: %v", err)
+		}
+
+		d.authorizer = autorest.NewBearerAuthorizer(token)
+		return nil
+	}
+
 	// Attempt to login with MSI
-	if d.inCloudShell || checkForMSIEndpoint() {
+	if checkForMSIEndpoint() {
 		d.log("Attempting to Login with MSI")
 		msiConfig := auth.NewMSIConfig()
 		authorizer, err := msiConfig.Authorizer()
@@ -685,4 +700,48 @@ type identityDetails struct {
 	Identity *containerinstance.ContainerGroupIdentity
 	Scope    *string
 	Role     *string
+}
+
+func (d *ACIDriver) getCloudShellToken() (*adal.Token, error) {
+
+	MSIEndpoint := os.Getenv("MSI_ENDPOINT")
+	d.log("CloudShell MSI Endpoint", MSIEndpoint)
+	if len(MSIEndpoint) == 0 {
+		return nil, errors.New("MSI_ENDPOINT environment variable not set")
+	}
+
+	timeout := time.Duration(1 * time.Second)
+	client := http.Client{
+		Timeout: timeout,
+	}
+	req, err := http.NewRequest("GET", "http://localhost:50342/oauth2/token", nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating HTTP Request to CloudShell Token: %v", err)
+	}
+
+	req.Header.Set("Metadata", "true")
+	query := req.URL.Query()
+	query.Add("api-version", "2018-02-01")
+	query.Add("resource", "https://management.azure.com/")
+	req.URL.RawQuery = query.Encode()
+	d.log("Token Query", query.Encode())
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting CloudShell Token: %v", err)
+	}
+	defer resp.Body.Close()
+	rawResp, err := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		if err != nil {
+			return nil, fmt.Errorf("Error getting CloudShell Token. Status Code:'%d'. Failed reading response body error: %v", resp.StatusCode, err)
+		}
+		return nil, fmt.Errorf("Error getting Token. Status Code:'%d'. Response body: %s", resp.StatusCode, string(rawResp))
+	}
+
+	var token adal.Token
+	err = json.Unmarshal(rawResp, &token)
+	if err != nil {
+		return nil, fmt.Errorf("Error deserialising CloudShell Token Status Code: '%d'. Token: %s", resp.StatusCode, string(rawResp))
+	}
+	return &token, nil
 }
