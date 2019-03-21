@@ -97,8 +97,8 @@ type InvocationImage struct {
 //
 // A location may be either a file (by path) or an environment variable.
 type Location struct {
-	Path                string `json:"path" mapstructure:"path"`
-	EnvironmentVariable string `json:"env" mapstructure:"env"`
+	Path                string `json:"path,omitempty" mapstructure:"path"`
+	EnvironmentVariable string `json:"env,omitempty" mapstructure:"env"`
 }
 
 // Maintainer describes a code maintainer of a bundle
