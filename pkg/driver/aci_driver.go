@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
 	"github.com/Azure/azure-sdk-for-go/services/msi/mgmt/2018-11-30/msi"
@@ -16,6 +17,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/uuid"
+
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -307,8 +309,7 @@ func (d *ACIDriver) createACIInstance(op *Operation) error {
 		return fmt.Errorf("Failed to get container Identity:%v", err)
 	}
 
-	d.log("Creating Azure Container Instance")
-	_, err = d.createInstance(aciName, aciLocation, aciRG, op.Image, env, identity)
+	_, err = d.createInstance(aciName, aciLocation, aciRG, op.Image, env, *identity)
 	if err != nil {
 		return fmt.Errorf("Error creating ACI Instance:%v", err)
 	}
@@ -333,7 +334,6 @@ func (d *ACIDriver) createACIInstance(op *Operation) error {
 	}
 
 	// Check if the container is running
-	containerRunning := false
 	state, err := d.getContainerState(aciRG, aciName)
 	if err != nil {
 		return fmt.Errorf("Error getting container state :%v", err)
@@ -349,7 +349,7 @@ func (d *ACIDriver) createACIInstance(op *Operation) error {
 		return errors.New("Container execution failed")
 	}
 
-	containerRunning = true
+	containerRunning := true
 	linesOutput := 0
 	for containerRunning {
 		d.log("Getting Container State")
@@ -404,13 +404,13 @@ func (d *ACIDriver) getContainerLogs(ctx context.Context, aciRG string, aciName 
 	return noOfLines, nil
 }
 
-func (d *ACIDriver) getContainerIdentity(ctx context.Context, aciRG string) (identityDetails, error) {
+func (d *ACIDriver) getContainerIdentity(ctx context.Context, aciRG string) (*identityDetails, error) {
 	useMSI := d.config["ACI_MSI_TYPE"]
 	d.log("MSI Type:", useMSI)
 	userMSIResourceID := d.config["ACI_USER_MSI_RESOURCE_ID"]
 	d.log("User MSI Resource ID:", userMSIResourceID)
 	if len(useMSI) == 0 {
-		return identityDetails{
+		return &identityDetails{
 			MSIType: "none",
 		}, nil
 	}
@@ -431,7 +431,7 @@ func (d *ACIDriver) getContainerIdentity(ctx context.Context, aciRG string) (ide
 		}
 		d.log("MSI Scope:", scope)
 
-		return identityDetails{
+		return &identityDetails{
 			MSIType: "system",
 			Identity: &containerinstance.ContainerGroupIdentity{
 				Type: containerinstance.SystemAssigned,
@@ -446,26 +446,29 @@ func (d *ACIDriver) getContainerIdentity(ctx context.Context, aciRG string) (ide
 		if len(userMSIResourceID) > 0 {
 			resource, err := azure.ParseResourceID(userMSIResourceID)
 			if err != nil {
-				return identityDetails{}, fmt.Errorf("ACI_USER_MSI_RESOURCE_ID environment variable parsing error: %v ", err)
+				return nil, fmt.Errorf("ACI_USER_MSI_RESOURCE_ID environment variable parsing error: %v ", err)
 			}
 
 			userAssignedIdentitiesClient := d.getUserAssignedIdentitiesClient(resource.SubscriptionID)
 			identity, err := userAssignedIdentitiesClient.Get(ctx, resource.ResourceGroup, resource.ResourceName)
-			return identityDetails{
+			if err != nil {
+				return nil, fmt.Errorf("Error getting User Assigned Identity:%s  Error: %v", userMSIResourceID, err)
+			}
+			return &identityDetails{
 				MSIType: "user",
 				Identity: &containerinstance.ContainerGroupIdentity{
 					Type: containerinstance.UserAssigned,
 					UserAssignedIdentities: map[string]*containerinstance.ContainerGroupIdentityUserAssignedIdentitiesValue{
-						*identity.ID: &containerinstance.ContainerGroupIdentityUserAssignedIdentitiesValue{},
+						*identity.ID: {},
 					},
 				},
 			}, nil
 		}
 
-		return identityDetails{}, errors.New("ACI Driver requires ACI_USER_MSI_RESOURCE_ID environment variable when ACI_MSI_TYPE is set to user")
+		return nil, errors.New("ACI Driver requires ACI_USER_MSI_RESOURCE_ID environment variable when ACI_MSI_TYPE is set to user")
 	}
 
-	return identityDetails{}, fmt.Errorf("ACI_MSI_TYPE environment variable punknown value: %s ", useMSI)
+	return nil, fmt.Errorf("ACI_MSI_TYPE environment variable unknown value: %s ", useMSI)
 }
 
 func (d *ACIDriver) getRoleDefinitionsClient(subscriptionID string) authorization.RoleDefinitionsClient {
@@ -546,11 +549,7 @@ func checkForMSIEndpoint() bool {
 		Timeout: timeout,
 	}
 	_, err := client.Head("http://169.254.169.254/metadata/identity/oauth2/token")
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 func (d *ACIDriver) createContainerGroup(aciName string, aciRG string, containerGroup containerinstance.ContainerGroup) (containerinstance.ContainerGroup, error) {
@@ -614,6 +613,8 @@ func (d *ACIDriver) createInstance(aciName string, aciLocation string, aciRG str
 		}
 
 	}
+
+	d.log("Creating ACI for CNAB action")
 	containerGroup, err := d.createContainerGroup(
 		aciName,
 		aciRG,
@@ -674,18 +675,29 @@ func (d *ACIDriver) setUpSystemMSIRBAC(principalID *string, scope string, role s
 	}
 
 	d.log("RoleDefinitionId", roleDefinitionID)
-	roleAssignmentsClient := d.getRoleAssignmentClient(d.subscriptionID)
-	_, err := roleAssignmentsClient.Create(ctx, scope, uuid.New().String(), authorization.RoleAssignmentCreateParameters{
-		Properties: &authorization.RoleAssignmentProperties{
-			RoleDefinitionID: &roleDefinitionID,
-			PrincipalID:      principalID,
-		},
-	})
-	if err != nil {
-		return fmt.Errorf("Error creating RoleDefinition Role:%s for Scope:%s Error: %v", role, scope, err)
+	// Wait for principal to be available
+	attempts := 5
+	var err error
+	for i := 0; i < attempts; i++ {
+		d.log("Creating Role Attempt", i)
+		roleAssignmentsClient := d.getRoleAssignmentClient(d.subscriptionID)
+		_, raerror := roleAssignmentsClient.Create(ctx, scope, uuid.New().String(), authorization.RoleAssignmentCreateParameters{
+			Properties: &authorization.RoleAssignmentProperties{
+				RoleDefinitionID: &roleDefinitionID,
+				PrincipalID:      principalID,
+			},
+		})
+		if raerror != nil {
+			err = fmt.Errorf("Error creating RoleDefinition Role:%s for Scope:%s Error: %v", role, scope, raerror)
+			d.log("Creating Role Attempt:", i, "Error:", err)
+			time.Sleep(20 * time.Second)
+			continue
+		}
+		err = raerror
+		break
 	}
 
-	return nil
+	return err
 }
 
 func (d *ACIDriver) log(message ...interface{}) {
