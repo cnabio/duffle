@@ -1,13 +1,14 @@
 package bundle
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/docker/go/canonical/json"
 )
 
 // Bundle is a CNAB metadata document
@@ -40,7 +41,7 @@ func ParseReader(r io.Reader) (Bundle, error) {
 // WriteFile serializes the bundle and writes it to a file as JSON.
 func (b Bundle) WriteFile(dest string, mode os.FileMode) error {
 	// FIXME: The marshal here should exactly match the Marshal in the signature code.
-	d, err := json.MarshalIndent(b, "", "    ")
+	d, err := json.MarshalCanonical(b)
 	if err != nil {
 		return err
 	}
@@ -49,7 +50,7 @@ func (b Bundle) WriteFile(dest string, mode os.FileMode) error {
 
 // WriteTo writes unsigned JSON to an io.Writer using the standard formatting.
 func (b Bundle) WriteTo(w io.Writer) (int64, error) {
-	d, err := json.MarshalIndent(b, "", "    ")
+	d, err := json.MarshalCanonical(b)
 	if err != nil {
 		return 0, err
 	}
@@ -82,14 +83,14 @@ type ImagePlatform struct {
 
 // Image describes a container image in the bundle
 type Image struct {
-	BaseImage
+	BaseImage   `mapstructure:",squash"`
 	Description string        `json:"description" mapstructure:"description"` //TODO: change? see where it's being used? change to description?
 	Refs        []LocationRef `json:"refs" mapstructure:"refs"`
 }
 
 // InvocationImage contains the image type and location for the installation of a bundle
 type InvocationImage struct {
-	BaseImage
+	BaseImage `mapstructure:",squash"`
 }
 
 // Location provides the location where a value should be written in
@@ -117,6 +118,10 @@ type Action struct {
 	//
 	// If it is possible that an action modify a release, this must be set to true.
 	Modifies bool `json:"modifies" mapstructure:"modifies"`
+	// Stateless indicates that the action is purely informational, that credentials are not required, and that the runtime should not keep track of its invocation
+	Stateless bool `json:"stateless,omitempty" mapstructure:"stateless"`
+	// Description describes the action as a user-readable string
+	Description string `json:"description,omitempty" mapstructure:"description,omitempty"`
 }
 
 // ValuesOrDefaults returns parameter values or the default parameter values
