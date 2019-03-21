@@ -16,11 +16,11 @@ type Bundle struct {
 	Name             string                         `json:"name" mapstructure:"name"`
 	Version          string                         `json:"version" mapstructure:"version"`
 	Description      string                         `json:"description" mapstructure:"description"`
-	Keywords         []string                       `json:"keywords,omitempty" mapstructure:"keywords,omitempty"`
-	Maintainers      []Maintainer                   `json:"maintainers,omitempty" mapstructure:"maintainers,omitempty"`
+	Keywords         []string                       `json:"keywords,omitempty" mapstructure:"keywords"`
+	Maintainers      []Maintainer                   `json:"maintainers,omitempty" mapstructure:"maintainers"`
 	InvocationImages []InvocationImage              `json:"invocationImages" mapstructure:"invocationImages"`
 	Images           map[string]Image               `json:"images" mapstructure:"images"`
-	Actions          map[string]Action              `json:"actions,omitempty" mapstructure:"actions,omitempty"`
+	Actions          map[string]Action              `json:"actions,omitempty" mapstructure:"actions"`
 	Parameters       map[string]ParameterDefinition `json:"parameters" mapstructure:"parameters"`
 	Credentials      map[string]Location            `json:"credentials" mapstructure:"credentials"`
 }
@@ -120,7 +120,7 @@ type Action struct {
 	// Stateless indicates that the action is purely informational, that credentials are not required, and that the runtime should not keep track of its invocation
 	Stateless bool `json:"stateless,omitempty" mapstructure:"stateless"`
 	// Description describes the action as a user-readable string
-	Description string `json:"description,omitempty" mapstructure:"description,omitempty"`
+	Description string `json:"description,omitempty" mapstructure:"description"`
 }
 
 // ValuesOrDefaults returns parameter values or the default parameter values
