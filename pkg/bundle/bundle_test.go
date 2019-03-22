@@ -52,9 +52,6 @@ func TestReadImageProperties(t *testing.T) {
 	if image1.Image != "urn:image1uri" {
 		t.Errorf("Expected Image 'urn:image1uri', got '%s'", image1.Image)
 	}
-	if len(image1.Refs) != 1 {
-		t.Errorf("Expected 1 ref, got %d", len(image1.Refs))
-	}
 }
 
 func TestReadCredentialProperties(t *testing.T) {
