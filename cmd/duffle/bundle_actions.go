@@ -1,10 +1,10 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
-	"os"
+
+	"github.com/deislabs/duffle/pkg/duffle/home"
 
 	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
@@ -13,9 +13,11 @@ import (
 const bundleActionsDesc = ` Lists all actions available in a bundle`
 
 type bundleActionsCmd struct {
-	out        io.Writer
-	bundleFile string
-	insecure   bool
+	out          io.Writer
+	home         home.Home
+	bundle       string
+	insecure     bool
+	bundleIsFile bool
 }
 
 func newBundleActionsCmd(w io.Writer) *cobra.Command {
@@ -26,28 +28,23 @@ func newBundleActionsCmd(w io.Writer) *cobra.Command {
 		Short: bundleActionsDesc,
 		Long:  bundleActionsDesc,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			a.bundle = args[0]
+			a.home = home.Home(homePath())
 
-			bundle, err := bundleFileOrArg1(args, a.bundleFile)
-			if err != nil {
-				return err
-			}
-			return a.run(bundle)
+			return a.run()
 		},
 	}
 
-	cmd.Flags().StringVarP(&a.bundleFile, "file", "f", "", "path to the bundle file to show actions for")
+	cmd.Flags().BoolVarP(&a.bundleIsFile, "bundle-is-file", "f", false, "Indicates that the bundle source is a file path")
 	cmd.Flags().BoolVarP(&a.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }
 
-func (a *bundleActionsCmd) run(bundleFile string) error {
-
-	// Verify that file exists
-	if fi, err := os.Stat(bundleFile); err != nil {
-		return fmt.Errorf("cannot find bundle file to sign: %v", err)
-	} else if fi.IsDir() {
-		return errors.New("cannot sign a directory")
+func (a *bundleActionsCmd) run() error {
+	bundleFile, err := resolveBundleFilePath(a.bundle, a.home.String(), a.bundleIsFile, a.insecure)
+	if err != nil {
+		return err
 	}
 
 	bun, err := loadBundle(bundleFile, a.insecure)
