@@ -13,8 +13,8 @@ import (
 	"github.com/deislabs/duffle/pkg/driver"
 )
 
-// notStateless is there just to make callers of opFromClaims more readable
-const notStateless = false
+// stateful is there just to make callers of opFromClaims more readable
+const stateful = false
 
 // Action describes one of the primary actions that can be executed in CNAB.
 //
