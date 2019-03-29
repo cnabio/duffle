@@ -24,7 +24,6 @@ const (
 	ActionInstall   = "install"
 	ActionUpgrade   = "upgrade"
 	ActionUninstall = "uninstall"
-	ActionStatus    = "status"
 	ActionUnknown   = "unknown"
 )
 

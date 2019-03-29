@@ -22,7 +22,6 @@ const stateful = false
 // - install
 // - upgrade
 // - uninstall
-// - status
 type Action interface {
 	// Run an action, and record the status in the given claim
 	Run(*claim.Claim, credentials.Set) error
