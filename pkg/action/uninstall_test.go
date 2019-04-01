@@ -11,6 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// makes sure Uninstall implements Action interface
+var _ Action = &Uninstall{}
+
 func TestUninstall_Run(t *testing.T) {
 	out := ioutil.Discard
 
