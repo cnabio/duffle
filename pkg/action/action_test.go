@@ -38,7 +38,7 @@ func mockBundle() *bundle.Bundle {
 		Version: "0.1.0",
 		InvocationImages: []bundle.InvocationImage{
 			{
-				bundle.BaseImage{Image: "foo/bar:0.1.0", ImageType: "docker"},
+				BaseImage: bundle.BaseImage{Image: "foo/bar:0.1.0", ImageType: "docker"},
 			},
 		},
 		Credentials: map[string]bundle.Location{

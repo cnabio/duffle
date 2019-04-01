@@ -39,9 +39,6 @@ func NewExporter(source, dest, logsDir string, l loader.Loader, thin, unsigned b
 	}
 	ctx := context.Background()
 	cli.NegotiateAPIVersion(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("cannot negotiate Docker client version: %v", err)
-	}
 
 	logs := filepath.Join(logsDir, "export-"+time.Now().Format("20060102150405"))
 
