@@ -133,7 +133,7 @@ func (b *buildCmd) run() (err error) {
 		return fmt.Errorf("cannot prepare build: %v", err)
 	}
 
-	if err := bldr.Build(ctx, app); err != nil {
+	if err := bldr.Build(ctx, app, bf); err != nil {
 		return err
 	}
 

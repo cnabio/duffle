@@ -26,11 +26,6 @@ func (b Builder) URI() string {
 	return "mock-uri:1.0.0"
 }
 
-// Digest represents the digest of a mock builder
-func (b Builder) Digest() string {
-	return "mock-digest"
-}
-
 // NewBuilder returns a new mock builder
 func NewBuilder(c *manifest.InvocationImage) *Builder {
 	return &Builder{}
@@ -42,6 +37,6 @@ func (b *Builder) PrepareBuild(appDir, registry, name string) error {
 }
 
 // Build is no-op for a mock builder
-func (b Builder) Build(ctx context.Context, log io.WriteCloser) error {
-	return nil
+func (b Builder) Build(ctx context.Context, log io.WriteCloser) (string, error) {
+	return "mock-digest", nil
 }
