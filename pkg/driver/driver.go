@@ -82,7 +82,7 @@ type DebugDriver struct {
 	config map[string]string
 }
 
-// Run executes the operation on the Debug  driver
+// Run executes the operation on the Debug driver
 func (d *DebugDriver) Run(op *Operation) error {
 	data, err := json.MarshalIndent(op, "", "  ")
 	if err != nil {

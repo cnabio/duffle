@@ -29,7 +29,7 @@ func TestUpgradePersistsClaim(t *testing.T) {
 		Version: "0.1.0",
 		InvocationImages: []bundle.InvocationImage{
 			{
-				bundle.BaseImage{Image: "foo/bar:0.1.0", ImageType: "docker"},
+				BaseImage: bundle.BaseImage{Image: "foo/bar:0.1.0", ImageType: "docker"},
 			},
 		},
 	}

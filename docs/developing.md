@@ -8,23 +8,22 @@ $ go get -d github.com/deislabs/duffle/...
 $ cd $(go env GOPATH)/src/github.com/deislabs/duffle
 ```
 
-## Building
-
 ### Prerequisites
 You need:
 * A working Go 1.11.4 (or later) environment
 * make
 
-Before you start, issue:
+Before you start working with the code, issue:
 ```console
 $ make bootstrap
 ```
 
-Then, to build `duffle`, issue:
+## Building
+
+To build `bin/duffle`, issue:
 ```console
 $ make build
 ```
-The resultant binary is placed in `bin/duffle`.
 
 If you want to install `duffle`, issue:
 ```console
@@ -36,6 +35,18 @@ $ sudo make install
 To run the tests, issue:
 ```console
 $ make test
+```
+
+## Linting
+
+To lint the code, issue:
+```console
+$ make lint
+```
+
+If this detects that some imports need re-organising (errors like "File is not `goimports`-ed"), issue:
+```console
+$ make goimports
 ```
 
 ## Debugging

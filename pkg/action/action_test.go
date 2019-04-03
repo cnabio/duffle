@@ -38,7 +38,7 @@ func mockBundle() *bundle.Bundle {
 		Version: "0.1.0",
 		InvocationImages: []bundle.InvocationImage{
 			{
-				bundle.BaseImage{Image: "foo/bar:0.1.0", ImageType: "docker"},
+				BaseImage: bundle.BaseImage{Image: "foo/bar:0.1.0", ImageType: "docker"},
 			},
 		},
 		Credentials: map[string]bundle.Location{
@@ -142,6 +142,69 @@ func TestOpFromClaim_UndefinedParams(t *testing.T) {
 
 	_, err := opFromClaim(claim.ActionInstall, notStateless, c, invocImage, mockSet, os.Stdout)
 	assert.Error(t, err)
+}
+
+func TestOpFromClaim_MissingRequiredParameter(t *testing.T) {
+	now := time.Now()
+	b := mockBundle()
+	b.Parameters["param_one"] = bundle.ParameterDefinition{Required: true}
+
+	c := &claim.Claim{
+		Created:  now,
+		Modified: now,
+		Name:     "name",
+		Revision: "revision",
+		Bundle:   b,
+		Parameters: map[string]interface{}{
+			"param_two":   "twoval",
+			"param_three": "threeval",
+		},
+	}
+	invocImage := c.Bundle.InvocationImages[0]
+
+	// missing required parameter fails
+	_, err := opFromClaim(claim.ActionInstall, notStateless, c, invocImage, mockSet, os.Stdout)
+	assert.EqualError(t, err, `missing required parameter "param_one" for action "install"`)
+
+	// fill the missing parameter
+	c.Parameters["param_one"] = "oneval"
+	_, err = opFromClaim(claim.ActionInstall, notStateless, c, invocImage, mockSet, os.Stdout)
+	assert.Nil(t, err)
+}
+
+func TestOpFromClaim_MissingRequiredParamSpecificToAction(t *testing.T) {
+	now := time.Now()
+	b := mockBundle()
+	// Add a required parameter only defined for the test action
+	b.Parameters["param_test"] = bundle.ParameterDefinition{
+		ApplyTo:  []string{"test"},
+		Required: true,
+	}
+	c := &claim.Claim{
+		Created:  now,
+		Modified: now,
+		Name:     "name",
+		Revision: "revision",
+		Bundle:   b,
+		Parameters: map[string]interface{}{
+			"param_one":   "oneval",
+			"param_two":   "twoval",
+			"param_three": "threeval",
+		},
+	}
+	invocImage := c.Bundle.InvocationImages[0]
+
+	// calling install action without the test required parameter for test action is ok
+	_, err := opFromClaim(claim.ActionInstall, notStateless, c, invocImage, mockSet, os.Stdout)
+	assert.Nil(t, err)
+
+	// test action needs the required parameter
+	_, err = opFromClaim("test", notStateless, c, invocImage, mockSet, os.Stdout)
+	assert.EqualError(t, err, `missing required parameter "param_test" for action "test"`)
+
+	c.Parameters["param_test"] = "only for test action"
+	_, err = opFromClaim("test", notStateless, c, invocImage, mockSet, os.Stdout)
+	assert.Nil(t, err)
 }
 
 func TestSelectInvocationImage_EmptyInvocationImages(t *testing.T) {

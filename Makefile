@@ -75,6 +75,8 @@ lint:
 
 HAS_DEP          := $(shell $(CHECK) dep)
 HAS_GOLANGCI     := $(shell $(CHECK) golangci-lint)
+HAS_GOIMPORTS    := $(shell $(CHECK) goimports)
+GOLANGCI_VERSION := v1.16.0
 
 .PHONY: build-drivers
 build-drivers:
@@ -87,6 +89,13 @@ ifndef HAS_DEP
 	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 endif
 ifndef HAS_GOLANGCI
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin $(GOLANGCI_VERSION)
+endif
+ifndef HAS_GOIMPORTS
+	go get -u golang.org/x/tools/cmd/goimports
 endif
 	dep ensure -vendor-only -v
+
+.PHONY: goimports
+goimports:
+	find . -name "*.go" | fgrep -v vendor/ | xargs goimports -w -local github.com/deislabs/duffle

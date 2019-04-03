@@ -39,6 +39,9 @@ func TestCanReadParameterDefinition(t *testing.T) {
 	minLength := 300
 	maxLength := 400
 	description := "some description"
+	action0 := "action0"
+	action1 := "action1"
+
 	json := fmt.Sprintf(`{
 		"parameters": {
 			"test": {
@@ -51,12 +54,14 @@ func TestCanReadParameterDefinition(t *testing.T) {
 				"maxLength": %d,
 				"metadata": {
 					"description": "%s"
-				}
+				},
+				"apply-to": [ "%s", "%s" ]
 			}
 		}
 	}`,
 		dataType, defaultValue, allowedValues0, allowedValues1,
-		minValue, maxValue, minLength, maxLength, description)
+		minValue, maxValue, minLength, maxLength, description,
+		action0, action1)
 
 	definitions, err := Unmarshal([]byte(json))
 	if err != nil {
@@ -93,6 +98,15 @@ func TestCanReadParameterDefinition(t *testing.T) {
 	}
 	if p.Metadata.Description != description {
 		t.Errorf("Expected description '%s' but got '%s'", description, p.Metadata.Description)
+	}
+	if len(p.ApplyTo) != 2 {
+		t.Errorf("Expected 2 apply-to actions but got %d", len(p.ApplyTo))
+	}
+	if p.ApplyTo[0] != action0 {
+		t.Errorf("Expected action '%s' but got '%s'", action0, p.ApplyTo[0])
+	}
+	if p.ApplyTo[1] != action1 {
+		t.Errorf("Expected action '%s' but got '%s'", action1, p.ApplyTo[1])
 	}
 }
 
