@@ -22,13 +22,6 @@ func setupTempDuffleHome(t *testing.T) (string, error) {
 	if err := os.MkdirAll(duffleHome.Logs(), 0755); err != nil {
 		return "", err
 	}
-	keyring := filepath.Join("..", "..", "pkg", "signature", "testdata", "keyring.gpg")
-
-	err = copyFile(keyring, filepath.Join(tempDuffleHome, "public.ring"))
-	if err != nil {
-		return "", err
-	}
-	mockSigningKeyring(tempDuffleHome, t)
 
 	return tempDuffleHome, nil
 }
@@ -41,7 +34,7 @@ func TestExportSetup(t *testing.T) {
 	}
 	defer os.Remove(tempDuffleHome)
 
-	if err := copySignedTestBundle(tempDuffleHome); err != nil {
+	if err := copyTestBundle(tempDuffleHome); err != nil {
 		t.Fatal(err)
 	}
 
@@ -64,7 +57,7 @@ func TestExportSetup(t *testing.T) {
 		t.Errorf("Did not expect error but got %s", err)
 	}
 
-	expectedSource := filepath.Join(tempDuffleHome, "bundles", "foo-1.0.0.cnab")
+	expectedSource := filepath.Join(tempDuffleHome, "bundles", "foo-1.0.0.json")
 	if source != expectedSource {
 		t.Errorf("Expected source to be %s, got %s", expectedSource, source)
 	}
@@ -117,15 +110,15 @@ func copyFile(src, dst string) (err error) {
 	return nil
 }
 
-func copySignedTestBundle(tempDuffleHome string) error {
-	signedBundle := filepath.Join("..", "..", "tests", "testdata", "bundles", "foo.cnab")
-	outfile := "foo-1.0.0.cnab"
-	if err := copyFile(signedBundle, filepath.Join(tempDuffleHome, "bundles", outfile)); err != nil {
+func copyTestBundle(tempDuffleHome string) error {
+	bun := filepath.Join("..", "..", "tests", "testdata", "bundles", "foo.json")
+	outfile := "foo-1.0.0.json"
+	if err := copyFile(bun, filepath.Join(tempDuffleHome, "bundles", outfile)); err != nil {
 		return err
 	}
 	var jsonBlob = []byte(`{
     "foo": {
-        "1.0.0": "foo-1.0.0.cnab"
+        "1.0.0": "foo-1.0.0.json"
         }
     } `)
 	return ioutil.WriteFile(filepath.Join(tempDuffleHome, "repositories.json"), jsonBlob, 0644)

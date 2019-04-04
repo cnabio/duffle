@@ -55,7 +55,6 @@ func newRootCmd(outputRedirect io.Writer) *cobra.Command {
 	cmd.AddCommand(newUpgradeCmd(outLog))
 	cmd.AddCommand(newRunCmd(outLog))
 	cmd.AddCommand(newCredentialsCmd(outLog))
-	cmd.AddCommand(newKeyCmd(outLog))
 	cmd.AddCommand(newClaimsCmd(outLog))
 	cmd.AddCommand(newExportCmd(outLog))
 	cmd.AddCommand(newImportCmd(outLog))

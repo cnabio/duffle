@@ -53,7 +53,7 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 			}
 			csName := args[0]
 
-			bun, err := loadBundle(bf, insecure)
+			bun, err := loadBundle(bf)
 			if err != nil {
 				return err
 			}
@@ -187,7 +187,7 @@ func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writ
 	case len(args) < 2 && bundleFile == "":
 		return "", errors.New("required arguments are NAME (name for the credentialset) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return getBundleFilepath(args[1], homePath(), insecure)
+		return getBundleFilepath(args[1], homePath())
 	}
 	return bundleFile, nil
 }

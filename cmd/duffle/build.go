@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,6 +14,7 @@ import (
 	dockerflags "github.com/docker/cli/cli/flags"
 	"github.com/docker/cli/opts"
 	"github.com/docker/go-connections/tlsconfig"
+	"github.com/docker/go/canonical/json"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -28,7 +28,6 @@ import (
 	"github.com/deislabs/duffle/pkg/imagebuilder/mock"
 	"github.com/deislabs/duffle/pkg/ohai"
 	"github.com/deislabs/duffle/pkg/repo"
-	"github.com/deislabs/duffle/pkg/signature"
 )
 
 const buildDesc = `
@@ -50,7 +49,6 @@ type buildCmd struct {
 	out        io.Writer
 	src        string
 	home       home.Home
-	signer     string
 	outputFile string
 
 	// options common to the docker client and the daemon.
@@ -87,7 +85,6 @@ func newBuildCmd(out io.Writer) *cobra.Command {
 	}
 
 	f = cmd.Flags()
-	f.StringVarP(&build.signer, "user", "u", "", "the user ID of the signing key to use. Format is either email address or 'NAME (COMMENT) <EMAIL>'")
 	f.StringVarP(&build.outputFile, "output-file", "o", "", "If set, writes the bundle to this file in addition to saving it to the local store")
 
 	f.BoolVar(&build.dockerClientOptions.Common.Debug, "docker-debug", false, "Enable debug mode")
@@ -152,30 +149,11 @@ func (b *buildCmd) run() (err error) {
 }
 
 func (b *buildCmd) writeBundle(bf *bundle.Bundle) (string, error) {
-	kr, err := signature.LoadKeyRing(b.home.SecretKeyRing())
+	data, err := json.MarshalCanonical(bf)
 	if err != nil {
-		return "", fmt.Errorf("cannot load keyring: %s", err)
+		return "", err
 	}
-
-	if kr.Len() == 0 {
-		return "", errors.New("no signing keys are present in the keyring")
-	}
-
-	// Default to the first key in the ring unless the user specifies otherwise.
-	key := kr.Keys()[0]
-	if b.signer != "" {
-		key, err = kr.Key(b.signer)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	sign := signature.NewSigner(key)
-	data, err := sign.Clearsign(bf)
-	data = append(data, '\n')
-	if err != nil {
-		return "", fmt.Errorf("cannot sign bundle: %s", err)
-	}
+	data = append(data, '\n') //TODO: why?
 
 	digest, err := digest.OfBuffer(data)
 	if err != nil {
