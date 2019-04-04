@@ -99,7 +99,7 @@ func TestOpFromClaim(t *testing.T) {
 	}
 	invocImage := c.Bundle.InvocationImages[0]
 
-	op, err := opFromClaim(claim.ActionInstall, notStateless, c, invocImage, mockSet, os.Stdout)
+	op, err := opFromClaim(claim.ActionInstall, stateful, c, invocImage, mockSet, os.Stdout)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,7 +140,7 @@ func TestOpFromClaim_UndefinedParams(t *testing.T) {
 	}
 	invocImage := c.Bundle.InvocationImages[0]
 
-	_, err := opFromClaim(claim.ActionInstall, notStateless, c, invocImage, mockSet, os.Stdout)
+	_, err := opFromClaim(claim.ActionInstall, stateful, c, invocImage, mockSet, os.Stdout)
 	assert.Error(t, err)
 }
 
@@ -163,12 +163,12 @@ func TestOpFromClaim_MissingRequiredParameter(t *testing.T) {
 	invocImage := c.Bundle.InvocationImages[0]
 
 	// missing required parameter fails
-	_, err := opFromClaim(claim.ActionInstall, notStateless, c, invocImage, mockSet, os.Stdout)
+	_, err := opFromClaim(claim.ActionInstall, stateful, c, invocImage, mockSet, os.Stdout)
 	assert.EqualError(t, err, `missing required parameter "param_one" for action "install"`)
 
 	// fill the missing parameter
 	c.Parameters["param_one"] = "oneval"
-	_, err = opFromClaim(claim.ActionInstall, notStateless, c, invocImage, mockSet, os.Stdout)
+	_, err = opFromClaim(claim.ActionInstall, stateful, c, invocImage, mockSet, os.Stdout)
 	assert.Nil(t, err)
 }
 
@@ -195,15 +195,15 @@ func TestOpFromClaim_MissingRequiredParamSpecificToAction(t *testing.T) {
 	invocImage := c.Bundle.InvocationImages[0]
 
 	// calling install action without the test required parameter for test action is ok
-	_, err := opFromClaim(claim.ActionInstall, notStateless, c, invocImage, mockSet, os.Stdout)
+	_, err := opFromClaim(claim.ActionInstall, stateful, c, invocImage, mockSet, os.Stdout)
 	assert.Nil(t, err)
 
 	// test action needs the required parameter
-	_, err = opFromClaim("test", notStateless, c, invocImage, mockSet, os.Stdout)
+	_, err = opFromClaim("test", stateful, c, invocImage, mockSet, os.Stdout)
 	assert.EqualError(t, err, `missing required parameter "param_test" for action "test"`)
 
 	c.Parameters["param_test"] = "only for test action"
-	_, err = opFromClaim("test", notStateless, c, invocImage, mockSet, os.Stdout)
+	_, err = opFromClaim("test", stateful, c, invocImage, mockSet, os.Stdout)
 	assert.Nil(t, err)
 }
 
