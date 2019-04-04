@@ -18,6 +18,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/uuid"
 
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -26,6 +27,7 @@ import (
 )
 
 const userAgent string = "Duffle ACI Driver"
+const msiTokenEndpoint = "http://169.254.169.254/metadata/identity/oauth2/token"
 
 // ACIDriver runs Docker and OCI invocation images in ACI
 type ACIDriver struct {
@@ -37,6 +39,7 @@ type ACIDriver struct {
 	deleteACIResources bool
 	authorizer         autorest.Authorizer
 	subscriptionID     string
+	out                io.Writer
 }
 
 // Config returns the ACI driver configuration options
@@ -75,6 +78,7 @@ func (d *ACIDriver) Handles(dt string) bool {
 }
 
 func (d *ACIDriver) exec(op *Operation) (reterr error) {
+	d.out = op.Out
 	d.deleteACIResources = true
 	if len(d.config["ACI_DO_NOT_DELETE"]) > 0 && strings.ToLower(d.config["ACI_DO_NOT_DELETE"]) == "true" {
 		d.deleteACIResources = false
@@ -399,7 +403,11 @@ func (d *ACIDriver) getContainerLogs(ctx context.Context, aciRG string, aciName 
 	lines := strings.Split(strings.TrimSuffix(*logs.Content, "\n"), "\n")
 	noOfLines := len(lines)
 	for currentLine := linesOutput; currentLine < noOfLines; currentLine++ {
-		fmt.Println(lines[currentLine])
+		//fmt.Println(lines[currentLine])
+		_, err := fmt.Fprintln(d.out, lines[currentLine])
+		if err != nil {
+			return 0, fmt.Errorf("Error writing container logs :%v", err)
+		}
 	}
 
 	return noOfLines, nil
@@ -534,7 +542,6 @@ func (d *ACIDriver) getContainerState(aciRG string, aciName string) (string, err
 }
 
 func locationIsAvailable(location string, locations []string) bool {
-
 	for _, l := range locations {
 		l = strings.ToLower(strings.Replace(l, " ", "", -1))
 		if l == location {
@@ -544,12 +551,13 @@ func locationIsAvailable(location string, locations []string) bool {
 
 	return false
 }
+
 func checkForMSIEndpoint() bool {
 	timeout := time.Duration(1 * time.Second)
 	client := http.Client{
 		Timeout: timeout,
 	}
-	_, err := client.Head("http://169.254.169.254/metadata/identity/oauth2/token")
+	_, err := client.Head(msiTokenEndpoint)
 	return err == nil
 }
 
@@ -569,6 +577,7 @@ func (d *ACIDriver) createContainerGroup(aciName string, aciRG string, container
 
 	return future.Result(containerGroupsClient)
 }
+
 func (d *ACIDriver) createInstance(aciName string, aciLocation string, aciRG string, image string, env []containerinstance.EnvironmentVariable, identity identityDetails) (*containerinstance.ContainerGroup, error) {
 	// if the MSI type is system assigned then need to create the ACI Instance first in order to create the identity and then assign permissions
 	if identity.MSIType == "system" {
@@ -653,6 +662,7 @@ func (d *ACIDriver) createInstance(aciName string, aciLocation string, aciRG str
 
 	return &containerGroup, nil
 }
+
 func (d *ACIDriver) setUpSystemMSIRBAC(principalID *string, scope string, role string) error {
 	d.log("Setting up System MSI Scope ", scope, "Role ", role)
 	ctx, cancel := context.WithCancel(context.Background())

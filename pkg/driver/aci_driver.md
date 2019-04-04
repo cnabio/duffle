@@ -34,7 +34,7 @@ $USER@Azure:~$ duffle init
 
 3. Install a sample bundle:
 
-A simple helloworld-aci bundle can be found [here](). 
+A simple helloworld-aci bundle can be found [here](https://github.com/deislabs/duffle/tree/acidriver/examples/helloworld-aci). 
 
 The sample bundle can be imported either with or without verification, to run import the bundle with verification first you need to import the public key that the bundle was signed with:
 
