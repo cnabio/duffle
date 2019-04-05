@@ -12,7 +12,7 @@ func newShowCmd(w io.Writer) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "show NAME",
-		Short: "return low-level information on application bundles",
+		Short: bundleShowShortUsage,
 		Long:  bsc.usage(false),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

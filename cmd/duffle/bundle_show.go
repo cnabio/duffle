@@ -8,13 +8,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const bundleShowShortUsage = `return low-level information on application bundles`
+
+type bundleShowCmd struct {
+	name     string
+	insecure bool
+	raw      bool
+	w        io.Writer
+}
+
 func newBundleShowCmd(w io.Writer) *cobra.Command {
 	bsc := &bundleShowCmd{}
 	bsc.w = w
 
 	cmd := &cobra.Command{
 		Use:   "show NAME",
-		Short: "return low-level information on application bundles",
+		Short: bundleShowShortUsage,
 		Long:  bsc.usage(true),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -29,13 +38,6 @@ func newBundleShowCmd(w io.Writer) *cobra.Command {
 	flags.BoolVarP(&bsc.raw, "raw", "r", false, "Display the raw bundle manifest")
 
 	return cmd
-}
-
-type bundleShowCmd struct {
-	name     string
-	insecure bool
-	raw      bool
-	w        io.Writer
 }
 
 func (bsc *bundleShowCmd) usage(bundleSubCommand bool) string {
