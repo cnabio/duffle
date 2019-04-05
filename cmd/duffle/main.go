@@ -129,7 +129,8 @@ func loadBundle(bundleFile string) (*bundle.Bundle, error) {
 	// Issue #439: Errors that come back from the loader can be
 	// pretty opaque.
 	var bun *bundle.Bundle
-	if bun, err := l.Load(bundleFile); err != nil {
+	bun, err := l.Load(bundleFile)
+	if err != nil {
 		return bun, fmt.Errorf("cannot load bundle: %s", err)
 	}
 	return bun, nil
