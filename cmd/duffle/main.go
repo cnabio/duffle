@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,9 +21,8 @@ import (
 
 var (
 	// duffleHome depicts the home directory where all duffle config is stored.
-	duffleHome           string
-	rootCmd              *cobra.Command
-	ErrUnderConstruction = errors.New("under construction")
+	duffleHome string
+	rootCmd    *cobra.Command
 )
 
 func main() {
