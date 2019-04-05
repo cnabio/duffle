@@ -24,14 +24,14 @@ type Exporter struct {
 	Client      *client.Client
 	Context     context.Context
 	Logs        string
-	Loader      loader.Loader
+	Loader      loader.BundleLoader
 }
 
 // NewExporter returns an *Exporter given information about where a bundle
 //  lives, where the compressed bundle should be exported to,
 //  and what form a bundle should be exported in (thin or thick/full). It also
 //  sets up a docker client to work with images.
-func NewExporter(source, dest, logsDir string, l loader.Loader, thin bool) (*Exporter, error) {
+func NewExporter(source, dest, logsDir string, l loader.BundleLoader, thin bool) (*Exporter, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err

@@ -25,7 +25,6 @@ type Bundle struct {
 	Credentials      map[string]Location            `json:"credentials" mapstructure:"credentials"`
 }
 
-//Unmarshal unmarshals a Bundle that was not signed.
 func Unmarshal(data []byte) (*Bundle, error) {
 	b := &Bundle{}
 	return b, json.Unmarshal(data, b)
@@ -40,7 +39,6 @@ func ParseReader(r io.Reader) (Bundle, error) {
 
 // WriteFile serializes the bundle and writes it to a file as JSON.
 func (b Bundle) WriteFile(dest string, mode os.FileMode) error {
-	// FIXME: The marshal here should exactly match the Marshal in the signature code.
 	d, err := json.MarshalCanonical(b)
 	if err != nil {
 		return err
@@ -48,7 +46,7 @@ func (b Bundle) WriteFile(dest string, mode os.FileMode) error {
 	return ioutil.WriteFile(dest, d, mode)
 }
 
-// WriteTo writes unsigned JSON to an io.Writer using the standard formatting.
+// WriteTo writes JSON to an io.Writer using the standard formatting.
 func (b Bundle) WriteTo(w io.Writer) (int64, error) {
 	d, err := json.MarshalCanonical(b)
 	if err != nil {

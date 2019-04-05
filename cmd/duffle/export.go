@@ -78,7 +78,7 @@ func (ex *exportCmd) run() error {
 	return nil
 }
 
-func (ex *exportCmd) Export(bundlefile string, l loader.Loader) error {
+func (ex *exportCmd) Export(bundlefile string, l loader.BundleLoader) error {
 	exp, err := packager.NewExporter(bundlefile, ex.dest, ex.home.Logs(), l, ex.thin)
 	if err != nil {
 		return fmt.Errorf("Unable to set up exporter: %s", err)
@@ -92,13 +92,14 @@ func (ex *exportCmd) Export(bundlefile string, l loader.Loader) error {
 	return nil
 }
 
-func (ex *exportCmd) setup() (string, loader.Loader, error) {
+func (ex *exportCmd) setup() (string, loader.BundleLoader, error) {
+	l := loader.New()
 	bundlefile, err := resolveBundleFilePath(ex.bundle, ex.home.String(), ex.bundleIsFile)
 	if err != nil {
-		return "", nil, err
+		return "", l, err
 	}
 
-	return bundlefile, loader.NewDetectingLoader(), nil
+	return bundlefile, l, nil
 }
 
 func resolveBundleFilePath(bun, homePath string, bundleIsFile bool) (string, error) {

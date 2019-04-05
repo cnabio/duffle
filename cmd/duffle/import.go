@@ -62,7 +62,7 @@ func (im *importCmd) run() error {
 		return err
 	}
 
-	l := loader.NewDetectingLoader()
+	l := loader.NewLoader()
 	imp, err := packager.NewImporter(source, dest, l, im.verbose)
 	if err != nil {
 		return err

@@ -28,7 +28,7 @@ func TestExport(t *testing.T) {
 		Source: source,
 		Thin:   true,
 		Logs:   filepath.Join(tempDir, "export-logs"),
-		Loader: loader.NewDetectingLoader(),
+		Loader: loader.NewLoader(),
 	}
 
 	if err := ex.Export(); err != nil {
@@ -56,7 +56,7 @@ func TestExportCreatesFileProperly(t *testing.T) {
 		Destination: filepath.Join(tempDir, "random-directory", "examplebun-whatev.tgz"),
 		Thin:        true,
 		Logs:        filepath.Join(tempDir, "export-logs"),
-		Loader:      loader.NewDetectingLoader(),
+		Loader:      loader.NewLoader(),
 	}
 
 	if err := ex.Export(); err == nil {

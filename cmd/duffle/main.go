@@ -124,7 +124,7 @@ func prepareDriver(driverName string) (driver.Driver, error) {
 }
 
 func loadBundle(bundleFile string) (*bundle.Bundle, error) {
-	l := loader.NewDetectingLoader()
+	l := loader.NewLoader()
 
 	// Issue #439: Errors that come back from the loader can be
 	// pretty opaque.

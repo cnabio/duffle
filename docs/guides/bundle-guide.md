@@ -95,9 +95,6 @@ After the bundle has been built, we can inspect the bundle:
 
 ```console
 $ duffle show helloworld:0.1.0 -r
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
-
 {
   "name": "helloworld",
   "version": "0.1.0",
@@ -112,22 +109,7 @@ Hash: SHA256
   "parameters": null,
   "credentials": null
 }
------BEGIN PGP SIGNATURE-----
-
-wsDcBAEBCAAQBQJb9ErXCRA58VPKJbKbxwAARqYMADtWlk3aLj/NVxNpd3GaqlI6
-tUiW/1T5zIFEWYsJgSC3ammN9z266Uf2q+tDC+jt7A5+sZTGHujn/8FCuURLRkp7
-UVU7ot1xJb8nWUyDLeZjX6yG+eI7XbqjIbt17+bp59XYVRlgJtT1/gLxqm1gh8IQ
-D2TLeuOdfI3bstupFEN7AoZWPG5XTYbtQCC9TdBLw70LLGl2f7L4Ll7RFDEJEjx+
-NVCjJEWaYAw7DP1kHUpl67vhkFVeptnbr99uC9aEFUo6fImeuczIU0S9K9g+2Vxf
-wcs+XgWKDBkAN9hF/tnaIVsIeHrPJZ9oviEbYDeVqIKUlUBBbNblVTVnjC7shfjF
-1SQ4AGhkIgf9gFan7KkERlAp3dcjh5XDgZ7/ijVGGItlbIE1p8+KBm2FRwJfox69
-L9aitybWBnt5EIm3w4YIYsMuMZuPM/0taoKH9nzNv4lQsKYqeX6tOD36aDx4fys1
-NSKekvE5KfHYU3t+3rUtJRphoVsSr3cNFldsVCVuzQ==
-=iFSF
------END PGP SIGNATURE-----
 ```
-
-As shown by the output, `duffle build` cryptographically signs the bundle to ensure that it has not been tampered with.
 
 ## Watch it Work
 
