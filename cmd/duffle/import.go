@@ -5,10 +5,11 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/deislabs/duffle/pkg/duffle/home"
-	"github.com/deislabs/duffle/pkg/packager"
-
 	"github.com/spf13/cobra"
+
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/loader"
+	"github.com/deislabs/duffle/pkg/packager"
 )
 
 const importDesc = `
@@ -16,12 +17,11 @@ Unpacks a bundle from a gzipped tar file on local file system
 `
 
 type importCmd struct {
-	source   string
-	dest     string
-	out      io.Writer
-	home     home.Home
-	insecure bool
-	verbose  bool
+	source  string
+	dest    string
+	out     io.Writer
+	home    home.Home
+	verbose bool
 }
 
 func newImportCmd(w io.Writer) *cobra.Command {
@@ -46,7 +46,6 @@ func newImportCmd(w io.Writer) *cobra.Command {
 
 	f := cmd.Flags()
 	f.StringVarP(&importc.dest, "destination", "d", "", "Location to unpack bundle")
-	f.BoolVarP(&importc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 	f.BoolVarP(&importc.verbose, "verbose", "v", false, "Verbose output")
 
 	return cmd
@@ -63,11 +62,7 @@ func (im *importCmd) run() error {
 		return err
 	}
 
-	l, err := getLoader(im.home.String(), im.insecure)
-	if err != nil {
-		return err
-	}
-
+	l := loader.NewLoader()
 	imp, err := packager.NewImporter(source, dest, l, im.verbose)
 	if err != nil {
 		return err

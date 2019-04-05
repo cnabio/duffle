@@ -19,7 +19,7 @@ func TestBundleRemove(t *testing.T) {
 	if err := os.MkdirAll(duffleHome.Bundles(), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := copySignedTestBundle(tempDuffleHome); err != nil {
+	if err := copyTestBundle(tempDuffleHome); err != nil {
 		t.Fatal(err)
 	}
 
@@ -33,7 +33,7 @@ func TestBundleRemove(t *testing.T) {
 		t.Errorf("Did not expect error, got %s", err)
 	}
 
-	if _, err := os.Stat(filepath.Join(cmd.home.Bundles(), "foo-1.0.0.cnab")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(cmd.home.Bundles(), "foo-1.0.0.json")); !os.IsNotExist(err) {
 		t.Errorf("Expected bundle file to be removed from local store but was not")
 	}
 }

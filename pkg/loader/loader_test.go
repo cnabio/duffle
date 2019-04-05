@@ -14,10 +14,10 @@ import (
 
 var testFooJSON = filepath.Join("..", "..", "tests", "testdata", "bundles", "foo.json")
 
-func TestUnsignedLoader(t *testing.T) {
+func TestLoader(t *testing.T) {
 	is := assert.New(t)
 
-	l := NewUnsignedLoader()
+	l := NewLoader()
 	bundle, err := l.Load(testFooJSON)
 	if err != nil {
 		t.Fatalf("cannot load bundle: %v", err)
@@ -26,7 +26,7 @@ func TestUnsignedLoader(t *testing.T) {
 	is.Equal("foo", bundle.Name)
 	is.Equal("1.0", bundle.Version)
 }
-func TestUnsignedLoader_Remote(t *testing.T) {
+func TestLoader_Remote(t *testing.T) {
 
 	data, err := ioutil.ReadFile(testFooJSON)
 	if err != nil {
@@ -38,7 +38,7 @@ func TestUnsignedLoader_Remote(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	l := NewUnsignedLoader()
+	l := NewLoader()
 	bundle, err := l.Load(ts.URL)
 	if err != nil {
 		t.Fatal(err)

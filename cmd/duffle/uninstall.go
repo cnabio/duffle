@@ -26,7 +26,6 @@ type uninstallCmd struct {
 	bundle           string
 	bundleFile       string
 	setParams        []string
-	insecure         bool
 	credentialsFiles []string
 }
 
@@ -54,13 +53,12 @@ func newUninstallCmd(w io.Writer) *cobra.Command {
 	flags.StringVarP(&uninstall.bundle, "bundle", "b", "", "bundle to uninstall")
 	flags.StringVar(&uninstall.bundleFile, "bundle-file", "", "path to a bundle file to uninstall")
 	flags.StringArrayVarP(&uninstall.setParams, "set", "s", []string{}, "set individual parameters as NAME=VALUE pairs")
-	flags.BoolVarP(&uninstall.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }
 
 func (un *uninstallCmd) setup() error {
-	bundleFile, err := prepareBundleFile(un.bundle, un.bundleFile, un.insecure)
+	bundleFile, err := prepareBundleFile(un.bundle, un.bundleFile)
 	if err != nil {
 		return err
 	}
@@ -76,7 +74,7 @@ func (un *uninstallCmd) run() error {
 	}
 
 	if un.bundleFile != "" {
-		b, err := loadBundle(un.bundleFile, un.insecure)
+		b, err := loadBundle(un.bundleFile)
 		if err != nil {
 			return err
 		}

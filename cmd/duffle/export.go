@@ -38,7 +38,6 @@ type exportCmd struct {
 	out          io.Writer
 	thin         bool
 	verbose      bool
-	insecure     bool
 	bundleIsFile bool
 }
 
@@ -63,7 +62,6 @@ func newExportCmd(w io.Writer) *cobra.Command {
 	f.BoolVarP(&export.bundleIsFile, "bundle-is-file", "f", false, "Indicates that the bundle source is a file path")
 	f.BoolVarP(&export.thin, "thin", "t", false, "Export only the bundle manifest")
 	f.BoolVarP(&export.verbose, "verbose", "v", false, "Verbose output")
-	f.BoolVarP(&export.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }
@@ -80,8 +78,8 @@ func (ex *exportCmd) run() error {
 	return nil
 }
 
-func (ex *exportCmd) Export(bundlefile string, l loader.Loader) error {
-	exp, err := packager.NewExporter(bundlefile, ex.dest, ex.home.Logs(), l, ex.thin, ex.insecure)
+func (ex *exportCmd) Export(bundlefile string, l loader.BundleLoader) error {
+	exp, err := packager.NewExporter(bundlefile, ex.dest, ex.home.Logs(), l, ex.thin)
 	if err != nil {
 		return fmt.Errorf("Unable to set up exporter: %s", err)
 	}
@@ -94,27 +92,23 @@ func (ex *exportCmd) Export(bundlefile string, l loader.Loader) error {
 	return nil
 }
 
-func (ex *exportCmd) setup() (string, loader.Loader, error) {
-	bundlefile, err := resolveBundleFilePath(ex.bundle, ex.home.String(), ex.bundleIsFile, ex.insecure)
+func (ex *exportCmd) setup() (string, loader.BundleLoader, error) {
+	l := loader.New()
+	bundlefile, err := resolveBundleFilePath(ex.bundle, ex.home.String(), ex.bundleIsFile)
 	if err != nil {
-		return "", nil, err
-	}
-
-	l, err := getLoader(ex.home.String(), ex.insecure)
-	if err != nil {
-		return "", nil, err
+		return "", l, err
 	}
 
 	return bundlefile, l, nil
 }
 
-func resolveBundleFilePath(bun, homePath string, bundleIsFile, insecure bool) (string, error) {
+func resolveBundleFilePath(bun, homePath string, bundleIsFile bool) (string, error) {
 
 	if bundleIsFile {
 		return bun, nil
 	}
 
-	bundlefile, err := getBundleFilepath(bun, homePath, insecure)
+	bundlefile, err := getBundleFilepath(bun, homePath)
 	if err != nil {
 		return "", err
 	}

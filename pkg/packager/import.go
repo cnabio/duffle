@@ -25,7 +25,7 @@ type Importer struct {
 	Source      string
 	Destination string
 	Client      *client.Client
-	Loader      loader.Loader
+	Loader      loader.BundleLoader
 	Verbose     bool
 }
 
@@ -33,8 +33,8 @@ type Importer struct {
 //
 // source is the filesystem path to the archive.
 // destination is the directory to unpack the contents.
-// load is a loader.Loader preconfigured for loading secure or insecure bundles.
-func NewImporter(source, destination string, load loader.Loader, verbose bool) (*Importer, error) {
+// load is a loader.BundleLoader preconfigured for loading bundles.
+func NewImporter(source, destination string, load loader.BundleLoader, verbose bool) (*Importer, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
