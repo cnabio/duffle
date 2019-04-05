@@ -17,14 +17,16 @@ import (
 	"github.com/deislabs/duffle/pkg/repo"
 )
 
-const installUsage = `Installs a CNAB bundle.
+const installUsage = `Installs a Cloud Native Application Bundle (CNAB)
 
-This command installs a CNAB bundle with a specific installation name.
+This command installs a bundle with a specific installation name.
 A claim (a record about the application installed) is created during
 the install process and can be referenced by the installation name.
 Example:
 	$ duffle install my_release example:0.1.0
 	$ duffle status my_release
+
+Note: To install a bundle, use $ duffle bundle install or $ duffle install. They are aliases for the same action.
 
 Different drivers are available for executing the duffle invocation
 image. The following drivers are built-in:
@@ -84,7 +86,7 @@ func newInstallCmd(w io.Writer) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "install [NAME] [BUNDLE]",
-		Short: "install a CNAB bundle",
+		Short: "install a bundle",
 		Long:  installUsage,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -100,7 +102,7 @@ func newInstallCmd(w io.Writer) *cobra.Command {
 	f.BoolVarP(&install.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 	f.StringVarP(&install.driver, "driver", "d", "docker", "Specify a driver name")
 	f.StringVarP(&install.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
-	f.StringArrayVarP(&install.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
+	f.StringArrayVarP(&install.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the bundle. This can be a credentialset name or a path to a file.")
 	f.StringArrayVarP(&install.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
 	f.StringArrayVarP(&install.setFiles, "set-file", "i", []string{}, "Set individual parameters from file content as NAME=SOURCE-PATH pairs")
 
