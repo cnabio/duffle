@@ -12,7 +12,6 @@ func TestBundleActions(t *testing.T) {
 		out:          out,
 		bundleIsFile: true,
 		bundle:       "./testdata/testbundle/actions-test-bundle.json",
-		insecure:     true,
 	}
 
 	if err := cmd.run(); err != nil {
