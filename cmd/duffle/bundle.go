@@ -22,6 +22,7 @@ func newBundleCmd(w io.Writer) *cobra.Command {
 		newInstallCmd(w),
 		newBundleShowCmd(w),
 		newBundleRemoveCmd(w),
+		newBundleActionsCmd(w),
 	)
 	return cmd
 }
