@@ -7,7 +7,7 @@ const goImg = "golang:1.11"
 const gopath = "/go"
 const localPath = gopath + `/src/github.com/${projectOrg}/${projectName}`;
 
-const noop = {run: () => {return Promise.resolve()}}
+const noop = { run: () => { return Promise.resolve() } }
 
 function build(e, project) {
   // Create a new job to run Go tests
@@ -27,6 +27,7 @@ function build(e, project) {
     `cp -a /src/.git ${localPath}`,
     `cd ${localPath}`,
     "make bootstrap",
+    "make build",
     "make test",
     "make lint",
   ];
@@ -38,7 +39,7 @@ function build(e, project) {
 // report their results independently to GitHub
 function runSuite(e, p) {
   // For now, this is the one-stop shop running build, lint and test targets
-  runTests(e, p).catch(e => {console.error(e.toString())});
+  runTests(e, p).catch(e => { console.error(e.toString()) });
 }
 
 // runTests is a Check Run that is ran as part of a Checks Suite
@@ -63,7 +64,7 @@ class Notification {
     this.payload = e.payload;
     this.name = name;
     this.externalID = e.buildID;
-    this.detailsURL = `https://brigadecore.github.io/kashti/builds/${ e.buildID }`;
+    this.detailsURL = `https://brigadecore.github.io/kashti/builds/${e.buildID}`;
     this.title = "running check";
     this.text = "";
     this.summary = "";
@@ -79,7 +80,7 @@ class Notification {
   // Send a new notification, and return a Promise<result>.
   run() {
     this.count++
-    var j = new Job(`${ this.name }-${ this.count }`, "deis/brigade-github-check-run:latest");
+    var j = new Job(`${this.name}-${this.count}`, "deis/brigade-github-check-run:latest");
     j.imageForcePull = true;
     j.env = {
       CHECK_CONCLUSION: this.conclusion,
@@ -106,13 +107,13 @@ async function notificationWrap(job, note, conclusion) {
     const logs = await job.logs();
 
     note.conclusion = conclusion;
-    note.summary = `Task "${ job.name }" passed`;
+    note.summary = `Task "${job.name}" passed`;
     note.text = note.text = "```" + res.toString() + "```\nTest Complete";
     return await note.run();
   } catch (e) {
     const logs = await job.logs();
     note.conclusion = "failure";
-    note.summary = `Task "${ job.name }" failed for ${ e.buildID }`;
+    note.summary = `Task "${job.name}" failed for ${e.buildID}`;
     note.text = "```" + logs + "```\nFailed with error: " + e.toString();
     try {
       return await note.run();
@@ -227,7 +228,7 @@ function acrBuild(project, tag) {
     `cd /src`,
     `cp -av /mnt/brigade/share/bin ./`,
     // Note: git tag may have a '+' character, which is not allowed in docker tag names, hence the substitution
-    `az acr build -r ${registry} -t public/${projectOrg}/${projectName}:${tag.replace("+","-")} .`
+    `az acr build -r ${registry} -t public/${projectOrg}/${projectName}:${tag.replace("+", "-")} .`
   ];
 
   return builder;
@@ -252,7 +253,7 @@ function slackNotify(title, msg, project) {
     return noop
   }
 }
- 
+
 events.on("exec", (e, p) => {
   return build(e, p).run()
 })
