@@ -16,7 +16,6 @@ type bundleActionsCmd struct {
 	out          io.Writer
 	home         home.Home
 	bundle       string
-	insecure     bool
 	bundleIsFile bool
 }
 
@@ -36,18 +35,17 @@ func newBundleActionsCmd(w io.Writer) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&a.bundleIsFile, "bundle-is-file", "f", false, "Indicates that the bundle source is a file path")
-	cmd.Flags().BoolVarP(&a.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }
 
 func (a *bundleActionsCmd) run() error {
-	bundleFile, err := resolveBundleFilePath(a.bundle, a.home.String(), a.bundleIsFile, a.insecure)
+	bundleFile, err := resolveBundleFilePath(a.bundle, a.home.String(), a.bundleIsFile)
 	if err != nil {
 		return err
 	}
 
-	bun, err := loadBundle(bundleFile, a.insecure)
+	bun, err := loadBundle(bundleFile)
 	if err != nil {
 		return err
 	}
