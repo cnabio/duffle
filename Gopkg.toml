@@ -49,3 +49,7 @@
 [[constraint]]
   name = "github.com/docker/go"
   version = "1.5.1-1"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/pivotal/image-relocation"
