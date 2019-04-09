@@ -9,11 +9,11 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/deislabs/cnab-go/bundle"
 	"github.com/spf13/cobra"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/credentials"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 )

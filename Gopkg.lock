@@ -181,6 +181,14 @@
   version = "v1.1.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:f5537515bc64edb9117ec396d197d88852d927185352ce08e2667562ef532a96"
+  name = "github.com/deislabs/cnab-go"
+  packages = ["bundle"]
+  pruneopts = "NUT"
+  revision = "1a73873b84025123a0f8fe84086e59493e051302"
+
+[[projects]]
   digest = "1:e71d64468873ca819b91b975e67e71f349a89f41ab38040bcbd8840f5e193654"
   name = "github.com/docker/cli"
   packages = [
@@ -754,14 +762,6 @@
   revision = "418d78d0b9a7b7de3a6bbc8a23def624cc977bb2"
 
 [[projects]]
-  digest = "1:3fd3d634f6815f19ac4b2c5e16d28ec9aa4584d0bba25d1ee6c424d813cca22a"
-  name = "github.com/renstrom/fuzzysearch"
-  packages = ["fuzzy"]
-  pruneopts = "NUT"
-  revision = "b18e754edff4833912ef4dce9eaca885bd3f0de1"
-  version = "v1.0.1"
-
-[[projects]]
   digest = "1:01252cd79aac70f16cac02a72a1067dd136e0ad6d5b597d0129cf74c739fd8d1"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
@@ -869,17 +869,9 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5a72a3eacbfef7b5ecf165c9e5b1f38f24c4a023a8c1490c138daf37eec9101b"
+  digest = "1:cb77e5934866333fa0784326a57e64c4da128001c94fbd1d29819d79bd3b1087"
   name = "golang.org/x/crypto"
   packages = [
-    "cast5",
-    "openpgp",
-    "openpgp/armor",
-    "openpgp/clearsign",
-    "openpgp/elgamal",
-    "openpgp/errors",
-    "openpgp/packet",
-    "openpgp/s2k",
     "pbkdf2",
     "ssh/terminal",
   ]
@@ -1186,6 +1178,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Masterminds/semver",
+    "github.com/deislabs/cnab-go/bundle",
     "github.com/docker/cli/cli/command",
     "github.com/docker/cli/cli/command/image/build",
     "github.com/docker/cli/cli/config",
@@ -1196,7 +1189,6 @@
     "github.com/docker/distribution/reference",
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/api/types/container",
-    "github.com/docker/docker/api/types/mount",
     "github.com/docker/docker/api/types/strslice",
     "github.com/docker/docker/builder/dockerignore",
     "github.com/docker/docker/client",
@@ -1212,17 +1204,13 @@
     "github.com/gosuri/uitable",
     "github.com/oklog/ulid",
     "github.com/opencontainers/go-digest",
-    "github.com/renstrom/fuzzysearch/fuzzy",
+    "github.com/pkg/errors",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
     "github.com/technosophos/moniker",
-    "golang.org/x/crypto/openpgp",
-    "golang.org/x/crypto/openpgp/armor",
-    "golang.org/x/crypto/openpgp/clearsign",
-    "golang.org/x/crypto/openpgp/packet",
     "golang.org/x/net/context",
     "gopkg.in/AlecAivazis/survey.v1",
     "gopkg.in/yaml.v2",

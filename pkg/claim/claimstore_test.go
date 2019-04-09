@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/deislabs/cnab-go/bundle"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/utils/crud"
 )
 

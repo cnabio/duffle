@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/deislabs/cnab-go/bundle"
 	"github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
 	dockerdebug "github.com/docker/cli/cli/debug"
@@ -19,7 +20,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/deislabs/duffle/pkg/builder"
-	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/crypto/digest"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/duffle/manifest"
