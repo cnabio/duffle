@@ -11,6 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// makes sure Install implements Action interface
+var _ Action = &Install{}
+
 func TestInstall_Run(t *testing.T) {
 	out := ioutil.Discard
 
