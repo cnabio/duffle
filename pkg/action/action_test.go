@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/claim"
 	"github.com/deislabs/duffle/pkg/credentials"
 	"github.com/deislabs/duffle/pkg/driver"
 
+	"github.com/deislabs/cnab-go/bundle"
 	"github.com/stretchr/testify/assert"
 )
 

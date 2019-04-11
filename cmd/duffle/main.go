@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/deislabs/cnab-go/bundle"
 	"github.com/spf13/cobra"
 
-	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/claim"
 	"github.com/deislabs/duffle/pkg/credentials"
 	"github.com/deislabs/duffle/pkg/driver"

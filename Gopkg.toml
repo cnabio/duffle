@@ -11,10 +11,6 @@
   version = "1.4.2"
 
 [[constraint]]
-  name = "github.com/Masterminds/vcs"
-  version = "1.11.1"
-
-[[constraint]]
   name = "github.com/sirupsen/logrus"
   version = "v1.0.4"
 

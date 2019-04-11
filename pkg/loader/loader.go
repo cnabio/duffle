@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/cnab-go/bundle"
 )
 
 // Loader provides an interface for loading a bundle
