@@ -12,6 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// makes sure RunCustom implements Action interface
+var _ Action = &RunCustom{}
+
 func TestRunCustom(t *testing.T) {
 	out := ioutil.Discard
 	is := assert.New(t)
