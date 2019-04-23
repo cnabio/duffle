@@ -22,8 +22,8 @@ import (
 
 const (
 	relocateDesc = `
-Relocates any docker and oci images referenced by a bundle, tags and pushes the images to a registry, and creates a new
-bundle with an updated image map.
+Relocates any docker and oci images, including invocation images, referenced by a bundle, tags and pushes the images to
+a registry, and creates a new bundle with an updated invocation images section and an updated image map.
 
 The --repository-prefix flag determines the repositories for the relocated images.
 Each image is tagged with a name starting with the given prefix and pushed to the repository.
@@ -115,34 +115,56 @@ func (r *relocateCmd) relocate(bun *bundle.Bundle) error {
 		bun.Name = r.outputBundle
 	}
 
+	for i := range bun.InvocationImages {
+		ii := bun.InvocationImages[i]
+		modified, err := r.relocateImage(&ii.BaseImage)
+		if err != nil {
+			return err
+		}
+		if modified {
+			bun.InvocationImages[i] = ii
+		}
+	}
+
 	for k := range bun.Images {
 		im := bun.Images[k]
-		if isOCI(im.ImageType) || isDocker(im.ImageType) {
-			// map the image name
-			n, err := image.NewName(im.Image)
-			if err != nil {
-				return err
-			}
-			rn := r.mapping(r.repoPrefix, n)
-
-			// tag/push the image to its new repository
-			dig, err := r.registryClient.Copy(n, rn)
-			if err != nil {
-				return err
-			}
-			if dig.String() != im.Digest {
-				// should not happen
-				return fmt.Errorf("digest of image %s not preserved: old digest %s; new digest %s", im.Image, im.Digest, dig.String())
-			}
-
-			// update the imagemap
-			im.OriginalImage = im.Image
-			im.Image = rn.String()
+		modified, err := r.relocateImage(&im.BaseImage)
+		if err != nil {
+			return err
+		}
+		if modified {
 			bun.Images[k] = im
 		}
 	}
 
 	return nil
+}
+
+func (r *relocateCmd) relocateImage(i *bundle.BaseImage) (bool, error) {
+	if !isOCI(i.ImageType) && !isDocker(i.ImageType) {
+		return false, nil
+	}
+	// map the image name
+	n, err := image.NewName(i.Image)
+	if err != nil {
+		return false, err
+	}
+	rn := r.mapping(r.repoPrefix, n)
+
+	// tag/push the image to its new repository
+	dig, err := r.registryClient.Copy(n, rn)
+	if err != nil {
+		return false, err
+	}
+	if i.Digest != "" && dig.String() != i.Digest {
+		// should not happen
+		return false, fmt.Errorf("digest of image %s not preserved: old digest %s; new digest %s", i.Image, i.Digest, dig.String())
+	}
+
+	// update the imagemap
+	i.OriginalImage = i.Image
+	i.Image = rn.String()
+	return true, nil
 }
 
 func isOCI(imageType string) bool {

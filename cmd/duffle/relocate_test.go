@@ -17,6 +17,10 @@ import (
 const (
 	testRepositoryPrefix = "example.com/user"
 
+	originalInvocationImageName  = "technosophos/helloworld:0.1.0"
+	relocatedInvocationImageName = "example.com/user/technosophos/helloworld/relocated:0.1.0"
+	invocationImageDigest        = "sha256:86959ecb500308ae523922eab84f2f94082f20b4e7bda84ce9be219f3f1b4e65"
+
 	originalImageNameA  = "deislabs/duffle@sha256:4d41eeb38fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540"
 	relocatedImageNameA = "example.com/user/deislabs/duffle/relocated@sha256:4d41eeb38fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540"
 	imageDigestA        = "sha256:4d41eeb38fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540"
@@ -70,6 +74,10 @@ func relocateFileToFile(t *testing.T, preserveDigest bool, expectedErr error) {
 		},
 		registryClient: &mockRegClient{
 			copyStub: func(source image.Name, target image.Name) (image.Digest, error) {
+				oiin, err := image.NewName(originalInvocationImageName)
+				if err != nil {
+					t.Fatal(err)
+				}
 				oinA, err := image.NewName(originalImageNameA)
 				if err != nil {
 					t.Fatal(err)
@@ -79,6 +87,10 @@ func relocateFileToFile(t *testing.T, preserveDigest bool, expectedErr error) {
 					t.Fatal(err)
 				}
 				switch source {
+				case oiin:
+					if target.String() == relocatedInvocationImageName {
+						return image.NewDigest(invocationImageDigest)
+					}
 				case oinA:
 					if target.String() == relocatedImageNameA {
 						return image.NewDigest(imageDigestA)
@@ -124,6 +136,19 @@ func relocateFileToFile(t *testing.T, preserveDigest bool, expectedErr error) {
 		t.Fatal(err)
 	}
 
+	ii := bun.InvocationImages[0]
+	actualInvocationImageName := ii.Image
+	if actualInvocationImageName != relocatedInvocationImageName {
+		t.Fatalf("output bundle has invocation image with unexpected name: %q (expected %q)",
+			actualInvocationImageName, relocatedInvocationImageName)
+	}
+
+	actualOriginalInvocationImageName := ii.OriginalImage
+	if actualOriginalInvocationImageName != originalInvocationImageName {
+		t.Fatalf("output bundle has invocation image with unexpected original name: %q (expected %q)",
+			actualOriginalInvocationImageName, originalInvocationImageName)
+	}
+
 	assertImage := func(i string, expectedOriginalImageName string, expectedImageName string) {
 		img := bun.Images[i]
 
@@ -146,6 +171,7 @@ func relocateFileToFile(t *testing.T, preserveDigest bool, expectedErr error) {
 }
 
 // naïve test mapping, preserving any tag and/or digest
+// Note: unlike the real mapping, this produces names with more than two slash-separated components.
 func testMapping(originalImage image.Name, t *testing.T) image.Name {
 	rn, err := image.NewName(path.Join(testRepositoryPrefix, originalImage.Path(), "relocated"))
 	if err != nil {

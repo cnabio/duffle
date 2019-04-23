@@ -4,7 +4,7 @@
   "description": "a bundle with images",
   "invocationImages": [
     {
-      "image": "deislabs/helloworld-cnab:675c2daf7449ae58927f251acdd88acb9d1e9767",
+      "image": "technosophos/helloworld:0.1.0",
       "imageType": "docker"
     }
   ],
