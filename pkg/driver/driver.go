@@ -22,8 +22,10 @@ func Lookup(name string) (Driver, error) {
 		return &DockerDriver{}, nil
 	case "debug":
 		return &DebugDriver{}, nil
-	default:
+	case "command":
 		return &CommandDriver{Name: name}, nil
+	default:
+		return nil, fmt.Errorf("unsupported driver: %s", name)
 	}
 }
 
