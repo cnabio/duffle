@@ -11,6 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// makes sure Upgrade implements Action interface
+var _ Action = &Upgrade{}
+
 func TestUpgrade_Run(t *testing.T) {
 	out := ioutil.Discard
 

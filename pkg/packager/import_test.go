@@ -23,7 +23,7 @@ func TestImport(t *testing.T) {
 	im := Importer{
 		Source:      "testdata/examplebun-0.1.0.tgz",
 		Destination: tempDir,
-		Loader:      loader.NewDetectingLoader(),
+		Loader:      loader.NewLoader(),
 	}
 
 	if err := im.Import(); err != nil {
@@ -44,7 +44,7 @@ func TestMalformedImport(t *testing.T) {
 	im := Importer{
 		Source:      "testdata/malformed-0.1.0.tgz",
 		Destination: tempDir,
-		Loader:      loader.NewDetectingLoader(),
+		Loader:      loader.NewLoader(),
 	}
 
 	if err = im.Import(); err == nil {

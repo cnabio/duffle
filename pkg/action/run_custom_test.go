@@ -5,12 +5,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/claim"
 	"github.com/deislabs/duffle/pkg/driver"
 
+	"github.com/deislabs/cnab-go/bundle"
 	"github.com/stretchr/testify/assert"
 )
+
+// makes sure RunCustom implements Action interface
+var _ Action = &RunCustom{}
 
 func TestRunCustom(t *testing.T) {
 	out := ioutil.Discard

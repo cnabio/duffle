@@ -8,13 +8,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const bundleShowShortUsage = `return low-level information on application bundles`
+
+type bundleShowCmd struct {
+	name string
+	raw  bool
+	w    io.Writer
+}
+
 func newBundleShowCmd(w io.Writer) *cobra.Command {
 	bsc := &bundleShowCmd{}
 	bsc.w = w
 
 	cmd := &cobra.Command{
 		Use:   "show NAME",
-		Short: "return low-level information on application bundles",
+		Short: bundleShowShortUsage,
 		Long:  bsc.usage(true),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -25,17 +33,9 @@ func newBundleShowCmd(w io.Writer) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.BoolVarP(&bsc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 	flags.BoolVarP(&bsc.raw, "raw", "r", false, "Display the raw bundle manifest")
 
 	return cmd
-}
-
-type bundleShowCmd struct {
-	name     string
-	insecure bool
-	raw      bool
-	w        io.Writer
 }
 
 func (bsc *bundleShowCmd) usage(bundleSubCommand bool) string {
@@ -49,13 +49,11 @@ func (bsc *bundleShowCmd) usage(bundleSubCommand bool) string {
 	Example:
 		$ duffle %s duffle/example:0.1.0
 
-	To display unsigned bundles, pass the --insecure flag:
-		$ duffle %s duffle/unsinged-example:0.1.0 --insecure
-`, commandName, commandName)
+`, commandName)
 }
 
 func (bsc *bundleShowCmd) run() error {
-	bundleFile, err := getBundleFilepath(bsc.name, homePath(), bsc.insecure)
+	bundleFile, err := getBundleFilepath(bsc.name, homePath())
 	if err != nil {
 		return err
 	}
@@ -70,7 +68,7 @@ func (bsc *bundleShowCmd) run() error {
 		return err
 	}
 
-	bun, err := loadBundle(bundleFile, bsc.insecure)
+	bun, err := loadBundle(bundleFile)
 	if err != nil {
 		return err
 	}

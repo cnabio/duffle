@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/bundle"
+	"github.com/deislabs/cnab-go/bundle"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -84,6 +84,30 @@ func TestCredentialSet_Expand(t *testing.T) {
 			is.Equal(path[v.Path], cs[k])
 		}
 	}
+}
+
+func TestCredentialSet_Merge(t *testing.T) {
+	cs := Set{
+		"first":  "first",
+		"second": "second",
+		"third":  "third",
+	}
+
+	is := assert.New(t)
+
+	err := cs.Merge(Set{})
+	is.NoError(err)
+	is.Len(cs, 3)
+	is.NotContains(cs, "fourth")
+
+	err = cs.Merge(Set{"fourth": "fourth"})
+	is.NoError(err)
+	is.Len(cs, 4)
+	is.Contains(cs, "fourth")
+
+	err = cs.Merge(Set{"second": "bis"})
+	is.EqualError(err, `ambiguous credential resolution: "second" is already present in base credential sets, cannot merge`)
+
 }
 
 func TestCredentialSetMissingCred(t *testing.T) {

@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/deislabs/cnab-go/bundle"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 
-	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/loader"
 )
 
@@ -24,15 +24,14 @@ type Exporter struct {
 	Client      *client.Client
 	Context     context.Context
 	Logs        string
-	Loader      loader.Loader
-	Unsigned    bool
+	Loader      loader.BundleLoader
 }
 
 // NewExporter returns an *Exporter given information about where a bundle
 //  lives, where the compressed bundle should be exported to,
 //  and what form a bundle should be exported in (thin or thick/full). It also
 //  sets up a docker client to work with images.
-func NewExporter(source, dest, logsDir string, l loader.Loader, thin, unsigned bool) (*Exporter, error) {
+func NewExporter(source, dest, logsDir string, l loader.BundleLoader, thin bool) (*Exporter, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
@@ -50,7 +49,6 @@ func NewExporter(source, dest, logsDir string, l loader.Loader, thin, unsigned b
 		Context:     ctx,
 		Logs:        logs,
 		Loader:      l,
-		Unsigned:    unsigned,
 	}, nil
 }
 
@@ -96,10 +94,7 @@ func (ex *Exporter) Export() error {
 	}
 	defer from.Close()
 
-	bundlefile := "bundle.cnab"
-	if ex.Unsigned {
-		bundlefile = "bundle.json"
-	}
+	bundlefile := "bundle.json"
 	to, err := os.OpenFile(filepath.Join(archiveDir, bundlefile), os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return err

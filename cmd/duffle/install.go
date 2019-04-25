@@ -7,24 +7,26 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/deislabs/cnab-go/bundle"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/deislabs/duffle/pkg/action"
-	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/claim"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/repo"
 )
 
-const installUsage = `Installs a CNAB bundle.
+const installUsage = `Installs a Cloud Native Application Bundle (CNAB)
 
-This command installs a CNAB bundle with a specific installation name.
+This command installs a bundle with a specific installation name.
 A claim (a record about the application installed) is created during
 the install process and can be referenced by the installation name.
 Example:
 	$ duffle install my_release example:0.1.0
 	$ duffle status my_release
+
+Note: To install a bundle, use $ duffle bundle install or $ duffle install. They are aliases for the same action.
 
 Different drivers are available for executing the duffle invocation
 image. The following drivers are built-in:
@@ -47,21 +49,6 @@ Windows Example:
 You can also load the bundle.json file directly:
 
 	$ duffle install dev_bundle path/to/bundle.json --bundle-is-file
-
-Verifying and --insecure:
-When the --insecure flag is passed, verification steps will not be
-performed. This means that Duffle will accept both unsigned
-(bundle.json) and signed (bundle.cnab) files, but will not perform
-any validation. The following table illustrates this:
-
-	Bundle     Key known?    Flag            Result
-	------     ----------    -----------     ------
-	Signed     Known         None            Okay
-	Signed     Known         --insecure      Okay
-	Signed     Unknown       None            Verification error
-	Signed     Unknown       --insecure      Okay
-	Unsigned   N/A           None            Verification error
-	Unsigned   N/A           --insecure      Okay
 `
 
 type installCmd struct {
@@ -73,7 +60,6 @@ type installCmd struct {
 	credentialsFiles []string
 	valuesFile       string
 	setParams        []string
-	insecure         bool
 	setFiles         []string
 	bundleIsFile     bool
 	name             string
@@ -84,7 +70,7 @@ func newInstallCmd(w io.Writer) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "install [NAME] [BUNDLE]",
-		Short: "install a CNAB bundle",
+		Short: "install a bundle",
 		Long:  installUsage,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -97,10 +83,9 @@ func newInstallCmd(w io.Writer) *cobra.Command {
 
 	f := cmd.Flags()
 	f.BoolVarP(&install.bundleIsFile, "bundle-is-file", "f", false, "Indicates that the bundle source is a file path")
-	f.BoolVarP(&install.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 	f.StringVarP(&install.driver, "driver", "d", "docker", "Specify a driver name")
 	f.StringVarP(&install.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
-	f.StringArrayVarP(&install.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
+	f.StringArrayVarP(&install.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the bundle. This can be a credentialset name or a path to a file.")
 	f.StringArrayVarP(&install.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
 	f.StringArrayVarP(&install.setFiles, "set-file", "i", []string{}, "Set individual parameters from file content as NAME=SOURCE-PATH pairs")
 
@@ -108,7 +93,7 @@ func newInstallCmd(w io.Writer) *cobra.Command {
 }
 
 func (i *installCmd) run() error {
-	bundleFile, err := resolveBundleFilePath(i.bundle, i.home.String(), i.bundleIsFile, i.insecure)
+	bundleFile, err := resolveBundleFilePath(i.bundle, i.home.String(), i.bundleIsFile)
 	if err != nil {
 		return err
 	}
@@ -118,7 +103,7 @@ func (i *installCmd) run() error {
 		return fmt.Errorf("a claim with the name %v already exists", i.name)
 	}
 
-	bun, err := loadBundle(bundleFile, i.insecure)
+	bun, err := loadBundle(bundleFile)
 	if err != nil {
 		return err
 	}
@@ -166,7 +151,7 @@ func (i *installCmd) run() error {
 	return err2
 }
 
-func getBundleFilepath(bun, homePath string, insecure bool) (string, error) {
+func getBundleFilepath(bun, homePath string) (string, error) {
 	home := home.Home(homePath)
 	ref, err := getReference(bun)
 	if err != nil {

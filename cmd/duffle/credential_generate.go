@@ -9,11 +9,11 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/deislabs/cnab-go/bundle"
 	"github.com/spf13/cobra"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/credentials"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 )
@@ -37,7 +37,6 @@ will still need to edit that file to set the appropriate values.
 func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 	bundleFile := ""
 	var (
-		insecure bool
 		dryRun   bool
 		noPrompt bool
 	)
@@ -47,13 +46,13 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 		Short:   "generate a credentialset from a bundle",
 		Long:    credentialGenerateHelp,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			bf, err := getBundleFileFromCredentialsArg(args, bundleFile, out, insecure)
+			bf, err := getBundleFileFromCredentialsArg(args, bundleFile, out)
 			if err != nil {
 				return err
 			}
 			csName := args[0]
 
-			bun, err := loadBundle(bf, insecure)
+			bun, err := loadBundle(bf)
 			if err != nil {
 				return err
 			}
@@ -84,7 +83,6 @@ func newCredentialGenerateCmd(out io.Writer) *cobra.Command {
 
 	f := cmd.Flags()
 	f.StringVarP(&bundleFile, "file", "f", "", "path to bundle.json")
-	f.BoolVarP(&insecure, "insecure", "k", false, "do not verify the bundle (INSECURE)")
 	f.BoolVar(&dryRun, "dry-run", false, "show prompts and result, but don't create credential set")
 	f.BoolVarP(&noPrompt, "no-prompt", "q", false, "do not prompt for input, but generate a stub credentialset")
 
@@ -178,7 +176,7 @@ func genCredentialSurvey(name string) (credentials.CredentialStrategy, error) {
 	return c, nil
 }
 
-func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writer, insecure bool) (string, error) {
+func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writer) (string, error) {
 	switch {
 	case len(args) < 1:
 		return "", errors.New("This command requires at least one argument: NAME (name for the credentialset). It also requires a BUNDLE (CNAB bundle name) or file (using -f)\nValid inputs:\n\t$ duffle credentials generate NAME BUNDLE\n\t$ duffle credentials generate NAME -f path-to-bundle.json")
@@ -187,7 +185,7 @@ func getBundleFileFromCredentialsArg(args []string, bundleFile string, w io.Writ
 	case len(args) < 2 && bundleFile == "":
 		return "", errors.New("required arguments are NAME (name for the credentialset) and BUNDLE (CNAB bundle name) or file")
 	case len(args) == 2:
-		return getBundleFilepath(args[1], homePath(), insecure)
+		return getBundleFilepath(args[1], homePath())
 	}
 	return bundleFile, nil
 }

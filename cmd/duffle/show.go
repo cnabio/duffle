@@ -12,7 +12,7 @@ func newShowCmd(w io.Writer) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "show NAME",
-		Short: "return low-level information on application bundles",
+		Short: bundleShowShortUsage,
 		Long:  bsc.usage(false),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -23,7 +23,6 @@ func newShowCmd(w io.Writer) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.BoolVarP(&bsc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 	flags.BoolVarP(&bsc.raw, "raw", "r", false, "Display the raw bundle manifest")
 
 	return cmd

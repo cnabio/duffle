@@ -11,6 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// makes sure Status implements Action interface
+var _ Action = &Status{}
+
 func TestStatus_Run(t *testing.T) {
 	out := ioutil.Discard
 
