@@ -20,11 +20,6 @@
       "image": "deislabs/duffle:0.1.0-ralpha.5-englishrose",
       "digest": "sha256:14d6134d892aeccb7e142557fe746ccd0a8f736a747c195ef04c9f3f0f0bbd49",
       "imageType": "docker"
-    },
-    "c": {
-      "description": "neither oci nor docker",
-      "image": "c",
-      "imageType": "c"
     }
   }
 }

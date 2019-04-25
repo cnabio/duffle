@@ -51,3 +51,49 @@ func TestMalformedImport(t *testing.T) {
 		t.Error("expected malformed bundle error")
 	}
 }
+
+func TestUnzip(t *testing.T) {
+	tempDir, err := ioutil.TempDir("", "duffle-import-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	is := assert.New(t)
+
+	im := Importer{
+		Source:      "testdata/examplebun-0.1.0.tgz",
+		Destination: tempDir,
+		Loader:      loader.NewLoader(),
+	}
+
+	dest, bun, err := im.Unzip()
+	if err != nil {
+		t.Fatalf("unzip failed: %v", err)
+	}
+
+	expectedBundlePath := filepath.Join(tempDir, "examplebun-0.1.0")
+	is.DirExistsf(expectedBundlePath, "expected examplebun to exist")
+	is.Equalf(expectedBundlePath, dest, "unexpected unzipped bundle location %s, expected %s", dest, expectedBundlePath)
+
+	expectedBundleName := "examplebun"
+	is.Equalf(expectedBundleName, bun.Name, "unexpected bundle name %s, expected %s", bun.Name, expectedBundleName)
+}
+
+func TestMalformedUnzip(t *testing.T) {
+	tempDir, err := ioutil.TempDir("", "duffle-import-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	im := Importer{
+		Source:      "testdata/malformed-0.1.0.tgz",
+		Destination: tempDir,
+		Loader:      loader.NewLoader(),
+	}
+
+	if _, _, err = im.Unzip(); err == nil {
+		t.Error("expected malformed bundle error")
+	}
+}

@@ -4,15 +4,22 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/pivotal/image-relocation/pkg/image"
-	"github.com/pivotal/image-relocation/pkg/pathmapping"
-	"github.com/pivotal/image-relocation/pkg/registry"
+	"github.com/deislabs/duffle/pkg/imagestore/builder"
+
+	"github.com/deislabs/duffle/pkg/imagestore"
+	"github.com/deislabs/duffle/pkg/relocator"
+
+	"github.com/deislabs/duffle/pkg/loader"
+	"github.com/deislabs/duffle/pkg/packager"
 
 	"github.com/deislabs/cnab-go/bundle"
+	"github.com/pivotal/image-relocation/pkg/image"
+	"github.com/pivotal/image-relocation/pkg/pathmapping"
 
 	"github.com/deislabs/duffle/pkg/duffle/home"
 
@@ -49,8 +56,9 @@ type relocateCmd struct {
 	out  io.Writer
 
 	// dependencies
-	mapping        pathmapping.PathMapping
-	registryClient registry.Client
+	mapping           pathmapping.PathMapping
+	imageStoreBuilder imagestore.Builder
+	imageStore        imagestore.Store
 }
 
 func newRelocateCmd(w io.Writer) *cobra.Command {
@@ -81,7 +89,7 @@ duffle relocate helloworld path/to/relocatedbundle.json --repository-prefix exam
 			relocate.home = home.Home(homePath())
 
 			relocate.mapping = pathmapping.FlattenRepoPathPreserveTagDigest
-			relocate.registryClient = registry.NewRegistryClient()
+			relocate.imageStoreBuilder = builder.NewLocatingBuilder()
 
 			return relocate.run()
 		},
@@ -97,100 +105,80 @@ duffle relocate helloworld path/to/relocatedbundle.json --repository-prefix exam
 }
 
 func (r *relocateCmd) run() error {
-	bun, err := r.setup()
+	rel, bun, tmpDir, err := r.setup()
 	if err != nil {
 		return err
 	}
+	defer os.RemoveAll(tmpDir)
 
-	if err := r.relocate(bun); err != nil {
+	if err := rel.Relocate(); err != nil {
 		return err
 	}
 
 	return r.writeBundle(bun)
 }
 
-func (r *relocateCmd) relocate(bun *bundle.Bundle) error {
+// The caller is responsible for deleting the returned temporary directory, which may contain the returned bundle.
+func (r *relocateCmd) setup() (*relocator.Relocator, *bundle.Bundle, string, error) {
+	dest := ""
+	bundleFile, err := resolveBundleFilePath(r.inputBundle, r.home.String(), r.inputBundleIsFile)
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	var bun *bundle.Bundle
+
+	if strings.HasSuffix(bundleFile, ".tgz") {
+		source, err := filepath.Abs(bundleFile)
+		if err != nil {
+			return nil, nil, "", err
+		}
+
+		dest, err = ioutil.TempDir("", "duffle-relocate-unzip")
+		if err != nil {
+			return nil, nil, "", err
+		}
+
+		l := loader.NewLoader()
+		imp, err := packager.NewImporter(source, dest, l, false)
+		if err != nil {
+			return nil, nil, "", err
+		}
+		dest, bun, err = imp.Unzip()
+		if err != nil {
+			return nil, nil, "", err
+		}
+	} else {
+		bun, err = loadBundle(bundleFile)
+		if err != nil {
+			return nil, nil, "", err
+		}
+	}
+
+	if err = bun.Validate(); err != nil {
+		return nil, nil, "", err
+	}
+
+	r.imageStore, err = r.imageStoreBuilder.ArchiveDir(dest).Build()
+	if err != nil {
+		return nil, nil, "", err
+	}
+
 	// mutate the input bundle to become the output bundle
 	if !r.outputBundleIsFile {
 		bun.Name = r.outputBundle
 	}
 
-	for i := range bun.InvocationImages {
-		ii := bun.InvocationImages[i]
-		modified, err := r.relocateImage(&ii.BaseImage)
-		if err != nil {
-			return err
-		}
-		if modified {
-			bun.InvocationImages[i] = ii
-		}
+	mapping := func(i image.Name) image.Name {
+		return pathmapping.FlattenRepoPathPreserveTagDigest(r.repoPrefix, i)
 	}
 
-	for k := range bun.Images {
-		im := bun.Images[k]
-		modified, err := r.relocateImage(&im.BaseImage)
-		if err != nil {
-			return err
-		}
-		if modified {
-			bun.Images[k] = im
-		}
-	}
-
-	return nil
-}
-
-func (r *relocateCmd) relocateImage(i *bundle.BaseImage) (bool, error) {
-	if !isOCI(i.ImageType) && !isDocker(i.ImageType) {
-		return false, nil
-	}
-	// map the image name
-	n, err := image.NewName(i.Image)
+	reloc, err := relocator.NewRelocator(bun, mapping, r.imageStore)
 	if err != nil {
-		return false, err
-	}
-	rn := r.mapping(r.repoPrefix, n)
-
-	// tag/push the image to its new repository
-	dig, err := r.registryClient.Copy(n, rn)
-	if err != nil {
-		return false, err
-	}
-	if i.Digest != "" && dig.String() != i.Digest {
-		// should not happen
-		return false, fmt.Errorf("digest of image %s not preserved: old digest %s; new digest %s", i.Image, i.Digest, dig.String())
+		return nil, nil, "", err
 	}
 
-	// update the imagemap
-	i.OriginalImage = i.Image
-	i.Image = rn.String()
-	return true, nil
-}
-
-func isOCI(imageType string) bool {
-	return imageType == "" || imageType == "oci"
-}
-
-func isDocker(imageType string) bool {
-	return imageType == "docker"
-}
-
-func (r *relocateCmd) setup() (*bundle.Bundle, error) {
-	bundleFile, err := resolveBundleFilePath(r.inputBundle, r.home.String(), r.inputBundleIsFile)
-	if err != nil {
-		return nil, err
-	}
-
-	bun, err := loadBundle(bundleFile)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = bun.Validate(); err != nil {
-		return nil, err
-	}
-
-	return bun, nil
+	return reloc, bun, dest, nil
 }
 
 func (r *relocateCmd) writeBundle(bf *bundle.Bundle) error {

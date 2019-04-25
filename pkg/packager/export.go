@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/deislabs/duffle/pkg/imagestore"
+
 	"github.com/deislabs/cnab-go/bundle"
 	"github.com/docker/docker/pkg/archive"
 
@@ -14,43 +16,28 @@ import (
 )
 
 type Exporter struct {
-	Source      string
-	Destination string
-	ImageStore  ImageStore
-	Logs        string
-	Loader      loader.BundleLoader
+	source            string
+	destination       string
+	imageStoreBuilder imagestore.Builder
+	imageStore        imagestore.Store
+	logs              string
+	loader            loader.BundleLoader
 }
 
 // NewExporter returns an *Exporter given information about where a bundle
 //  lives, where the compressed bundle should be exported to,
 //  and what form a bundle should be exported in (thin or thick/full). It also
 //  sets up a docker client to work with images.
-func NewExporter(source, dest, logsDir string, l loader.BundleLoader, is ImageStore) (*Exporter, error) {
+func NewExporter(source, dest, logsDir string, l loader.BundleLoader, b imagestore.Builder) (*Exporter, error) {
 	logs := filepath.Join(logsDir, "export-"+time.Now().Format("20060102150405"))
 
 	return &Exporter{
-		Source:      source,
-		Destination: dest,
-		ImageStore:  is,
-		Logs:        logs,
-		Loader:      l,
+		source:            source,
+		destination:       dest,
+		imageStoreBuilder: b,
+		logs:              logs,
+		loader:            l,
 	}, nil
-}
-
-type ImageStore interface {
-	configure(archiveDir string, logs io.Writer) error
-	add(img string) (contentDigest string, err error)
-}
-
-func NewImageStore(thin bool, ociLayout bool) (ImageStore, error) {
-	if thin {
-		return newNop(), nil
-	}
-	if ociLayout {
-		return newOciLayout(), nil
-	}
-	return newTarFiles()
-
 }
 
 // Export prepares an artifacts directory containing all of the necessary
@@ -60,21 +47,21 @@ func NewImageStore(thin bool, ociLayout bool) (ImageStore, error) {
 //  exist
 func (ex *Exporter) Export() error {
 	//prepare log file for this export
-	logsf, err := os.Create(ex.Logs)
+	logsf, err := os.Create(ex.logs)
 	if err != nil {
 		return err
 	}
 	defer logsf.Close()
 
-	fi, err := os.Stat(ex.Source)
+	fi, err := os.Stat(ex.source)
 	if os.IsNotExist(err) {
 		return err
 	}
 	if fi.IsDir() {
-		return fmt.Errorf("Bundle manifest %s is a directory, should be a file", ex.Source)
+		return fmt.Errorf("Bundle manifest %s is a directory, should be a file", ex.source)
 	}
 
-	bun, err := ex.Loader.Load(ex.Source)
+	bun, err := ex.loader.Load(ex.source)
 	if err != nil {
 		return fmt.Errorf("Error loading bundle: %s", err)
 	}
@@ -88,7 +75,7 @@ func (ex *Exporter) Export() error {
 	}
 	defer os.RemoveAll(archiveDir)
 
-	from, err := os.Open(ex.Source)
+	from, err := os.Open(ex.source)
 	if err != nil {
 		return err
 	}
@@ -106,16 +93,18 @@ func (ex *Exporter) Export() error {
 		return err
 	}
 
-	if err := ex.ImageStore.configure(archiveDir, logsf); err != nil {
+	ex.imageStore, err = ex.imageStoreBuilder.ArchiveDir(archiveDir).Logs(logsf).Build()
+	if err != nil {
 		return fmt.Errorf("Error creating artifacts: %s", err)
 	}
+
 	if err := ex.prepareArtifacts(bun); err != nil {
 		return fmt.Errorf("Error preparing artifacts: %s", err)
 	}
 
 	dest := name + ".tgz"
-	if ex.Destination != "" {
-		dest = ex.Destination
+	if ex.destination != "" {
+		dest = ex.destination
 	}
 
 	writer, err := os.Create(dest)
@@ -158,9 +147,9 @@ func (ex *Exporter) prepareArtifacts(bun *bundle.Bundle) error {
 	return nil
 }
 
-// addImage pulls an image, adds it to the artifacts/ directory, and verifies its digest
+// addImage pulls an image, adds it to the image store, and verifies its digest
 func (ex *Exporter) addImage(image bundle.BaseImage) error {
-	dig, err := ex.ImageStore.add(image.Image)
+	dig, err := ex.imageStore.Add(image.Image)
 	if err != nil {
 		return err
 	}
@@ -178,4 +167,8 @@ func checkDigest(image bundle.BaseImage, dig string) error {
 		return fmt.Errorf("content digest mismatch: image %s has digest %s but the digest should be %s according to the bundle manifest", image.Image, dig, digestFromManifest)
 	}
 	return nil
+}
+
+func (ex *Exporter) Logs() string {
+	return ex.logs
 }

@@ -57,7 +57,7 @@
 
 [[constraint]]
   name = "github.com/pivotal/image-relocation"
-  revision = "532dd0b42e7a50010d7868364309cd314a2bb376"
+  revision = "3c9c32bb3d97fc213476f1c9846a99ca35ecba5d"
 
 [[override]]
   name = "github.com/google/go-containerregistry"
