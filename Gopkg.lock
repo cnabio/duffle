@@ -726,7 +726,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1c5a18736f0071a05ff992f89516ba037020643c932ed5c4ed144f63dcc02ab0"
+  digest = "1:d9ddb2193e45382f76fe95bc9289a23eee14d8fc2e7c3583bdd03bba961f0e0f"
   name = "github.com/pivotal/image-relocation"
   packages = [
     "pkg/image",
@@ -734,7 +734,7 @@
     "pkg/registry",
   ]
   pruneopts = "NUT"
-  revision = "532dd0b42e7a50010d7868364309cd314a2bb376"
+  revision = "32c0ad007a7fdec3d8ed89803e55b839320adb0d"
 
 [[projects]]
   digest = "1:5cf3f025cbee5951a4ee961de067c8a89fc95a5adabead774f82822efabab121"

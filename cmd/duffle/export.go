@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/deislabs/duffle/pkg/imagestore"
 	"io"
 
 	"github.com/pkg/errors"
@@ -92,7 +93,7 @@ func (ex *exportCmd) run() error {
 }
 
 func (ex *exportCmd) Export(bundlefile string, l loader.BundleLoader) error {
-	is, err := packager.NewImageStore(ex.thin, ex.ociLayout)
+	is, err := imagestore.NewBuilder(ex.thin, ex.ociLayout)
 	if err != nil {
 		return err
 	}
@@ -105,7 +106,7 @@ func (ex *exportCmd) Export(bundlefile string, l loader.BundleLoader) error {
 		return err
 	}
 	if ex.verbose {
-		fmt.Fprintf(ex.out, "Export logs: %s\n", exp.Logs)
+		fmt.Fprintf(ex.out, "Export logs: %s\n", exp.Logs())
 	}
 	return nil
 }
