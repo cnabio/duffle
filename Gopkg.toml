@@ -53,3 +53,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/pivotal/image-relocation"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/globalsign/mgo"
