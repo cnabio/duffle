@@ -30,35 +30,56 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
 3. Build and install your first bundle (you can find the `examples` directory in this repository):
     ```console
     $ duffle build ./examples/helloworld/
-    Step 1/5 : FROM alpine:latest
-    ---> 196d12cf6ab1
-    Step 2/5 : RUN apk add -u bash
-    ---> Using cache
-    ---> 54b3a85c5c2e
-    Step 3/5 : COPY Dockerfile /cnab/Dockerfile
-    ---> Using cache
-    ---> cd6f4ff8d83d
-    Step 4/5 : COPY app /cnab/app
-    ---> 38a482447ffd
-    Step 5/5 : CMD ["/cnab/app/run"]
-    ---> Running in 8b22055f0a37
-    ---> e5c795c2a1f4
-    Successfully built e5c795c2a1f4
-    Successfully tagged deislabs/helloworld-cnab:64dfc7c4d825fe87506dbaba6ab038eafe2a486d
-    ==> Successfully built bundle helloworld:0.1.0
+    Step 1/6 : FROM alpine:latest
+     ---> e21c333399e0
+    Step 2/6 : RUN apk update
+     ---> Running in 93480e25ef09
+    fetch http://dl-cdn.alpinelinux.org/alpine/v3.7/main/x86_64/APKINDEX.tar.gz
+    fetch http://dl-cdn.alpinelinux.org/alpine/v3.7/community/x86_64/APKINDEX.tar.gz
+    v3.7.3-40-g354ae2b18a [http://dl-cdn.alpinelinux.org/alpine/v3.7/main]
+    v3.7.3-38-gb9b86f0506 [http://dl-cdn.alpinelinux.org/alpine/v3.7/community]
+    OK: 9055 distinct packages available
+     ---> 4123d6b1dfc5
+    Step 3/6 : RUN apk add -u bash
+     ---> Running in 3db9dd96e10b
+    (1/10) Upgrading busybox (1.27.2-r6 -> 1.27.2-r11)
+    Executing busybox-1.27.2-r11.post-upgrade
+    (2/10) Upgrading libressl2.6-libcrypto (2.6.3-r0 -> 2.6.5-r0)
+    (3/10) Installing libressl2.6-libtls (2.6.5-r0)
+    (4/10) Installing ssl_client (1.27.2-r11)
+    (5/10) Installing pkgconf (1.3.10-r0)
+    (6/10) Installing ncurses-terminfo-base (6.0_p20171125-r1)
+    (7/10) Installing ncurses-terminfo (6.0_p20171125-r1)
+    (8/10) Installing ncurses-libs (6.0_p20171125-r1)
+    (9/10) Installing readline (7.0.003-r0)
+    (10/10) Installing bash (4.4.19-r1)
+    Executing bash-4.4.19-r1.post-install
+    Executing busybox-1.27.2-r11.trigger
+    OK: 13 MiB in 19 packages
+     ---> 5a3670bf25d9
+    Step 4/6 : COPY Dockerfile /cnab/Dockerfile
+     ---> 58548d5a8553
+    Step 5/6 : COPY app /cnab/app
+     ---> 46ce2cca5f93
+    Step 6/6 : CMD ["/cnab/app/run"]
+     ---> Running in d2294cc8b7fd
+     ---> 69abe3476d43
+    Successfully built 69abe3476d43
+    Successfully tagged deislabs/helloworld-cnab:87d786be507769a4913c90d85134c85727c85f41
+    ==> Successfully built bundle helloworld:0.1.1
     ```
 
 4. Check that it was built:
     ```console
     $ duffle bundle list
-    NAME            VERSION DIGEST                                          SIGNED?
-    helloworld      0.1.0   b2747e5c36369f4c102f4f879caa94e607e5db7e        true
+    NAME            VERSION DIGEST
+    helloworld      0.1.1   fae0c3a28bd850f6a9a2631b9abe4f8244c83ee4
     ```
 
 5. Now run it:
     ```console
-    $ duffle credentials generate helloworld-creds helloworld:0.1.0
-    $ duffle install helloworld-demo -c helloworld-creds helloworld:0.1.0
+    $ duffle credentials generate helloworld-creds helloworld:0.1.1
+    $ duffle install helloworld-demo -c helloworld-creds helloworld:0.1.1
     Executing install action...
     hello world
     Install action

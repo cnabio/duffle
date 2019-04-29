@@ -24,8 +24,10 @@ func Lookup(name string) (Driver, error) {
 		return &DebugDriver{}, nil
 	case "aci":
 		return &ACIDriver{}, nil
-	default:
+	case "command":
 		return &CommandDriver{Name: name}, nil
+	default:
+		return nil, fmt.Errorf("unsupported driver: %s", name)
 	}
 }
 

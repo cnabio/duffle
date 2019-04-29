@@ -10,8 +10,15 @@ import (
 var _ Driver = &DockerDriver{}
 var _ Driver = &DebugDriver{}
 
-func TestLookup_ExternalDriver(t *testing.T) {
+func TestLookup_UnsupportedDriver(t *testing.T) {
 	d, err := Lookup("no_such_driver")
+
+	assert.Nil(t, d)
+	assert.Error(t, err)
+}
+
+func TestLookup_CommandDriver(t *testing.T) {
+	d, err := Lookup("command")
 
 	assert.NoError(t, err)
 	assert.IsType(t, d, &CommandDriver{})
