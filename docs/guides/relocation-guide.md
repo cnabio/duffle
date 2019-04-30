@@ -84,4 +84,4 @@ The invocation image then installs the software such that its images are loaded 
 
 ### Thick Bundle Relocation
 
-Not yet supported.
+Not yet supported. See [issue 705](https://github.com/deislabs/duffle/issues/705)
