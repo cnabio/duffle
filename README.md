@@ -3,7 +3,12 @@
 [![Waffle.io - Columns and their card count](https://badge.waffle.io/deislabs/duffle.svg?columns=In%20Progress,Needs%20Review,Done)](https://waffle.io/deislabs/duffle)
 
 
-Duffle is a command line tool that allows you to install and manage CNAB bundles. To learn more about about CNAB and duffle, check out the [docs](docs/README.md).
+Duffle is the reference implementation of the [CNAB Specification][cnab], a
+command-line tool to install and manage CNAB bundles. While you can build new
+bundles with duffle, we recommend using one of the [CNAB community
+tools][cnab-tools] that were designed to make authoring bundles easier.
+
+To learn more about about CNAB and duffle, check out the [docs](docs/README.md).
 
 ## Getting Started
 
@@ -104,3 +109,6 @@ Duffle is a command line tool that allows you to install and manage CNAB bundles
 ## Developing Duffle
 
 See the [Developer's Guide](docs/developing.md).
+
+[cnab]: https://cnab.io
+[cnab-tools]: https://cnab.io/community-projects/#tools
