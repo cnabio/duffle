@@ -9,7 +9,7 @@ both as a tool to install and manage bundles, and author bundles at a low level.
 
 The community has created implementations of the CNAB spec with
 [opinionated takes on authoring bundles][cnab-tools]. Some even use Duffle's
-[libraries][cnab-go] to handle the CNAB implementation. If you want to make your own CNAB tooling, that is a great place to start!
+[libraries][cnab-sdk] to handle the CNAB implementation. If you want to make your own CNAB tooling, that is a great place to start!
 
 Learn more about about CNAB and Duffle, check out our [docs](docs/README.md).
 
@@ -115,4 +115,4 @@ See the [Developer's Guide](docs/developing.md).
 
 [cnab]: https://cnab.io
 [cnab-tools]: https://cnab.io/community-projects/#tools
-[cnab-go]: https://github.com/deislabs/cnab-go
+[cnab-sdk]: https://cnab.io/community-projects/#sdk
