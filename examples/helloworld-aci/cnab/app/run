@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#set -eo pipefail
+set -e
 
 action=$CNAB_ACTION
 name=$CNAB_INSTALLATION_NAME
@@ -13,11 +13,11 @@ case $action in
     install)
     echo "$(date) Install action"
     i=0
-    while [ $i -lt 6 ]
+    while [ $i -lt 3 ]
     do 
         echo "$(date) STDOUT:Running..."
         (>&2 echo "$(date) STDERR:Running...")
-        sleep 10
+        sleep 5
         i=$((i+1))
     done
     

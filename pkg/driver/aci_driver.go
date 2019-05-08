@@ -370,13 +370,14 @@ func (d *ACIDriver) createACIInstance(op *Operation) error {
 			}
 
 			d.log("Sleeping")
+			fmt.Print("\033[1C\033[1D")
 			time.Sleep(5 * time.Second)
 		} else {
 			if strings.Compare(state, "Succeeded") != 0 {
+				_, err = d.getContainerLogs(ctx, aciRG, aciName, linesOutput)
 				return fmt.Errorf("Unexpected Container Status:%s", state)
 			}
 
-			d.log("Container terminated successfully")
 			containerRunning = false
 		}
 
@@ -386,8 +387,7 @@ func (d *ACIDriver) createACIInstance(op *Operation) error {
 	if err != nil {
 		return fmt.Errorf("Error getting container logs :%v", err)
 	}
-
-	d.log("Done")
+	d.log("Container terminated successfully")
 	return nil
 }
 
