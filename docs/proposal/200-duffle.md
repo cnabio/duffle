@@ -25,7 +25,7 @@ The following commands run a CNAB's applicable invocation image, each passing a 
 - `duffle install` captures the intent to install a bundle, and sets `CNAB_ACTION=install`.
 - `duffle upgrade` captures the intent to upgrade an existing installation with a bundle, and sets `CNAB_ACTION=upgrade`.
 - `duffle uninstall` captures the intent to uninstall an application, and sets `CNAB_ACTION=uninstall`.
-- `duffle status` captures the intent to determine the status of an application, and sets `CNAB_ACTION=status`.
+- `duffle status` captures the intent to determine the status of an application, and sets `CNAB_ACTION=io.cnab.status`.
 
 All of these actions accept [credential sets](201-credentialsets.md). `install` and `upgrade` accept parameters. (TODO: In the future, `uninstall` may also accept parameters).
 
@@ -35,7 +35,7 @@ Upgrade takes a claim's installation name as input, loads the claim, executes th
 
 Uninstall takes a claim's installation name, looks up the claim, executes the uninstall, and then destroys the claim.
 
-Status takes a claim's installation name, looks up a claim, and executes the status. Status never modifies the claim.
+Status takes a claim's installation name, looks up a claim, and executes the `io.cnab.status` action. Status never modifies the claim.
 
 ## Duffle List
 

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/claim"
 	"github.com/deislabs/duffle/pkg/driver"
 
@@ -16,15 +17,16 @@ var _ Action = &Status{}
 
 func TestStatus_Run(t *testing.T) {
 	out := ioutil.Discard
-
+	b := mockBundle()
+	b.Actions["io.cnab.status"] = bundle.Action{}
 	st := &Status{Driver: &driver.DebugDriver{}}
 	c := &claim.Claim{
 		Created:    time.Time{},
 		Modified:   time.Time{},
 		Name:       "name",
 		Revision:   "revision",
-		Bundle:     mockBundle(),
 		Parameters: map[string]interface{}{},
+		Bundle:     b,
 	}
 
 	if err := st.Run(c, mockSet, out); err != nil {

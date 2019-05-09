@@ -15,14 +15,5 @@ type Status struct {
 
 // Run executes a status action in an image
 func (i *Status) Run(c *claim.Claim, creds credentials.Set, w io.Writer) error {
-	invocImage, err := selectInvocationImage(i.Driver, c)
-	if err != nil {
-		return err
-	}
-
-	op, err := opFromClaim(claim.ActionStatus, stateful, c, invocImage, creds, w)
-	if err != nil {
-		return err
-	}
-	return i.Driver.Run(op)
+	return (&RunCustom{Driver: i.Driver, Action: "io.cnab.status"}).Run(c, creds, w)
 }

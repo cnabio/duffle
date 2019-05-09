@@ -52,10 +52,7 @@ case $action in
     upgrade)
     echo "Upgrade action"
     ;;
-    downgrade)
-    echo "Downgrade action"
-    ;;
-    status)
+    io.cnab.status)
     echo "Status action"
     ;;
     *)
