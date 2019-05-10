@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/deislabs/cnab-go/driver"
 )
 
 // CommandDriver relies upon a system command to provide a driver implementation
@@ -15,7 +17,7 @@ type CommandDriver struct {
 }
 
 // Run executes the command
-func (d *CommandDriver) Run(op *Operation) error {
+func (d *CommandDriver) Run(op *driver.Operation) error {
 	return d.exec(op)
 }
 
@@ -39,7 +41,7 @@ func (d *CommandDriver) cliName() string {
 	return "duffle-" + strings.ToLower(d.Name)
 }
 
-func (d *CommandDriver) exec(op *Operation) error {
+func (d *CommandDriver) exec(op *driver.Operation) error {
 	// We need to do two things here: We need to make it easier for the
 	// command to access data, and we need to make it easy for the command
 	// to pass that data on to the image it invokes. So we do some data

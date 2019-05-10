@@ -8,7 +8,7 @@ import (
 
 	"github.com/deislabs/cnab-go/bundle"
 
-	"github.com/deislabs/duffle/pkg/claim"
+	"github.com/deislabs/cnab-go/claim"
 )
 
 func TestUpgradePersistsClaim(t *testing.T) {

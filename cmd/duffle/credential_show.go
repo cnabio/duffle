@@ -5,11 +5,10 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/deislabs/duffle/pkg/credentials"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 
+	"github.com/deislabs/cnab-go/credentials"
 	"github.com/ghodss/yaml"
-
 	"github.com/spf13/cobra"
 )
 
