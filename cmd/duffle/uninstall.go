@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/deislabs/duffle/pkg/action"
+	"github.com/deislabs/cnab-go/action"
 )
 
 const uninstallUsage = `Uninstalls an installation of a CNAB bundle.
