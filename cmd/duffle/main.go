@@ -27,14 +27,6 @@ var (
 )
 
 func main() {
-	defer func() {
-		if r := recover(); r != nil {
-			if err, ok := r.(error); ok {
-				fmt.Fprint(os.Stderr, fmt.Sprintf("error occurred %+v", err))
-				must(err)
-			}
-		}
-	}()
 	rootCmd = newRootCmd(nil)
 	must(rootCmd.Execute())
 }
