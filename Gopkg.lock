@@ -180,7 +180,6 @@
   version = "v1.1.1"
 
 [[projects]]
-  branch = "add-duffle-types"
   digest = "1:26492e179ef4aebabd64482e08144f77273a817f0ad865021d4c7172d78c9892"
   name = "github.com/deislabs/cnab-go"
   packages = [
@@ -192,8 +191,7 @@
     "utils/crud",
   ]
   pruneopts = "NUT"
-  revision = "9cd2d85086f9a1e31ac1c59e6ec4f6bb36c2f980"
-  source = "github.com/radu-matei/cnab-go"
+  revision = "9028f0f800a40977c2e49a38be764978cfe82324"
 
 [[projects]]
   digest = "1:e71d64468873ca819b91b975e67e71f349a89f41ab38040bcbd8840f5e193654"

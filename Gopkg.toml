@@ -65,9 +65,8 @@
 
 [[constraint]]
   name = "github.com/deislabs/cnab-go"
-  source = "github.com/radu-matei/cnab-go"
-  branch = "add-duffle-types"
-
+  revision = "9028f0f800a40977c2e49a38be764978cfe82324"
+  
 [[override]]
   name = "k8s.io/apimachinery"
   revision = "kubernetes-1.11.2"
