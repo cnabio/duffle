@@ -58,7 +58,34 @@ func defaultDuffleHome() string {
 // claimStorage returns a claim store for accessing claims.
 func claimStorage() claim.Store {
 	h := home.Home(homePath())
-	return claim.NewClaimStore(crud.NewFileSystemStore(h.Claims(), "json"))
+	var crudStore crud.Store
+	if host, ok := os.LookupEnv("DUFFLE_CLAIM_STORAGE"); ok {
+		switch host {
+		case "mongodb":
+			var err error
+			crudStore, err = crud.NewMongoDBStore(mongodbURL())
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "cannot configure storage for %s: %s", host, err)
+				os.Exit(3)
+			}
+		case "fs", "filesystem":
+			crudStore = crud.NewFileSystemStore(h.Claims(), "json")
+		default:
+			fmt.Fprintf(os.Stderr, "No claims storage for %q. Try setting DUFFLE_CLAIM_STORAGE.", host)
+			os.Exit(3)
+		}
+	} else {
+		crudStore = crud.NewFileSystemStore(h.Claims(), "json")
+	}
+
+	return claim.NewClaimStore(crudStore)
+}
+
+func mongodbURL() string {
+	if val, ok := os.LookupEnv("DUFFLE_MONGODB_URL"); ok {
+		return val
+	}
+	return "mongodb://localhost:27017/duffle"
 }
 
 // loadCredentials loads a set of credentials from HOME.

@@ -100,6 +100,9 @@ func (i *installCmd) run() error {
 	// look in claims store for another claim with the same name
 	_, err = claimStorage().Read(i.name)
 	if err != claim.ErrClaimNotFound {
+		if err != nil {
+			return fmt.Errorf("error in claim: %s", err)
+		}
 		return fmt.Errorf("a claim with the name %v already exists", i.name)
 	}
 

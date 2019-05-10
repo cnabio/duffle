@@ -31,6 +31,7 @@ func newListCmd(out io.Writer) *cobra.Command {
 
 func (l *listCmd) run() error {
 	if l.short {
+		// Show short listing, then exit.
 		claims, err := claimStorage().List()
 		if err != nil {
 			return err
@@ -38,24 +39,24 @@ func (l *listCmd) run() error {
 		for _, claim := range claims {
 			fmt.Fprintln(l.out, claim)
 		}
-
-	} else {
-		claims, err := claimStorage().ReadAll()
-		if err != nil {
-			return err
-		}
-
-		table := uitable.New()
-		table.MaxColWidth = 50
-		table.Wrap = true
-
-		table.AddRow("NAME", "BUNDLE", "INSTALLED", "LAST ACTION", "LAST STATUS")
-		for _, cl := range claims {
-			table.AddRow(cl.Name, cl.Bundle.Name, cl.Created, cl.Result.Action, cl.Result.Status)
-		}
-
-		fmt.Fprintln(l.out, table)
+		return nil
 	}
+
+	claims, err := claimStorage().ReadAll()
+	if err != nil {
+		return err
+	}
+
+	table := uitable.New()
+	table.MaxColWidth = 50
+	table.Wrap = true
+
+	table.AddRow("NAME", "BUNDLE", "INSTALLED", "LAST ACTION", "LAST STATUS")
+	for _, cl := range claims {
+		table.AddRow(cl.Name, cl.Bundle.Name, cl.Created, cl.Result.Action, cl.Result.Status)
+	}
+
+	fmt.Fprintln(l.out, table)
 
 	return nil
 }
