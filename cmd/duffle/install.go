@@ -7,14 +7,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/deislabs/cnab-go/bundle"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	"github.com/deislabs/duffle/pkg/action"
-	"github.com/deislabs/duffle/pkg/claim"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/repo"
+
+	"github.com/deislabs/cnab-go/action"
+	"github.com/deislabs/cnab-go/bundle"
+	"github.com/deislabs/cnab-go/claim"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const installUsage = `Installs a Cloud Native Application Bundle (CNAB)

@@ -7,16 +7,17 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/deislabs/cnab-go/bundle"
-	"github.com/spf13/cobra"
-
-	"github.com/deislabs/duffle/pkg/claim"
-	"github.com/deislabs/duffle/pkg/credentials"
-	"github.com/deislabs/duffle/pkg/driver"
+	duffleDriver "github.com/deislabs/duffle/pkg/driver"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/loader"
 	"github.com/deislabs/duffle/pkg/reference"
-	"github.com/deislabs/duffle/pkg/utils/crud"
+
+	"github.com/deislabs/cnab-go/bundle"
+	"github.com/deislabs/cnab-go/claim"
+	"github.com/deislabs/cnab-go/credentials"
+	"github.com/deislabs/cnab-go/driver"
+	"github.com/deislabs/cnab-go/utils/crud"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -104,7 +105,7 @@ func must(err error) {
 
 // prepareDriver prepares a driver per the user's request.
 func prepareDriver(driverName string) (driver.Driver, error) {
-	driverImpl, err := driver.Lookup(driverName)
+	driverImpl, err := duffleDriver.Lookup(driverName)
 	if err != nil {
 		return driverImpl, err
 	}

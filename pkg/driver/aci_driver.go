@@ -5,6 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
@@ -16,14 +22,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/deislabs/cnab-go/driver"
 	"github.com/google/uuid"
-
-	"io"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"strings"
-	"time"
 )
 
 const userAgent string = "Duffle ACI Driver"
@@ -68,16 +68,16 @@ func (d *ACIDriver) SetConfig(settings map[string]string) {
 }
 
 // Run executes the ACI driver
-func (d *ACIDriver) Run(op *Operation) error {
+func (d *ACIDriver) Run(op *driver.Operation) error {
 	return d.exec(op)
 }
 
 // Handles indicates that the ACI driver supports "docker" and "oci"
 func (d *ACIDriver) Handles(dt string) bool {
-	return dt == ImageTypeDocker || dt == ImageTypeOCI
+	return dt == driver.ImageTypeDocker || dt == driver.ImageTypeOCI
 }
 
-func (d *ACIDriver) exec(op *Operation) (reterr error) {
+func (d *ACIDriver) exec(op *driver.Operation) (reterr error) {
 	d.out = op.Out
 	d.deleteACIResources = true
 	if len(d.config["ACI_DO_NOT_DELETE"]) > 0 && strings.ToLower(d.config["ACI_DO_NOT_DELETE"]) == "true" {
@@ -209,7 +209,7 @@ func (d *ACIDriver) setAzureSubscriptionID() error {
 	return nil
 }
 
-func (d *ACIDriver) createACIInstance(op *Operation) error {
+func (d *ACIDriver) createACIInstance(op *driver.Operation) error {
 	// GET ACI Config
 	aciRG := d.config["ACI_RESOURCE_GROUP"]
 	aciLocation := d.config["ACI_LOCATION"]
