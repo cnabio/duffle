@@ -9,6 +9,7 @@ import (
 
 // Builder represents a mock builder
 type Builder struct {
+	directory string
 }
 
 // Name represents the name of an image the mock builder will build
@@ -31,9 +32,16 @@ func (b Builder) Digest() string {
 	return "mock-digest"
 }
 
+// Directory is the name of the invocation image source of a mock builder
+func (b Builder) Directory() string {
+	return b.directory
+}
+
 // NewBuilder returns a new mock builder
-func NewBuilder(c *manifest.InvocationImage) *Builder {
-	return &Builder{}
+func NewBuilder(c *manifest.InvocationImage, dir string) *Builder {
+	return &Builder{
+		directory: dir,
+	}
 }
 
 // PrepareBuild is no-op for a mock builder

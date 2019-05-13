@@ -78,7 +78,8 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 	}
 
 	for _, imb := range imageBuilders {
-		invImage := ctx.Manifest.InvocationImages[imb.Name()]
+
+		invImage := ctx.Manifest.InvocationImages[imb.Directory()]
 		if invImage == nil {
 			return nil, nil, errors.New(fmt.Sprintf("could not find an invocation image for %s", imb.Name()))
 		}

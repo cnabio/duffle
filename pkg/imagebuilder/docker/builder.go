@@ -36,6 +36,7 @@ const (
 // Builder contains all information to build a docker container image
 type Builder struct {
 	name         string
+	directory    string
 	Image        string
 	Dockerfile   string
 	BuildContext io.ReadCloser
@@ -51,6 +52,11 @@ type dockerBuilder struct {
 // Name is the name of the image to build
 func (db Builder) Name() string {
 	return db.name
+}
+
+// Directory is the name of the directory of the invocation image source to build
+func (db Builder) Directory() string {
+	return db.directory
 }
 
 // Type represents the image type to build
@@ -71,18 +77,18 @@ func (db Builder) Digest() string {
 }
 
 // NewBuilder returns a new Docker builder based on the manifest
-func NewBuilder(c *manifest.InvocationImage, cli *command.DockerCli) *Builder {
+func NewBuilder(c *manifest.InvocationImage, dir string, cli *command.DockerCli) *Builder {
 	return &Builder{
-		name: c.Name,
-		// TODO - handle different Dockerfile names
-		Dockerfile:    "Dockerfile",
+		name:          c.Name,
+		directory:     dir,
+		Dockerfile:    "Dockerfile", // TODO - handle different Dockerfile names
 		dockerBuilder: dockerBuilder{DockerClient: cli},
 	}
 }
 
 // PrepareBuild archives the app directory and loads it as Docker context
 func (db *Builder) PrepareBuild(appDir, registry, name string) error {
-	if err := archiveSrc(filepath.Join(appDir, db.name), db); err != nil {
+	if err := archiveSrc(db.directory, db); err != nil {
 		return err
 	}
 

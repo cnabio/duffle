@@ -11,6 +11,7 @@ type ImageBuilder interface {
 	Type() string
 	URI() string
 	Digest() string
+	Directory() string
 
 	PrepareBuild(string, string, string) error
 	Build(context.Context, io.WriteCloser) error

@@ -201,7 +201,7 @@ func dockerPreRun(opts *dockerflags.ClientOptions) {
 // prepareImageBuilders returns the configured image builders that the bundle builder will need to build invocation images
 func (b *buildCmd) prepareImageBuilders(mfst *manifest.Manifest) ([]imagebuilder.ImageBuilder, error) {
 	var imagebuilders []imagebuilder.ImageBuilder
-	for _, image := range mfst.InvocationImages {
+	for dir, image := range mfst.InvocationImages {
 		switch image.Builder {
 		case "docker":
 			// setup docker
@@ -209,10 +209,10 @@ func (b *buildCmd) prepareImageBuilders(mfst *manifest.Manifest) ([]imagebuilder
 			if err := cli.Initialize(b.dockerClientOptions); err != nil {
 				return imagebuilders, fmt.Errorf("failed to create docker client: %v", err)
 			}
-			imagebuilders = append(imagebuilders, docker.NewBuilder(image, cli))
+			imagebuilders = append(imagebuilders, docker.NewBuilder(image, dir, cli))
 
 		case "mock":
-			imagebuilders = append(imagebuilders, mock.NewBuilder(image))
+			imagebuilders = append(imagebuilders, mock.NewBuilder(image, dir))
 		}
 	}
 	return imagebuilders, nil
