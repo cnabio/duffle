@@ -1,4 +1,8 @@
 # This file is described here:  https://help.github.com/en/articles/about-code-owners
 
 # Global Owners: These members are Core Maintainers of Duffle
-* @technosophos @michellenoorali @vdice @radu-matei @jeremyrickard @carolynvs @bacongobbler @glyn @silvin-lubecki
+# Only certain critical files should cause all the owners to be added automatically to PR reviews
+# See https://github.com/deislabs/duffle/issues/745 for the rationale
+CODEOWNERS @technosophos @michellenoorali @vdice @radu-matei @jeremyrickard @carolynvs @bacongobbler @glyn @silvin-lubecki
+LICENSE    @technosophos @michellenoorali @vdice @radu-matei @jeremyrickard @carolynvs @bacongobbler @glyn @silvin-lubecki
+NOTICE     @technosophos @michellenoorali @vdice @radu-matei @jeremyrickard @carolynvs @bacongobbler @glyn @silvin-lubecki
