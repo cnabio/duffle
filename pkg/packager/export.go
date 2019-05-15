@@ -7,11 +7,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/deislabs/duffle/pkg/imagestore"
-
 	"github.com/deislabs/cnab-go/bundle"
 	"github.com/docker/docker/pkg/archive"
 
+	"github.com/deislabs/duffle/pkg/imagestore"
 	"github.com/deislabs/duffle/pkg/loader"
 )
 

@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"io"
 
-	builder2 "github.com/deislabs/duffle/pkg/imagestore/builder"
-
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 
 	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/imagestore/builder"
 	"github.com/deislabs/duffle/pkg/loader"
 	"github.com/deislabs/duffle/pkg/packager"
-
-	"github.com/spf13/cobra"
 )
 
 const exportDesc = `
@@ -94,12 +92,12 @@ func (ex *exportCmd) run() error {
 }
 
 func (ex *exportCmd) Export(bundlefile string, l loader.BundleLoader) error {
-	builder, err := builder2.NewBuilder(ex.thin, ex.ociLayout)
+	bldr, err := builder.NewBuilder(ex.thin, ex.ociLayout)
 	if err != nil {
 		return err
 	}
 
-	exp, err := packager.NewExporter(bundlefile, ex.dest, ex.home.Logs(), l, builder)
+	exp, err := packager.NewExporter(bundlefile, ex.dest, ex.home.Logs(), l, bldr)
 	if err != nil {
 		return fmt.Errorf("Unable to set up exporter: %s", err)
 	}

@@ -9,22 +9,18 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/deislabs/duffle/pkg/imagestore/builder"
-
-	"github.com/deislabs/duffle/pkg/imagestore"
-	"github.com/deislabs/duffle/pkg/relocator"
-
-	"github.com/deislabs/duffle/pkg/loader"
-	"github.com/deislabs/duffle/pkg/packager"
-
 	"github.com/deislabs/cnab-go/bundle"
 	"github.com/pivotal/image-relocation/pkg/image"
 	"github.com/pivotal/image-relocation/pkg/pathmapping"
-
-	"github.com/deislabs/duffle/pkg/duffle/home"
-
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/validation"
+
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/imagestore"
+	"github.com/deislabs/duffle/pkg/imagestore/builder"
+	"github.com/deislabs/duffle/pkg/loader"
+	"github.com/deislabs/duffle/pkg/packager"
+	"github.com/deislabs/duffle/pkg/relocator"
 )
 
 const (
@@ -37,6 +33,9 @@ Each image is tagged with a name starting with the given prefix and pushed to th
 
 For example, if the repository-prefix is example.com/user, the image istio/proxyv2 is relocated
 to a name starting with example.com/user/ and pushed to a repository hosted by example.com.
+
+If a thick bundle is relocated, the images are loaded from the bundle instead of from their registries before being
+tagged and pushed. The new bundle is a thin bundle, regardless of whether the input bundle was thick or thin.
 `
 	invalidRepositoryChars = ":@\" "
 )
@@ -70,7 +69,8 @@ func newRelocateCmd(w io.Writer) *cobra.Command {
 		Long:  relocateDesc,
 		Example: `duffle relocate helloworld hellorelocated --repository-prefix example.com/user
 duffle relocate path/to/bundle.json relocatedbundle --repository-prefix example.com/user --input-bundle-is-file
-duffle relocate helloworld path/to/relocatedbundle.json --repository-prefix example.com/user --output-bundle-is-file`,
+duffle relocate helloworld path/to/relocatedbundle.json --repository-prefix example.com/user --output-bundle-is-file
+duffle relocate thick.tgz relocatedbundle.json --repository-prefix example.com/user --input-bundle-is-file --output-bundle-is-file`,
 		Args: cobra.ExactArgs(2),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			// validate --repository-prefix if it is set, otherwise fall through so that cobra will report the missing flag in its usual manner
@@ -105,11 +105,11 @@ duffle relocate helloworld path/to/relocatedbundle.json --repository-prefix exam
 }
 
 func (r *relocateCmd) run() error {
-	rel, bun, tmpDir, err := r.setup()
+	rel, bun, cleanup, err := r.setup()
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(tmpDir)
+	defer cleanup()
 
 	if err := rel.Relocate(); err != nil {
 		return err
@@ -118,12 +118,13 @@ func (r *relocateCmd) run() error {
 	return r.writeBundle(bun)
 }
 
-// The caller is responsible for deleting the returned temporary directory, which may contain the returned bundle.
-func (r *relocateCmd) setup() (*relocator.Relocator, *bundle.Bundle, string, error) {
+// The caller is responsible for running the returned cleanup function, which may delete the returned bundle.
+func (r *relocateCmd) setup() (*relocator.Relocator, *bundle.Bundle, func(), error) {
+	nop := func() {}
 	dest := ""
 	bundleFile, err := resolveBundleFilePath(r.inputBundle, r.home.String(), r.inputBundleIsFile)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, nil, nop, err
 	}
 
 	var bun *bundle.Bundle
@@ -131,37 +132,37 @@ func (r *relocateCmd) setup() (*relocator.Relocator, *bundle.Bundle, string, err
 	if strings.HasSuffix(bundleFile, ".tgz") {
 		source, err := filepath.Abs(bundleFile)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, nil, nop, err
 		}
 
 		dest, err = ioutil.TempDir("", "duffle-relocate-unzip")
 		if err != nil {
-			return nil, nil, "", err
+			return nil, nil, nop, err
 		}
 
 		l := loader.NewLoader()
 		imp, err := packager.NewImporter(source, dest, l, false)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, nil, nop, err
 		}
 		dest, bun, err = imp.Unzip()
 		if err != nil {
-			return nil, nil, "", err
+			return nil, nil, nop, err
 		}
 	} else {
 		bun, err = loadBundle(bundleFile)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, nil, nop, err
 		}
 	}
 
 	if err = bun.Validate(); err != nil {
-		return nil, nil, "", err
+		return nil, nil, nop, err
 	}
 
 	r.imageStore, err = r.imageStoreBuilder.ArchiveDir(dest).Build()
 	if err != nil {
-		return nil, nil, "", err
+		return nil, nil, nop, err
 	}
 
 	// mutate the input bundle to become the output bundle
@@ -175,10 +176,10 @@ func (r *relocateCmd) setup() (*relocator.Relocator, *bundle.Bundle, string, err
 
 	reloc, err := relocator.NewRelocator(bun, mapping, r.imageStore)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, nil, nop, err
 	}
 
-	return reloc, bun, dest, nil
+	return reloc, bun, func() { os.RemoveAll(dest) }, nil
 }
 
 func (r *relocateCmd) writeBundle(bf *bundle.Bundle) error {

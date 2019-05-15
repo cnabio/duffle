@@ -8,15 +8,15 @@ import (
 
 	"github.com/deislabs/duffle/pkg/imagestore"
 	"github.com/deislabs/duffle/pkg/imagestore/ocilayout"
-	remote2 "github.com/deislabs/duffle/pkg/imagestore/remote"
+	"github.com/deislabs/duffle/pkg/imagestore/remote"
 	"github.com/deislabs/duffle/pkg/imagestore/tarfiles"
 )
 
 // NewBuilder creates an image store builder which will, if necessary, create archive contents.
-func NewBuilder(remote bool, ociLayout bool) (imagestore.Builder, error) {
+func NewBuilder(remoteRepos bool, ociLayout bool) (imagestore.Builder, error) {
 	// infer the concrete type of the image store from the input parameters
-	if remote {
-		return remote2.NewRemoteBuilder(), nil
+	if remoteRepos {
+		return remote.NewRemoteBuilder(), nil
 	}
 	if ociLayout {
 		return ocilayout.NewOciLayout(), nil
@@ -53,7 +53,7 @@ func (b *locatingBuilder) Logs(logs io.Writer) imagestore.Builder {
 
 func (b *locatingBuilder) Build() (imagestore.Store, error) {
 	if thin(b.archiveDir) {
-		return remote2.NewRemoteBuilder().Build()
+		return remote.NewRemoteBuilder().Build()
 	}
 
 	if s, err := ocilayout.LocateOciLayout(b.archiveDir); err == nil {

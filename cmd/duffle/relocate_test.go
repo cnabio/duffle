@@ -8,13 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/imagestore/imagestoremocks"
-
-	"github.com/deislabs/duffle/pkg/imagestore"
-
 	"github.com/pivotal/image-relocation/pkg/image"
 
 	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/imagestore"
+	"github.com/deislabs/duffle/pkg/imagestore/imagestoremocks"
 )
 
 const (
