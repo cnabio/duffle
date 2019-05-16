@@ -9,9 +9,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
-
-	"github.com/deislabs/duffle/pkg/duffle/manifest"
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/command/image/build"
@@ -22,10 +19,11 @@ import (
 	"github.com/docker/docker/pkg/fileutils"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-
 	"github.com/sirupsen/logrus"
-
 	"golang.org/x/net/context"
+
+	"github.com/deislabs/duffle/pkg/duffle/manifest"
+	"github.com/deislabs/duffle/pkg/imagebuilder/docker/digester"
 )
 
 const (
@@ -61,13 +59,6 @@ func (db Builder) Type() string {
 // URI returns the image in the format <registry>/<image>
 func (db Builder) URI() string {
 	return db.Image
-}
-
-// Digest returns the name of a Docker Builder, which will give the image name
-//
-// TODO - return the actual digest
-func (db Builder) Digest() string {
-	return strings.Split(db.Image, ":")[1]
 }
 
 // NewBuilder returns a new Docker builder based on the manifest
@@ -109,7 +100,7 @@ func (db *Builder) PrepareBuild(appDir, registry, name string) error {
 }
 
 // Build builds the docker images.
-func (db Builder) Build(ctx context.Context, log io.WriteCloser) error {
+func (db *Builder) Build(ctx context.Context, log io.WriteCloser) (string, error) {
 	defer db.BuildContext.Close()
 	buildOpts := types.ImageBuildOptions{
 		Tags:       []string{db.Image},
@@ -118,23 +109,33 @@ func (db Builder) Build(ctx context.Context, log io.WriteCloser) error {
 
 	resp, err := db.dockerBuilder.DockerClient.Client().ImageBuild(ctx, db.BuildContext, buildOpts)
 	if err != nil {
-		return fmt.Errorf("error building image builder %v with builder %v: %v", db.Name(), db.Type(), err)
+		return "", fmt.Errorf("error building image builder %v with builder %v: %v", db.Name(), db.Type(), err)
 	}
-
 	defer resp.Body.Close()
+
 	outFd, isTerm := term.GetFdInfo(db.BuildContext)
 	if err := jsonmessage.DisplayJSONMessagesStream(resp.Body, log, outFd, isTerm, nil); err != nil {
-		return fmt.Errorf("error streaming messages for image builder %v with builder %v: %v", db.Name(), db.Type(), err)
+		return "", fmt.Errorf("error streaming messages for image builder %v with builder %v: %v", db.Name(), db.Type(), err)
 	}
 
 	if _, _, err = db.dockerBuilder.DockerClient.Client().ImageInspectWithRaw(ctx, db.Image); err != nil {
 		if dockerclient.IsErrNotFound(err) {
-			return fmt.Errorf("could not locate image for %s: %v", db.Name(), err)
+			return "", fmt.Errorf("could not locate image for %s: %v", db.Name(), err)
 		}
-		return fmt.Errorf("imageInspectWithRaw error for image builder %v: %v", db.Name(), err)
+		return "", fmt.Errorf("imageInspectWithRaw error for image builder %v: %v", db.Name(), err)
 	}
 
-	return nil
+	d := digester.NewDigester(
+		ctx,
+		db.dockerBuilder.DockerClient.Client(),
+		db.Image,
+	)
+	digestStr, err := d.Digest()
+	if err != nil {
+		return "", fmt.Errorf("Failed to calculate digest for image: %s", err)
+	}
+
+	return digestStr, nil
 }
 
 func archiveSrc(contextPath string, b *Builder) error {
