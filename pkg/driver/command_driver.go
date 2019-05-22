@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -71,7 +72,34 @@ func (d *CommandDriver) exec(op *driver.Operation) error {
 	}
 	cmd.Env = pairs
 	cmd.Stdin = bytes.NewBuffer(data)
-	out, err := cmd.CombinedOutput()
-	fmt.Fprintln(op.Out, string(out))
-	return err
+
+	// Make stdout and stderr from driver available immediately
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("Setting up output handling for driver (%s) failed: %v", d.Name, err)
+	}
+
+	go func() {
+
+		// Errors not handled here as they only prevent output from the driver being shown, errors in the command execution are handled when command is executed
+
+		io.Copy(op.Out, stdout)
+	}()
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("Setting up error output handling for driver (%s) failed: %v", d.Name, err)
+	}
+	go func() {
+
+		// Errors not handled here as they only prevent output from the driver being shown, errors in the command execution are handled when command is executed
+
+		io.Copy(op.Out, stderr)
+	}()
+
+	if err = cmd.Start(); err != nil {
+		return fmt.Errorf("Start of driver (%s) failed: %v", d.Name, err)
+	}
+
+	return cmd.Wait()
 }
