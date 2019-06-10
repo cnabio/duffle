@@ -1,101 +1,124 @@
-PROJECT         := duffle
-ORG             := deislabs
-DOCKER_REGISTRY ?= $(ORG)
-BINDIR          := $(CURDIR)/bin
-GOFLAGS         :=
-LDFLAGS         := -w -s
-TESTFLAGS       :=
-INSTALL_DIR     := /usr/local/bin
+SHELL ?= /bin/bash
 
-ifeq ($(OS),Windows_NT)
-	TARGET = $(PROJECT).exe
-	SHELL  = cmd.exe
-	CHECK  = where.exe
+.DEFAULT_GOAL := build
+
+################################################################################
+# Version details                                                              #
+################################################################################
+
+# This will reliably return the short SHA1 of HEAD or, if the working directory
+# is dirty, will return that + "-dirty"
+GIT_VERSION = $(shell git describe --always --abbrev=7 --dirty --match=NeVeRmAtCh)
+
+################################################################################
+# Go build details                                                             #
+################################################################################
+
+BASE_PACKAGE_NAME := github.com/deislabs/duffle
+
+################################################################################
+# Containerized development environment-- or lack thereof                      #
+################################################################################
+
+ifneq ($(SKIP_DOCKER),true)
+	PROJECT_ROOT := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+	DEV_IMAGE := quay.io/deis/lightweight-docker-go:v0.7.0
+	DOCKER_CMD := docker run \
+		-it \
+		--rm \
+		-e SKIP_DOCKER=true \
+		-v $(PROJECT_ROOT):/go/src/$(BASE_PACKAGE_NAME) \
+		-w /go/src/$(BASE_PACKAGE_NAME) $(DEV_IMAGE)
+endif
+
+################################################################################
+# Binaries and Docker images we build and publish                              #
+################################################################################
+
+ifdef DOCKER_REGISTRY
+	DOCKER_REGISTRY := $(DOCKER_REGISTRY)/
+endif
+
+ifdef DOCKER_ORG
+	DOCKER_ORG := $(DOCKER_ORG)/
+endif
+
+BASE_IMAGE_NAME := duffle
+
+ifdef VERSION
+	MUTABLE_DOCKER_TAG := latest
 else
-	TARGET = $(PROJECT)
-	SHELL  ?= bash
-	CHECK  ?= which
+	VERSION            := $(GIT_VERSION)
+	MUTABLE_DOCKER_TAG := edge
 endif
 
-GIT_TAG   := $(shell git describe --tags --always)
-VERSION   ?= ${GIT_TAG}
-# Replace + with -, for Docker image tag compliance
-IMAGE_TAG ?= $(subst +,-,$(VERSION))
-LDFLAGS   += -X github.com/$(ORG)/$(PROJECT)/pkg/version.Version=$(VERSION)
+LDFLAGS              := -w -s -X $(BASE_PACKAGE_NAME)/pkg/version.Version=$(VERSION)
 
-.PHONY: default
-default: build
+IMAGE_NAME         := $(DOCKER_REGISTRY)$(DOCKER_ORG)$(BASE_IMAGE_NAME):$(VERSION)
+MUTABLE_IMAGE_NAME := $(DOCKER_REGISTRY)$(DOCKER_ORG)$(BASE_IMAGE_NAME):$(MUTABLE_DOCKER_TAG)
 
-.PHONY: build
-build:
-	go build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(TARGET) github.com/$(ORG)/$(PROJECT)/cmd/...
+################################################################################
+# Utility targets                                                              #
+################################################################################
 
-.PHONY: install
-install:
-	install $(BINDIR)/$(TARGET) $(INSTALL_DIR)
-
-CX_OSES  = linux windows darwin
-CX_ARCHS = amd64
-
-.PHONY: build-release
-build-release:
-	@for os in $(CX_OSES); do \
-		echo "building $$os"; \
-		for arch in $(CX_ARCHS); do \
-			GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 go build -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)-$$os-$$arch github.com/$(ORG)/$(PROJECT)/cmd/...; \
-		done; \
-		if [ $$os = 'windows' ]; then \
-			mv $(BINDIR)/$(PROJECT)-$$os-$$arch $(BINDIR)/$(PROJECT)-$$os-$$arch.exe; \
-		fi; \
-	done
-
-.PHONY: debug
-debug:
-	go build $(GOFLAGS) -o $(BINDIR)/$(TARGET) github.com/$(ORG)/$(PROJECT)/cmd/...
-
-.PHONY: build-docker-bin
-build-docker-bin:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(TARGET) github.com/$(ORG)/$(PROJECT)/cmd/...
-
-.PHONY: docker-build
-docker-build:
-	docker build -t $(DOCKER_REGISTRY)/$(PROJECT):$(IMAGE_TAG) .
-
-.PHONY: docker-push
-docker-push:
-	docker push $(DOCKER_REGISTRY)/$(PROJECT):$(IMAGE_TAG)
-
-.PHONY: test
-test:
-	go test $(TESTFLAGS) ./...
-
-.PHONY: lint
-lint:
-	golangci-lint run --config ./golangci.yml
-
-HAS_DEP          := $(shell $(CHECK) dep)
-HAS_GOLANGCI     := $(shell $(CHECK) golangci-lint)
-HAS_GOIMPORTS    := $(shell $(CHECK) goimports)
-GOLANGCI_VERSION := v1.16.0
-
-.PHONY: build-drivers
-build-drivers:
-	cp drivers/azure-vm/$(PROJECT)-azvm.sh bin/$(PROJECT)-azvm
-	cd drivers/azure-vm && pip3 install -r requirements.txt
-
-.PHONY: bootstrap
-bootstrap:
-ifndef HAS_DEP
-	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-endif
-ifndef HAS_GOLANGCI
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin $(GOLANGCI_VERSION)
-endif
-ifndef HAS_GOIMPORTS
-	go get -u golang.org/x/tools/cmd/goimports
-endif
-	dep ensure -vendor-only -v
+.PHONY: dep
+dep:
+	$(DOCKER_CMD) dep ensure -v
 
 .PHONY: goimports
 goimports:
-	find . -name "*.go" | fgrep -v vendor/ | xargs goimports -w -local github.com/deislabs/duffle
+	$(DOCKER_CMD) sh -c "find . -name \"*.go\" | fgrep -v vendor/ | xargs goimports -w -local github.com/deislabs/duffle"
+
+.PHONY: build-drivers
+build-drivers:
+	mkdir -p bin
+	cp drivers/azure-vm/duffle-azvm.sh bin/duffle-azvm
+	cd drivers/azure-vm && pip3 install -r requirements.txt
+
+################################################################################
+# Tests                                                                        #
+################################################################################
+
+# Verifies there are no discrepancies between desired dependencies and the
+# tracked, vendored dependencies
+.PHONY: verify-vendored-code
+verify-vendored-code:
+	$(DOCKER_CMD) dep check
+
+.PHONY: lint
+lint:
+	$(DOCKER_CMD) golangci-lint run --config ./golangci.yml
+
+.PHONY: test
+test:
+	$(DOCKER_CMD) go test -v ./...
+
+################################################################################
+# Build / Publish                                                              #
+################################################################################
+
+.PHONY: build
+build: build-all-bins build-image
+
+.PHONY: build-all-bins
+build-all-bins:
+	$(GO_DOCKER_CMD) bash -c "LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
+
+# You can make this target build for a specific OS and architecture using OS and
+# ARCH environment variables.
+.PHONY: build-bin
+build-bin:
+	$(GO_DOCKER_CMD) bash -c "OS=\"$(OS)\" ARCH=\"$(ARCH)\" LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
+
+.PHONY: build-image
+build-image:
+	docker build -t $(IMAGE_NAME) .
+	docker tag $(IMAGE_NAME) $(MUTABLE_IMAGE_NAME)
+
+.PHONY: push
+push: push-image
+
+.PHONY: push-image
+push-image:
+	docker push $(IMAGE_NAME)
+	docker push $(MUTABLE_IMAGE_NAME)
