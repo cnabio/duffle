@@ -52,6 +52,11 @@ func NewKubernetesDriver(namespace, serviceAccount string, conf *rest.Config) (*
 	return driver, err
 }
 
+// Handles receives an ImageType* and answers whether this driver supports that type.
+func (k *KubernetesDriver) Handles(imagetype string) bool {
+	return imagetype == driver.ImageTypeDocker || imagetype == driver.ImageTypeOCI
+}
+
 // Config returns the Kubernetes driver configuration options.
 func (k *KubernetesDriver) Config() map[string]string {
 	return map[string]string{
@@ -163,7 +168,6 @@ func (k *KubernetesDriver) Run(op *driver.Operation) error {
 		if err != nil {
 			return err
 		}
-		// TODO: add to slice of resources awaiting cleanup instead, then return err
 		if !k.SkipCleanup {
 			defer k.deleteSecret(envsecret.ObjectMeta.Name)
 		}
@@ -223,9 +227,14 @@ func (k *KubernetesDriver) Run(op *driver.Operation) error {
 	selector := metav1.ListOptions{
 		LabelSelector: labels.Set(job.ObjectMeta.Labels).String(),
 	}
+
+	return k.watchJobStatusAndLogs(selector, op.Out)
+}
+
+func (k *KubernetesDriver) watchJobStatusAndLogs(selector metav1.ListOptions, out io.Writer) error {
 	// Stream Pod logs in the background
 	logsStreamingComplete := make(chan bool)
-	err = k.streamPodLogs(selector, op.Out, logsStreamingComplete)
+	err := k.streamPodLogs(selector, out, logsStreamingComplete)
 	if err != nil {
 		return err
 	}
@@ -261,12 +270,7 @@ func (k *KubernetesDriver) Run(op *driver.Operation) error {
 		<-logsStreamingComplete
 	}
 
-	return err
-}
-
-// Handles receives an ImageType* and answers whether this driver supports that type.
-func (k *KubernetesDriver) Handles(imagetype string) bool {
-	return imagetype == driver.ImageTypeDocker || imagetype == driver.ImageTypeOCI
+	return nil
 }
 
 func (k *KubernetesDriver) streamPodLogs(options metav1.ListOptions, out io.Writer, done chan bool) error {
@@ -324,7 +328,6 @@ func (k *KubernetesDriver) deleteJob(name string) error {
 	})
 }
 
-// TODO: limit character count
 func generateNameTemplate(op *driver.Operation) string {
 	return fmt.Sprintf("%s-%s-", op.Installation, op.Action)
 }
