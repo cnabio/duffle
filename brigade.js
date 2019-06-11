@@ -212,11 +212,7 @@ class Notification {
   // Send a new notification, and return a Promise<result>.
   run() {
     this.count++;
-    // Here we are using the mutable 'edge' version of this utility
-    // as an exercise of vetting the current master version of the code in this repo.
-    // It is recommended that immutable tags be used in other cases,
-    // e.g., a proper semver tag of 'vX.X.X' or the short git sha of a particular commit.
-    var job = new Job(`${ this.name }-notification-${ this.count }`, "brigadecore/brigade-github-check-run:edge");
+    var job = new Job(`${ this.name }-notification-${ this.count }`, "brigadecore/brigade-github-check-run:v0.1.0");
     job.imageForcePull = true;
     job.env = {
       "CHECK_CONCLUSION": this.conclusion,
