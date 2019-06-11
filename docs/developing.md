@@ -60,6 +60,13 @@ To build for one specific OS / architecture:
 $ OS=<desired OS> ARCH=<desired architecture> make build-bin
 ```
 
+For convenience, you can build for the OS of your choice with amd64 architecture
+using targets of the form `build-<OS>`. For example:
+
+```console
+$ make build-darwin
+```
+
 To build only the Docker image and nothing else:
 
 ```console
