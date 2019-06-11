@@ -112,7 +112,10 @@ build-bin:
 
 .PHONY: build-image
 build-image:
-	docker build -t $(IMAGE_NAME) .
+	docker build \
+		-t $(IMAGE_NAME) \
+		--build-arg LDFLAGS='$(LDFLAGS)' \
+		.
 	docker tag $(IMAGE_NAME) $(MUTABLE_IMAGE_NAME)
 
 .PHONY: push
