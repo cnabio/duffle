@@ -24,7 +24,7 @@ const (
 	k8sFileSecretVolume = "files"
 )
 
-// KubernetesDriver is capable of running an invocation image in a Kubernetes cluster.
+// KubernetesDriver runs an invocation image in a Kubernetes cluster.
 type KubernetesDriver struct {
 	Namespace             string
 	ServiceAccountName    string
@@ -49,24 +49,20 @@ func NewKubernetesDriver(namespace, serviceAccount string, conf *rest.Config) (*
 	}
 	driver.setDefaults()
 	err := driver.setClient(conf)
-	if err != nil {
-		return driver, err
-	}
-
-	return driver, nil
+	return driver, err
 }
 
-// Config returns the Kubernetes driver configuration options
+// Config returns the Kubernetes driver configuration options.
 func (k *KubernetesDriver) Config() map[string]string {
 	return map[string]string{
-		"KUBE_NAMESPACE":  "Increase verbosity. true, false are supported values",
-		"SERVICE_ACCOUNT": "Always pull image, even if locally available (0|1)",
+		"KUBE_NAMESPACE":  "Kubernetes namespace in which to run the invocation image",
+		"SERVICE_ACCOUNT": "Kubernetes service account to be mounted by the invocation image (if empty, no service account token will be mounted)",
 		"KUBE_CONFIG":     "Absolute path to the kubeconfig file",
 		"MASTER_URL":      "Kubernetes master endpoint",
 	}
 }
 
-// SetConfig sets Kubernetes driver configuration
+// SetConfig sets Kubernetes driver configuration.
 func (k *KubernetesDriver) SetConfig(settings map[string]string) {
 	k.setDefaults()
 	k.Namespace = settings["KUBE_NAMESPACE"]
@@ -113,7 +109,7 @@ func (k *KubernetesDriver) setClient(conf *rest.Config) error {
 	return nil
 }
 
-// Run executes the operation inside of the invocation image
+// Run executes the operation inside of the invocation image.
 func (k *KubernetesDriver) Run(op *driver.Operation) error {
 	if k.Namespace == "" {
 		return fmt.Errorf("KUBE_NAMESPACE is required")
@@ -268,26 +264,29 @@ func (k *KubernetesDriver) Run(op *driver.Operation) error {
 	return err
 }
 
-// Handles receives an ImageType* and answers whether this driver supports that type
+// Handles receives an ImageType* and answers whether this driver supports that type.
 func (k *KubernetesDriver) Handles(imagetype string) bool {
 	return imagetype == driver.ImageTypeDocker || imagetype == driver.ImageTypeOCI
 }
 
 func (k *KubernetesDriver) streamPodLogs(options metav1.ListOptions, out io.Writer, done chan bool) error {
-	watch, err := k.pods.Watch(options)
+	watcher, err := k.pods.Watch(options)
 	if err != nil {
 		return err
 	}
 
 	go func() {
-		watching := map[string]bool{}
-		for event := range watch.ResultChan() {
+		// Track pods whose logs have been streamed by pod name. We need to know when we've already
+		// processed logs for a given pod, since multiple lifecycle events are received per pod.
+		streamedLogs := map[string]bool{}
+		for event := range watcher.ResultChan() {
 			pod, ok := event.Object.(*v1.Pod)
 			if !ok {
 				continue
 			}
 			podName := pod.GetName()
-			if watching[podName] {
+			if streamedLogs[podName] {
+				// The event was for a pod whose logs have already been streamed, so do nothing.
 				continue
 			}
 			req := k.pods.GetLogs(podName, &v1.PodLogOptions{
@@ -295,11 +294,15 @@ func (k *KubernetesDriver) streamPodLogs(options metav1.ListOptions, out io.Writ
 				Follow:    true,
 			})
 			reader, err := req.Stream()
+			// There was an error connecting to the pod, so continue the loop and attempt streaming
+			// logs again next time there is an event for the same pod.
 			if err != nil {
 				continue
 			}
 
-			watching[podName] = true
+			// We successfully connected to the pod, so mark it as having streamed logs.
+			streamedLogs[podName] = true
+			// Block the loop until all logs from the pod have been processed.
 			io.Copy(out, reader)
 			reader.Close()
 			done <- true
