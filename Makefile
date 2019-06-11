@@ -110,6 +110,11 @@ build-all-bins:
 build-bin:
 	$(DOCKER_CMD) bash -c "OS=\"$(OS)\" ARCH=\"$(ARCH)\" LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
 
+# This target is for contributor convenience.
+.PHONY: build-%
+build-%:
+	$(DOCKER_CMD) bash -c "OS=$* LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
+
 .PHONY: build-image
 build-image:
 	docker build \
