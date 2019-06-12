@@ -104,16 +104,16 @@ build: build-all-bins build-image
 build-all-bins:
 	$(DOCKER_CMD) bash -c "LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
 
-# You can make this target build for a specific OS and architecture using OS and
-# ARCH environment variables.
+# You can make this target build for a specific OS and architecture using GOOS
+# and GOARCH environment variables.
 .PHONY: build-bin
 build-bin:
-	$(DOCKER_CMD) bash -c "OS=\"$(OS)\" ARCH=\"$(ARCH)\" LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
+	$(DOCKER_CMD) bash -c "GOOS=\"$(GOOS)\" GOARCH=\"$(GOARCH)\" LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
 
 # This target is for contributor convenience.
 .PHONY: build-%
 build-%:
-	$(DOCKER_CMD) bash -c "OS=$* LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
+	$(DOCKER_CMD) bash -c "GOOS=$* LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
 
 .PHONY: build-image
 build-image:

@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-oses=${OS:-"linux windows darwin"}
-archs=${ARCH:-amd64}
+oses=${GOOS:-"linux windows darwin"}
+archs=${GOARCH:-amd64}
 
 for os in $oses; do
   for arch in $archs; do 
