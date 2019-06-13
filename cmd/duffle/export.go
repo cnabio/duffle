@@ -76,7 +76,7 @@ func (ex *exportCmd) run() error {
 }
 
 func (ex *exportCmd) Export(bundlefile string, l loader.BundleLoader) error {
-	is, err := packager.NewImageStore(ex.thin, true)
+	is, err := packager.NewImageStore(ex.thin)
 	if err != nil {
 		return err
 	}
