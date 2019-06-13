@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -90,36 +89,7 @@ func (im *Importer) Import() error {
 		return fmt.Errorf("failed to load and validate bundle.%s: %s", ext, err)
 	}
 
-	artifactsDir := filepath.Join(dest, "artifacts")
-	_, err = os.Stat(artifactsDir)
-	if err == nil {
-		filepath.Walk(artifactsDir, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if info.IsDir() {
-				return nil
-			}
-
-			file, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-			defer file.Close()
-			out, err := im.Client.ImageLoad(context.Background(), file, false)
-			if err != nil {
-				return err
-			}
-			defer out.Body.Close()
-
-			if im.Verbose {
-				io.Copy(os.Stdout, out.Body)
-			}
-
-			return nil
-		})
-	}
+	// TODO: https://github.com/deislabs/duffle/issues/758
 
 	return nil
 }
