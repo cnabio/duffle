@@ -42,15 +42,11 @@ type ImageStore interface {
 	add(img string) (contentDigest string, err error)
 }
 
-func NewImageStore(thin bool, ociLayout bool) (ImageStore, error) {
+func NewImageStore(thin bool) (ImageStore, error) {
 	if thin {
 		return newNop(), nil
 	}
-	if ociLayout {
-		return newOciLayout(), nil
-	}
-	return newTarFiles()
-
+	return newOciLayout(), nil
 }
 
 // Export prepares an artifacts directory containing all of the necessary
