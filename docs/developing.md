@@ -9,30 +9,74 @@ $ cd $(go env GOPATH)/src/github.com/deislabs/duffle
 ```
 
 ### Prerequisites
-You need:
-* A working Go 1.11.4 (or later) environment
-* make
 
-Before you start working with the code, issue:
-```console
-$ make bootstrap
-```
+You need:
+
+* make
+* Docker
+
+## Containerized Development Environment
+
+To ensure a consistent development environment for all contributors, Duffle
+relies heavily on Docker containers as sandboxes for all development activities
+including dependency resolution and executing tests.
+
+`make` targets seamlessly handle the container orchestration.
+
+If, for whatever reason, you must opt-out of executing development tasks within
+containers, set the `SKIP_DOCKER` environment variable to `true`, but be aware
+that by doing so, the success or failure of development-related tasks, tests,
+etc. will be dependent on the state of your system, with no guarantee of the
+same results in CI.
+
+## Developing on Windows
+
+All development-related tasks should "just work" on Linux and Mac OS systems.
+When developing on Windows, the maintainers strongly recommend utilizing the
+Windows Subsystem for Linux.
+
+[This blog post](https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly)
+provides excellent guidance on making the Windows Subsystem for Linux work
+seamlessly with Docker Desktop (Docker for Windows).
 
 ## Building
 
-To build `bin/duffle`, issue:
+To build everything (binaries for Linux, Mac, and Windows on amd64 architecture)
+as well as a linux/amd64 Docker image containing the corresponding binary:
+
 ```console
 $ make build
 ```
 
-If you want to install `duffle`, issue:
+To build binaries for Linux, Mac, and Windows, but no Docker image:
+
 ```console
-$ sudo make install
+$ make build-all-bins
+```
+
+To build for one specific OS / architecture:
+
+```console
+$ OS=<desired OS> ARCH=<desired architecture> make build-bin
+```
+
+For convenience, you can build for the OS of your choice with amd64 architecture
+using targets of the form `build-<OS>`. For example:
+
+```console
+$ make build-darwin
+```
+
+To build only the Docker image and nothing else:
+
+```console
+$ make build-image
 ```
 
 ## Testing
 
 To run the tests, issue:
+
 ```console
 $ make test
 ```
@@ -40,13 +84,24 @@ $ make test
 ## Linting
 
 To lint the code, issue:
+
 ```console
 $ make lint
 ```
 
 If this detects that some imports need re-organising (errors like "File is not `goimports`-ed"), issue:
+
 ```console
 $ make goimports
+```
+
+## Dependency Resolution
+
+If, at any time, you need to (re-)resolve the project's dependencies, perhaps
+because a new one is needed or an existing one is no longer needed, issue:
+
+```console
+$ make dep
 ```
 
 ## Debugging
