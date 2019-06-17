@@ -1,4 +1,4 @@
-FROM quay.io/deis/lightweight-docker-go:v0.7.0
+FROM golang:1.12-alpine
 ARG LDFLAGS
 ENV CGO_ENABLED=0
 WORKDIR /go/src/github.com/deislabs/duffle

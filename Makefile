@@ -22,13 +22,15 @@ BASE_PACKAGE_NAME := github.com/deislabs/duffle
 
 ifneq ($(SKIP_DOCKER),true)
 	PROJECT_ROOT := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-	DEV_IMAGE := quay.io/deis/lightweight-docker-go:v0.7.0
+	DEV_IMAGE := golang:1.12-stretch
 	DOCKER_CMD := docker run \
 		-it \
 		--rm \
 		-e SKIP_DOCKER=true \
 		-v $(PROJECT_ROOT):/go/src/$(BASE_PACKAGE_NAME) \
 		-w /go/src/$(BASE_PACKAGE_NAME) $(DEV_IMAGE)
+	INSTALL_DEP := make install-dep &&
+	INSTALL_GOLANGCI_LINT := make install-golangci-lint &&
 endif
 
 ################################################################################
@@ -63,7 +65,15 @@ MUTABLE_IMAGE_NAME := $(DOCKER_REGISTRY)$(DOCKER_ORG)$(BASE_IMAGE_NAME):$(MUTABL
 
 .PHONY: dep
 dep:
-	$(DOCKER_CMD) dep ensure -v
+	$(DOCKER_CMD) $(INSTALL_DEP) dep ensure -v
+
+.PHONY: install-dep
+install-dep:
+	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | INSTALL_DIRECTORY=/usr/local/bin sh
+
+.PHONY: install-golangci-lint
+install-golangci-lint:
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b /usr/local/bin v1.16.0
 
 .PHONY: goimports
 goimports:
@@ -87,7 +97,7 @@ verify-vendored-code:
 
 .PHONY: lint
 lint:
-	$(DOCKER_CMD) golangci-lint run --config ./golangci.yml
+	$(DOCKER_CMD) $(INSTALL_GOLANGCI_LINT) golangci-lint run --config ./golangci.yml
 
 .PHONY: test
 test:

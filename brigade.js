@@ -3,7 +3,7 @@ const { events, Job, Group } = require("brigadier");
 const projectOrg = "deislabs";
 const projectName = "duffle";
 
-const goImg = "quay.io/deis/lightweight-docker-go:v0.7.0";
+const goImg = "golang:1.12-stretch";
 const gopath = "/go"
 const localPath = gopath + `/src/github.com/${projectOrg}/${projectName}`;
 
@@ -67,7 +67,7 @@ function test() {
   // Run Go unit tests
   job.tasks = [
     `cd ${localPath}`,
-    "make verify-vendored-code lint test"
+    "make install-dep verify-vendored-code install-golangci-lint lint test"
   ];
   return job;
 }
