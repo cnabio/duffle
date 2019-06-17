@@ -173,7 +173,7 @@ func (k *KubernetesDriver) Run(op *driver.Operation) error {
 		}
 
 		container.EnvFrom = []v1.EnvFromSource{
-			v1.EnvFromSource{
+			{
 				SecretRef: &v1.SecretEnvSource{
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: envsecret.ObjectMeta.Name,
@@ -263,6 +263,9 @@ func (k *KubernetesDriver) watchJobStatusAndLogs(selector metav1.ListOptions, ou
 		if complete {
 			break
 		}
+	}
+	if err != nil {
+		return err
 	}
 
 	// Wait for pod logs to finish printing
