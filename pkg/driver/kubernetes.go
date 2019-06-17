@@ -350,7 +350,7 @@ func generateFileSecret(files map[string]string) (*v1.Secret, []v1.VolumeMount) 
 
 	i := 0
 	for path, contents := range files {
-		key := strings.ReplaceAll(filepath.ToSlash(path), "/", "_")
+		key := strings.Replace(filepath.ToSlash(path), "/", "_", -1)
 		data[key] = contents
 		mounts[i] = v1.VolumeMount{
 			Name:      k8sFileSecretVolume,
