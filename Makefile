@@ -22,7 +22,7 @@ BASE_PACKAGE_NAME := github.com/deislabs/duffle
 
 ifneq ($(SKIP_DOCKER),true)
 	PROJECT_ROOT := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-	DEV_IMAGE := quay.io/deis/lightweight-docker-go:v0.7.0
+	DEV_IMAGE := golang:1.12-stretch
 	DOCKER_CMD := docker run \
 		-it \
 		--rm \
@@ -64,6 +64,14 @@ MUTABLE_IMAGE_NAME := $(DOCKER_REGISTRY)$(DOCKER_ORG)$(BASE_IMAGE_NAME):$(MUTABL
 .PHONY: dep
 dep:
 	$(DOCKER_CMD) dep ensure -v
+
+.PHONY: install-dep
+install-dep:
+	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | INSTALL_DIRECTORY=/usr/local/bin sh
+
+.PHONY: install-golangci-lint
+install-golangci-lint:
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b /usr/local/bin v1.16.0
 
 .PHONY: goimports
 goimports:
