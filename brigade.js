@@ -161,13 +161,8 @@ function checkRequested(e, p) {
 // Here we can add additional Check Runs, which will run in parallel and
 // report their results independently to GitHub
 function runSuite(e, p) {
-  // For the master branch, we build and publish images in response to the push
-  // event. We test as a precondition for doing that, so we DON'T test here
-  // for the master branch.
-  if (e.revision.ref != "master") {
-    // For now, this is the one-stop shop running build, lint and test targets
-    return runTests(e, p);
-  }
+  // For now, this is the one-stop shop running build, lint and test targets
+  return runTests(e, p);
 }
 
 // runTests is a Check Run that is run as part of a Checks Suite
