@@ -45,7 +45,7 @@ and
     x@d maps to y@d (for all digests d).
 
 ## duffle relocate
-`duffle relocate` relocates the images referenced by a bundle and creates a new bundle with an updated image map. Relocation is restricted to images with type "docker" and "oci". Images of other types are not relocated.
+`duffle relocate` relocates the images referenced by a bundle and creates a _relocation mapping file_ which captures the mapping from original to relocated image names. Relocation is restricted to images with type "docker" and "oci". Images of other types are not relocated.
  
 The `--repository-prefix` flag determines the repositories for the relocated images. Each image is given a name starting with the given prefix and pushed to the repository.
 
@@ -70,13 +70,13 @@ This will be done in a DMZ with access to the internet and write access to the i
 Suppose their internal registry is hosted at `registry.internal.acme.com` and they have created a user `smith` to manage the forge software. They can use `duffle relocate` to
 relocate the images to their registry as follows:
 ```bash
-duffle relocate forge.json forge-relocated --input-bundle-is-file --repository-prefix=registry.internal.acme.com/smith
+duffle relocate forge.json --bundle-is-file --repository-prefix=registry.internal.acme.com/smith --relocation-mapping relmap.json
 
 ```
 
-They can now install the forge software from the relocated bundle:
+They can now install the forge software using the original bundle together with the relocation mapping file:
 ```bash
-duffle install acme-forge forge-relocated ...
+duffle install forge.json --bundle-is-file --relocation-mapping relmap.json ...
 
 ```
 
