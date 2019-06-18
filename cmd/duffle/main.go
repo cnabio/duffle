@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -96,10 +97,10 @@ func must(err error) {
 }
 
 // prepareDriver prepares a driver per the user's request.
-func prepareDriver(driverName string) (driver.Driver, error) {
+func prepareDriver(driverName string, relMap string) (driver.Driver, error) {
 	driverImpl, err := duffleDriver.Lookup(driverName)
 	if err != nil {
-		return driverImpl, err
+		return nil, err
 	}
 
 	// Load any driver-specific config out of the environment.
@@ -111,7 +112,46 @@ func prepareDriver(driverName string) (driver.Driver, error) {
 		configurable.SetConfig(driverCfg)
 	}
 
-	return driverImpl, err
+	rm, err := loadRelMapping(relMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// wrap the driver so any relocation mapping is mounted
+	return &driverWithRelocationMapping{
+		driver:     driverImpl,
+		relMapping: rm,
+	}, nil
+}
+
+type driverWithRelocationMapping struct {
+	driver     driver.Driver
+	relMapping string
+}
+
+func (d *driverWithRelocationMapping) Run(op *driver.Operation) error {
+	// if there is a relocation mapping, ensure it is mounted
+	if d.relMapping != "" {
+		fmt.Printf("mounting relocation mapping %q\n", d.relMapping)
+		op.Files["/cnab/app/relocation-mapping.json"] = d.relMapping
+	}
+	return d.driver.Run(op)
+}
+
+func (d *driverWithRelocationMapping) Handles(it string) bool {
+	return d.driver.Handles(it)
+}
+
+func loadRelMapping(relMap string) (string, error) {
+	if relMap != "" {
+		data, err := ioutil.ReadFile(relMap)
+		if err != nil {
+			return "", fmt.Errorf("failed to read relocation mapping from %s: %v", relMap, err)
+		}
+		return string(data), nil
+	}
+
+	return "", nil
 }
 
 func loadBundle(bundleFile string) (*bundle.Bundle, error) {
