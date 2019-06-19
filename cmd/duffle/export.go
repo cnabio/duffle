@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/deislabs/duffle/pkg/imagestore/builder"
+
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/loader"
 	"github.com/deislabs/duffle/pkg/packager"
@@ -76,12 +78,12 @@ func (ex *exportCmd) run() error {
 }
 
 func (ex *exportCmd) Export(bundlefile string, l loader.BundleLoader) error {
-	is, err := packager.NewImageStore(ex.thin)
+	bldr, err := builder.NewBuilder(ex.thin)
 	if err != nil {
 		return err
 	}
 
-	exp, err := packager.NewExporter(bundlefile, ex.dest, ex.home.Logs(), l, is)
+	exp, err := packager.NewExporter(bundlefile, ex.dest, ex.home.Logs(), l, bldr)
 	if err != nil {
 		return fmt.Errorf("Unable to set up exporter: %s", err)
 	}
@@ -89,7 +91,7 @@ func (ex *exportCmd) Export(bundlefile string, l loader.BundleLoader) error {
 		return err
 	}
 	if ex.verbose {
-		fmt.Fprintf(ex.out, "Export logs: %s\n", exp.Logs)
+		fmt.Fprintf(ex.out, "Export logs: %s\n", exp.Logs())
 	}
 	return nil
 }
