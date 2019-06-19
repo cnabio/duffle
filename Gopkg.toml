@@ -63,11 +63,6 @@
   name = "github.com/google/go-containerregistry"
   revision = "5296537b6d5d12241dd0a8b1ef70a59cba62f48c"
 
-[[constraint]]
-  name = "github.com/deislabs/cnab-go"
-  source = "github.com/radu-matei/cnab-go"
-  branch = "add-duffle-types"
-
 [[override]]
   name = "k8s.io/apimachinery"
   revision = "kubernetes-1.11.2"
