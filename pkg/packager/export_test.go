@@ -5,60 +5,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/deislabs/duffle/pkg/loader"
-	"github.com/deislabs/duffle/pkg/signature"
 )
-
-func TestExportSigned(t *testing.T) {
-	testFixtures := filepath.Join("..", "signature", "testdata")
-	testPublicRing := filepath.Join(testFixtures, "public.gpg")
-	signedBun := filepath.Join(testFixtures, "signed.json.asc")
-
-	tempDir, err := setupTempDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tempDir)
-	if err := setupSignedBundle(tempDir, signedBun); err != nil {
-		t.Fatal(err)
-	}
-	kr, err := signature.LoadKeyRing(testPublicRing)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	tempPWD, pwd, err := setupPWD()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		os.Chdir(pwd)
-		os.RemoveAll(tempPWD)
-	}()
-
-	destination := "example-cool-bundle-0.1.0.tgz"
-	ex := Exporter{
-		Source:      filepath.Join(tempDir, "bundle.cnab"),
-		Destination: destination,
-		Thin:        true,
-		Logs:        filepath.Join(tempDir, "export-logs"),
-		Loader:      loader.NewSecureLoader(kr),
-		Unsigned:    false,
-	}
-
-	if err := ex.Export(); err != nil {
-		t.Errorf("Expected no error, got error: %v", err)
-	}
-
-	_, err = os.Stat(destination)
-	if err != nil && os.IsNotExist(err) {
-		t.Errorf("Expected %s to exist but was not created", destination)
-	} else if err != nil {
-		t.Errorf("Error with compressed bundle file: %v", err)
-	}
-}
 
 func TestExport(t *testing.T) {
 	source, err := filepath.Abs(filepath.Join("testdata", "examplebun", "bundle.json"))
@@ -75,16 +27,42 @@ func TestExport(t *testing.T) {
 		os.RemoveAll(tempPWD)
 	}()
 
+	configArchiveDir := ""
+	imagesAdded := []string{}
+
+	is := &mockImageStore{
+		configureStub: func(archiveDir string, logs io.Writer) error {
+			configArchiveDir = archiveDir
+			return nil
+		},
+		addStub: func(im string) (string, error) {
+			imagesAdded = append(imagesAdded, im)
+			return "", nil
+		},
+	}
+
 	ex := Exporter{
-		Source:   source,
-		Thin:     true,
-		Logs:     filepath.Join(tempDir, "export-logs"),
-		Loader:   loader.NewDetectingLoader(),
-		Unsigned: true,
+		Source:     source,
+		ImageStore: is,
+		Logs:       filepath.Join(tempDir, "export-logs"),
+		Loader:     loader.NewLoader(),
 	}
 
 	if err := ex.Export(); err != nil {
 		t.Errorf("Expected no error, got error: %v", err)
+	}
+
+	expectedConfigArchiveDirBase := "examplebun-0.1.0-export"
+	configArchiveDirBase := filepath.Base(configArchiveDir)
+	if configArchiveDirBase != expectedConfigArchiveDirBase {
+		t.Errorf("ImageStore.configure was passed an archive directory ending in %s; expected %s", configArchiveDirBase, expectedConfigArchiveDirBase)
+	}
+
+	expectedImagesAdded := []string{"mock/examplebun:0.1.0", "mock/image-a:58326809e0p19b79054015bdd4e93e84b71ae1ta", "mock/image-b:88426103e0p19b38554015bd34e93e84b71de2fc"}
+	sort.Strings(expectedImagesAdded)
+	sort.Strings(imagesAdded)
+	if !reflect.DeepEqual(imagesAdded, expectedImagesAdded) {
+		t.Errorf("ImageStore.add was called with %v; expected %v", imagesAdded, expectedImagesAdded)
 	}
 
 	expectedFile := "examplebun-0.1.0.tgz"
@@ -103,17 +81,43 @@ func TestExportCreatesFileProperly(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
+	configArchiveDir := ""
+	imagesAdded := []string{}
+
+	is := &mockImageStore{
+		configureStub: func(archiveDir string, logs io.Writer) error {
+			configArchiveDir = archiveDir
+			return nil
+		},
+		addStub: func(im string) (string, error) {
+			imagesAdded = append(imagesAdded, im)
+			return "", nil
+		},
+	}
+
 	ex := Exporter{
 		Source:      "testdata/examplebun/bundle.json",
 		Destination: filepath.Join(tempDir, "random-directory", "examplebun-whatev.tgz"),
-		Thin:        true,
+		ImageStore:  is,
 		Logs:        filepath.Join(tempDir, "export-logs"),
-		Unsigned:    true,
-		Loader:      loader.NewDetectingLoader(),
+		Loader:      loader.NewLoader(),
 	}
 
 	if err := ex.Export(); err == nil {
 		t.Error("Expected path does not exist error, got no error")
+	}
+
+	expectedConfigArchiveDirBase := "examplebun-0.1.0-export"
+	configArchiveDirBase := filepath.Base(configArchiveDir)
+	if configArchiveDirBase != expectedConfigArchiveDirBase {
+		t.Errorf("ImageStore.configure was passed an archive directory ending in %s; expected %s", configArchiveDirBase, expectedConfigArchiveDirBase)
+	}
+
+	expectedImagesAdded := []string{"mock/examplebun:0.1.0", "mock/image-a:58326809e0p19b79054015bdd4e93e84b71ae1ta", "mock/image-b:88426103e0p19b38554015bd34e93e84b71de2fc"}
+	sort.Strings(expectedImagesAdded)
+	sort.Strings(imagesAdded)
+	if !reflect.DeepEqual(imagesAdded, expectedImagesAdded) {
+		t.Errorf("ImageStore.add was called with %v; expected %v", imagesAdded, expectedImagesAdded)
 	}
 
 	if err := os.MkdirAll(filepath.Join(tempDir, "random-directory"), 0755); err != nil {
@@ -133,20 +137,45 @@ func TestExportCreatesFileProperly(t *testing.T) {
 	}
 }
 
-func setupSignedBundle(tempDir, signedBundle string) error {
-	from, err := os.Open(signedBundle)
+func TestExportDigestMismatch(t *testing.T) {
+	source, err := filepath.Abs(filepath.Join("testdata", "examplebun", "bundle.json"))
 	if err != nil {
-		return err
+		t.Fatal(err)
 	}
-	defer from.Close()
-	to, err := os.OpenFile(filepath.Join(tempDir, "bundle.cnab"), os.O_RDWR|os.O_CREATE, 0666)
+	tempDir, tempPWD, pwd, err := setupExportTestEnvironment()
 	if err != nil {
-		return err
+		t.Fatal(err)
 	}
-	defer to.Close()
+	defer func() {
+		os.RemoveAll(tempDir)
+		os.Chdir(pwd)
+		os.RemoveAll(tempPWD)
+	}()
 
-	_, err = io.Copy(to, from)
-	return err
+	is := &mockImageStore{
+		configureStub: func(archiveDir string, logs io.Writer) error {
+			return nil
+		},
+		addStub: func(im string) (string, error) {
+			// return the same digest for all images, but only one of them has a digest in the bundle manifest so just
+			// that one will fail verification
+			return "sha256:222222228fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540", nil
+		},
+	}
+
+	ex := Exporter{
+		Source:     source,
+		ImageStore: is,
+		Logs:       filepath.Join(tempDir, "export-logs"),
+		Loader:     loader.NewLoader(),
+	}
+
+	if err := ex.Export(); err.Error() != "Error preparing artifacts: content digest mismatch: image mock/image-a:"+
+		"58326809e0p19b79054015bdd4e93e84b71ae1ta has digest "+
+		"sha256:222222228fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540 but the digest should be "+
+		"sha256:111111118fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540 according to the bundle manifest" {
+		t.Errorf("Unexpected error: %v", err)
+	}
 }
 
 func setupTempDir() (string, error) {
@@ -185,4 +214,17 @@ func setupExportTestEnvironment() (string, string, string, error) {
 	}
 
 	return tempDir, tempPWD, pwd, nil
+}
+
+type mockImageStore struct {
+	configureStub func(archiveDir string, logs io.Writer) error
+	addStub       func(im string) (string, error)
+}
+
+func (i *mockImageStore) configure(archiveDir string, logs io.Writer) error {
+	return i.configureStub(archiveDir, logs)
+}
+
+func (i *mockImageStore) add(im string) (string, error) {
+	return i.addStub(im)
 }

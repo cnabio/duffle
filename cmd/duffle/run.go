@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/deislabs/duffle/pkg/action"
-	"github.com/deislabs/duffle/pkg/claim"
+	"github.com/deislabs/cnab-go/action"
+	"github.com/deislabs/cnab-go/claim"
 )
 
 func newRunCmd(w io.Writer) *cobra.Command {

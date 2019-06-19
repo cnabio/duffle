@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -11,9 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/repo"
-	"github.com/deislabs/duffle/pkg/signature"
 )
 
 func TestBuild(t *testing.T) {
@@ -54,14 +51,11 @@ func TestBuild(t *testing.T) {
 		out:  out,
 	}
 
-	// Create temporary signing key
-	mockSigningKeyring(testHome.String(), t)
-
 	if err := cmd.run(); err != nil {
 		t.Errorf("Expected no error but got err: %s", err)
 	}
 
-	// Verify that the bundle exists and is signed
+	// Verify that the bundle exists
 	is := assert.New(t)
 
 	index, err := repo.LoadIndex(testHome.Repositories())
@@ -77,22 +71,6 @@ func TestBuild(t *testing.T) {
 
 	loc := filepath.Join(testHome.Bundles(), digest)
 	is.FileExists(loc)
-	data, err := ioutil.ReadFile(loc)
+	_, err = ioutil.ReadFile(loc)
 	is.NoError(err)
-	is.Contains(string(data), "---BEGIN PGP SIGNED MESSAGE----")
-}
-
-func mockSigningKeyring(tempHome string, t *testing.T) {
-	t.Helper()
-	uid, err := signature.ParseUserID("fake <fake@example.com>")
-	if err != nil {
-		t.Fatal(err)
-	}
-	ring := signature.CreateKeyRing(func(a string) ([]byte, error) { return nil, errors.New("not implemented") })
-	key, err := signature.CreateKey(uid)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ring.AddKey(key)
-	ring.SavePrivate(home.Home(tempHome).SecretKeyRing(), true)
 }

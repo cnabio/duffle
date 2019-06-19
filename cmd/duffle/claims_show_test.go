@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/bundle"
-	"github.com/deislabs/duffle/pkg/claim"
+	"github.com/deislabs/cnab-go/claim"
 
+	"github.com/deislabs/cnab-go/bundle"
 	"github.com/stretchr/testify/assert"
 )
 

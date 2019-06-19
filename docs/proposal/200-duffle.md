@@ -74,7 +74,7 @@ For operations that execute this installation image (install, upgrade, etc.), th
 
 - Load the parameters and credential set definitions
 - Load the claim (if necessary)
-- Load the `bundle.json`. If signed, verify it before parsing the body
+- Load the `bundle.json`.
 - Locate the invocation image
 - Validate the parameters and credentials
 - Prepare the invocation image, mounting the parameters and credentials, as well as the claim data

@@ -1,41 +1,32 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/deislabs/duffle/pkg/signature"
-
-	"github.com/spf13/cobra"
-
-	"github.com/deislabs/duffle/pkg/bundle"
-	"github.com/deislabs/duffle/pkg/claim"
-	"github.com/deislabs/duffle/pkg/credentials"
-	"github.com/deislabs/duffle/pkg/driver"
+	duffleDriver "github.com/deislabs/duffle/pkg/driver"
 	"github.com/deislabs/duffle/pkg/duffle/home"
-	"github.com/deislabs/duffle/pkg/utils/crud"
+	"github.com/deislabs/duffle/pkg/loader"
+	"github.com/deislabs/duffle/pkg/reference"
+
+	"github.com/deislabs/cnab-go/bundle"
+	"github.com/deislabs/cnab-go/claim"
+	"github.com/deislabs/cnab-go/credentials"
+	"github.com/deislabs/cnab-go/driver"
+	"github.com/deislabs/cnab-go/utils/crud"
+	"github.com/spf13/cobra"
 )
 
 var (
 	// duffleHome depicts the home directory where all duffle config is stored.
-	duffleHome           string
-	rootCmd              *cobra.Command
-	ErrUnderConstruction = errors.New("under construction")
+	duffleHome string
+	rootCmd    *cobra.Command
 )
 
 func main() {
-	defer func() {
-		if r := recover(); r != nil {
-			if err, ok := r.(error); ok {
-				fmt.Fprint(os.Stderr, fmt.Sprintf("error occurred %+v", err))
-				must(err)
-			}
-		}
-	}()
 	rootCmd = newRootCmd(nil)
 	must(rootCmd.Execute())
 }
@@ -93,14 +84,6 @@ func loadCredentials(files []string, b *bundle.Bundle) (map[string]string, error
 	return creds, credentials.Validate(creds, b.Credentials)
 }
 
-// loadVerifyingKeyRings loads all of the keys that can be used for verifying.
-//
-// This includes all the keys in the public key file and in the secret key file.
-func loadVerifyingKeyRings(homedir string) (*signature.KeyRing, error) {
-	hp := home.Home(homedir)
-	return signature.LoadKeyRings(hp.PublicKeyRing(), hp.SecretKeyRing())
-}
-
 // isPathy checks to see if a name looks like a path.
 func isPathy(name string) bool {
 	return strings.Contains(name, string(filepath.Separator))
@@ -114,7 +97,7 @@ func must(err error) {
 
 // prepareDriver prepares a driver per the user's request.
 func prepareDriver(driverName string) (driver.Driver, error) {
-	driverImpl, err := driver.Lookup(driverName)
+	driverImpl, err := duffleDriver.Lookup(driverName)
 	if err != nil {
 		return driverImpl, err
 	}
@@ -129,4 +112,51 @@ func prepareDriver(driverName string) (driver.Driver, error) {
 	}
 
 	return driverImpl, err
+}
+
+func loadBundle(bundleFile string) (*bundle.Bundle, error) {
+	l := loader.NewLoader()
+
+	// Issue #439: Errors that come back from the loader can be
+	// pretty opaque.
+	var bun *bundle.Bundle
+	bun, err := l.Load(bundleFile)
+	if err != nil {
+		return bun, fmt.Errorf("cannot load bundle: %s", err)
+	}
+	return bun, nil
+}
+func getReference(bundleName string) (reference.NamedTagged, error) {
+	var (
+		name string
+		ref  reference.NamedTagged
+	)
+
+	parts := strings.SplitN(bundleName, "://", 2)
+	if len(parts) == 2 {
+		name = parts[1]
+	} else {
+		name = parts[0]
+	}
+	normalizedRef, err := reference.ParseNormalizedNamed(name)
+	if err != nil {
+		return nil, fmt.Errorf("%q is not a valid bundle name: %v", name, err)
+	}
+	if reference.IsNameOnly(normalizedRef) {
+		ref, err = reference.WithTag(normalizedRef, "latest")
+		if err != nil {
+			// NOTE(bacongobbler): Using the default tag *must* be valid.
+			// To create a NamedTagged type with non-validated
+			// input, the WithTag function should be used instead.
+			panic(err)
+		}
+	} else {
+		if taggedRef, ok := normalizedRef.(reference.NamedTagged); ok {
+			ref = taggedRef
+		} else {
+			return nil, fmt.Errorf("unsupported image name: %s", normalizedRef.String())
+		}
+	}
+
+	return ref, nil
 }

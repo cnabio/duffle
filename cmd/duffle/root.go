@@ -41,25 +41,25 @@ func newRootCmd(outputRedirect io.Writer) *cobra.Command {
 	p.StringVar(&duffleHome, "home", defaultDuffleHome(), "location of your Duffle config. Overrides $DUFFLE_HOME")
 	p.BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
 
-	cmd.AddCommand(newBuildCmd(outLog))
-	cmd.AddCommand(newBundleCmd(outLog))
-	cmd.AddCommand(newInitCmd(outLog))
-	cmd.AddCommand(newShowCmd(outLog))
-	cmd.AddCommand(newListCmd(outLog))
-	cmd.AddCommand(newPullCmd(outLog))
-	cmd.AddCommand(newPushCmd(outLog))
-	cmd.AddCommand(newVersionCmd(outLog))
-	cmd.AddCommand(newInstallCmd(outLog))
-	cmd.AddCommand(newStatusCmd(outLog))
-	cmd.AddCommand(newUninstallCmd(outLog))
-	cmd.AddCommand(newUpgradeCmd(outLog))
-	cmd.AddCommand(newRunCmd(outLog))
-	cmd.AddCommand(newCredentialsCmd(outLog))
-	cmd.AddCommand(newKeyCmd(outLog))
-	cmd.AddCommand(newClaimsCmd(outLog))
-	cmd.AddCommand(newExportCmd(outLog))
-	cmd.AddCommand(newImportCmd(outLog))
-	cmd.AddCommand(newCreateCmd(outLog))
+	cmd.AddCommand(
+		newBuildCmd(outLog),
+		newBundleCmd(outLog),
+		newInitCmd(outLog),
+		newShowCmd(outLog),
+		newListCmd(outLog),
+		newRelocateCmd(outLog),
+		newVersionCmd(outLog),
+		newInstallCmd(outLog),
+		newStatusCmd(outLog),
+		newUninstallCmd(outLog),
+		newUpgradeCmd(outLog),
+		newRunCmd(outLog),
+		newCredentialsCmd(outLog),
+		newClaimsCmd(outLog),
+		newExportCmd(outLog),
+		newImportCmd(outLog),
+		newCreateCmd(outLog),
+	)
 
 	return cmd
 }

@@ -23,7 +23,6 @@ func newShowCmd(w io.Writer) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.BoolVarP(&bsc.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 	flags.BoolVarP(&bsc.raw, "raw", "r", false, "Display the raw bundle manifest")
 
 	return cmd

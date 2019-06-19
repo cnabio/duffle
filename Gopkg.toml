@@ -11,10 +11,6 @@
   version = "1.4.2"
 
 [[constraint]]
-  name = "github.com/Masterminds/vcs"
-  version = "1.11.1"
-
-[[constraint]]
   name = "github.com/sirupsen/logrus"
   version = "v1.0.4"
 
@@ -32,7 +28,11 @@
 
 [[override]]
   name = "github.com/docker/go-metrics"
-  revision = "d466d4f6fd960e01820085bd7e1a24426ee7ef18"
+  revision = "db152003892af64a8a892e1ee49edf8b6580a657"
+
+[[override]]
+  version = "0.9.0"
+  name = "github.com/prometheus/client_golang"
 
 [[constraint]]
   name = "github.com/gosuri/uitable"
@@ -50,6 +50,47 @@
   non-go = true
   unused-packages = true
   go-tests = true
+  
 [[constraint]]
   name = "github.com/docker/go"
   version = "1.5.1-1"
+
+[[constraint]]
+  name = "github.com/pivotal/image-relocation"
+  revision = "532dd0b42e7a50010d7868364309cd314a2bb376"
+
+[[override]]
+  name = "github.com/google/go-containerregistry"
+  revision = "5296537b6d5d12241dd0a8b1ef70a59cba62f48c"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  revision = "kubernetes-1.11.2"
+
+[[override]]
+  name = "k8s.io/api"
+  revision = "kubernetes-1.11.2"
+
+[[override]]
+  name = "k8s.io/client-go"
+  revision = "kubernetes-1.11.2"
+
+[[override]]
+  name = "k8s.io/kubernetes"
+  revision = "kubernetes-1.11.2"
+
+[[override]]
+  name = "k8s.io/kube-openapi"
+  revision = "d8ea2fe547a448256204cfc68dfee7b26c720acb"
+
+[[override]]
+  name = "github.com/docker/compose-on-kubernetes"
+  revision = "a6086e2369e39c2058a003a7eb42e567ecfd1f03"
+
+[[override]]
+  name = "github.com/containerd/containerd"
+  revision = "7f5f1176dd9fb3cc8d3ce5de91759ed3dc969fa2"
+
+[[override]]
+  name = "golang.org/x/sys"
+  revision = "f49334f85ddcf0f08d7fb6dd7363e9e6d6b777eb"

@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/deislabs/cnab-go/bundle"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deislabs/duffle/pkg/bundle"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 )
 
@@ -41,7 +41,7 @@ func TestGetBundle(t *testing.T) {
 		tc := tc // capture range variable
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
-			bundle, err := getBundleFilepath(tc.File, duffleHome, true)
+			bundle, err := getBundleFilepath(tc.File, duffleHome)
 			if err != nil {
 				t.Error(err)
 			}

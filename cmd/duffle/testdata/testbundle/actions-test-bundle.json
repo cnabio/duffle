@@ -1,0 +1,17 @@
+{
+    "actions": {
+        "dry-run": {
+            "description": "prints what install would do with the given parameters values",
+            "modifies": false,
+            "stateless": true
+        },
+        "migrate": {
+            "description": "migration action",
+            "modifies": false
+        },
+        "status": {
+            "description": "retrieves the status of an installation",
+            "modifies": false
+        }
+    }
+}

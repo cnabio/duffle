@@ -7,14 +7,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	"github.com/deislabs/duffle/pkg/action"
-	"github.com/deislabs/duffle/pkg/bundle"
-	"github.com/deislabs/duffle/pkg/claim"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/repo"
+
+	"github.com/deislabs/cnab-go/action"
+	"github.com/deislabs/cnab-go/bundle"
+	"github.com/deislabs/cnab-go/claim"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const installUsage = `Installs a Cloud Native Application Bundle (CNAB)
@@ -49,21 +49,6 @@ Windows Example:
 You can also load the bundle.json file directly:
 
 	$ duffle install dev_bundle path/to/bundle.json --bundle-is-file
-
-Verifying and --insecure:
-When the --insecure flag is passed, verification steps will not be
-performed. This means that Duffle will accept both unsigned
-(bundle.json) and signed (bundle.cnab) files, but will not perform
-any validation. The following table illustrates this:
-
-	Bundle     Key known?    Flag            Result
-	------     ----------    -----------     ------
-	Signed     Known         None            Okay
-	Signed     Known         --insecure      Okay
-	Signed     Unknown       None            Verification error
-	Signed     Unknown       --insecure      Okay
-	Unsigned   N/A           None            Verification error
-	Unsigned   N/A           --insecure      Okay
 `
 
 type installCmd struct {
@@ -75,7 +60,6 @@ type installCmd struct {
 	credentialsFiles []string
 	valuesFile       string
 	setParams        []string
-	insecure         bool
 	setFiles         []string
 	bundleIsFile     bool
 	name             string
@@ -99,7 +83,6 @@ func newInstallCmd(w io.Writer) *cobra.Command {
 
 	f := cmd.Flags()
 	f.BoolVarP(&install.bundleIsFile, "bundle-is-file", "f", false, "Indicates that the bundle source is a file path")
-	f.BoolVarP(&install.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 	f.StringVarP(&install.driver, "driver", "d", "docker", "Specify a driver name")
 	f.StringVarP(&install.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	f.StringArrayVarP(&install.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the bundle. This can be a credentialset name or a path to a file.")
@@ -110,7 +93,7 @@ func newInstallCmd(w io.Writer) *cobra.Command {
 }
 
 func (i *installCmd) run() error {
-	bundleFile, err := resolveBundleFilePath(i.bundle, i.home.String(), i.bundleIsFile, i.insecure)
+	bundleFile, err := resolveBundleFilePath(i.bundle, i.home.String(), i.bundleIsFile)
 	if err != nil {
 		return err
 	}
@@ -120,7 +103,7 @@ func (i *installCmd) run() error {
 		return fmt.Errorf("a claim with the name %v already exists", i.name)
 	}
 
-	bun, err := loadBundle(bundleFile, i.insecure)
+	bun, err := loadBundle(bundleFile)
 	if err != nil {
 		return err
 	}
@@ -168,7 +151,7 @@ func (i *installCmd) run() error {
 	return err2
 }
 
-func getBundleFilepath(bun, homePath string, insecure bool) (string, error) {
+func getBundleFilepath(bun, homePath string) (string, error) {
 	home := home.Home(homePath)
 	ref, err := getReference(bun)
 	if err != nil {

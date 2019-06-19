@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/deislabs/duffle/pkg/duffle/home"
+
+	"github.com/deislabs/cnab-go/credentials"
 	"github.com/gosuri/uitable"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
-	"github.com/deislabs/duffle/pkg/credentials"
-	"github.com/deislabs/duffle/pkg/duffle/home"
 )
 
 type credentialListCmd struct {

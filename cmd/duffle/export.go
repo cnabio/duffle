@@ -12,22 +12,19 @@ import (
 )
 
 const exportDesc = `
-Packages a bundle, invocation images, and all referenced images within
-a single gzipped tarfile. All images specified in the bundle metadata
-are saved as tar files in the artifacts/ directory along with an 
-artifacts.json file which describes the contents of artifacts/ directory.
+Packages a bundle, and by default any images referenced by the bundle, within a single gzipped tarfile.
 
-By default, this command will use the name and version information of
-the bundle to create a compressed archive file called
-<name>-<version>.tgz in the current directory. This destination can be
-updated by specifying a file path to save the compressed bundle to using
-the --output-file flag.
+Unless --thin is specified, a thick bundle is exported. A thick bundle contains the bundle manifest and all images
+(including invocation images) referenced by the bundle metadata. Images are saved as an OCI image layout in the
+artifacts/layout/ directory.
 
-Use the --thin flag to export the bundle manifest without the invocation
-images and referenced images.
+If --thin specified, only the bundle manifest is exported.
 
-Pass in a path to a bundle file instead of a bundle in local storage by
-using the --bundle-is-file flag like below:
+By default, this command will use the name and version information of the bundle to create a compressed archive file
+called <name>-<version>.tgz in the current directory. This destination can be updated by specifying a file path to save
+the compressed bundle to using the --output-file flag.
+
+A path to a bundle file may be passed in instead of a bundle in local storage by using the --bundle-is-file flag, thus:
 $ duffle export [PATH] --bundle-is-file
 `
 
@@ -38,7 +35,6 @@ type exportCmd struct {
 	out          io.Writer
 	thin         bool
 	verbose      bool
-	insecure     bool
 	bundleIsFile bool
 }
 
@@ -60,10 +56,9 @@ func newExportCmd(w io.Writer) *cobra.Command {
 
 	f := cmd.Flags()
 	f.StringVarP(&export.dest, "output-file", "o", "", "Save exported bundle to file path")
-	f.BoolVarP(&export.bundleIsFile, "bundle-is-file", "f", false, "Indicates that the bundle source is a file path")
+	f.BoolVarP(&export.bundleIsFile, "bundle-is-file", "f", false, "Interpret the bundle source as a file path")
 	f.BoolVarP(&export.thin, "thin", "t", false, "Export only the bundle manifest")
 	f.BoolVarP(&export.verbose, "verbose", "v", false, "Verbose output")
-	f.BoolVarP(&export.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 
 	return cmd
 }
@@ -80,8 +75,13 @@ func (ex *exportCmd) run() error {
 	return nil
 }
 
-func (ex *exportCmd) Export(bundlefile string, l loader.Loader) error {
-	exp, err := packager.NewExporter(bundlefile, ex.dest, ex.home.Logs(), l, ex.thin, ex.insecure)
+func (ex *exportCmd) Export(bundlefile string, l loader.BundleLoader) error {
+	is, err := packager.NewImageStore(ex.thin)
+	if err != nil {
+		return err
+	}
+
+	exp, err := packager.NewExporter(bundlefile, ex.dest, ex.home.Logs(), l, is)
 	if err != nil {
 		return fmt.Errorf("Unable to set up exporter: %s", err)
 	}
@@ -94,27 +94,23 @@ func (ex *exportCmd) Export(bundlefile string, l loader.Loader) error {
 	return nil
 }
 
-func (ex *exportCmd) setup() (string, loader.Loader, error) {
-	bundlefile, err := resolveBundleFilePath(ex.bundle, ex.home.String(), ex.bundleIsFile, ex.insecure)
+func (ex *exportCmd) setup() (string, loader.BundleLoader, error) {
+	l := loader.New()
+	bundlefile, err := resolveBundleFilePath(ex.bundle, ex.home.String(), ex.bundleIsFile)
 	if err != nil {
-		return "", nil, err
-	}
-
-	l, err := getLoader(ex.home.String(), ex.insecure)
-	if err != nil {
-		return "", nil, err
+		return "", l, err
 	}
 
 	return bundlefile, l, nil
 }
 
-func resolveBundleFilePath(bun, homePath string, bundleIsFile, insecure bool) (string, error) {
+func resolveBundleFilePath(bun, homePath string, bundleIsFile bool) (string, error) {
 
 	if bundleIsFile {
 		return bun, nil
 	}
 
-	bundlefile, err := getBundleFilepath(bun, homePath, insecure)
+	bundlefile, err := getBundleFilepath(bun, homePath)
 	if err != nil {
 		return "", err
 	}

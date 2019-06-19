@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/deislabs/duffle/pkg/action"
+	"github.com/deislabs/cnab-go/action"
 )
 
 const upgradeUsage = `perform the upgrade action in the CNAB bundle`
@@ -35,7 +35,6 @@ type upgradeCmd struct {
 	bundle           string
 	bundleFile       string
 	setParams        []string
-	insecure         bool
 	setFiles         []string
 	credentialsFiles []string
 }
@@ -65,14 +64,13 @@ func newUpgradeCmd(w io.Writer) *cobra.Command {
 	flags.StringArrayVarP(&upgrade.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
 	flags.StringVarP(&upgrade.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&upgrade.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
-	flags.BoolVarP(&upgrade.insecure, "insecure", "k", false, "Do not verify the bundle (INSECURE)")
 	flags.StringArrayVarP(&upgrade.setFiles, "set-file", "i", []string{}, "Set individual parameters from file content as NAME=SOURCE-PATH pairs")
 
 	return cmd
 }
 
 func (up *upgradeCmd) setup() error {
-	bundleFile, err := prepareBundleFile(up.bundle, up.bundleFile, up.insecure)
+	bundleFile, err := prepareBundleFile(up.bundle, up.bundleFile)
 	if err != nil {
 		return err
 	}
@@ -90,7 +88,7 @@ func (up *upgradeCmd) run() error {
 
 	// If the user specifies a bundle file, override the existing one.
 	if up.bundleFile != "" {
-		bun, err := loadBundle(up.bundleFile, up.insecure)
+		bun, err := loadBundle(up.bundleFile)
 		if err != nil {
 			return err
 		}
@@ -129,13 +127,13 @@ func (up *upgradeCmd) run() error {
 	return persistErr
 }
 
-func prepareBundleFile(bundle, bundleFile string, insecure bool) (string, error) {
+func prepareBundleFile(bundle, bundleFile string) (string, error) {
 	if bundle != "" && bundleFile != "" {
 		return "", ErrBundleAndBundleFile
 	}
 
 	if bundle != "" {
-		bundleFile, err := getBundleFilepath(bundle, homePath(), insecure)
+		bundleFile, err := getBundleFilepath(bundle, homePath())
 		if err != nil {
 			return bundleFile, err
 		}
