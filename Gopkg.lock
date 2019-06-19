@@ -781,7 +781,7 @@
   version = "v3.0.0"
 
 [[projects]]
-  digest = "1:f47d5892e50c2937477813f188fba877953faa98e2846497f842211ae3b52670"
+  digest = "1:87bef79892c094091d2ce4e1d9244e79660baf2f839ab9f075f82ed19a006263"
   name = "github.com/pivotal/image-relocation"
   packages = [
     "pkg/image",
@@ -789,7 +789,8 @@
     "pkg/registry",
   ]
   pruneopts = "NUT"
-  revision = "532dd0b42e7a50010d7868364309cd314a2bb376"
+  revision = "3c9c32bb3d97fc213476f1c9846a99ca35ecba5d"
+  version = "v0.1"
 
 [[projects]]
   digest = "1:14715f705ff5dfe0ffd6571d7d201dd8e921030f8070321a79380d8ca4ec1a24"
