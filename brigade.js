@@ -7,7 +7,7 @@ const goImg = "quay.io/deis/lightweight-docker-go:v0.7.0";
 const gopath = "/go"
 const localPath = gopath + `/src/github.com/${projectOrg}/${projectName}`;
 
-const releaseTagRegex = /^refs\/tags\/(v[0-9]+(?:\.[0-9]+)*(?:\-.+)?)$/;
+const releaseTagRegex = /^refs\/tags\/([0-9]+(?:\.[0-9]+)*(?:\-.+)?)$/;
 
 const noopJob = { run: () => { return Promise.resolve() } }
 
@@ -28,13 +28,6 @@ events.on("push", (e, p) => {
     return buildAndPublishImage(p, version).run()
       .then(() => {
         githubRelease(p, version).run();
-      })
-      .then(() => {
-        slackNotify(
-          "Duffle Release",
-          `${version} release now on GitHub! <https://github.com/${p.repo.name}/releases/tag/${version}>`,
-          p
-        ).run();
       });
   }
   if (e.revision.ref == "refs/heads/master") {
@@ -248,22 +241,3 @@ async function notificationWrap(job, note) {
   }
 }
 
-function slackNotify(title, msg, project) {
-  if (project.secrets.SLACK_WEBHOOK) {
-    var slack = new Job(`${projectName}-slack-notify`, "technosophos/slack-notify:latest")
-
-    slack.env = {
-      SLACK_WEBHOOK: project.secrets.SLACK_WEBHOOK,
-      SLACK_USERNAME: "duffle-ci",
-      SLACK_TITLE: title,
-      SLACK_MESSAGE: msg,
-      SLACK_COLOR: "#00ff00"
-    }
-    slack.tasks = ["/slack-notify"]
-
-    return slack
-  } else {
-    console.log(`Slack Notification for '${title}' not sent; no SLACK_WEBHOOK secret found.`)
-    return noopJob
-  }
-}
