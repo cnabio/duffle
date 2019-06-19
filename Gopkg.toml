@@ -57,7 +57,7 @@
 
 [[constraint]]
   name = "github.com/pivotal/image-relocation"
-  revision = "532dd0b42e7a50010d7868364309cd314a2bb376"
+  version = "v0.1"
 
 [[constraint]]
   name = "github.com/deislabs/cnab-go"
