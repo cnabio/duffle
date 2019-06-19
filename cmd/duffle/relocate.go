@@ -103,11 +103,7 @@ func (r *relocateCmd) run() error {
 		return err
 	}
 
-	if err := r.relocate(bun); err != nil {
-		return err
-	}
-
-	return nil
+	return r.relocate(bun)
 }
 
 func (r *relocateCmd) relocate(bun *bundle.Bundle) error {

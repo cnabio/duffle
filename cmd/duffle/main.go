@@ -132,7 +132,6 @@ type driverWithRelocationMapping struct {
 func (d *driverWithRelocationMapping) Run(op *driver.Operation) error {
 	// if there is a relocation mapping, ensure it is mounted
 	if d.relMapping != "" {
-		fmt.Printf("mounting relocation mapping %q\n", d.relMapping)
 		op.Files["/cnab/app/relocation-mapping.json"] = d.relMapping
 	}
 	return d.driver.Run(op)
