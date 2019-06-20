@@ -102,15 +102,21 @@ func TestLoadCredentials(t *testing.T) {
 
 	bun := bundle.Bundle{
 		Name: "test-load-creds",
-		Credentials: map[string]bundle.Location{
+		Credentials: map[string]bundle.Credential{
 			"knapsack": {
-				EnvironmentVariable: "KNAP",
+				Location: bundle.Location{
+					EnvironmentVariable: "KNAP",
+				},
 			},
 			"haversack": {
-				EnvironmentVariable: "HAVER",
+				Location: bundle.Location{
+					EnvironmentVariable: "HAVER",
+				},
 			},
 			"gym-bag": {
-				EnvironmentVariable: "GYM",
+				Location: bundle.Location{
+					EnvironmentVariable: "GYM",
+				},
 			},
 		},
 	}

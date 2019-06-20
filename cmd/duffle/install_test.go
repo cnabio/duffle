@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deislabs/cnab-go/bundle"
+	"github.com/deislabs/cnab-go/bundle/definition"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/deislabs/duffle/pkg/duffle/home"
@@ -57,10 +57,10 @@ func TestGetBundle(t *testing.T) {
 func TestOverrides(t *testing.T) {
 	is := assert.New(t)
 	// overrides(overrides []string, paramDefs map[string]bundle.ParameterDefinition)
-	defs := map[string]bundle.ParameterDefinition{
-		"first":  {DataType: "string"},
-		"second": {DataType: "bool"},
-		"third":  {DataType: "int"},
+	defs := definition.Definitions{
+		"first":  {Type: "string"},
+		"second": {Type: "boolean"},
+		"third":  {Type: "integer"},
 	}
 
 	setVals := []string{"first=foo", "second=true", "third=2", "fourth"}

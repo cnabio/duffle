@@ -180,19 +180,20 @@
   version = "v1.1.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:10066b62989745300f0c31e3fddb652a32e584debc30092279f41a3c01ead407"
+  digest = "1:c0f597501e91ea022c1d3a7681d4687a0cd2404dbabbf6b6f10fcf9936b4d5d7"
   name = "github.com/deislabs/cnab-go"
   packages = [
     "action",
     "bundle",
+    "bundle/definition",
     "claim",
     "credentials",
     "driver",
     "utils/crud",
   ]
   pruneopts = "NUT"
-  revision = "50bcf8e15a15ce278dcab2d19561d42b30a74d5b"
+  revision = "b8d6d13fdfc865b39cf29026ce169e6e709619dd"
+  version = "v0.1.2-beta1"
 
 [[projects]]
   digest = "1:e71d64468873ca819b91b975e67e71f349a89f41ab38040bcbd8840f5e193654"
@@ -381,6 +382,20 @@
   pruneopts = "NUT"
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:6be8997d410d48dd045a8c18ee25e59ebfaeb9aa502c240b0d8ad9bb3e3fdd4f"
+  name = "github.com/globalsign/mgo"
+  packages = [
+    ".",
+    "bson",
+    "internal/json",
+    "internal/sasl",
+    "internal/scram",
+  ]
+  pruneopts = "NUT"
+  revision = "eeefdecb41b842af6dc652aaea4026e8403e62df"
 
 [[projects]]
   digest = "1:c6f5a29fce208cb102ad1e356d3a3a361be54604549063943613058a377dd0d0"
@@ -789,6 +804,22 @@
   ]
   pruneopts = "NUT"
   revision = "5867b95ac084bbfee6ea16595c4e05ab009021da"
+
+[[projects]]
+  digest = "1:51365c3135ef6d52b4134bfa52005cb4f0cb7740a1ddc5ce46398a2ddf033eef"
+  name = "github.com/qri-io/jsonpointer"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "43be820608971e680b60469cfc7cc0e2e75fd4ef"
+  version = "v0.1.0"
+
+[[projects]]
+  digest = "1:7413856103afc3d0d748c26346ff4e82222cd57cc095e28d18194dfc50ac5582"
+  name = "github.com/qri-io/jsonschema"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "b244d4b99401d163bd9e382fd58698794259d091"
+  version = "v0.1.1"
 
 [[projects]]
   digest = "1:998e4640c25e00ccb7b2569bf94562283937b8afb3485c0e1a0a05a15330240d"
@@ -1252,6 +1283,7 @@
     "github.com/Masterminds/semver",
     "github.com/deislabs/cnab-go/action",
     "github.com/deislabs/cnab-go/bundle",
+    "github.com/deislabs/cnab-go/bundle/definition",
     "github.com/deislabs/cnab-go/claim",
     "github.com/deislabs/cnab-go/credentials",
     "github.com/deislabs/cnab-go/driver",
