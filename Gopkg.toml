@@ -94,3 +94,8 @@
 [[override]]
   name = "golang.org/x/sys"
   revision = "f49334f85ddcf0f08d7fb6dd7363e9e6d6b777eb"
+
+[[override]]
+  # version imported by k8s.io/client-go @ kubernetes-1.11.2
+  name = "github.com/Azure/go-autorest"
+  revision = "1ff28809256a84bb6966640ff3d0371af82ccba4"
