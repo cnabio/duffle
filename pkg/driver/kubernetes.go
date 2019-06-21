@@ -9,6 +9,8 @@ import (
 
 	// load credential helpers
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	// Convert transitive deps to direct deps so that we can use constraints in our Gopkg.toml
+	_ "github.com/Azure/go-autorest/autorest"
 
 	"github.com/deislabs/cnab-go/driver"
 	batchv1 "k8s.io/api/batch/v1"

@@ -1333,6 +1333,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Azure/go-autorest/autorest",
     "github.com/Masterminds/semver",
     "github.com/deislabs/cnab-go/action",
     "github.com/deislabs/cnab-go/bundle",
