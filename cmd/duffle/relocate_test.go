@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/pivotal/image-relocation/pkg/image"
@@ -53,15 +55,14 @@ func relocateFileToFile(t *testing.T, preserveDigest bool, expectedErr error) {
 	}
 	defer os.RemoveAll(work)
 
-	outputBundle := filepath.Join(work, "relocated.json")
+	relMapPath := filepath.Join(work, "relmap.json")
 
 	cmd := &relocateCmd{
-		inputBundle:  "testdata/relocate/bundle.json",
-		outputBundle: outputBundle,
+		inputBundle: "testdata/relocate/bundle.json",
 
-		repoPrefix:         testRepositoryPrefix,
-		inputBundleIsFile:  true,
-		outputBundleIsFile: true,
+		repoPrefix:        testRepositoryPrefix,
+		bundleIsFile:      true,
+		relocationMapping: relMapPath,
 
 		home: home.Home(duffleHome),
 		out:  ioutil.Discard,
@@ -121,53 +122,27 @@ func relocateFileToFile(t *testing.T, preserveDigest bool, expectedErr error) {
 		return
 	}
 
-	// check output bundle
-	bundleFile, err := resolveBundleFilePath(outputBundle, "", true)
+	// check relocation mapping file
+	data, err := ioutil.ReadFile(relMapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	relMap := make(map[string]string)
+	err = json.Unmarshal(data, &relMap)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	bun, err := loadBundle(bundleFile)
-	if err != nil {
-		t.Fatal(err)
+	expectedRelMap := map[string]string{
+		originalInvocationImageName: relocatedInvocationImageName,
+		originalImageNameA:          relocatedImageNameA,
+		originalImageNameB:          relocatedImageNameB,
 	}
 
-	if err = bun.Validate(); err != nil {
-		t.Fatal(err)
+	if !reflect.DeepEqual(relMap, expectedRelMap) {
+		t.Fatalf("output relocation mapping file has unexpected content: %v (expected %v)",
+			relMap, expectedRelMap)
 	}
-
-	ii := bun.InvocationImages[0]
-	actualInvocationImageName := ii.Image
-	if actualInvocationImageName != relocatedInvocationImageName {
-		t.Fatalf("output bundle has invocation image with unexpected name: %q (expected %q)",
-			actualInvocationImageName, relocatedInvocationImageName)
-	}
-
-	actualOriginalInvocationImageName := ii.OriginalImage
-	if actualOriginalInvocationImageName != originalInvocationImageName {
-		t.Fatalf("output bundle has invocation image with unexpected original name: %q (expected %q)",
-			actualOriginalInvocationImageName, originalInvocationImageName)
-	}
-
-	assertImage := func(i string, expectedOriginalImageName string, expectedImageName string) {
-		img := bun.Images[i]
-
-		actualImageName := img.Image
-		if actualImageName != expectedImageName {
-			t.Fatalf("output bundle has image %s with unexpected name: %q (expected %q)", i, actualImageName,
-				expectedImageName)
-		}
-
-		actualOriginalImageName := img.OriginalImage
-		if actualOriginalImageName != expectedOriginalImageName {
-			t.Fatalf("output bundle has image %s with unexpected original name: %q (expected %q)", i,
-				actualOriginalImageName, expectedOriginalImageName)
-		}
-	}
-
-	assertImage("a", originalImageNameA, relocatedImageNameA)
-	assertImage("b", originalImageNameB, relocatedImageNameB)
-	assertImage("c", "", "c")
 }
 
 // naïve test mapping, preserving any tag and/or digest
