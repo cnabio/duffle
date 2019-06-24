@@ -17,9 +17,16 @@
       "digest": "sha256:ca4050c9fed3a2ddcaef32140686613c4110ed728f53262d0a23a7e17da73111"
     }
   },
-  "parameters": {
+  "definitions": {
     "foo": {
       "type": "string"
+    }
+  },
+  "parameters": {
+    "fields": {
+      "foo": {
+        "definition": "foo"
+      }
     }
   },
   "credentials": {

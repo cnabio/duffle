@@ -12,6 +12,7 @@ import (
 
 	"github.com/deislabs/cnab-go/action"
 	"github.com/deislabs/cnab-go/bundle"
+	"github.com/deislabs/cnab-go/bundle/definition"
 	"github.com/deislabs/cnab-go/claim"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -182,7 +183,7 @@ func getBundleFilepath(bun, homePath string) (string, error) {
 }
 
 // overrides parses the --set data and returns values that should override other params.
-func overrides(overrides []string, paramDefs map[string]bundle.ParameterDefinition) (map[string]interface{}, error) {
+func overrides(overrides []string, paramDefs definition.Definitions) (map[string]interface{}, error) {
 	res := map[string]interface{}{}
 	for _, p := range overrides {
 		pair := strings.SplitN(p, "=", 2)
@@ -230,7 +231,7 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setF
 		}
 
 	}
-	overridden, err := overrides(setParams, bun.Parameters)
+	overridden, err := overrides(setParams, bun.Definitions)
 	if err != nil {
 		return vals, err
 	}
@@ -246,7 +247,7 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setF
 		}
 
 		// Check that this is a known param
-		if _, ok := bun.Parameters[parts[0]]; !ok {
+		if _, ok := bun.Parameters.Fields[parts[0]]; !ok {
 			return vals, fmt.Errorf("bundle does not have a parameter named %q", parts[0])
 		}
 

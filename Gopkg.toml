@@ -59,6 +59,10 @@
   name = "github.com/pivotal/image-relocation"
   revision = "532dd0b42e7a50010d7868364309cd314a2bb376"
 
+[[constraint]]
+  name = "github.com/deislabs/cnab-go"
+  version = "v0.1.2-beta1"
+
 [[override]]
   name = "github.com/google/go-containerregistry"
   revision = "5296537b6d5d12241dd0a8b1ef70a59cba62f48c"
