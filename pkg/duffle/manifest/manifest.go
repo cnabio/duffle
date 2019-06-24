@@ -5,22 +5,24 @@ import (
 	"path/filepath"
 
 	"github.com/deislabs/cnab-go/bundle"
+	"github.com/deislabs/cnab-go/bundle/definition"
 
 	"github.com/technosophos/moniker"
 )
 
 // Manifest represents a duffle manifest.
 type Manifest struct {
-	Name             string                                `json:"name" mapstructure:"name"`
-	Version          string                                `json:"version" mapstructure:"version"`
-	Description      string                                `json:"description,omitempty" mapstructure:"description"`
-	Keywords         []string                              `json:"keywords,omitempty" mapstructure:"keywords"`
-	Maintainers      []bundle.Maintainer                   `json:"maintainers,omitempty" mapstructure:"maintainers"`
-	InvocationImages map[string]*InvocationImage           `json:"invocationImages,omitempty" mapstructure:"invocationImages"`
-	Images           map[string]bundle.Image               `json:"images,omitempty" mapstructure:"images"`
-	Actions          map[string]bundle.Action              `json:"actions,omitempty" mapstructure:"actions"`
-	Parameters       map[string]bundle.ParameterDefinition `json:"parameters,omitempty" mapstructure:"parameters"`
-	Credentials      map[string]bundle.Location            `json:"credentials,omitempty" mapstructure:"credentials"`
+	Name             string                       `json:"name" mapstructure:"name"`
+	Version          string                       `json:"version" mapstructure:"version"`
+	Description      string                       `json:"description,omitempty" mapstructure:"description"`
+	Keywords         []string                     `json:"keywords,omitempty" mapstructure:"keywords"`
+	Maintainers      []bundle.Maintainer          `json:"maintainers,omitempty" mapstructure:"maintainers"`
+	InvocationImages map[string]*InvocationImage  `json:"invocationImages,omitempty" mapstructure:"invocationImages"`
+	Images           map[string]bundle.Image      `json:"images,omitempty" mapstructure:"images"`
+	Actions          map[string]bundle.Action     `json:"actions,omitempty" mapstructure:"actions"`
+	Parameters       *bundle.ParametersDefinition `json:"parameters,omitempty" mapstructure:"parameters"`
+	Credentials      map[string]bundle.Credential `json:"credentials,omitempty" mapstructure:"credentials"`
+	Definitions      definition.Definitions       `json:"definitions,omitempty" mapstructure:"definitions"`
 }
 
 // InvocationImage represents an invocation image component of a CNAB bundle

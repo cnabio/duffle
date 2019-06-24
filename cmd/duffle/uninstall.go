@@ -94,7 +94,7 @@ func (un *uninstallCmd) run() error {
 		claim.Parameters = params
 	}
 
-	driverImpl, err := prepareDriver(un.driver)
+	driverImpl, err := prepareDriver(un.driver, "")
 	if err != nil {
 		return fmt.Errorf("could not prepare driver: %s", err)
 	}

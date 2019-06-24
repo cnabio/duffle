@@ -12,6 +12,7 @@ import (
 
 	"github.com/deislabs/cnab-go/action"
 	"github.com/deislabs/cnab-go/bundle"
+	"github.com/deislabs/cnab-go/bundle/definition"
 	"github.com/deislabs/cnab-go/claim"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -27,6 +28,9 @@ Example:
 	$ duffle status my_release
 
 Note: To install a bundle, use $ duffle bundle install or $ duffle install. They are aliases for the same action.
+
+If the bundle has been relocated, you can pass the relocation mapping
+file created by duffle relocate using the --relocation-mapping flag.
 
 Different drivers are available for executing the duffle invocation
 image. The following drivers are built-in:
@@ -56,13 +60,14 @@ type installCmd struct {
 	home   home.Home
 	out    io.Writer
 
-	driver           string
-	credentialsFiles []string
-	valuesFile       string
-	setParams        []string
-	setFiles         []string
-	bundleIsFile     bool
-	name             string
+	driver            string
+	credentialsFiles  []string
+	valuesFile        string
+	setParams         []string
+	setFiles          []string
+	bundleIsFile      bool
+	name              string
+	relocationMapping string
 }
 
 func newInstallCmd(w io.Writer) *cobra.Command {
@@ -83,6 +88,7 @@ func newInstallCmd(w io.Writer) *cobra.Command {
 
 	f := cmd.Flags()
 	f.BoolVarP(&install.bundleIsFile, "bundle-is-file", "f", false, "Indicates that the bundle source is a file path")
+	f.StringVarP(&install.relocationMapping, "relocation-mapping", "m", "", "Path of relocation mapping JSON file")
 	f.StringVarP(&install.driver, "driver", "d", "docker", "Specify a driver name")
 	f.StringVarP(&install.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	f.StringArrayVarP(&install.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the bundle. This can be a credentialset name or a path to a file.")
@@ -112,7 +118,7 @@ func (i *installCmd) run() error {
 		return err
 	}
 
-	driverImpl, err := prepareDriver(i.driver)
+	driverImpl, err := prepareDriver(i.driver, i.relocationMapping)
 	if err != nil {
 		return err
 	}
@@ -177,7 +183,7 @@ func getBundleFilepath(bun, homePath string) (string, error) {
 }
 
 // overrides parses the --set data and returns values that should override other params.
-func overrides(overrides []string, paramDefs map[string]bundle.ParameterDefinition) (map[string]interface{}, error) {
+func overrides(overrides []string, paramDefs definition.Definitions) (map[string]interface{}, error) {
 	res := map[string]interface{}{}
 	for _, p := range overrides {
 		pair := strings.SplitN(p, "=", 2)
@@ -225,7 +231,7 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setF
 		}
 
 	}
-	overridden, err := overrides(setParams, bun.Parameters)
+	overridden, err := overrides(setParams, bun.Definitions)
 	if err != nil {
 		return vals, err
 	}
@@ -241,7 +247,7 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setF
 		}
 
 		// Check that this is a known param
-		if _, ok := bun.Parameters[parts[0]]; !ok {
+		if _, ok := bun.Parameters.Fields[parts[0]]; !ok {
 			return vals, fmt.Errorf("bundle does not have a parameter named %q", parts[0])
 		}
 

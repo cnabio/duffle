@@ -12,7 +12,7 @@ func TestNew(t *testing.T) {
 	// Testing to make sure maps are initialized
 	is := assert.New(t)
 	is.Len(m.InvocationImages, 0)
-	is.Len(m.Parameters, 0)
+	is.Nil(m.Parameters)
 	is.Len(m.Credentials, 0)
 
 }
@@ -63,17 +63,17 @@ func TestLoad(t *testing.T) {
 				t.Errorf("exp docker but was \"%v\"", img.ImageType)
 			}
 
-			if len(m.Parameters) != 1 {
-				t.Fatalf("expected 1 parameter but got %d", len(m.Parameters))
+			if len(m.Parameters.Fields) != 1 {
+				t.Fatalf("expected 1 parameter but got %d", len(m.Parameters.Fields))
 			}
 
-			param, ok := m.Parameters["foo"]
+			_, ok := m.Parameters.Fields["foo"]
 			if !ok {
 				t.Errorf("expected a parameter named foo but got %v", m.Parameters)
 			}
 
-			if param.DataType != "string" {
-				t.Errorf("expected foo parameter to have a type of string but got %v", param.DataType)
+			if m.Definitions["foo"].Type != "string" {
+				t.Errorf("expected foo parameter to have a type of string but got %v", m.Definitions["foo"].Type)
 			}
 
 			if len(m.Credentials) != 1 {
