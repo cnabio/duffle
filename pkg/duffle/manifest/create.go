@@ -31,15 +31,18 @@ COPY app /cnab/app
 CMD ["/cnab/app/run"]
 `
 
+const schemaVersion = "v1.0.0-WD"
+
 // Scaffold takes a path and creates a minimal duffle manifest (duffle.json)
 //  and scaffolds the components in that manifest
 func Scaffold(path string) error {
 	name := filepath.Base(path)
 	m := &Manifest{
-		Name:        name,
-		Version:     "0.1.0",
-		Description: "A short description of your bundle",
-		Keywords:    []string{name, "cnab", "tutorial"},
+		Name:          name,
+		Version:       "0.1.0",
+		SchemaVersion: schemaVersion,
+		Description:   "A short description of your bundle",
+		Keywords:      []string{name, "cnab", "tutorial"},
 		Maintainers: []bundle.Maintainer{
 			{
 				Name:  "John Doe",

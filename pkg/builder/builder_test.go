@@ -52,10 +52,11 @@ func (tc testImage) Build(ctx context.Context, log io.WriteCloser) error {
 
 func TestPrepareBuild(t *testing.T) {
 	mfst := &manifest.Manifest{
-		Name:        "foo",
-		Version:     "0.1.0",
-		Description: "description",
-		Keywords:    []string{"test"},
+		Name:          "foo",
+		Version:       "0.1.0",
+		SchemaVersion: "v1.0.0",
+		Description:   "description",
+		Keywords:      []string{"test"},
 		InvocationImages: map[string]*manifest.InvocationImage{
 			"cnab": {
 				Name:          "cnab",
@@ -90,6 +91,12 @@ func TestPrepareBuild(t *testing.T) {
 		t.Fatalf("expected there to be 1 image, got %d. Full output: %v", len(b.Images), b)
 	}
 
+	if b.Version != mfst.Version {
+		t.Errorf("expected version %v, got %v", mfst.Version, b.Version)
+	}
+	if b.SchemaVersion != mfst.SchemaVersion {
+		t.Errorf("expected schemaVersion %v, got %v", mfst.SchemaVersion, b.SchemaVersion)
+	}
 	expected := bundle.InvocationImage{}
 	expected.Image = "cnab:0.1.0"
 	expected.ImageType = "docker"
