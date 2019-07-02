@@ -14,6 +14,7 @@ import (
 type Manifest struct {
 	Name             string                       `json:"name" mapstructure:"name"`
 	Version          string                       `json:"version" mapstructure:"version"`
+	SchemaVersion    string                       `json:"schemaVersion" mapstructure:"schemaVersion"`
 	Description      string                       `json:"description,omitempty" mapstructure:"description"`
 	Keywords         []string                     `json:"keywords,omitempty" mapstructure:"keywords"`
 	Maintainers      []bundle.Maintainer          `json:"maintainers,omitempty" mapstructure:"maintainers"`
