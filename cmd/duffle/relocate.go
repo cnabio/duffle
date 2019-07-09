@@ -59,7 +59,7 @@ func newRelocateCmd(w io.Writer) *cobra.Command {
 	relocate := &relocateCmd{out: w}
 
 	cmd := &cobra.Command{
-		Use:   "relocate [INPUT-BUNDLE] [OUTPUT-BUNDLE]",
+		Use:   "relocate [INPUT-BUNDLE]",
 		Short: "relocate images in a CNAB bundle",
 		Long:  relocateDesc,
 		Example: `duffle relocate helloworld --relocation-mapping path/to/relmap.json --repository-prefix example.com/user
