@@ -175,13 +175,14 @@ func TestPrepareBuild(t *testing.T) {
 	}
 	checksPerformed++
 
+	// Ensure that all the fields have been checked. If the structures need to diverge in the future, this test should be modified.
 	mfstFields := getFields(manifest.Manifest{})
 	if len(mfstFields) != checksPerformed {
 		t.Errorf("expected to check %v fields for equality, but checked only %v fields", len(mfstFields), checksPerformed)
 	}
 }
 
-func TestBundleAndManifestHasSameFields(t *testing.T) {
+func TestBundleAndManifestHaveSameFields(t *testing.T) {
 	mfst := manifest.Manifest{}
 	mfstFields := getFields(mfst)
 
@@ -193,14 +194,14 @@ func TestBundleAndManifestHasSameFields(t *testing.T) {
 	}
 }
 
-func getFields(i interface{}) map[string]bool {
-	fields := make(map[string]bool, 15)
+func getFields(i interface{}) map[string]struct{} {
+	fields := make(map[string]struct{}, 15)
 
 	v := reflect.ValueOf(i)
 	typeOf := reflect.TypeOf(i)
 
 	for i := 0; i < v.NumField(); i++ {
-		fields[typeOf.Field(i).Name] = true
+		fields[typeOf.Field(i).Name] = struct{}{}
 	}
 	return fields
 }
