@@ -8,6 +8,7 @@ import (
 
 	"github.com/deislabs/cnab-go/bundle"
 	"github.com/deislabs/cnab-go/bundle/definition"
+
 	"github.com/deislabs/duffle/pkg/duffle/manifest"
 	"github.com/deislabs/duffle/pkg/imagebuilder"
 )
@@ -58,19 +59,19 @@ func TestPrepareBuild(t *testing.T) {
 		Fields: map[string]bundle.ParameterDefinition{"param1": {}},
 	}
 	mfst := &manifest.Manifest{
-		Actions: map[string]bundle.Action{"act1": {}},
+		Actions:     map[string]bundle.Action{"act1": {}},
 		Credentials: map[string]bundle.Credential{"cred1": {}},
-		Custom: map[string]interface{}{"cus1": nil},
+		Custom:      map[string]interface{}{"cus1": nil},
 		Definitions: map[string]*definition.Schema{"def1": {}},
-		Description:   "description",
-		Images: map[string]bundle.Image{"img1": {}},
+		Description: "description",
+		Images:      map[string]bundle.Image{"img1": {}},
 		InvocationImages: map[string]*manifest.InvocationImage{
 			"cnab": {
 				Name:          "cnab",
 				Configuration: map[string]string{"registry": "registry"},
 			},
 		},
-		Keywords:      []string{"test"},
+		Keywords: []string{"test"},
 		Maintainers: []bundle.Maintainer{
 			{
 				Name:  "test",
@@ -79,8 +80,8 @@ func TestPrepareBuild(t *testing.T) {
 			},
 		},
 		Name:          "foo",
-		Outputs: outputs,
-		Parameters: params,
+		Outputs:       outputs,
+		Parameters:    params,
 		SchemaVersion: "v1.0.0",
 		Version:       "0.1.0",
 	}
