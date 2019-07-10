@@ -24,6 +24,8 @@ type Manifest struct {
 	Parameters       *bundle.ParametersDefinition `json:"parameters,omitempty" mapstructure:"parameters"`
 	Credentials      map[string]bundle.Credential `json:"credentials,omitempty" mapstructure:"credentials"`
 	Definitions      definition.Definitions       `json:"definitions,omitempty" mapstructure:"definitions"`
+	Outputs          *bundle.OutputsDefinition    `json:"outputs,omitempty" mapstructure:"outputs"`
+	Custom           map[string]interface{}       `json:"custom,omitempty" mapstructure:"custom"`
 }
 
 // InvocationImage represents an invocation image component of a CNAB bundle
