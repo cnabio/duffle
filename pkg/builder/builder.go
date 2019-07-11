@@ -67,16 +67,19 @@ func (b *Builder) PrepareBuild(bldr *Builder, mfst *manifest.Manifest, appDir st
 	}
 
 	bf := &bundle.Bundle{
-		Name:          ctx.Manifest.Name,
+		Actions:       ctx.Manifest.Actions,
+		Credentials:   ctx.Manifest.Credentials,
+		Custom:        ctx.Manifest.Custom,
+		Definitions:   ctx.Manifest.Definitions,
 		Description:   ctx.Manifest.Description,
 		Images:        ctx.Manifest.Images,
 		Keywords:      ctx.Manifest.Keywords,
 		Maintainers:   ctx.Manifest.Maintainers,
-		Actions:       ctx.Manifest.Actions,
+		Name:          ctx.Manifest.Name,
+		Outputs:       ctx.Manifest.Outputs,
 		Parameters:    ctx.Manifest.Parameters,
-		Credentials:   ctx.Manifest.Credentials,
-		Version:       ctx.Manifest.Version,
 		SchemaVersion: ctx.Manifest.SchemaVersion,
+		Version:       ctx.Manifest.Version,
 	}
 
 	for _, imb := range imageBuilders {
