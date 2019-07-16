@@ -135,7 +135,9 @@ func (d *driverWithRelocationMapping) Run(op *driver.Operation) error {
 	if d.relMapping != "" {
 		op.Files["/cnab/app/relocation-mapping.json"] = d.relMapping
 
-		if err := d.relocateImage(&op.Image); err != nil {
+		var err error
+		op.Image, err = d.relocateImage(op.Image)
+		if err != nil {
 			return err
 		}
 	}
@@ -147,20 +149,19 @@ func (d *driverWithRelocationMapping) Handles(it string) bool {
 	return d.driver.Handles(it)
 }
 
-func (d *driverWithRelocationMapping) relocateImage(im *string) error {
+func (d *driverWithRelocationMapping) relocateImage(im string) (string, error) {
 	relMap := make(map[string]string)
 	err := json.Unmarshal([]byte(d.relMapping), &relMap)
 	if err != nil {
-		return err
+		return "", fmt.Errorf("failed to unmarshal relocation mapping: %v", err)
 	}
 
-	mapped, ok := relMap[*im]
+	mapped, ok := relMap[im]
 	if !ok {
-		return fmt.Errorf("invocation image %s not present in relocation mapping %v", *im, relMap)
+		return "", fmt.Errorf("invocation image %s not present in relocation mapping %v", im, relMap)
 	}
-	*im = mapped
 
-	return nil
+	return mapped, nil
 }
 
 func loadRelMapping(relMap string) (string, error) {
