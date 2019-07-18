@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -130,15 +131,37 @@ type driverWithRelocationMapping struct {
 }
 
 func (d *driverWithRelocationMapping) Run(op *driver.Operation) error {
-	// if there is a relocation mapping, ensure it is mounted
+	// if there is a relocation mapping, ensure it is mounted and relocate the invocation image
 	if d.relMapping != "" {
 		op.Files["/cnab/app/relocation-mapping.json"] = d.relMapping
+
+		var err error
+		op.Image, err = d.relocateImage(op.Image)
+		if err != nil {
+			return err
+		}
 	}
+
 	return d.driver.Run(op)
 }
 
 func (d *driverWithRelocationMapping) Handles(it string) bool {
 	return d.driver.Handles(it)
+}
+
+func (d *driverWithRelocationMapping) relocateImage(im string) (string, error) {
+	relMap := make(map[string]string)
+	err := json.Unmarshal([]byte(d.relMapping), &relMap)
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal relocation mapping: %v", err)
+	}
+
+	mapped, ok := relMap[im]
+	if !ok {
+		return "", fmt.Errorf("invocation image %s not present in relocation mapping %v", im, relMap)
+	}
+
+	return mapped, nil
 }
 
 func loadRelMapping(relMap string) (string, error) {
