@@ -43,7 +43,7 @@ func newExportCmd(w io.Writer) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "export [BUNDLE]",
-		Short: "package CNAB bundle in gzipped tar file",
+		Short: "package CNAB bundle in gzipped tar file, test",
 		Long:  exportDesc,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
