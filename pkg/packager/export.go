@@ -3,6 +3,7 @@ package packager
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -75,7 +76,7 @@ func (ex *Exporter) Export() error {
 		return fmt.Errorf("Error loading bundle: %s", err)
 	}
 	name := bun.Name + "-" + bun.Version
-	archiveDir, err := filepath.Abs(name + "-export")
+	archiveDir, err := ioutil.TempDir("", name)
 	if err != nil {
 		return err
 	}
