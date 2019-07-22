@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/deislabs/duffle/pkg/loader"
@@ -52,10 +53,10 @@ func TestExport(t *testing.T) {
 		t.Errorf("Expected no error, got error: %v", err)
 	}
 
-	expectedConfigArchiveDirBase := "examplebun-0.1.0-export"
+	expectedPrefix := "examplebun-0.1.0"
 	configArchiveDirBase := filepath.Base(configArchiveDir)
-	if configArchiveDirBase != expectedConfigArchiveDirBase {
-		t.Errorf("ImageStore.configure was passed an archive directory ending in %s; expected %s", configArchiveDirBase, expectedConfigArchiveDirBase)
+	if !strings.HasPrefix(configArchiveDirBase, expectedPrefix) {
+		t.Errorf("ImageStore.configure was passed an archive directory %s; expected prefix %s", configArchiveDirBase, expectedPrefix)
 	}
 
 	expectedImagesAdded := []string{"mock/examplebun:0.1.0", "mock/image-a:58326809e0p19b79054015bdd4e93e84b71ae1ta", "mock/image-b:88426103e0p19b38554015bd34e93e84b71de2fc"}
@@ -107,10 +108,10 @@ func TestExportCreatesFileProperly(t *testing.T) {
 		t.Error("Expected path does not exist error, got no error")
 	}
 
-	expectedConfigArchiveDirBase := "examplebun-0.1.0-export"
+	expectedPrefix := "examplebun-0.1.0"
 	configArchiveDirBase := filepath.Base(configArchiveDir)
-	if configArchiveDirBase != expectedConfigArchiveDirBase {
-		t.Errorf("ImageStore.configure was passed an archive directory ending in %s; expected %s", configArchiveDirBase, expectedConfigArchiveDirBase)
+	if !strings.HasPrefix(configArchiveDirBase, expectedPrefix) {
+		t.Errorf("ImageStore.configure was passed an archive directory %s; expected prefix %s", configArchiveDirBase, expectedPrefix)
 	}
 
 	expectedImagesAdded := []string{"mock/examplebun:0.1.0", "mock/image-a:58326809e0p19b79054015bdd4e93e84b71ae1ta", "mock/image-b:88426103e0p19b38554015bd34e93e84b71de2fc"}
