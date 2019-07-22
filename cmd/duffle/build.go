@@ -31,9 +31,9 @@ import (
 )
 
 const buildDesc = `
-Builds a Cloud Native Application Bundle (CNAB) given a path to a directory that has a duffle build file (duffle.json).
+Builds a Cloud Native Application Bundle (CNAB) given a path to a directory that has a duffle configuration file (duffle.json).
 
-It builds the invocation images specified in the duffle build file and then creates or updates the bundle in local storage with the latest invocation images.
+It builds the invocation images specified in the duffle configuration file and then creates or updates the bundle in local storage with the latest invocation images.
 `
 
 const (
