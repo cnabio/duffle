@@ -28,7 +28,7 @@ func TestGenerateName(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	testcases := []string{"", "duffle.toml", "duffle.json", "duffle.yaml"}
+	testcases := []string{"", "duffle.json"}
 
 	for _, tc := range testcases {
 		t.Run(tc, func(t *testing.T) {
