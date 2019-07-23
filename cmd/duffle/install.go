@@ -136,7 +136,9 @@ func (i *installCmd) run() error {
 	}
 
 	c.Bundle = bun
-	c.Parameters, err = calculateParamValues(bun, i.valuesFile, i.setParams, i.setFiles)
+	// calculateParamValues determines if values can be changed in later actions, but we don't have
+	// previous values so install passes nil.
+	c.Parameters, err = calculateParamValues(bun, i.valuesFile, i.setParams, i.setFiles, nil)
 	if err != nil {
 		return err
 	}
@@ -221,7 +223,10 @@ func parseValues(file string) (map[string]interface{}, error) {
 	return v.AllSettings(), nil
 }
 
-func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setFilePaths []string) (map[string]interface{}, error) {
+func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setFilePaths []string, prevVals map[string]interface{}) (map[string]interface{}, error) {
+	if prevVals == nil {
+		prevVals = map[string]interface{}{}
+	}
 	vals := map[string]interface{}{}
 	if valuesFile != "" {
 		var err error
@@ -261,5 +266,5 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setF
 		vals[parts[0]] = string(content)
 	}
 
-	return bundle.ValuesOrDefaults(vals, bun)
+	return bundle.ValuesOrDefaults(vals, prevVals, bun)
 }

@@ -68,7 +68,7 @@ Credentials and parameters may be passed to the bundle during a target action.
 
 			// Override parameters only if some are set.
 			if valuesFile != "" || len(setParams) > 0 {
-				c.Parameters, err = calculateParamValues(c.Bundle, valuesFile, setParams, setFiles)
+				c.Parameters, err = calculateParamValues(c.Bundle, valuesFile, setParams, setFiles, c.Parameters)
 				if err != nil {
 					return err
 				}

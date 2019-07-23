@@ -109,7 +109,7 @@ func (up *upgradeCmd) run() error {
 
 	// Override parameters only if some are set.
 	if up.valuesFile != "" || len(up.setParams) > 0 {
-		claim.Parameters, err = calculateParamValues(claim.Bundle, up.valuesFile, up.setParams, up.setFiles)
+		claim.Parameters, err = calculateParamValues(claim.Bundle, up.valuesFile, up.setParams, up.setFiles, claim.Parameters)
 		if err != nil {
 			return err
 		}
