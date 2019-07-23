@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -109,9 +110,12 @@ func (i *installCmd) run() error {
 		return fmt.Errorf("a claim with the name %v already exists", i.name)
 	}
 
-	bun, err := loadBundle(bundleFile)
+	bun, tempDir, err := inferAndLoadBundle(bundleFile)
 	if err != nil {
 		return err
+	}
+	if tempDir != "" {
+		defer os.RemoveAll(tempDir)
 	}
 
 	if err = bun.Validate(); err != nil {

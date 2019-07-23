@@ -121,28 +121,32 @@ func (r *relocateCmd) run() error {
 	return r.writeRelocationMapping(relMap)
 }
 
+func inferAndLoadBundle(bundleFile string) (*bundle.Bundle, string, error) {
+	if strings.HasSuffix(bundleFile, ".tgz") {
+		bun, dest, err := unzipBundle(bundleFile)
+		if err != nil {
+			return nil, "", err
+		}
+		return bun, dest, nil
+	}
+	bun, err := loadBundle(bundleFile)
+	if err != nil {
+		return nil, "", err
+	}
+	return bun, "", nil
+}
+
 // The caller is responsible for running the returned cleanup function, which may delete the returned bundle.
 func (r *relocateCmd) setup() (*relocator.Relocator, func(), error) {
 	nop := func() {}
-	dest := ""
 	bundleFile, err := resolveBundleFilePath(r.inputBundle, r.home.String(), r.bundleIsFile)
 	if err != nil {
 		return nil, nop, err
 	}
 
-	var bun *bundle.Bundle
-
-	if strings.HasSuffix(bundleFile, ".tgz") {
-		var err error
-		bun, dest, err = unzipBundle(bundleFile)
-		if err != nil {
-			return nil, nop, err
-		}
-	} else {
-		bun, err = loadBundle(bundleFile)
-		if err != nil {
-			return nil, nop, err
-		}
+	bun, dest, err := inferAndLoadBundle(bundleFile)
+	if err != nil {
+		return nil, nop, err
 	}
 
 	if err = bun.Validate(); err != nil {
