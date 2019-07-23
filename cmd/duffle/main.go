@@ -63,14 +63,13 @@ func loadCredentials(files []string, b *bundle.Bundle) (map[string]string, error
 		return creds, credentials.Validate(creds, b.Credentials)
 	}
 
+	credDir := home.Home(homePath()).Credentials() // Credentials directory should exist from duffle init
+
 	// The strategy here is "last one wins". We loop through each credential file and
 	// calculate its credentials. Then we insert them into the creds map in the order
 	// in which they were supplied on the CLI.
 	for _, file := range files {
-		if !isPathy(file) {
-			file = filepath.Join(home.Home(homePath()).Credentials(), file+".yaml")
-		}
-		cset, err := credentials.Load(file)
+		cset, err := credentials.Load(findCreds(credDir, file))
 		if err != nil {
 			return creds, err
 		}
@@ -86,9 +85,23 @@ func loadCredentials(files []string, b *bundle.Bundle) (map[string]string, error
 	return creds, credentials.Validate(creds, b.Credentials)
 }
 
-// isPathy checks to see if a name looks like a path.
-func isPathy(name string) bool {
-	return strings.Contains(name, string(filepath.Separator))
+func findCreds(credDir string, file string) string {
+	if !fileExists(file) {
+		testPath := filepath.Join(credDir, file+".yaml")
+		if fileExists(testPath) {
+			file = testPath
+		} else {
+			file = filepath.Join(credDir, file+".yml") // Don't bother checking existence because it fails later
+		}
+	}
+	return file
+}
+
+func fileExists(path string) bool {
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		return true
+	}
+	return false
 }
 
 func must(err error) {
