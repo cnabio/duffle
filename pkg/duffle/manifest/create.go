@@ -33,7 +33,7 @@ CMD ["/cnab/app/run"]
 
 const schemaVersion = "v1.0.0-WD"
 
-// Scaffold takes a path and creates a minimal duffle manifest (duffle.json)
+// Scaffold takes a path and creates a minimal duffle configuration file (duffle.json)
 //  and scaffolds the components in that manifest
 func Scaffold(path string) error {
 	name := filepath.Base(path)
