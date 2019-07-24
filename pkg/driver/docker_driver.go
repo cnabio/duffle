@@ -190,6 +190,10 @@ func (d *DockerDriver) exec(op *driver.Operation) error {
 		stdout io.Writer = os.Stdout
 		stderr io.Writer = os.Stderr
 	)
+	if op.Out != nil {
+		stdout = op.Out
+		stderr = op.Out
+	}
 	go func() {
 		defer attach.Close()
 		for {
