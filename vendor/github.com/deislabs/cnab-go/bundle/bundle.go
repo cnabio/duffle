@@ -79,7 +79,7 @@ type LocationRef struct {
 type BaseImage struct {
 	ImageType string            `json:"imageType" mapstructure:"imageType"`
 	Image     string            `json:"image" mapstructure:"image"`
-	Digest    string            `json:"digest,omitempty" mapstructure:"digest"`
+	Digest    string            `json:"contentDigest,omitempty" mapstructure:"contentDigest"`
 	Size      uint64            `json:"size,omitempty" mapstructure:"size"`
 	Labels    map[string]string `json:"labels,omitempty" mapstructure:"labels"`
 	MediaType string            `json:"mediaType,omitempty" mapstructure:"mediaType"`
