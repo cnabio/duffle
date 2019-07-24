@@ -200,7 +200,7 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:57222ef01ff3930c9010c1387d0311974ec5a1c3627ed63e41374aef6341a12d"
+  digest = "1:d5a5e2bc2ecdebdb160b61cc7deda7116ff2358955b8c84582be5200c28979dd"
   name = "github.com/deislabs/cnab-go"
   packages = [
     "action",
@@ -209,11 +209,14 @@
     "claim",
     "credentials",
     "driver",
+    "driver/command",
+    "driver/docker",
+    "driver/kubernetes",
     "utils/crud",
   ]
   pruneopts = "NUT"
-  revision = "d0e47f49ea9a4ef8aedf1043b11ffa7506fc10d7"
-  version = "v0.2.0-beta1"
+  revision = "63abcd2f312747df714357dfab48fda5d6d1f903"
+  version = "v0.2.1-beta1"
 
 [[projects]]
   digest = "1:7a6852b35eb5bbc184561443762d225116ae630c26a7c4d90546619f1e7d2ad2"
@@ -1202,7 +1205,7 @@
   revision = "kubernetes-1.11.2"
 
 [[projects]]
-  digest = "1:a20e293fab86a640f5cd1e730c24909d9940ed936e25242031395fea9e317de2"
+  digest = "1:13a711fa4a9db8c05c1217196f149dc3cbf01ccc2050bf1608ba5ab9e5d7afd3"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
@@ -1230,90 +1233,56 @@
     "pkg/util/framer",
     "pkg/util/intstr",
     "pkg/util/json",
-    "pkg/util/mergepatch",
     "pkg/util/net",
     "pkg/util/runtime",
     "pkg/util/sets",
-    "pkg/util/strategicpatch",
     "pkg/util/validation",
     "pkg/util/validation/field",
     "pkg/util/wait",
     "pkg/util/yaml",
     "pkg/version",
     "pkg/watch",
-    "third_party/forked/golang/json",
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "NUT"
   revision = "kubernetes-1.11.2"
 
 [[projects]]
-  digest = "1:a1812b20c3004d2368a2d3260713e265d29b8bc51bc783913624fde3a68feec7"
+  digest = "1:07fb9af3c30ff80267a744462c70f8eaa5cb4fdf67d951713567f343be256fda"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
-    "discovery/fake",
     "kubernetes",
-    "kubernetes/fake",
     "kubernetes/scheme",
     "kubernetes/typed/admissionregistration/v1alpha1",
-    "kubernetes/typed/admissionregistration/v1alpha1/fake",
     "kubernetes/typed/admissionregistration/v1beta1",
-    "kubernetes/typed/admissionregistration/v1beta1/fake",
     "kubernetes/typed/apps/v1",
-    "kubernetes/typed/apps/v1/fake",
     "kubernetes/typed/apps/v1beta1",
-    "kubernetes/typed/apps/v1beta1/fake",
     "kubernetes/typed/apps/v1beta2",
-    "kubernetes/typed/apps/v1beta2/fake",
     "kubernetes/typed/authentication/v1",
-    "kubernetes/typed/authentication/v1/fake",
     "kubernetes/typed/authentication/v1beta1",
-    "kubernetes/typed/authentication/v1beta1/fake",
     "kubernetes/typed/authorization/v1",
-    "kubernetes/typed/authorization/v1/fake",
     "kubernetes/typed/authorization/v1beta1",
-    "kubernetes/typed/authorization/v1beta1/fake",
     "kubernetes/typed/autoscaling/v1",
-    "kubernetes/typed/autoscaling/v1/fake",
     "kubernetes/typed/autoscaling/v2beta1",
-    "kubernetes/typed/autoscaling/v2beta1/fake",
     "kubernetes/typed/batch/v1",
-    "kubernetes/typed/batch/v1/fake",
     "kubernetes/typed/batch/v1beta1",
-    "kubernetes/typed/batch/v1beta1/fake",
     "kubernetes/typed/batch/v2alpha1",
-    "kubernetes/typed/batch/v2alpha1/fake",
     "kubernetes/typed/certificates/v1beta1",
-    "kubernetes/typed/certificates/v1beta1/fake",
     "kubernetes/typed/core/v1",
-    "kubernetes/typed/core/v1/fake",
     "kubernetes/typed/events/v1beta1",
-    "kubernetes/typed/events/v1beta1/fake",
     "kubernetes/typed/extensions/v1beta1",
-    "kubernetes/typed/extensions/v1beta1/fake",
     "kubernetes/typed/networking/v1",
-    "kubernetes/typed/networking/v1/fake",
     "kubernetes/typed/policy/v1beta1",
-    "kubernetes/typed/policy/v1beta1/fake",
     "kubernetes/typed/rbac/v1",
-    "kubernetes/typed/rbac/v1/fake",
     "kubernetes/typed/rbac/v1alpha1",
-    "kubernetes/typed/rbac/v1alpha1/fake",
     "kubernetes/typed/rbac/v1beta1",
-    "kubernetes/typed/rbac/v1beta1/fake",
     "kubernetes/typed/scheduling/v1alpha1",
-    "kubernetes/typed/scheduling/v1alpha1/fake",
     "kubernetes/typed/scheduling/v1beta1",
-    "kubernetes/typed/scheduling/v1beta1/fake",
     "kubernetes/typed/settings/v1alpha1",
-    "kubernetes/typed/settings/v1alpha1/fake",
     "kubernetes/typed/storage/v1",
-    "kubernetes/typed/storage/v1/fake",
     "kubernetes/typed/storage/v1alpha1",
-    "kubernetes/typed/storage/v1alpha1/fake",
     "kubernetes/typed/storage/v1beta1",
-    "kubernetes/typed/storage/v1beta1/fake",
     "pkg/apis/clientauthentication",
     "pkg/apis/clientauthentication/v1alpha1",
     "pkg/apis/clientauthentication/v1beta1",
@@ -1326,7 +1295,6 @@
     "plugin/pkg/client/auth/openstack",
     "rest",
     "rest/watch",
-    "testing",
     "third_party/forked/golang/template",
     "tools/auth",
     "tools/clientcmd",
@@ -1347,13 +1315,6 @@
   revision = "kubernetes-1.11.2"
 
 [[projects]]
-  digest = "1:a2c842a1e0aed96fd732b535514556323a6f5edfded3b63e5e0ab1bce188aa54"
-  name = "k8s.io/kube-openapi"
-  packages = ["pkg/util/proto"]
-  pruneopts = "NUT"
-  revision = "d8ea2fe547a448256204cfc68dfee7b26c720acb"
-
-[[projects]]
   branch = "master"
   digest = "1:ccaa5810f7d18dbe4bacc8cfdb5b5060282fd607c78ed92f584d706012fbd40b"
   name = "vbom.ml/util"
@@ -1365,7 +1326,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/Azure/go-autorest/autorest",
     "github.com/Masterminds/semver",
     "github.com/deislabs/cnab-go/action",
     "github.com/deislabs/cnab-go/bundle",
@@ -1373,6 +1333,9 @@
     "github.com/deislabs/cnab-go/claim",
     "github.com/deislabs/cnab-go/credentials",
     "github.com/deislabs/cnab-go/driver",
+    "github.com/deislabs/cnab-go/driver/command",
+    "github.com/deislabs/cnab-go/driver/docker",
+    "github.com/deislabs/cnab-go/driver/kubernetes",
     "github.com/deislabs/cnab-go/utils/crud",
     "github.com/docker/cli/cli/command",
     "github.com/docker/cli/cli/command/image/build",
@@ -1381,18 +1344,13 @@
     "github.com/docker/cli/cli/flags",
     "github.com/docker/cli/opts",
     "github.com/docker/distribution/digestset",
-    "github.com/docker/distribution/reference",
     "github.com/docker/docker/api/types",
-    "github.com/docker/docker/api/types/container",
-    "github.com/docker/docker/api/types/strslice",
     "github.com/docker/docker/builder/dockerignore",
     "github.com/docker/docker/client",
     "github.com/docker/docker/pkg/archive",
     "github.com/docker/docker/pkg/fileutils",
     "github.com/docker/docker/pkg/jsonmessage",
-    "github.com/docker/docker/pkg/stdcopy",
     "github.com/docker/docker/pkg/term",
-    "github.com/docker/docker/registry",
     "github.com/docker/go-connections/tlsconfig",
     "github.com/docker/go/canonical/json",
     "github.com/ghodss/yaml",
@@ -1412,18 +1370,7 @@
     "golang.org/x/net/context",
     "gopkg.in/AlecAivazis/survey.v1",
     "gopkg.in/yaml.v2",
-    "k8s.io/api/batch/v1",
-    "k8s.io/api/core/v1",
-    "k8s.io/apimachinery/pkg/api/resource",
-    "k8s.io/apimachinery/pkg/apis/meta/v1",
-    "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/util/validation",
-    "k8s.io/client-go/kubernetes/fake",
-    "k8s.io/client-go/kubernetes/typed/batch/v1",
-    "k8s.io/client-go/kubernetes/typed/core/v1",
-    "k8s.io/client-go/plugin/pkg/client/auth",
-    "k8s.io/client-go/rest",
-    "k8s.io/client-go/tools/clientcmd",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
