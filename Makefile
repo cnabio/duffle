@@ -91,7 +91,7 @@ lint:
 
 .PHONY: test
 test:
-	$(DOCKER_CMD) go test -v ./...
+	$(DOCKER_CMD) go test ./...
 
 ################################################################################
 # Build / Publish                                                              #
