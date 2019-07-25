@@ -49,6 +49,9 @@ and
  
 The `--repository-prefix` flag determines the repositories for the relocated images. Each image is given a name starting with the given prefix and pushed to the repository.
 
+The `--relocation-mapping` flag is the path of a relocation mapping file which is created by the relocate command and which should be
+passed to other commands (`install`, `upgrade`, `run`, and `uninstall`) when the relocated images are to be used.
+
 For example, if the repository prefix is `example.com/user`, the image `istio/proxyv2` is relocated
 to a name starting with `example.com/user/` and pushed to a repository hosted by `example.com`.
 
@@ -80,8 +83,31 @@ duffle install forge.json --bundle-is-file --relocation-mapping relmap.json ...
 
 ```
 
-The invocation image then installs the software such that its images are loaded from the internal registry.
+The invocation image is loaded from the internal registry and installs the software such that its images are also loaded from the internal registry.
 
 ### Thick Bundle Relocation
 
-Not yet supported.
+Gringotts Wizarding Bank (GWB) needs to install some software into a new coin sorting machine.
+For GWB, security is paramount. Like Acme, all their production software must be loaded from internal repositories.
+However, GWB regard a networked DMZ as too insecure. Their data center has no connection to the external internet.
+
+Software is delivered to GWB encoded in Base64 and etched on large stones which are then rolled by hand into the
+GWB data center, scanned, and decoded. The stones are stored for future security audits.
+
+GWB obtains the new software as a thick bundle (`sort.tgz`) and relocates it to their private registry as follows:
+```bash
+duffle relocate sort.tgz --bundle-is-file --repository-prefix=registry.gold.gwb.dia/griphook --relocation-mapping relmap.json
+
+```
+This loads the images from `sort.tgz` into the private registry. Relocating from a thick bundle does not need
+access to the original image repositories (which would prevent it from running inside the GWB data center).  
+
+They can now install the sorting software using the original bundle together with the relocation mapping file:
+```bash
+duffle install sort.tgz --bundle-is-file --relocation-mapping relmap.json ...
+
+```
+
+Again the invocation image is loaded from the internal registry and installs the software such that its images are also loaded from the internal registry.
+Since relocation does not modify the original bundle or produce a new bundle, GWB can use the original stones in security audits.
+
