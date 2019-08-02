@@ -110,8 +110,8 @@ func TestInvalidLoad(t *testing.T) {
 			if err == nil {
 				t.Errorf("expected an error to be thrown")
 			}
-			if !strings.Contains(err.Error(), "error(s) decoding") {
-				t.Errorf("expected err to contain %s but was %s", "error(s) decoding", err.Error())
+			if !strings.Contains(err.Error(), "json: cannot unmarshal array into Go struct field") {
+				t.Errorf("expected err to contain %s but was %s", "json: cannot unmarshal array into Go struct field", err.Error())
 			}
 		})
 	}
