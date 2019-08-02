@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,7 +17,6 @@ import (
 	"github.com/deislabs/cnab-go/bundle/definition"
 	"github.com/deislabs/cnab-go/claim"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const installUsage = `Installs a Cloud Native Application Bundle (CNAB)
@@ -218,13 +218,15 @@ func overrides(overrides []string, paramDefs definition.Definitions) (map[string
 }
 
 func parseValues(file string) (map[string]interface{}, error) {
-	v := viper.New()
-	v.SetConfigFile(file)
-	err := v.ReadInConfig()
+	vals := map[string]interface{}{}
+	f, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
-	return v.AllSettings(), nil
+	if err := json.Unmarshal(f, &vals); err != nil {
+		return nil, err
+	}
+	return vals, nil
 }
 
 func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setFilePaths []string, prevVals map[string]interface{}) (map[string]interface{}, error) {

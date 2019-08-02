@@ -12,27 +12,27 @@ import (
 
 // Manifest represents a duffle manifest.
 type Manifest struct {
-	Name             string                       `json:"name" mapstructure:"name"`
-	Version          string                       `json:"version" mapstructure:"version"`
-	SchemaVersion    string                       `json:"schemaVersion" mapstructure:"schemaVersion"`
-	Description      string                       `json:"description,omitempty" mapstructure:"description"`
-	Keywords         []string                     `json:"keywords,omitempty" mapstructure:"keywords"`
-	Maintainers      []bundle.Maintainer          `json:"maintainers,omitempty" mapstructure:"maintainers"`
-	InvocationImages map[string]*InvocationImage  `json:"invocationImages,omitempty" mapstructure:"invocationImages"`
-	Images           map[string]bundle.Image      `json:"images,omitempty" mapstructure:"images"`
-	Actions          map[string]bundle.Action     `json:"actions,omitempty" mapstructure:"actions"`
-	Parameters       *bundle.ParametersDefinition `json:"parameters,omitempty" mapstructure:"parameters"`
-	Credentials      map[string]bundle.Credential `json:"credentials,omitempty" mapstructure:"credentials"`
-	Definitions      definition.Definitions       `json:"definitions,omitempty" mapstructure:"definitions"`
-	Outputs          *bundle.OutputsDefinition    `json:"outputs,omitempty" mapstructure:"outputs"`
-	Custom           map[string]interface{}       `json:"custom,omitempty" mapstructure:"custom"`
+	Name             string                       `json:"name"`
+	Version          string                       `json:"version"`
+	SchemaVersion    string                       `json:"schemaVersion"`
+	Description      string                       `json:"description,omitempty"`
+	Keywords         []string                     `json:"keywords,omitempty"`
+	Maintainers      []bundle.Maintainer          `json:"maintainers,omitempty"`
+	InvocationImages map[string]*InvocationImage  `json:"invocationImages,omitempty"`
+	Images           map[string]bundle.Image      `json:"images,omitempty"`
+	Actions          map[string]bundle.Action     `json:"actions,omitempty"`
+	Parameters       *bundle.ParametersDefinition `json:"parameters,omitempty"`
+	Credentials      map[string]bundle.Credential `json:"credentials,omitempty"`
+	Definitions      definition.Definitions       `json:"definitions,omitempty"`
+	Outputs          *bundle.OutputsDefinition    `json:"outputs,omitempty"`
+	Custom           map[string]interface{}       `json:"custom,omitempty"`
 }
 
 // InvocationImage represents an invocation image component of a CNAB bundle
 type InvocationImage struct {
-	Name          string            `json:"name" mapstructure:"name"`
-	Builder       string            `json:"builder" mapstructure:"builder"`
-	Configuration map[string]string `json:"configuration" mapstructure:"configuration"`
+	Name          string            `json:"name"`
+	Builder       string            `json:"builder"`
+	Configuration map[string]string `json:"configuration"`
 }
 
 // New creates a new manifest with the Environments intialized.
