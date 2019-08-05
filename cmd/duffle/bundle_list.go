@@ -61,7 +61,7 @@ func newBundleListCmd(w io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
-		Short:   "lists bundles pulled or built and stored locally",
+		Short:   "list bundles pulled or built and stored locally",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			home := home.Home(homePath())
 			references, err := searchLocal(home)
