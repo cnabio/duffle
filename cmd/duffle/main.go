@@ -143,7 +143,7 @@ type driverWithRelocationMapping struct {
 	relMapping string
 }
 
-func (d *driverWithRelocationMapping) Run(op *driver.Operation) error {
+func (d *driverWithRelocationMapping) Run(op *driver.Operation) (driver.OperationResult, error) {
 	// if there is a relocation mapping, ensure it is mounted and relocate the invocation image
 	if d.relMapping != "" {
 		op.Files["/cnab/app/relocation-mapping.json"] = d.relMapping
@@ -151,7 +151,7 @@ func (d *driverWithRelocationMapping) Run(op *driver.Operation) error {
 		var err error
 		op.Image, err = d.relocateImage(op.Image)
 		if err != nil {
-			return err
+			return driver.OperationResult{}, err
 		}
 	}
 
