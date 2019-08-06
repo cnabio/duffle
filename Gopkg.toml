@@ -57,7 +57,9 @@
 
 [[constraint]]
   name = "github.com/deislabs/cnab-go"
-  version = "v0.2.1-beta1"
+  # version = "v0.2.1-beta1"
+  # FIX ME
+  revision = "b58e5b38096273e9fbbea9691111dda27c59d836"
 
 [[override]]
   name = "github.com/google/go-containerregistry"
