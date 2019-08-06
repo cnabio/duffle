@@ -23,10 +23,8 @@
     }
   },
   "parameters": {
-    "fields": {
-      "foo": {
-        "definition": "foo"
-      }
+    "foo": {
+      "definition": "foo"
     }
   },
   "credentials": {

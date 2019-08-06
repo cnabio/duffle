@@ -142,7 +142,7 @@ func (i *installCmd) run() error {
 	c.Bundle = bun
 	// calculateParamValues determines if values can be changed in later actions, but we don't have
 	// previous values so install passes nil.
-	c.Parameters, err = calculateParamValues(bun, i.valuesFile, i.setParams, i.setFiles, nil)
+	c.Parameters, err = calculateParamValues(bun, i.valuesFile, i.setParams, i.setFiles)
 	if err != nil {
 		return err
 	}
@@ -229,10 +229,7 @@ func parseValues(file string) (map[string]interface{}, error) {
 	return vals, nil
 }
 
-func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setFilePaths []string, prevVals map[string]interface{}) (map[string]interface{}, error) {
-	if prevVals == nil {
-		prevVals = map[string]interface{}{}
-	}
+func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setFilePaths []string) (map[string]interface{}, error) {
 	vals := map[string]interface{}{}
 	if valuesFile != "" {
 		var err error
@@ -258,7 +255,7 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setF
 		}
 
 		// Check that this is a known param
-		if _, ok := bun.Parameters.Fields[parts[0]]; !ok {
+		if _, ok := bun.Parameters[parts[0]]; !ok {
 			return vals, fmt.Errorf("bundle does not have a parameter named %q", parts[0])
 		}
 
@@ -272,5 +269,5 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setF
 		vals[parts[0]] = string(content)
 	}
 
-	return bundle.ValuesOrDefaults(vals, prevVals, bun)
+	return bundle.ValuesOrDefaults(vals, bun)
 }
