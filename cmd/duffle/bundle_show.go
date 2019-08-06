@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
 
+	"github.com/docker/go/canonical/json"
 	"github.com/spf13/cobra"
 )
 
@@ -58,22 +58,21 @@ func (bsc *bundleShowCmd) run() error {
 		return err
 	}
 
-	if bsc.raw {
-		f, err := os.Open(bundleFile)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		_, err = io.Copy(bsc.w, f)
-		return err
-	}
-
 	bun, err := loadBundle(bundleFile)
 	if err != nil {
 		return err
 	}
 
-	_, err = bun.WriteTo(bsc.w)
+	if bsc.raw {
+		_, err = bun.WriteTo(bsc.w)
+		return err
+	}
+
+	d, err := json.MarshalIndent(bun, " ", " ")
+	if err != nil {
+		return err
+	}
+	_, err = bsc.w.Write(d)
 
 	return err
 }
