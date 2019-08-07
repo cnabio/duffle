@@ -1252,6 +1252,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Masterminds/semver",
+    "github.com/containerd/containerd/remotes",
     "github.com/deislabs/cnab-go/action",
     "github.com/deislabs/cnab-go/bundle",
     "github.com/deislabs/cnab-go/bundle/definition",
