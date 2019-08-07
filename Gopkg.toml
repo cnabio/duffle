@@ -101,3 +101,8 @@
   # version imported by k8s.io/client-go @ kubernetes-1.11.2
   name = "github.com/Azure/go-autorest"
   revision = "1ff28809256a84bb6966640ff3d0371af82ccba4"
+
+[[constraint]]
+  name = "github.com/docker/cnab-to-oci"
+  source = "github.com/radu-matei/cnab-to-oci"
+  branch = "sync-bundle"

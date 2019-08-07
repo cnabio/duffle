@@ -258,6 +258,18 @@
   revision = "f95ca8e1ba6c22c9abcdbf65e8dcc39c53958bba"
 
 [[projects]]
+  branch = "sync-bundle"
+  digest = "1:7b52393f0fd17d69c47dd4b2ad76f9bf56bae02764474bc9080eb31e8c2980e6"
+  name = "github.com/docker/cnab-to-oci"
+  packages = [
+    "converter",
+    "remotes",
+  ]
+  pruneopts = "NUT"
+  revision = "8a3ef28f3fa5501cb68cf856a285b86ca20472de"
+  source = "github.com/radu-matei/cnab-to-oci"
+
+[[projects]]
   digest = "1:a828cce5747a0ac32a41fd9644660a815cbc3c61caa85c03b0a651d62320aa0b"
   name = "github.com/docker/compose-on-kubernetes"
   packages = [
@@ -1256,6 +1268,7 @@
     "github.com/docker/cli/cli/debug",
     "github.com/docker/cli/cli/flags",
     "github.com/docker/cli/opts",
+    "github.com/docker/cnab-to-oci/remotes",
     "github.com/docker/distribution/digestset",
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/builder/dockerignore",
