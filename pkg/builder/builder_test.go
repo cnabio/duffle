@@ -55,9 +55,8 @@ func TestPrepareBuild(t *testing.T) {
 	outputs := &bundle.OutputsDefinition{
 		Fields: map[string]bundle.OutputDefinition{"output1": {}},
 	}
-	params := &bundle.ParametersDefinition{
-		Fields: map[string]bundle.ParameterDefinition{"param1": {}},
-	}
+	params := map[string]bundle.Parameter{"param1": {}}
+
 	mfst := &manifest.Manifest{
 		Actions:     map[string]bundle.Action{"act1": {}},
 		Credentials: map[string]bundle.Credential{"cred1": {}},
@@ -79,11 +78,13 @@ func TestPrepareBuild(t *testing.T) {
 				URL:   "https://test.com",
 			},
 		},
-		Name:          "foo",
-		Outputs:       outputs,
-		Parameters:    params,
-		SchemaVersion: "v1.0.0",
-		Version:       "0.1.0",
+		Name:               "foo",
+		Outputs:            outputs,
+		Parameters:         params,
+		SchemaVersion:      "v1.0.0",
+		Version:            "0.1.0",
+		License:            "MIT",
+		RequiredExtensions: []string{"ext1", "ext2"},
 	}
 
 	components := []imagebuilder.ImageBuilder{
@@ -172,6 +173,16 @@ func TestPrepareBuild(t *testing.T) {
 
 	if b.Version != mfst.Version {
 		t.Errorf("expected version %v, got %v", mfst.Version, b.Version)
+	}
+	checksPerformed++
+
+	if b.License != mfst.License {
+		t.Errorf("expected licnse %v, got %v", mfst.License, b.License)
+	}
+	checksPerformed++
+
+	if !reflect.DeepEqual(b.RequiredExtensions, mfst.RequiredExtensions) {
+		t.Errorf("expected credentials to be %+v but was %+v", mfst.RequiredExtensions, b.RequiredExtensions)
 	}
 	checksPerformed++
 

@@ -200,7 +200,7 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:d5a5e2bc2ecdebdb160b61cc7deda7116ff2358955b8c84582be5200c28979dd"
+  digest = "1:0033eca884c6e2a28b9754a881220244942748bb9b0408b2550aecb39297711d"
   name = "github.com/deislabs/cnab-go"
   packages = [
     "action",
@@ -215,8 +215,7 @@
     "utils/crud",
   ]
   pruneopts = "NUT"
-  revision = "63abcd2f312747df714357dfab48fda5d6d1f903"
-  version = "v0.2.1-beta1"
+  revision = "b58e5b38096273e9fbbea9691111dda27c59d836"
 
 [[projects]]
   digest = "1:7a6852b35eb5bbc184561443762d225116ae630c26a7c4d90546619f1e7d2ad2"
@@ -257,6 +256,18 @@
   ]
   pruneopts = "NUT"
   revision = "f95ca8e1ba6c22c9abcdbf65e8dcc39c53958bba"
+
+[[projects]]
+  branch = "sync-bundle"
+  digest = "1:7b52393f0fd17d69c47dd4b2ad76f9bf56bae02764474bc9080eb31e8c2980e6"
+  name = "github.com/docker/cnab-to-oci"
+  packages = [
+    "converter",
+    "remotes",
+  ]
+  pruneopts = "NUT"
+  revision = "8a3ef28f3fa5501cb68cf856a285b86ca20472de"
+  source = "github.com/radu-matei/cnab-to-oci"
 
 [[projects]]
   digest = "1:a828cce5747a0ac32a41fd9644660a815cbc3c61caa85c03b0a651d62320aa0b"
@@ -1241,6 +1252,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Masterminds/semver",
+    "github.com/containerd/containerd/remotes",
     "github.com/deislabs/cnab-go/action",
     "github.com/deislabs/cnab-go/bundle",
     "github.com/deislabs/cnab-go/bundle/definition",
@@ -1257,6 +1269,7 @@
     "github.com/docker/cli/cli/debug",
     "github.com/docker/cli/cli/flags",
     "github.com/docker/cli/opts",
+    "github.com/docker/cnab-to-oci/remotes",
     "github.com/docker/distribution/digestset",
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/builder/dockerignore",

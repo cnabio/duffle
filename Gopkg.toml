@@ -57,7 +57,9 @@
 
 [[constraint]]
   name = "github.com/deislabs/cnab-go"
-  version = "v0.2.1-beta1"
+  # version = "v0.2.1-beta1"
+  # FIX ME
+  revision = "b58e5b38096273e9fbbea9691111dda27c59d836"
 
 [[override]]
   name = "github.com/google/go-containerregistry"
@@ -99,3 +101,8 @@
   # version imported by k8s.io/client-go @ kubernetes-1.11.2
   name = "github.com/Azure/go-autorest"
   revision = "1ff28809256a84bb6966640ff3d0371af82ccba4"
+
+[[constraint]]
+  name = "github.com/docker/cnab-to-oci"
+  source = "github.com/radu-matei/cnab-to-oci"
+  branch = "sync-bundle"
