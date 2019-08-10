@@ -9,17 +9,17 @@ import (
 	"runtime"
 	"strings"
 
-	duffleDriver "github.com/deislabs/duffle/pkg/driver"
-	"github.com/deislabs/duffle/pkg/duffle/home"
-	"github.com/deislabs/duffle/pkg/loader"
-	"github.com/deislabs/duffle/pkg/reference"
-
 	"github.com/deislabs/cnab-go/bundle"
+	"github.com/deislabs/cnab-go/bundle/loader"
 	"github.com/deislabs/cnab-go/claim"
 	"github.com/deislabs/cnab-go/credentials"
 	"github.com/deislabs/cnab-go/driver"
 	"github.com/deislabs/cnab-go/utils/crud"
 	"github.com/spf13/cobra"
+
+	duffleDriver "github.com/deislabs/duffle/pkg/driver"
+	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/reference"
 )
 
 var (

@@ -6,9 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/deislabs/cnab-go/bundle/loader"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/deislabs/duffle/pkg/loader"
 )
 
 func TestImport(t *testing.T) {

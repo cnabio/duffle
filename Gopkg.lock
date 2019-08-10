@@ -200,12 +200,13 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:e6b1ef832f13f503f6496d923b9f918d5475b004424ca589558afae541dc0a17"
+  digest = "1:e86556f6f91e6c175ac44965165c1edbf75a978dd85442cef7415059f86a4bc3"
   name = "github.com/deislabs/cnab-go"
   packages = [
     "action",
     "bundle",
     "bundle/definition",
+    "bundle/loader",
     "claim",
     "credentials",
     "driver",
@@ -215,8 +216,8 @@
     "utils/crud",
   ]
   pruneopts = "NUT"
-  revision = "c992a169ba13fb2f36857dbddfb45e6790400758"
-  version = "v0.3.0-beta1"
+  revision = "1ef7d96a46de6e4205de8eedd80e3cf387fef72b"
+  version = "v0.3.1-beta1"
 
 [[projects]]
   digest = "1:7a6852b35eb5bbc184561443762d225116ae630c26a7c4d90546619f1e7d2ad2"
@@ -1244,6 +1245,7 @@
     "github.com/deislabs/cnab-go/action",
     "github.com/deislabs/cnab-go/bundle",
     "github.com/deislabs/cnab-go/bundle/definition",
+    "github.com/deislabs/cnab-go/bundle/loader",
     "github.com/deislabs/cnab-go/claim",
     "github.com/deislabs/cnab-go/credentials",
     "github.com/deislabs/cnab-go/driver",

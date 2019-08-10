@@ -10,7 +10,7 @@ import (
 	"github.com/deislabs/cnab-go/bundle"
 )
 
-// Loader provides an interface for loading a bundle
+// BundleLoader provides an interface for loading a bundle
 type BundleLoader interface {
 	// Load a bundle from a local file
 	Load(source string) (*bundle.Bundle, error)
