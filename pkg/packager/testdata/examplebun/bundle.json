@@ -11,7 +11,7 @@
         "image-a":{
             "name": "image-a",
             "image": "mock/image-a:58326809e0p19b79054015bdd4e93e84b71ae1ta",
-            "digest": "sha256:111111118fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540",
+            "contentDigest": "sha256:111111118fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540",
             "refs": null
         },
         "image-b":{

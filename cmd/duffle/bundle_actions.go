@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const bundleActionsDesc = ` Lists all actions available in a bundle`
+const bundleActionsDesc = `list all actions available in a bundle`
 
 type bundleActionsCmd struct {
 	out          io.Writer

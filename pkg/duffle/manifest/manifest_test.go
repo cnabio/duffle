@@ -12,7 +12,7 @@ func TestNew(t *testing.T) {
 	// Testing to make sure maps are initialized
 	is := assert.New(t)
 	is.Len(m.InvocationImages, 0)
-	is.Len(m.Parameters, 0)
+	is.Nil(m.Parameters)
 	is.Len(m.Credentials, 0)
 
 }
@@ -28,7 +28,7 @@ func TestGenerateName(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	testcases := []string{"", "duffle.toml", "duffle.json", "duffle.yaml"}
+	testcases := []string{"", "duffle.json"}
 
 	for _, tc := range testcases {
 		t.Run(tc, func(t *testing.T) {
@@ -67,13 +67,13 @@ func TestLoad(t *testing.T) {
 				t.Fatalf("expected 1 parameter but got %d", len(m.Parameters))
 			}
 
-			param, ok := m.Parameters["foo"]
+			_, ok := m.Parameters["foo"]
 			if !ok {
 				t.Errorf("expected a parameter named foo but got %v", m.Parameters)
 			}
 
-			if param.DataType != "string" {
-				t.Errorf("expected foo parameter to have a type of string but got %v", param.DataType)
+			if m.Definitions["foo"].Type != "string" {
+				t.Errorf("expected foo parameter to have a type of string but got %v", m.Definitions["foo"].Type)
 			}
 
 			if len(m.Credentials) != 1 {
@@ -110,8 +110,8 @@ func TestInvalidLoad(t *testing.T) {
 			if err == nil {
 				t.Errorf("expected an error to be thrown")
 			}
-			if !strings.Contains(err.Error(), "error(s) decoding") {
-				t.Errorf("expected err to contain %s but was %s", "error(s) decoding", err.Error())
+			if !strings.Contains(err.Error(), "json: cannot unmarshal array into Go struct field") {
+				t.Errorf("expected err to contain %s but was %s", "json: cannot unmarshal array into Go struct field", err.Error())
 			}
 		})
 	}

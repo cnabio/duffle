@@ -103,7 +103,7 @@ const (
 
 type credentialGenerator func(name string) (credentials.CredentialStrategy, error)
 
-func genCredentialSet(name string, creds map[string]bundle.Location, fn credentialGenerator) (credentials.CredentialSet, error) {
+func genCredentialSet(name string, creds map[string]bundle.Credential, fn credentialGenerator) (credentials.CredentialSet, error) {
 	cs := credentials.CredentialSet{
 		Name: name,
 	}

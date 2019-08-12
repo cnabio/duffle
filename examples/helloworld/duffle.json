@@ -29,5 +29,6 @@
         }
     },
     "parameters": null,
-    "credentials": null
+    "credentials": null,
+    "schemaVersion": "v1.0.0-WD"
 }

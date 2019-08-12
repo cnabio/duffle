@@ -10,16 +10,22 @@ import (
 
 func TestGenCredentialSet(t *testing.T) {
 	name := "zed"
-	credlocs := map[string]bundle.Location{
+	credlocs := map[string]bundle.Credential{
 		"first": {
-			EnvironmentVariable: "FIRST_VAR",
+			Location: bundle.Location{
+				EnvironmentVariable: "FIRST_VAR",
+			},
 		},
 		"second": {
-			EnvironmentVariable: "SECOND_VAR",
-			Path:                "/second/path",
+			Location: bundle.Location{
+				EnvironmentVariable: "SECOND_VAR",
+				Path:                "/second/path",
+			},
 		},
 		"third": {
-			Path: "/third/path",
+			Location: bundle.Location{
+				Path: "/third/path",
+			},
 		},
 	}
 	is := assert.New(t)

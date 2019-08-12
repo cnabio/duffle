@@ -3,10 +3,6 @@
   version = "0.0.3"
 
 [[constraint]]
-  name = "github.com/spf13/viper"
-  version = "v1.2"
-
-[[constraint]]
   name = "github.com/Masterminds/semver"
   version = "1.4.2"
 
@@ -57,7 +53,11 @@
 
 [[constraint]]
   name = "github.com/pivotal/image-relocation"
-  revision = "532dd0b42e7a50010d7868364309cd314a2bb376"
+  version = "v0.1"
+
+[[constraint]]
+  name = "github.com/deislabs/cnab-go"
+  version = "v0.3.0-beta1"
 
 [[override]]
   name = "github.com/google/go-containerregistry"
@@ -94,3 +94,8 @@
 [[override]]
   name = "golang.org/x/sys"
   revision = "f49334f85ddcf0f08d7fb6dd7363e9e6d6b777eb"
+
+[[constraint]]
+  # version imported by k8s.io/client-go @ kubernetes-1.11.2
+  name = "github.com/Azure/go-autorest"
+  revision = "1ff28809256a84bb6966640ff3d0371af82ccba4"

@@ -1,16 +1,23 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/deislabs/duffle/pkg/imagestore"
+	"github.com/deislabs/duffle/pkg/imagestore/construction"
+	"github.com/deislabs/duffle/pkg/loader"
+	"github.com/deislabs/duffle/pkg/packager"
+	"github.com/deislabs/duffle/pkg/relocator"
+
 	"github.com/pivotal/image-relocation/pkg/image"
 	"github.com/pivotal/image-relocation/pkg/pathmapping"
-	"github.com/pivotal/image-relocation/pkg/registry"
 
 	"github.com/deislabs/cnab-go/bundle"
 
@@ -23,47 +30,49 @@ import (
 const (
 	relocateDesc = `
 Relocates any docker and oci images, including invocation images, referenced by a bundle, tags and pushes the images to
-a registry, and creates a new bundle with an updated invocation images section and an updated image map.
+a registry, and creates a relocation mapping JSON file.
 
 The --repository-prefix flag determines the repositories for the relocated images.
 Each image is tagged with a name starting with the given prefix and pushed to the repository.
 
 For example, if the repository-prefix is example.com/user, the image istio/proxyv2 is relocated
 to a name starting with example.com/user/ and pushed to a repository hosted by example.com.
+
+The generated relocation mapping file maps the original image references to their relocated counterparts. This file is
+an optional input to the install, upgrade, and run commands.
 `
 	invalidRepositoryChars = ":@\" "
 )
 
 type relocateCmd struct {
 	// args
-	inputBundle  string
-	outputBundle string
+	inputBundle string
 
 	// flags
-	repoPrefix         string
-	inputBundleIsFile  bool
-	outputBundleIsFile bool
+	repoPrefix        string
+	bundleIsFile      bool
+	relocationMapping string
 
 	// context
 	home home.Home
 	out  io.Writer
 
 	// dependencies
-	mapping        pathmapping.PathMapping
-	registryClient registry.Client
+	mapping               pathmapping.PathMapping
+	imageStoreConstructor imagestore.Constructor
+	imageStore            imagestore.Store
 }
 
 func newRelocateCmd(w io.Writer) *cobra.Command {
 	relocate := &relocateCmd{out: w}
 
 	cmd := &cobra.Command{
-		Use:   "relocate [INPUT-BUNDLE] [OUTPUT-BUNDLE]",
+		Use:   "relocate [INPUT-BUNDLE]",
 		Short: "relocate images in a CNAB bundle",
 		Long:  relocateDesc,
-		Example: `duffle relocate helloworld hellorelocated --repository-prefix example.com/user
-duffle relocate path/to/bundle.json relocatedbundle --repository-prefix example.com/user --input-bundle-is-file
-duffle relocate helloworld path/to/relocatedbundle.json --repository-prefix example.com/user --output-bundle-is-file`,
-		Args: cobra.ExactArgs(2),
+		Example: `duffle relocate helloworld --relocation-mapping path/to/relmap.json --repository-prefix example.com/user
+duffle relocate path/to/bundle.json --relocation-mapping path/to/relmap.json --repository-prefix example.com/user --input-bundle-is-file`,
+		Args: cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			// validate --repository-prefix if it is set, otherwise fall through so that cobra will report the missing flag in its usual manner
 			if cmd.Flags().Changed("repository-prefix") {
@@ -76,147 +85,122 @@ duffle relocate helloworld path/to/relocatedbundle.json --repository-prefix exam
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			relocate.inputBundle = args[0]
-			relocate.outputBundle = args[1]
 
 			relocate.home = home.Home(homePath())
 
 			relocate.mapping = pathmapping.FlattenRepoPathPreserveTagDigest
-			relocate.registryClient = registry.NewRegistryClient()
+			relocate.imageStoreConstructor = construction.NewLocatingConstructor()
 
 			return relocate.run()
 		},
 	}
 
 	f := cmd.Flags()
-	f.BoolVarP(&relocate.inputBundleIsFile, "input-bundle-is-file", "", false, "Indicates that the input bundle source is a file path")
-	f.BoolVarP(&relocate.outputBundleIsFile, "output-bundle-is-file", "", false, "Indicates that the output bundle destination is a file path")
-	f.StringVarP(&relocate.repoPrefix, "repository-prefix", "r", "", "Prefix for relocated image names")
+	f.BoolVarP(&relocate.bundleIsFile, "bundle-is-file", "f", false, "Indicates that the input bundle source is a file path")
+	f.StringVarP(&relocate.relocationMapping, "relocation-mapping", "m", "", "Path for output relocation mapping JSON file")
+	cmd.MarkFlagRequired("relocation-mapping")
+	f.StringVarP(&relocate.repoPrefix, "repository-prefix", "p", "", "Prefix for relocated image names")
 	cmd.MarkFlagRequired("repository-prefix")
 
 	return cmd
 }
 
 func (r *relocateCmd) run() error {
-	bun, err := r.setup()
+	relMap := make(map[string]string)
+
+	rel, cleanup, err := r.setup()
 	if err != nil {
 		return err
 	}
+	defer cleanup()
 
-	if err := r.relocate(bun); err != nil {
+	if err := rel.Relocate(relMap); err != nil {
 		return err
 	}
 
-	return r.writeBundle(bun)
+	return r.writeRelocationMapping(relMap)
 }
 
-func (r *relocateCmd) relocate(bun *bundle.Bundle) error {
-	// mutate the input bundle to become the output bundle
-	if !r.outputBundleIsFile {
-		bun.Name = r.outputBundle
-	}
-
-	for i := range bun.InvocationImages {
-		ii := bun.InvocationImages[i]
-		modified, err := r.relocateImage(&ii.BaseImage)
+func inferAndLoadBundle(bundleFile string) (*bundle.Bundle, string, error) {
+	if strings.HasSuffix(bundleFile, ".tgz") {
+		bun, dest, err := unzipBundle(bundleFile)
 		if err != nil {
-			return err
+			return nil, "", err
 		}
-		if modified {
-			bun.InvocationImages[i] = ii
-		}
+		return bun, dest, nil
 	}
-
-	for k := range bun.Images {
-		im := bun.Images[k]
-		modified, err := r.relocateImage(&im.BaseImage)
-		if err != nil {
-			return err
-		}
-		if modified {
-			bun.Images[k] = im
-		}
-	}
-
-	return nil
-}
-
-func (r *relocateCmd) relocateImage(i *bundle.BaseImage) (bool, error) {
-	if !isOCI(i.ImageType) && !isDocker(i.ImageType) {
-		return false, nil
-	}
-	// map the image name
-	n, err := image.NewName(i.Image)
-	if err != nil {
-		return false, err
-	}
-	rn := r.mapping(r.repoPrefix, n)
-
-	// tag/push the image to its new repository
-	dig, err := r.registryClient.Copy(n, rn)
-	if err != nil {
-		return false, err
-	}
-	if i.Digest != "" && dig.String() != i.Digest {
-		// should not happen
-		return false, fmt.Errorf("digest of image %s not preserved: old digest %s; new digest %s", i.Image, i.Digest, dig.String())
-	}
-
-	// update the imagemap
-	i.OriginalImage = i.Image
-	i.Image = rn.String()
-	return true, nil
-}
-
-func isOCI(imageType string) bool {
-	return imageType == "" || imageType == "oci"
-}
-
-func isDocker(imageType string) bool {
-	return imageType == "docker"
-}
-
-func (r *relocateCmd) setup() (*bundle.Bundle, error) {
-	bundleFile, err := resolveBundleFilePath(r.inputBundle, r.home.String(), r.inputBundleIsFile)
-	if err != nil {
-		return nil, err
-	}
-
 	bun, err := loadBundle(bundleFile)
 	if err != nil {
-		return nil, err
+		return nil, "", err
+	}
+	return bun, "", nil
+}
+
+// The caller is responsible for running the returned cleanup function, which may delete the returned bundle.
+func (r *relocateCmd) setup() (*relocator.Relocator, func(), error) {
+	nop := func() {}
+	bundleFile, err := resolveBundleFilePath(r.inputBundle, r.home.String(), r.bundleIsFile)
+	if err != nil {
+		return nil, nop, err
+	}
+
+	bun, dest, err := inferAndLoadBundle(bundleFile)
+	if err != nil {
+		return nil, nop, err
 	}
 
 	if err = bun.Validate(); err != nil {
-		return nil, err
+		return nil, nop, err
 	}
 
-	return bun, nil
+	r.imageStore, err = r.imageStoreConstructor(imagestore.WithArchiveDir(dest))
+	if err != nil {
+		return nil, nop, err
+	}
+
+	mapping := func(i image.Name) image.Name {
+		return pathmapping.FlattenRepoPathPreserveTagDigest(r.repoPrefix, i)
+	}
+
+	reloc, err := relocator.NewRelocator(bun, mapping, r.imageStore, r.out)
+	if err != nil {
+		return nil, nop, err
+	}
+
+	return reloc, func() { os.RemoveAll(dest) }, nil
 }
 
-func (r *relocateCmd) writeBundle(bf *bundle.Bundle) error {
-	data, digest, err := marshalBundle(bf)
+func unzipBundle(bundleFile string) (*bundle.Bundle, string, error) {
+	source, err := filepath.Abs(bundleFile)
 	if err != nil {
-		return fmt.Errorf("cannot marshal bundle: %v", err)
+		return nil, "", err
 	}
 
-	if r.outputBundleIsFile {
-		if err := ioutil.WriteFile(r.outputBundle, data, 0644); err != nil {
-			return fmt.Errorf("cannot write bundle to %s: %v", r.outputBundle, err)
-		}
-		return nil
+	dest, err := ioutil.TempDir("", "duffle-relocate-unzip")
+	if err != nil {
+		return nil, "", err
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(r.home.Bundles(), digest), data, 0644); err != nil {
-		return fmt.Errorf("cannot store bundle : %v", err)
-
+	l := loader.NewLoader()
+	imp, err := packager.NewImporter(source, dest, l, false)
+	if err != nil {
+		return nil, "", err
+	}
+	dest, bun, err := imp.Unzip()
+	if err != nil {
+		return nil, "", err
 	}
 
-	// record the new bundle in repositories.json
-	if err := recordBundleReference(r.home, bf.Name, bf.Version, digest); err != nil {
-		return fmt.Errorf("cannot record bundle: %v", err)
+	return bun, dest, nil
+}
+
+func (r *relocateCmd) writeRelocationMapping(relMap map[string]string) error {
+	rm, err := json.Marshal(relMap)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	return ioutil.WriteFile(r.relocationMapping, rm, 0644)
 }
 
 func validateRepository(repo string) error {

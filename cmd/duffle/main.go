@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -61,14 +63,13 @@ func loadCredentials(files []string, b *bundle.Bundle) (map[string]string, error
 		return creds, credentials.Validate(creds, b.Credentials)
 	}
 
+	credDir := home.Home(homePath()).Credentials() // Credentials directory should exist from duffle init
+
 	// The strategy here is "last one wins". We loop through each credential file and
 	// calculate its credentials. Then we insert them into the creds map in the order
 	// in which they were supplied on the CLI.
 	for _, file := range files {
-		if !isPathy(file) {
-			file = filepath.Join(home.Home(homePath()).Credentials(), file+".yaml")
-		}
-		cset, err := credentials.Load(file)
+		cset, err := credentials.Load(findCreds(credDir, file))
 		if err != nil {
 			return creds, err
 		}
@@ -84,9 +85,23 @@ func loadCredentials(files []string, b *bundle.Bundle) (map[string]string, error
 	return creds, credentials.Validate(creds, b.Credentials)
 }
 
-// isPathy checks to see if a name looks like a path.
-func isPathy(name string) bool {
-	return strings.Contains(name, string(filepath.Separator))
+func findCreds(credDir string, file string) string {
+	if !fileExists(file) {
+		testPath := filepath.Join(credDir, file+".yaml")
+		if fileExists(testPath) {
+			file = testPath
+		} else {
+			file = filepath.Join(credDir, file+".yml") // Don't bother checking existence because it fails later
+		}
+	}
+	return file
+}
+
+func fileExists(path string) bool {
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		return true
+	}
+	return false
 }
 
 func must(err error) {
@@ -96,10 +111,10 @@ func must(err error) {
 }
 
 // prepareDriver prepares a driver per the user's request.
-func prepareDriver(driverName string) (driver.Driver, error) {
+func prepareDriver(driverName string, relMap string) (driver.Driver, error) {
 	driverImpl, err := duffleDriver.Lookup(driverName)
 	if err != nil {
-		return driverImpl, err
+		return nil, err
 	}
 
 	// Load any driver-specific config out of the environment.
@@ -111,7 +126,67 @@ func prepareDriver(driverName string) (driver.Driver, error) {
 		configurable.SetConfig(driverCfg)
 	}
 
-	return driverImpl, err
+	rm, err := loadRelMapping(relMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// wrap the driver so any relocation mapping is mounted
+	return &driverWithRelocationMapping{
+		driver:     driverImpl,
+		relMapping: rm,
+	}, nil
+}
+
+type driverWithRelocationMapping struct {
+	driver     driver.Driver
+	relMapping string
+}
+
+func (d *driverWithRelocationMapping) Run(op *driver.Operation) (driver.OperationResult, error) {
+	// if there is a relocation mapping, ensure it is mounted and relocate the invocation image
+	if d.relMapping != "" {
+		op.Files["/cnab/app/relocation-mapping.json"] = d.relMapping
+
+		var err error
+		op.Image, err = d.relocateImage(op.Image)
+		if err != nil {
+			return driver.OperationResult{}, err
+		}
+	}
+
+	return d.driver.Run(op)
+}
+
+func (d *driverWithRelocationMapping) Handles(it string) bool {
+	return d.driver.Handles(it)
+}
+
+func (d *driverWithRelocationMapping) relocateImage(im string) (string, error) {
+	relMap := make(map[string]string)
+	err := json.Unmarshal([]byte(d.relMapping), &relMap)
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal relocation mapping: %v", err)
+	}
+
+	mapped, ok := relMap[im]
+	if !ok {
+		return "", fmt.Errorf("invocation image %s not present in relocation mapping %v", im, relMap)
+	}
+
+	return mapped, nil
+}
+
+func loadRelMapping(relMap string) (string, error) {
+	if relMap != "" {
+		data, err := ioutil.ReadFile(relMap)
+		if err != nil {
+			return "", fmt.Errorf("failed to read relocation mapping from %s: %v", relMap, err)
+		}
+		return string(data), nil
+	}
+
+	return "", nil
 }
 
 func loadBundle(bundleFile string) (*bundle.Bundle, error) {

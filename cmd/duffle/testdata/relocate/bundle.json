@@ -1,4 +1,5 @@
 {
+  "schemaVersion": "v1.0.0-WD",
   "name": "testrelocate",
   "version": "0.1",
   "description": "a bundle with images",
@@ -12,19 +13,14 @@
     "a": {
       "description": "digested oci",
       "image": "deislabs/duffle@sha256:4d41eeb38fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540",
-      "digest": "sha256:4d41eeb38fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540",
+      "contentDigest": "sha256:4d41eeb38fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540",
       "imageType": "oci"
     },
     "b": {
       "description": "tagged docker",
       "image": "deislabs/duffle:0.1.0-ralpha.5-englishrose",
-      "digest": "sha256:14d6134d892aeccb7e142557fe746ccd0a8f736a747c195ef04c9f3f0f0bbd49",
+      "contentDigest": "sha256:14d6134d892aeccb7e142557fe746ccd0a8f736a747c195ef04c9f3f0f0bbd49",
       "imageType": "docker"
-    },
-    "c": {
-      "description": "neither oci nor docker",
-      "image": "c",
-      "imageType": "c"
     }
   }
 }

@@ -42,7 +42,9 @@ type Claim struct {
 	Bundle     *bundle.Bundle         `json:"bundle"`
 	Result     Result                 `json:"result"`
 	Parameters map[string]interface{} `json:"parameters"`
-	Files      map[string]string      `json:"files"`
+	// Outputs is a map from the names of outputs (defined in the bundle) to the contents of the files.
+	Outputs       map[string]interface{}    `json:"outputs"`
+	RelocationMap bundle.ImageRelocationMap `json:"relocationMap"`
 }
 
 // ValidName is a regular expression that indicates whether a name is a valid claim name.
@@ -65,7 +67,9 @@ func New(name string) (*Claim, error) {
 			Action: ActionUnknown,
 			Status: StatusUnknown,
 		},
-		Parameters: map[string]interface{}{},
+		Parameters:    map[string]interface{}{},
+		Outputs:       map[string]interface{}{},
+		RelocationMap: bundle.ImageRelocationMap{},
 	}, nil
 }
 

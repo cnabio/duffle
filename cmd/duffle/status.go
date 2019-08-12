@@ -62,7 +62,7 @@ reason, it may need the same credentials used to install.
 				return err
 			}
 
-			driverImpl, err := prepareDriver(statusDriver)
+			driverImpl, err := prepareDriver(statusDriver, "")
 			if err != nil {
 				return err
 			}

@@ -20,7 +20,7 @@ For example, 'duffle create foo'  will create a directory structure that looks l
 
     foo/
         |
-        |- duffle.json        # The build definition file
+        |- duffle.json        # The build configuration file
         |
         |- cnab/              # Contains invocation image
                 |

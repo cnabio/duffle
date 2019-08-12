@@ -28,15 +28,16 @@ are specified, the parameters there will be used (even if the resolved set is em
 var ErrBundleAndBundleFile = errors.New("Both --bundle and --bundle-file flags cannot be set")
 
 type upgradeCmd struct {
-	out              io.Writer
-	name             string
-	driver           string
-	valuesFile       string
-	bundle           string
-	bundleFile       string
-	setParams        []string
-	setFiles         []string
-	credentialsFiles []string
+	out               io.Writer
+	name              string
+	driver            string
+	valuesFile        string
+	bundle            string
+	bundleFile        string
+	setParams         []string
+	setFiles          []string
+	credentialsFiles  []string
+	relocationMapping string
 }
 
 func newUpgradeCmd(w io.Writer) *cobra.Command {
@@ -61,6 +62,7 @@ func newUpgradeCmd(w io.Writer) *cobra.Command {
 	flags.StringVarP(&upgrade.driver, "driver", "d", "docker", "Specify a driver name")
 	flags.StringVarP(&upgrade.bundle, "bundle", "b", "", "bundle to use for upgrading")
 	flags.StringVar(&upgrade.bundleFile, "bundle-file", "", "path of the bundle file to use for upgrading")
+	flags.StringVarP(&upgrade.relocationMapping, "relocation-mapping", "m", "", "Path of relocation mapping JSON file")
 	flags.StringArrayVarP(&upgrade.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
 	flags.StringVarP(&upgrade.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&upgrade.setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")
@@ -95,7 +97,7 @@ func (up *upgradeCmd) run() error {
 		claim.Bundle = bun
 	}
 
-	driverImpl, err := prepareDriver(up.driver)
+	driverImpl, err := prepareDriver(up.driver, up.relocationMapping)
 	if err != nil {
 		return err
 	}

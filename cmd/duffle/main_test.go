@@ -39,20 +39,6 @@ func CreateTestHome(t *testing.T) home.Home {
 	return testHome
 }
 
-func TestIsPathy(t *testing.T) {
-	is := assert.New(t)
-	thispath := filepath.Join("this", "is", "a", "path")
-	fooya := filepath.Join("..", "foo.yaml")
-	for path, expect := range map[string]bool{
-		"foo":      false,
-		thispath:   true,
-		"foo.yaml": false,
-		fooya:      true,
-	} {
-		is.Equal(expect, isPathy(path), "Expected %t, for %s", expect, path)
-	}
-}
-
 func TestLoadCredentials(t *testing.T) {
 	cred1 := credentials.CredentialSet{
 		Name: "first",
@@ -102,15 +88,21 @@ func TestLoadCredentials(t *testing.T) {
 
 	bun := bundle.Bundle{
 		Name: "test-load-creds",
-		Credentials: map[string]bundle.Location{
+		Credentials: map[string]bundle.Credential{
 			"knapsack": {
-				EnvironmentVariable: "KNAP",
+				Location: bundle.Location{
+					EnvironmentVariable: "KNAP",
+				},
 			},
 			"haversack": {
-				EnvironmentVariable: "HAVER",
+				Location: bundle.Location{
+					EnvironmentVariable: "HAVER",
+				},
 			},
 			"gym-bag": {
-				EnvironmentVariable: "GYM",
+				Location: bundle.Location{
+					EnvironmentVariable: "GYM",
+				},
 			},
 		},
 	}
@@ -121,4 +113,52 @@ func TestLoadCredentials(t *testing.T) {
 	is.Equal("cred2", creds["knapsack"])
 	is.Equal("cred3", creds["haversack"])
 	is.Equal("cred1", creds["gym-bag"])
+}
+
+func TestFindCreds(t *testing.T) {
+	credDir, err := ioutil.TempDir("", "credTest")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(credDir)
+	is := assert.New(t)
+
+	tests := map[string]struct {
+		input            string
+		expectedFilePath func() string
+	}{
+		"no path yaml": {
+			input: "creds1",
+			expectedFilePath: func() string {
+				credPath := filepath.Join(credDir, "creds1.yaml")
+				err = ioutil.WriteFile(credPath, []byte("test"), 0644)
+				if err != nil {
+					t.Fatal(err)
+				}
+				return credPath
+			},
+		},
+		"no path yml": {
+			input: "creds2",
+			expectedFilePath: func() string {
+				credPath := filepath.Join(credDir, "creds2.yml")
+				err = ioutil.WriteFile(credPath, []byte("test"), 0644)
+				if err != nil {
+					t.Fatal(err)
+				}
+				return credPath
+			},
+		},
+		"path": {
+			input: "testdata/dufflehome/credentials/testing.yaml",
+			expectedFilePath: func() string {
+				return "testdata/dufflehome/credentials/testing.yaml"
+			},
+		},
+	}
+
+	for name, testCase := range tests {
+		is.Equal(testCase.expectedFilePath(), findCreds(credDir, testCase.input), "Fail on test: "+name)
+		os.RemoveAll(filepath.Join(credDir, "*"))
+	}
 }

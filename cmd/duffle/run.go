@@ -30,11 +30,12 @@ Custom actions can only be executed on releases (already-installed bundles).
 Credentials and parameters may be passed to the bundle during a target action.
 `
 	var (
-		driver           string
-		credentialsFiles []string
-		valuesFile       string
-		setParams        []string
-		setFiles         []string
+		driver            string
+		credentialsFiles  []string
+		valuesFile        string
+		setParams         []string
+		setFiles          []string
+		relocationMapping string
 	)
 
 	cmd := &cobra.Command{
@@ -60,7 +61,7 @@ Credentials and parameters may be passed to the bundle during a target action.
 				return err
 			}
 
-			driverImpl, err := prepareDriver(driver)
+			driverImpl, err := prepareDriver(driver, relocationMapping)
 			if err != nil {
 				return err
 			}
@@ -94,6 +95,7 @@ Credentials and parameters may be passed to the bundle during a target action.
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&driver, "driver", "d", "docker", "Specify a driver name")
+	flags.StringVarP(&relocationMapping, "relocation-mapping", "m", "", "Path of relocation mapping JSON file")
 	flags.StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify a set of credentials to use inside the CNAB bundle")
 	flags.StringVarP(&valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
 	flags.StringArrayVarP(&setParams, "set", "s", []string{}, "Set individual parameters as NAME=VALUE pairs")

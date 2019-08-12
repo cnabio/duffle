@@ -19,14 +19,15 @@ be re-used.
 `
 
 type uninstallCmd struct {
-	out              io.Writer
-	name             string
-	valuesFile       string
-	driver           string
-	bundle           string
-	bundleFile       string
-	setParams        []string
-	credentialsFiles []string
+	out               io.Writer
+	name              string
+	valuesFile        string
+	driver            string
+	bundle            string
+	bundleFile        string
+	setParams         []string
+	credentialsFiles  []string
+	relocationMapping string
 }
 
 func newUninstallCmd(w io.Writer) *cobra.Command {
@@ -47,6 +48,7 @@ func newUninstallCmd(w io.Writer) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
+	flags.StringVarP(&uninstall.relocationMapping, "relocation-mapping", "m", "", "Path of relocation mapping JSON file")
 	flags.StringVarP(&uninstall.driver, "driver", "d", "docker", "Specify a driver name")
 	flags.StringArrayVarP(&uninstall.credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
 	flags.StringVarP(&uninstall.valuesFile, "parameters", "p", "", "Specify file containing parameters. Formats: toml, MORE SOON")
@@ -94,7 +96,7 @@ func (un *uninstallCmd) run() error {
 		claim.Parameters = params
 	}
 
-	driverImpl, err := prepareDriver(un.driver)
+	driverImpl, err := prepareDriver(un.driver, un.relocationMapping)
 	if err != nil {
 		return fmt.Errorf("could not prepare driver: %s", err)
 	}

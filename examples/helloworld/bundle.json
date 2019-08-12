@@ -5,7 +5,7 @@
   "invocationImages": [
     {
       "image": "deislabs/helloworld-cnab:675c2daf7449ae58927f251acdd88acb9d1e9767",
-      "imageType":"docker"
+      "imageType": "docker"
     }
   ],
   "keywords": [
@@ -27,5 +27,6 @@
   ],
   "images": null,
   "parameters": null,
-  "credentials": null
+  "credentials": null,
+  "schemaVersion": "v1.0.0-WD"
 }

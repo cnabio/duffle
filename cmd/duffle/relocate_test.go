@@ -1,45 +1,64 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/pivotal/image-relocation/pkg/image"
-	"github.com/pivotal/image-relocation/pkg/registry"
 
 	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/deislabs/duffle/pkg/imagestore"
+	"github.com/deislabs/duffle/pkg/imagestore/imagestoremocks"
 )
 
 const (
 	testRepositoryPrefix = "example.com/user"
 
 	originalInvocationImageName  = "technosophos/helloworld:0.1.0"
-	relocatedInvocationImageName = "example.com/user/technosophos/helloworld/relocated:0.1.0"
-	invocationImageDigest        = "sha256:86959ecb500308ae523922eab84f2f94082f20b4e7bda84ce9be219f3f1b4e65"
+	relocatedInvocationImageName = "example.com/user/technosophos-helloworld-6731e0d41b7fd5a24e14c853af93bd81:0.1.0"
 
 	originalImageNameA  = "deislabs/duffle@sha256:4d41eeb38fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540"
-	relocatedImageNameA = "example.com/user/deislabs/duffle/relocated@sha256:4d41eeb38fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540"
+	relocatedImageNameA = "example.com/user/deislabs-duffle-50aa5cc4ebb040ac696a9753d1695298@sha256:4d41eeb38fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540"
 	imageDigestA        = "sha256:4d41eeb38fb14266b7c0461ef1ef0b2f8c05f41cd544987a259a9d92cdad2540"
 
-	originalImageNameB    = "deislabs/duffle:0.1.0-ralpha.5-englishrose"
-	relocatedImageNameB   = "example.com/user/deislabs/duffle/relocated:0.1.0-ralpha.5-englishrose"
-	originalImageDigestB  = "sha256:14d6134d892aeccb7e142557fe746ccd0a8f736a747c195ef04c9f3f0f0bbd49"
-	relocatedImageDigestB = "sha256:deadbeef892aeccb7e142557fe746ccd0a8f736a747c195ef04c9f3f0f0bbd49"
+	originalImageNameB   = "deislabs/duffle:0.1.0-ralpha.5-englishrose"
+	relocatedImageNameB  = "example.com/user/deislabs-duffle-50aa5cc4ebb040ac696a9753d1695298:0.1.0-ralpha.5-englishrose"
+	originalImageDigestB = "sha256:14d6134d892aeccb7e142557fe746ccd0a8f736a747c195ef04c9f3f0f0bbd49"
 )
 
-func TestRelocateFileToFilePreservingDigests(t *testing.T) {
-	relocateFileToFile(t, true, nil)
+func TestRelocateFileToFileSupportedImageTypes(t *testing.T) {
+	relocateFileToFile(t, "testdata/relocate/bundle.json", nil, func(archiveDir string) {
+		if archiveDir != "" {
+			t.Fatalf("archiveDir was %q, expected %q", archiveDir, "")
+		}
+	})
 }
 
-func TestRelocateFileToFileMutatingDigests(t *testing.T) {
-	relocateFileToFile(t, false, fmt.Errorf("digest of image %s not preserved: old digest %s; new digest %s", originalImageNameB, originalImageDigestB, relocatedImageDigestB))
+func TestRelocateThickBundleToFileSupportedImageTypes(t *testing.T) {
+	relocateFileToFile(t, "testdata/relocate/testrelocate-0.1.tgz", nil, func(archiveDir string) {
+		expectedSuffix := "testrelocate-0.1"
+		if !strings.HasSuffix(archiveDir, expectedSuffix) {
+			t.Fatalf("archiveDir was %q, expected it to end with %q", archiveDir, expectedSuffix)
+		}
+	})
 }
 
-func relocateFileToFile(t *testing.T, preserveDigest bool, expectedErr error) {
+func TestRelocateFileToFileUnsupportedImageType(t *testing.T) {
+	relocateFileToFile(t, "testdata/relocate/bundle-with-unsupported-image-type.json", errors.New("cannot relocate image c with imageType c: only oci and docker image types are currently supported"), func(archiveDir string) {
+		if archiveDir != "" {
+			t.Fatalf("archiveDir was %q, expected %q", archiveDir, "")
+		}
+	})
+}
+
+func relocateFileToFile(t *testing.T, bundle string, expectedErr error, archiveDirStub func(archiveDir string)) {
 
 	duffleHome, err := ioutil.TempDir("", "dufflehome")
 	if err != nil {
@@ -53,15 +72,40 @@ func relocateFileToFile(t *testing.T, preserveDigest bool, expectedErr error) {
 	}
 	defer os.RemoveAll(work)
 
-	outputBundle := filepath.Join(work, "relocated.json")
+	relMapPath := filepath.Join(work, "relmap.json")
+
+	is := &imagestoremocks.MockStore{
+		PushStub: func(dig image.Digest, src image.Name, dst image.Name) error {
+			type pair struct {
+				first  string
+				second string
+			}
+			digests := map[string]pair{
+				"docker.io/" + originalInvocationImageName: {"", relocatedInvocationImageName},
+				"docker.io/" + originalImageNameA:          {imageDigestA, relocatedImageNameA},
+				"docker.io/" + originalImageNameB:          {originalImageDigestB, relocatedImageNameB},
+			}
+			exp, ok := digests[src.String()]
+			if !ok {
+				t.Fatalf("unexpected source image %v", src)
+			}
+			expectedDig, expectedDst := exp.first, exp.second
+			if dig.String() != expectedDig {
+				t.Fatalf("digest for source image %v was %s, expected %s", src, dig, expectedDig)
+			}
+			if dst.String() != expectedDst {
+				t.Fatalf("destination image for source image %v was %v, expected %s", src, dst, expectedDst)
+			}
+			return nil
+		},
+	}
 
 	cmd := &relocateCmd{
-		inputBundle:  "testdata/relocate/bundle.json",
-		outputBundle: outputBundle,
+		inputBundle: bundle,
 
-		repoPrefix:         testRepositoryPrefix,
-		inputBundleIsFile:  true,
-		outputBundleIsFile: true,
+		repoPrefix:        testRepositoryPrefix,
+		bundleIsFile:      true,
+		relocationMapping: relMapPath,
 
 		home: home.Home(duffleHome),
 		out:  ioutil.Discard,
@@ -72,43 +116,9 @@ func relocateFileToFile(t *testing.T, preserveDigest bool, expectedErr error) {
 			}
 			return testMapping(originalImage, t)
 		},
-		registryClient: &mockRegClient{
-			copyStub: func(source image.Name, target image.Name) (image.Digest, error) {
-				oiin, err := image.NewName(originalInvocationImageName)
-				if err != nil {
-					t.Fatal(err)
-				}
-				oinA, err := image.NewName(originalImageNameA)
-				if err != nil {
-					t.Fatal(err)
-				}
-				oinB, err := image.NewName(originalImageNameB)
-				if err != nil {
-					t.Fatal(err)
-				}
-				switch source {
-				case oiin:
-					if target.String() == relocatedInvocationImageName {
-						return image.NewDigest(invocationImageDigest)
-					}
-				case oinA:
-					if target.String() == relocatedImageNameA {
-						return image.NewDigest(imageDigestA)
-					}
-				case oinB:
-					if target.String() == relocatedImageNameB {
-						if preserveDigest {
-							return image.NewDigest(originalImageDigestB)
-						}
-						// check behaviour if digest is modified, even though this is not normally expected
-						return image.NewDigest(relocatedImageDigestB)
-					}
-				default:
-					t.Fatalf("unexpected source %v", source)
-				}
-				t.Fatalf("unexpected mapping from %v to %v", source, target)
-				return image.EmptyDigest, nil // unreachable
-			},
+		imageStoreConstructor: func(option ...imagestore.Option) (store imagestore.Store, e error) {
+			archiveDirStub(imagestore.Create(option...).ArchiveDir)
+			return is, nil
 		},
 	}
 
@@ -121,53 +131,27 @@ func relocateFileToFile(t *testing.T, preserveDigest bool, expectedErr error) {
 		return
 	}
 
-	// check output bundle
-	bundleFile, err := resolveBundleFilePath(outputBundle, "", true)
+	// check relocation mapping file
+	data, err := ioutil.ReadFile(relMapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	relMap := make(map[string]string)
+	err = json.Unmarshal(data, &relMap)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	bun, err := loadBundle(bundleFile)
-	if err != nil {
-		t.Fatal(err)
+	expectedRelMap := map[string]string{
+		originalInvocationImageName: relocatedInvocationImageName,
+		originalImageNameA:          relocatedImageNameA,
+		originalImageNameB:          relocatedImageNameB,
 	}
 
-	if err = bun.Validate(); err != nil {
-		t.Fatal(err)
+	if !reflect.DeepEqual(relMap, expectedRelMap) {
+		t.Fatalf("output relocation mapping file has unexpected content: %v (expected %v)",
+			relMap, expectedRelMap)
 	}
-
-	ii := bun.InvocationImages[0]
-	actualInvocationImageName := ii.Image
-	if actualInvocationImageName != relocatedInvocationImageName {
-		t.Fatalf("output bundle has invocation image with unexpected name: %q (expected %q)",
-			actualInvocationImageName, relocatedInvocationImageName)
-	}
-
-	actualOriginalInvocationImageName := ii.OriginalImage
-	if actualOriginalInvocationImageName != originalInvocationImageName {
-		t.Fatalf("output bundle has invocation image with unexpected original name: %q (expected %q)",
-			actualOriginalInvocationImageName, originalInvocationImageName)
-	}
-
-	assertImage := func(i string, expectedOriginalImageName string, expectedImageName string) {
-		img := bun.Images[i]
-
-		actualImageName := img.Image
-		if actualImageName != expectedImageName {
-			t.Fatalf("output bundle has image %s with unexpected name: %q (expected %q)", i, actualImageName,
-				expectedImageName)
-		}
-
-		actualOriginalImageName := img.OriginalImage
-		if actualOriginalImageName != expectedOriginalImageName {
-			t.Fatalf("output bundle has image %s with unexpected original name: %q (expected %q)", i,
-				actualOriginalImageName, expectedOriginalImageName)
-		}
-	}
-
-	assertImage("a", originalImageNameA, relocatedImageNameA)
-	assertImage("b", originalImageNameB, relocatedImageNameB)
-	assertImage("c", "", "c")
 }
 
 // naïve test mapping, preserving any tag and/or digest
@@ -190,20 +174,4 @@ func testMapping(originalImage image.Name, t *testing.T) image.Name {
 		}
 	}
 	return rn
-}
-
-type mockRegClient struct {
-	copyStub       func(source image.Name, target image.Name) (image.Digest, error)
-	digestStub     func(n image.Name) (image.Digest, error)
-	newLayoutStub  func(path string) (registry.Layout, error)
-	readLayoutStub func(path string) (registry.Layout, error)
-}
-
-func (r *mockRegClient) Digest(n image.Name) (image.Digest, error) { return r.digestStub(n) }
-func (r *mockRegClient) Copy(src image.Name, tgt image.Name) (image.Digest, error) {
-	return r.copyStub(src, tgt)
-}
-func (r *mockRegClient) NewLayout(path string) (registry.Layout, error) { return r.newLayoutStub(path) }
-func (r *mockRegClient) ReadLayout(path string) (registry.Layout, error) {
-	return r.readLayoutStub(path)
 }

@@ -28,8 +28,9 @@ type Client interface {
 	// Digest returns the digest of the given image or an error if the image does not exist or the digest is unavailable.
 	Digest(image.Name) (image.Digest, error)
 
-	// Copy copies the given source image to the given target and returns the image's digest (which is preserved).
-	Copy(source image.Name, target image.Name) (image.Digest, error)
+	// Copy copies the given source image to the given target and returns the image's digest (which is preserved) and
+	// the size in bytes of the raw image manifest.
+	Copy(source image.Name, target image.Name) (image.Digest, int64, error)
 
 	// NewLayout creates a Layout for the Client and creates a corresponding directory containing a new OCI image layout at
 	// the given file system path.
@@ -67,21 +68,31 @@ func (r *client) Digest(n image.Name) (image.Digest, error) {
 	return image.NewDigest(hash.String())
 }
 
-func (r *client) Copy(source image.Name, target image.Name) (image.Digest, error) {
+func (r *client) Copy(source image.Name, target image.Name) (image.Digest, int64, error) {
 	img, err := r.readRemoteImage(source)
 	if err != nil {
-		return image.EmptyDigest, fmt.Errorf("failed to read image %v: %v", source, err)
+		return image.EmptyDigest, 0, fmt.Errorf("failed to read image %v: %v", source, err)
 	}
 
 	hash, err := img.Digest()
 	if err != nil {
-		return image.EmptyDigest, fmt.Errorf("failed to read digest of image %v: %v", source, err)
+		return image.EmptyDigest, 0, fmt.Errorf("failed to read digest of image %v: %v", source, err)
 	}
 
 	err = r.writeRemoteImage(img, target)
 	if err != nil {
-		return image.EmptyDigest, fmt.Errorf("failed to write image %v: %v", target, err)
+		return image.EmptyDigest, 0, fmt.Errorf("failed to write image %v: %v", target, err)
 	}
 
-	return image.NewDigest(hash.String())
+	dig, err := image.NewDigest(hash.String())
+	if err != nil {
+		return image.EmptyDigest, 0, err
+	}
+
+	rawManifest, err := img.RawManifest()
+	if err != nil {
+		return image.EmptyDigest, 0, fmt.Errorf("failed to get raw manifest of image %v: %v", source, err)
+	}
+
+	return dig, int64(len(rawManifest)), nil
 }

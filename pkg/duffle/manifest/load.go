@@ -1,32 +1,27 @@
 package manifest
 
 import (
-	"fmt"
+	"encoding/json"
+	"os"
 	"path/filepath"
-
-	"github.com/spf13/viper"
 
 	"github.com/deislabs/duffle/pkg/duffle"
 )
 
-// Load opens the named file for reading. If successful, the manifest is returned.
+// Load parses the named file into a manifest.
 func Load(name, dir string) (*Manifest, error) {
-	v := viper.New()
 	if name == "" {
-		v.SetConfigName(duffle.DuffleFilename)
-	} else {
-		v.SetConfigFile(filepath.Join(dir, name))
+		name = duffle.DuffleFilename + ".json"
 	}
-	v.AddConfigPath(dir)
-	err := v.ReadInConfig()
-	if err != nil {
-		return nil, fmt.Errorf("Error finding duffle config file: %s", err)
-	}
-
-	m := New()
-	err = v.Unmarshal(m)
+	f, err := os.Open(filepath.Join(dir, name))
 	if err != nil {
 		return nil, err
 	}
-	return m, nil
+
+	manifest := New()
+	if err := json.NewDecoder(f).Decode(&manifest); err != nil {
+		return nil, err
+	}
+
+	return manifest, nil
 }
