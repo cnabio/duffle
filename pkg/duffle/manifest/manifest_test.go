@@ -63,11 +63,11 @@ func TestLoad(t *testing.T) {
 				t.Errorf("exp docker but was \"%v\"", img.ImageType)
 			}
 
-			if len(m.Parameters.Fields) != 1 {
-				t.Fatalf("expected 1 parameter but got %d", len(m.Parameters.Fields))
+			if len(m.Parameters) != 1 {
+				t.Fatalf("expected 1 parameter but got %d", len(m.Parameters))
 			}
 
-			_, ok := m.Parameters.Fields["foo"]
+			_, ok := m.Parameters["foo"]
 			if !ok {
 				t.Errorf("expected a parameter named foo but got %v", m.Parameters)
 			}
