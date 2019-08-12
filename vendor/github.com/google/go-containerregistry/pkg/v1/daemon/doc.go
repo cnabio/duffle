@@ -12,14 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1
-
-// Platform represents the target os/arch for an image.
-type Platform struct {
-	Architecture string   `json:"architecture"`
-	OS           string   `json:"os"`
-	OSVersion    string   `json:"os.version,omitempty"`
-	OSFeatures   []string `json:"os.features,omitempty"`
-	Variant      string   `json:"variant,omitempty"`
-	Features     []string `json:"features,omitempty"`
-}
+// Package daemon provides facilities for reading/writing v1.Image from/to
+// a running daemon.
+package daemon

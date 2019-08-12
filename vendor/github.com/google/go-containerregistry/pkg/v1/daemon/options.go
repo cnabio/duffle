@@ -12,14 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1
+package daemon
 
-// Platform represents the target os/arch for an image.
-type Platform struct {
-	Architecture string   `json:"architecture"`
-	OS           string   `json:"os"`
-	OSVersion    string   `json:"os.version,omitempty"`
-	OSFeatures   []string `json:"os.features,omitempty"`
-	Variant      string   `json:"variant,omitempty"`
-	Features     []string `json:"features,omitempty"`
+// WithBufferedOpener buffers the image.
+func WithBufferedOpener() ImageOption {
+	return func(i *imageOpener) error {
+		return i.setBuffered(true)
+	}
+}
+
+// WithUnbufferedOpener streams the image to avoid buffering.
+func WithUnbufferedOpener() ImageOption {
+	return func(i *imageOpener) error {
+		return i.setBuffered(false)
+	}
+}
+
+func (i *imageOpener) setBuffered(buffer bool) error {
+	i.buffered = buffer
+	return nil
 }

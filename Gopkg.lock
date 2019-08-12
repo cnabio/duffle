@@ -471,24 +471,27 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:2e588e08805f44a6b53d08a47a48b1b7fdb6903076fc8c245f1ec769b28ceb74"
+  digest = "1:56a9f68e8f260c3be2b1d997b7b7cf8b2ea019d52fea350219158571a61e0236"
   name = "github.com/google/go-containerregistry"
   packages = [
     "pkg/authn",
+    "pkg/internal/retry",
+    "pkg/logs",
     "pkg/name",
     "pkg/v1",
+    "pkg/v1/daemon",
     "pkg/v1/empty",
     "pkg/v1/layout",
     "pkg/v1/partial",
     "pkg/v1/random",
     "pkg/v1/remote",
     "pkg/v1/remote/transport",
-    "pkg/v1/stream",
+    "pkg/v1/tarball",
     "pkg/v1/types",
     "pkg/v1/v1util",
   ]
   pruneopts = "NUT"
-  revision = "5296537b6d5d12241dd0a8b1ef70a59cba62f48c"
+  revision = "ef12d49c8daf6a6d72978966d5945e39bb898b4a"
 
 [[projects]]
   digest = "1:52c5834e2bebac9030c97cc0798ac11c3aa8a39f098aeb419f142533da6cd3cc"
@@ -733,7 +736,7 @@
   version = "v3.0.0"
 
 [[projects]]
-  digest = "1:87bef79892c094091d2ce4e1d9244e79660baf2f839ab9f075f82ed19a006263"
+  digest = "1:f822c559b4c70e3493d03c6f3861a208507ef9bf148c57b0531c5ac85ab7fe30"
   name = "github.com/pivotal/image-relocation"
   packages = [
     "pkg/image",
@@ -741,8 +744,8 @@
     "pkg/registry",
   ]
   pruneopts = "NUT"
-  revision = "3c9c32bb3d97fc213476f1c9846a99ca35ecba5d"
-  version = "v0.1"
+  revision = "ea07ec0b5a8a8e6fb53e33d479fa557bd5faa023"
+  version = "v0.2"
 
 [[projects]]
   digest = "1:14715f705ff5dfe0ffd6571d7d201dd8e921030f8070321a79380d8ca4ec1a24"

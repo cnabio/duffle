@@ -17,13 +17,23 @@
 package registry
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/daemon"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/pivotal/image-relocation/pkg/image"
+)
+
+var (
+	daemonImageFunc = daemon.Image
+	repoImageFunc   = remote.Image
+	resolveFunc     = authn.DefaultKeychain.Resolve
+	repoWriteFunc   = remote.Write
 )
 
 func readRemoteImage(n image.Name) (v1.Image, error) {
@@ -44,7 +54,16 @@ func readRemoteImage(n image.Name) (v1.Image, error) {
 		return nil, err
 	}
 
-	return remote.Image(ref, remote.WithAuth(auth))
+	img, err := daemonImageFunc(ref)
+	if err != nil {
+		var remoteErr error
+		img, remoteErr = repoImageFunc(ref, remote.WithAuth(auth))
+		if remoteErr != nil {
+			return nil, fmt.Errorf("reading remote image %s failed: %v; attempting to read from daemon also failed: %v", n.String(), remoteErr, err)
+		}
+	}
+
+	return img, nil
 }
 
 func writeRemoteImage(i v1.Image, n image.Name) error {
@@ -58,14 +77,17 @@ func writeRemoteImage(i v1.Image, n image.Name) error {
 		return err
 	}
 
-	return remote.Write(ref, i, auth, http.DefaultTransport)
+	return repoWriteFunc(ref, i, remote.WithAuth(auth), remote.WithTransport(http.DefaultTransport))
 }
 
 func resolve(n image.Name) (authn.Authenticator, error) {
+	if n == image.EmptyName {
+		return nil, errors.New("empty image name invalid")
+	}
 	repo, err := name.NewRepository(n.WithoutTagOrDigest().String(), name.WeakValidation)
 	if err != nil {
 		return nil, err
 	}
 
-	return authn.DefaultKeychain.Resolve(repo.Registry)
+	return resolveFunc(repo.Registry)
 }
