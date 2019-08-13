@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/deislabs/cnab-go/bundle"
+
 	"github.com/deislabs/cnab-go/bundle/definition"
 	"github.com/stretchr/testify/assert"
 
@@ -62,17 +64,31 @@ func TestOverrides(t *testing.T) {
 		"second": {Type: "boolean"},
 		"third":  {Type: "integer"},
 	}
+	params := map[string]bundle.Parameter{
+		"str":    {Definition: "first"},
+		"second": {Definition: "second"},
+		"int":    {Definition: "third"},
+		"bad":    {Definition: "three hundred and thirty third"},
+	}
 
-	setVals := []string{"first=foo", "second=true", "third=2", "fourth"}
-	o, err := overrides(setVals, defs)
+	setVals := []string{"str=foo", "second=true", "int=2", "fourth"}
+	o, err := overrides(setVals, params, defs)
 	is.NoError(err)
 
 	is.Len(o, 3)
-	is.Equal(o["first"].(string), "foo")
+	is.Equal(o["str"].(string), "foo")
 	is.True(o["second"].(bool))
-	is.Equal(o["third"].(int), 2)
+	is.Equal(o["int"].(int), 2)
 
 	// We expect an error if we pass a param that was not defined:
-	_, err = overrides([]string{"undefined=foo"}, defs)
+	_, err = overrides([]string{"undefined=foo"}, params, defs)
+	is.Error(err)
+
+	// We expect an error if we pass a param that was not defined even if the name matches a definition:
+	_, err = overrides([]string{"first=foo"}, params, defs)
+	is.Error(err)
+
+	// We expect an error if we pass a param whose definition does not exist:
+	_, err = overrides([]string{"bad=worse"}, params, defs)
 	is.Error(err)
 }
