@@ -8,12 +8,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/deislabs/duffle/pkg/imagestore"
-
 	"github.com/deislabs/cnab-go/bundle"
+	"github.com/deislabs/cnab-go/bundle/loader"
 	"github.com/docker/docker/pkg/archive"
 
-	"github.com/deislabs/duffle/pkg/loader"
+	"github.com/deislabs/duffle/pkg/imagestore"
 )
 
 type Exporter struct {

@@ -8,10 +8,8 @@ import (
 	"strings"
 
 	"github.com/deislabs/cnab-go/bundle"
-
+	"github.com/deislabs/cnab-go/bundle/loader"
 	"github.com/docker/docker/pkg/archive"
-
-	"github.com/deislabs/duffle/pkg/loader"
 )
 
 var (

@@ -81,7 +81,7 @@ type LocationRef struct {
 type BaseImage struct {
 	ImageType string            `json:"imageType" yaml:"imageType"`
 	Image     string            `json:"image" yaml:"image"`
-	Digest    string            `json:"contentDigest,omitempty" yaml:"contentDigest"`
+	Digest    string            `json:"contentDigest,omitempty" yaml:"contentDigest,omitempty"`
 	Size      uint64            `json:"size,omitempty" yaml:"size,omitempty"`
 	Labels    map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 	MediaType string            `json:"mediaType,omitempty" yaml:"mediaType,omitempty"`
