@@ -71,7 +71,7 @@ func newRelocateCmd(w io.Writer) *cobra.Command {
 		Short: "relocate images in a CNAB bundle",
 		Long:  relocateDesc,
 		Example: `duffle relocate helloworld --relocation-mapping path/to/relmap.json --repository-prefix example.com/user
-duffle relocate path/to/bundle.json --relocation-mapping path/to/relmap.json --repository-prefix example.com/user --input-bundle-is-file`,
+duffle relocate path/to/bundle.json --relocation-mapping path/to/relmap.json --repository-prefix example.com/user --bundle-is-file`,
 		Args: cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			// validate --repository-prefix if it is set, otherwise fall through so that cobra will report the missing flag in its usual manner
