@@ -189,7 +189,7 @@ func getBundleFilepath(bun, homePath string) (string, error) {
 }
 
 // overrides parses the --set data and returns values that should override other params.
-func overrides(overrides []string, paramDefs definition.Definitions) (map[string]interface{}, error) {
+func overrides(overrides []string, parameters map[string]bundle.Parameter, schemas definition.Definitions) (map[string]interface{}, error) {
 	res := map[string]interface{}{}
 	for _, p := range overrides {
 		pair := strings.SplitN(p, "=", 2)
@@ -199,19 +199,28 @@ func overrides(overrides []string, paramDefs definition.Definitions) (map[string
 			// a parameter in the file.
 			continue
 		}
-		def, ok := paramDefs[pair[0]]
+
+		parameterName := pair[0]
+		overrideValue := pair[1]
+
+		parameter, ok := parameters[parameterName]
 		if !ok {
-			return res, fmt.Errorf("parameter %s not defined in bundle", pair[0])
+			return res, fmt.Errorf("parameter %s not defined in bundle", parameterName)
 		}
 
-		if _, ok := res[pair[0]]; ok {
-			return res, fmt.Errorf("parameter %q specified multiple times", pair[0])
+		if _, ok := res[parameterName]; ok {
+			return res, fmt.Errorf("parameter %q specified multiple times", parameterName)
+		}
+
+		schema, ok := schemas[parameter.Definition]
+		if !ok {
+			return res, fmt.Errorf("definition %q of parameter %q is not present in bundle", parameter.Definition, parameterName)
 		}
 
 		var err error
-		res[pair[0]], err = def.ConvertValue(pair[1])
+		res[parameterName], err = schema.ConvertValue(overrideValue)
 		if err != nil {
-			return res, fmt.Errorf("cannot use %s as value of %s: %s", pair[1], pair[0], err)
+			return res, fmt.Errorf("cannot use %s as value of %s: %s", overrideValue, parameterName, err)
 		}
 	}
 	return res, nil
@@ -239,7 +248,7 @@ func calculateParamValues(bun *bundle.Bundle, valuesFile string, setParams, setF
 		}
 
 	}
-	overridden, err := overrides(setParams, bun.Definitions)
+	overridden, err := overrides(setParams, bun.Parameters, bun.Definitions)
 	if err != nil {
 		return vals, err
 	}
