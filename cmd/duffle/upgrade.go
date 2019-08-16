@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -90,11 +91,18 @@ func (up *upgradeCmd) run() error {
 
 	// If the user specifies a bundle file, override the existing one.
 	if up.bundleFile != "" {
-		bun, err := loadBundle(up.bundleFile)
+		bun, tempDir, err := inferAndLoadBundle(up.bundleFile)
 		if err != nil {
 			return err
 		}
+		if tempDir != "" {
+			defer os.RemoveAll(tempDir)
+		}
 		claim.Bundle = bun
+	}
+
+	if err = claim.Bundle.Validate(); err != nil {
+		return err
 	}
 
 	driverImpl, err := prepareDriver(up.driver, up.relocationMapping)
