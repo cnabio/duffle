@@ -14,10 +14,10 @@ import (
 	"github.com/deislabs/cnab-go/claim"
 	"github.com/deislabs/cnab-go/credentials"
 	"github.com/deislabs/cnab-go/driver"
+	"github.com/deislabs/cnab-go/driver/lookup"
 	"github.com/deislabs/cnab-go/utils/crud"
 	"github.com/spf13/cobra"
 
-	duffleDriver "github.com/deislabs/duffle/pkg/driver"
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/reference"
 )
@@ -112,7 +112,7 @@ func must(err error) {
 
 // prepareDriver prepares a driver per the user's request.
 func prepareDriver(driverName string, relMap string) (driver.Driver, error) {
-	driverImpl, err := duffleDriver.Lookup(driverName)
+	driverImpl, err := lookup.Lookup(driverName)
 	if err != nil {
 		return nil, err
 	}

@@ -200,7 +200,7 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:e86556f6f91e6c175ac44965165c1edbf75a978dd85442cef7415059f86a4bc3"
+  digest = "1:0fef6f49fe9577b57632f0f8864238fb65d5b8c7a3611620eb144cdde582bb3c"
   name = "github.com/deislabs/cnab-go"
   packages = [
     "action",
@@ -213,11 +213,12 @@
     "driver/command",
     "driver/docker",
     "driver/kubernetes",
+    "driver/lookup",
     "utils/crud",
   ]
   pruneopts = "NUT"
-  revision = "1ef7d96a46de6e4205de8eedd80e3cf387fef72b"
-  version = "v0.3.1-beta1"
+  revision = "0ce7659aab8dbd37cc912ea64cb78f403534de42"
+  version = "v0.3.2-beta1"
 
 [[projects]]
   digest = "1:7a6852b35eb5bbc184561443762d225116ae630c26a7c4d90546619f1e7d2ad2"
@@ -1249,9 +1250,7 @@
     "github.com/deislabs/cnab-go/claim",
     "github.com/deislabs/cnab-go/credentials",
     "github.com/deislabs/cnab-go/driver",
-    "github.com/deislabs/cnab-go/driver/command",
-    "github.com/deislabs/cnab-go/driver/docker",
-    "github.com/deislabs/cnab-go/driver/kubernetes",
+    "github.com/deislabs/cnab-go/driver/lookup",
     "github.com/deislabs/cnab-go/utils/crud",
     "github.com/docker/cli/cli/command",
     "github.com/docker/cli/cli/command/image/build",
