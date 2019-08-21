@@ -29,8 +29,9 @@ func TestUpgradePersistsClaim(t *testing.T) {
 		t.Fatal(err)
 	}
 	instClaim.Bundle = &bundle.Bundle{
-		Name:    "bar",
-		Version: "0.1.0",
+		Name:          "bar",
+		Version:       "0.1.0",
+		SchemaVersion: "v1.0.0-WD",
 		InvocationImages: []bundle.InvocationImage{
 			{
 				BaseImage: bundle.BaseImage{Image: "foo/bar:0.1.0", ImageType: "docker"},

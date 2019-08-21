@@ -107,3 +107,14 @@ $ make dep
 ## Debugging
 
 For instructions on using VS Code to debug the Duffle binary, see [the debugging document](debugging.md).
+
+## Creating a Release
+
+To create a release, simply push a tag and CI will do the rest. The tag should be of the form:
+```console
+<major>.<minor>.<patch>[-<pre-release>]
+```
+Tags conform to [Semantic Versioning](https://semver.org/) in syntax and semantics, but must not start with `v`.
+
+Examples tags are: `0.3.0-beta.3` and `1.0.0`. 
+
