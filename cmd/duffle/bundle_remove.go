@@ -46,7 +46,7 @@ func newBundleRemoveCmd(w io.Writer) *cobra.Command {
 			return remove.run()
 		},
 	}
-	cmd.Flags().StringVar(&remove.versions, "version", "", "A version or SemVer2 version range")
+	cmd.Flags().StringVarP(&remove.versions, "version", "r", "", "A version or SemVer2 version range")
 
 	return cmd
 }
