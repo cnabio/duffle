@@ -149,7 +149,7 @@ func (d *driverWithRelocationMapping) Run(op *driver.Operation) (driver.Operatio
 		op.Files["/cnab/app/relocation-mapping.json"] = d.relMapping
 
 		var err error
-		op.Image, err = d.relocateImage(op.Image)
+		op.Image.Image, err = d.relocateImage(op.Image.Image)
 		if err != nil {
 			return driver.OperationResult{}, err
 		}

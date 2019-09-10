@@ -126,7 +126,7 @@ func (up *upgradeCmd) run() error {
 	upgr := &action.Upgrade{
 		Driver: driverImpl,
 	}
-	err = upgr.Run(&claim, creds, up.out)
+	err = upgr.Run(&claim, creds, setOut(up.out))
 
 	// persist the claim, regardless of the success of the upgrade action
 	persistErr := claimStorage().Store(claim)

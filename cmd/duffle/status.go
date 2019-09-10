@@ -70,7 +70,7 @@ reason, it may need the same credentials used to install.
 			// TODO: Do we pass new values in here? Or just from Claim?
 			action := &action.Status{Driver: driverImpl}
 			fmt.Println("Executing status action in bundle...")
-			return action.Run(&c, creds, cmd.OutOrStdout())
+			return action.Run(&c, creds, setOut(cmd.OutOrStdout()))
 		},
 	}
 	cmd.Flags().StringVarP(&statusDriver, "driver", "d", "docker", "Specify a driver name")
