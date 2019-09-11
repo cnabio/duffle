@@ -29,7 +29,7 @@ const (
 	fullDockerHubHost = "index.docker.io"
 )
 
-// Name is a named image reference
+// Name is a named image reference. It can refer to an image manifest or a manifest list (e.g. a multi-arch image).
 type Name struct {
 	ref reference.Named
 }

@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/deislabs/duffle/pkg/imagestore"
 	"github.com/pivotal/image-relocation/pkg/image"
 	"github.com/pivotal/image-relocation/pkg/registry"
-
-	"github.com/deislabs/duffle/pkg/imagestore"
+	"github.com/pivotal/image-relocation/pkg/registry/ggcr"
 )
 
 // ociLayout is an image store which stores images as an OCI image layout.
@@ -26,7 +26,7 @@ func Create(options ...imagestore.Option) (imagestore.Store, error) {
 		return nil, err
 	}
 
-	layout, err := registry.NewRegistryClient().NewLayout(layoutDir)
+	layout, err := ggcr.NewRegistryClient().NewLayout(layoutDir)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func LocateOciLayout(archiveDir string) (imagestore.Store, error) {
 	if _, err := os.Stat(layoutDir); os.IsNotExist(err) {
 		return nil, err
 	}
-	layout, err := registry.NewRegistryClient().ReadLayout(layoutDir)
+	layout, err := ggcr.NewRegistryClient().ReadLayout(layoutDir)
 	if err != nil {
 		return nil, err
 	}
