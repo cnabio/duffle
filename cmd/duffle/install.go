@@ -151,7 +151,7 @@ func (i *installCmd) run() error {
 		Driver: driverImpl,
 	}
 	fmt.Fprintf(i.out, "Executing install action...\n")
-	err = inst.Run(c, creds, i.out)
+	err = inst.Run(c, creds, setOut(i.out))
 
 	// Even if the action fails, we want to store a claim. This is because
 	// we cannot know, based on a failure, whether or not any resources were

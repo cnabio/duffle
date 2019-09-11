@@ -57,7 +57,7 @@
 
 [[constraint]]
   name = "github.com/deislabs/cnab-go"
-  version = "v0.3.3-beta1"
+  version = "v0.4.0-beta1"
 
 [[override]]
   name = "github.com/google/go-containerregistry"
@@ -94,8 +94,3 @@
 [[override]]
   name = "golang.org/x/sys"
   revision = "f49334f85ddcf0f08d7fb6dd7363e9e6d6b777eb"
-
-[[constraint]]
-  # version imported by k8s.io/client-go @ kubernetes-1.11.2
-  name = "github.com/Azure/go-autorest"
-  revision = "1ff28809256a84bb6966640ff3d0371af82ccba4"

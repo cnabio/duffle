@@ -80,7 +80,7 @@ Credentials and parameters may be passed to the bundle during a target action.
 			}
 
 			fmt.Fprintf(w, "Executing custom action %q for release %q", target, claimName)
-			err = action.Run(&c, creds, cmd.OutOrStdout())
+			err = action.Run(&c, creds, setOut(cmd.OutOrStdout()))
 			if actionDef := c.Bundle.Actions[target]; !actionDef.Modifies {
 				// Do not store a claim for non-mutating actions.
 				return err

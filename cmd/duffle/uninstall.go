@@ -111,7 +111,7 @@ func (un *uninstallCmd) run() error {
 	}
 
 	fmt.Fprintln(un.out, "Executing uninstall action...")
-	if err := uninst.Run(&claim, creds, un.out); err != nil {
+	if err := uninst.Run(&claim, creds, setOut(un.out)); err != nil {
 		return fmt.Errorf("could not uninstall %q: %s", un.name, err)
 	}
 	return claimStorage().Delete(un.name)
