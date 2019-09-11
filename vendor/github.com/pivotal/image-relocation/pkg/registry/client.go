@@ -17,9 +17,6 @@
 package registry
 
 import (
-	"fmt"
-
-	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/pivotal/image-relocation/pkg/image"
 )
 
@@ -41,58 +38,3 @@ type Client interface {
 	ReadLayout(path string) (Layout, error)
 }
 
-type client struct {
-	readRemoteImage  func(n image.Name) (v1.Image, error)
-	writeRemoteImage func(i v1.Image, n image.Name) error
-}
-
-// NewRegistryClient returns a new Client.
-func NewRegistryClient() Client {
-	return &client{
-		readRemoteImage:  readRemoteImage,
-		writeRemoteImage: writeRemoteImage,
-	}
-}
-
-func (r *client) Digest(n image.Name) (image.Digest, error) {
-	img, err := r.readRemoteImage(n)
-	if err != nil {
-		return image.EmptyDigest, err
-	}
-
-	hash, err := img.Digest()
-	if err != nil {
-		return image.EmptyDigest, err
-	}
-
-	return image.NewDigest(hash.String())
-}
-
-func (r *client) Copy(source image.Name, target image.Name) (image.Digest, int64, error) {
-	img, err := r.readRemoteImage(source)
-	if err != nil {
-		return image.EmptyDigest, 0, fmt.Errorf("failed to read image %v: %v", source, err)
-	}
-
-	hash, err := img.Digest()
-	if err != nil {
-		return image.EmptyDigest, 0, fmt.Errorf("failed to read digest of image %v: %v", source, err)
-	}
-
-	err = r.writeRemoteImage(img, target)
-	if err != nil {
-		return image.EmptyDigest, 0, fmt.Errorf("failed to write image %v: %v", target, err)
-	}
-
-	dig, err := image.NewDigest(hash.String())
-	if err != nil {
-		return image.EmptyDigest, 0, err
-	}
-
-	rawManifest, err := img.RawManifest()
-	if err != nil {
-		return image.EmptyDigest, 0, fmt.Errorf("failed to get raw manifest of image %v: %v", source, err)
-	}
-
-	return dig, int64(len(rawManifest)), nil
-}

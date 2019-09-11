@@ -18,7 +18,7 @@ package image
 
 import "github.com/opencontainers/go-digest"
 
-// Digest provides a CAS address of an image.
+// Digest provides a CAS address of an image (either an image manifest or a manifest list).
 type Digest struct {
 	dig digest.Digest
 }
