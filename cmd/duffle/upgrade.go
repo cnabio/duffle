@@ -105,7 +105,7 @@ func (up *upgradeCmd) run() error {
 		return err
 	}
 
-	driverImpl, err := prepareDriver(up.driver, up.relocationMapping)
+	driverImpl, err := prepareDriver(up.driver)
 	if err != nil {
 		return err
 	}
@@ -123,10 +123,15 @@ func (up *upgradeCmd) run() error {
 		}
 	}
 
+	opRelocator, err := makeOpRelocator(up.relocationMapping)
+	if err != nil {
+		return err
+	}
+
 	upgr := &action.Upgrade{
 		Driver: driverImpl,
 	}
-	err = upgr.Run(&claim, creds, setOut(up.out))
+	err = upgr.Run(&claim, creds, setOut(up.out), opRelocator)
 
 	// persist the claim, regardless of the success of the upgrade action
 	persistErr := claimStorage().Store(claim)
