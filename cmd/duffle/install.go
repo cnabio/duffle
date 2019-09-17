@@ -122,7 +122,7 @@ func (i *installCmd) run() error {
 		return err
 	}
 
-	driverImpl, err := prepareDriver(i.driver, i.relocationMapping)
+	driverImpl, err := prepareDriver(i.driver)
 	if err != nil {
 		return err
 	}
@@ -147,11 +147,16 @@ func (i *installCmd) run() error {
 		return err
 	}
 
+	opRelocator, err := makeOpRelocator(i.relocationMapping)
+	if err != nil {
+		return err
+	}
+
 	inst := &action.Install{
 		Driver: driverImpl,
 	}
 	fmt.Fprintf(i.out, "Executing install action...\n")
-	err = inst.Run(c, creds, setOut(i.out))
+	err = inst.Run(c, creds, setOut(i.out), opRelocator)
 
 	// Even if the action fails, we want to store a claim. This is because
 	// we cannot know, based on a failure, whether or not any resources were

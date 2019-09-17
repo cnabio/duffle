@@ -96,7 +96,7 @@ func (un *uninstallCmd) run() error {
 		claim.Parameters = params
 	}
 
-	driverImpl, err := prepareDriver(un.driver, un.relocationMapping)
+	driverImpl, err := prepareDriver(un.driver)
 	if err != nil {
 		return fmt.Errorf("could not prepare driver: %s", err)
 	}
@@ -106,12 +106,17 @@ func (un *uninstallCmd) run() error {
 		return fmt.Errorf("could not load credentials: %s", err)
 	}
 
+	opRelocator, err := makeOpRelocator(un.relocationMapping)
+	if err != nil {
+		return err
+	}
+
 	uninst := &action.Uninstall{
 		Driver: driverImpl,
 	}
 
 	fmt.Fprintln(un.out, "Executing uninstall action...")
-	if err := uninst.Run(&claim, creds, setOut(un.out)); err != nil {
+	if err := uninst.Run(&claim, creds, setOut(un.out), opRelocator); err != nil {
 		return fmt.Errorf("could not uninstall %q: %s", un.name, err)
 	}
 	return claimStorage().Delete(un.name)

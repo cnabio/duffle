@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/deislabs/cnab-go/action"
 	"github.com/deislabs/cnab-go/bundle"
 	"github.com/deislabs/cnab-go/bundle/loader"
 	"github.com/deislabs/cnab-go/claim"
@@ -111,7 +112,7 @@ func must(err error) {
 }
 
 // prepareDriver prepares a driver per the user's request.
-func prepareDriver(driverName string, relMap string) (driver.Driver, error) {
+func prepareDriver(driverName string) (driver.Driver, error) {
 	driverImpl, err := lookup.Lookup(driverName)
 	if err != nil {
 		return nil, err
@@ -126,55 +127,36 @@ func prepareDriver(driverName string, relMap string) (driver.Driver, error) {
 		configurable.SetConfig(driverCfg)
 	}
 
-	rm, err := loadRelMapping(relMap)
+	return driverImpl, nil
+}
+
+func makeOpRelocator(relMapping string) (action.OperationConfigFunc, error) {
+	rm, err := loadRelMapping(relMapping)
 	if err != nil {
 		return nil, err
 	}
 
-	// wrap the driver so any relocation mapping is mounted
-	return &driverWithRelocationMapping{
-		driver:     driverImpl,
-		relMapping: rm,
-	}, nil
-}
-
-type driverWithRelocationMapping struct {
-	driver     driver.Driver
-	relMapping string
-}
-
-func (d *driverWithRelocationMapping) Run(op *driver.Operation) (driver.OperationResult, error) {
-	// if there is a relocation mapping, ensure it is mounted and relocate the invocation image
-	if d.relMapping != "" {
-		op.Files["/cnab/app/relocation-mapping.json"] = d.relMapping
-
-		var err error
-		op.Image.Image, err = d.relocateImage(op.Image.Image)
+	relMap := make(map[string]string)
+	if rm != "" {
+		err := json.Unmarshal([]byte(rm), &relMap)
 		if err != nil {
-			return driver.OperationResult{}, err
+			return nil, fmt.Errorf("failed to unmarshal relocation mapping: %v", err)
 		}
 	}
 
-	return d.driver.Run(op)
-}
+	return func(op *driver.Operation) error {
+		// if there is a relocation mapping, ensure it is mounted and relocate the invocation image
+		if rm != "" {
+			op.Files["/cnab/app/relocation-mapping.json"] = rm
 
-func (d *driverWithRelocationMapping) Handles(it string) bool {
-	return d.driver.Handles(it)
-}
-
-func (d *driverWithRelocationMapping) relocateImage(im string) (string, error) {
-	relMap := make(map[string]string)
-	err := json.Unmarshal([]byte(d.relMapping), &relMap)
-	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal relocation mapping: %v", err)
-	}
-
-	mapped, ok := relMap[im]
-	if !ok {
-		return "", fmt.Errorf("invocation image %s not present in relocation mapping %v", im, relMap)
-	}
-
-	return mapped, nil
+			im, ok := relMap[op.Image.Image]
+			if !ok {
+				return fmt.Errorf("invocation image %s not present in relocation mapping %v", op.Image.Image, relMap)
+			}
+			op.Image.Image = im
+		}
+		return nil
+	}, nil
 }
 
 func loadRelMapping(relMap string) (string, error) {

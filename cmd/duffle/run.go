@@ -61,7 +61,7 @@ Credentials and parameters may be passed to the bundle during a target action.
 				return err
 			}
 
-			driverImpl, err := prepareDriver(driver, relocationMapping)
+			driverImpl, err := prepareDriver(driver)
 			if err != nil {
 				return err
 			}
@@ -74,13 +74,18 @@ Credentials and parameters may be passed to the bundle during a target action.
 				}
 			}
 
+			opRelocator, err := makeOpRelocator(relocationMapping)
+			if err != nil {
+				return err
+			}
+
 			action := &action.RunCustom{
 				Driver: driverImpl,
 				Action: target,
 			}
 
 			fmt.Fprintf(w, "Executing custom action %q for release %q", target, claimName)
-			err = action.Run(&c, creds, setOut(cmd.OutOrStdout()))
+			err = action.Run(&c, creds, setOut(cmd.OutOrStdout()), opRelocator)
 			if actionDef := c.Bundle.Actions[target]; !actionDef.Modifies {
 				// Do not store a claim for non-mutating actions.
 				return err

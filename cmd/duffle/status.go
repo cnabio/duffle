@@ -21,8 +21,9 @@ action will restart the CNAB image and ask it to query for status. For that
 reason, it may need the same credentials used to install.
 `
 	var (
-		statusDriver     string
-		credentialsFiles []string
+		statusDriver      string
+		credentialsFiles  []string
+		relocationMapping string
 	)
 
 	cmd := &cobra.Command{
@@ -62,7 +63,12 @@ reason, it may need the same credentials used to install.
 				return err
 			}
 
-			driverImpl, err := prepareDriver(statusDriver, "")
+			driverImpl, err := prepareDriver(statusDriver)
+			if err != nil {
+				return err
+			}
+
+			opRelocator, err := makeOpRelocator(relocationMapping)
 			if err != nil {
 				return err
 			}
@@ -70,11 +76,12 @@ reason, it may need the same credentials used to install.
 			// TODO: Do we pass new values in here? Or just from Claim?
 			action := &action.Status{Driver: driverImpl}
 			fmt.Println("Executing status action in bundle...")
-			return action.Run(&c, creds, setOut(cmd.OutOrStdout()))
+			return action.Run(&c, creds, setOut(cmd.OutOrStdout()), opRelocator)
 		},
 	}
 	cmd.Flags().StringVarP(&statusDriver, "driver", "d", "docker", "Specify a driver name")
 	cmd.Flags().StringArrayVarP(&credentialsFiles, "credentials", "c", []string{}, "Specify credentials to use inside the CNAB bundle. This can be a credentialset name or a path to a file.")
+	cmd.Flags().StringVarP(&relocationMapping, "relocation-mapping", "m", "", "Path of relocation mapping JSON file")
 
 	return cmd
 }
