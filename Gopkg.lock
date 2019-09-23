@@ -736,7 +736,7 @@
   version = "v3.0.0"
 
 [[projects]]
-  digest = "1:4cec3a6ba6650e085d416d3f135f738d1b6b33d2855073d4426ca1398beedef0"
+  digest = "1:b63982d7e9a99a2446f1dc931376d69615b73fac5bf7fda9853e39fd91d64906"
   name = "github.com/pivotal/image-relocation"
   packages = [
     "pkg/image",
@@ -745,8 +745,8 @@
     "pkg/registry/ggcr",
   ]
   pruneopts = "NUT"
-  revision = "82d942d97499e63711ec1e8b94e4655364c0a53d"
-  version = "v0.4"
+  revision = "28a4e87a740db9ee4e0b105ec6bef4210558df47"
+  version = "v0.5"
 
 [[projects]]
   digest = "1:14715f705ff5dfe0ffd6571d7d201dd8e921030f8070321a79380d8ca4ec1a24"

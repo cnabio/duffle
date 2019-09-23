@@ -86,7 +86,7 @@ func writeRemoteImage(i v1.Image, n image.Name) error {
 		return err
 	}
 
-	ref, err := name.ParseReference(n.String(), name.WeakValidation)
+	ref, err := getWriteReference(n)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func writeRemoteIndex(i v1.ImageIndex, n image.Name) error {
 		return err
 	}
 
-	ref, err := name.ParseReference(n.String(), name.WeakValidation)
+	ref, err := getWriteReference(n)
 	if err != nil {
 		return err
 	}
@@ -118,4 +118,14 @@ func resolve(n image.Name) (authn.Authenticator, error) {
 	}
 
 	return resolveFunc(repo.Registry)
+}
+
+func getWriteReference(n image.Name) (name.Reference, error) {
+	// if target image reference is both tagged and digested, ignore the digest so the tag is preserved
+	// (the digest will be preserved by go-containerregistry)
+	if n.Tag() != "" {
+		n = n.WithoutDigest()
+	}
+
+	return name.ParseReference(n.String(), name.WeakValidation)
 }
