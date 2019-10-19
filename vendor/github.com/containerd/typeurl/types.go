@@ -116,15 +116,19 @@ func MarshalAny(v interface{}) (*types.Any, error) {
 
 // UnmarshalAny unmarshals the any type into a concrete type.
 func UnmarshalAny(any *types.Any) (interface{}, error) {
-	t, err := getTypeByUrl(any.TypeUrl)
+	return UnmarshalByTypeURL(any.TypeUrl, any.Value)
+}
+
+func UnmarshalByTypeURL(typeURL string, value []byte) (interface{}, error) {
+	t, err := getTypeByUrl(typeURL)
 	if err != nil {
 		return nil, err
 	}
 	v := reflect.New(t.t).Interface()
 	if t.isProto {
-		err = proto.Unmarshal(any.Value, v.(proto.Message))
+		err = proto.Unmarshal(value, v.(proto.Message))
 	} else {
-		err = json.Unmarshal(any.Value, v)
+		err = json.Unmarshal(value, v)
 	}
 	return v, err
 }
