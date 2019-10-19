@@ -53,6 +53,7 @@ else
 endif
 
 LDFLAGS              := -w -s -X $(BASE_PACKAGE_NAME)/pkg/version.Version=$(VERSION)
+GOBUILDTAGS 		 := osusergo
 
 IMAGE_NAME         := $(DOCKER_REGISTRY)$(DOCKER_ORG)$(BASE_IMAGE_NAME):$(VERSION)
 MUTABLE_IMAGE_NAME := $(DOCKER_REGISTRY)$(DOCKER_ORG)$(BASE_IMAGE_NAME):$(MUTABLE_DOCKER_TAG)
@@ -102,24 +103,25 @@ build: build-all-bins build-image
 
 .PHONY: build-all-bins
 build-all-bins:
-	$(DOCKER_CMD) bash -c "LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
+	$(DOCKER_CMD) bash -c "LDFLAGS=\"$(LDFLAGS)\" TAGS=\"$(GOBUILDTAGS)\" scripts/build.sh"
 
 # You can make this target build for a specific OS and architecture using GOOS
 # and GOARCH environment variables.
 .PHONY: build-bin
 build-bin:
-	$(DOCKER_CMD) bash -c "GOOS=\"$(GOOS)\" GOARCH=\"$(GOARCH)\" LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
+	$(DOCKER_CMD) bash -c "GOOS=\"$(GOOS)\" GOARCH=\"$(GOARCH)\" LDFLAGS=\"$(LDFLAGS)\" TAGS=\"$(GOBUILDTAGS)\" scripts/build.sh"
 
 # This target is for contributor convenience.
 .PHONY: build-%
 build-%:
-	$(DOCKER_CMD) bash -c "GOOS=$* LDFLAGS=\"$(LDFLAGS)\" scripts/build.sh"
+	$(DOCKER_CMD) bash -c "GOOS=$* LDFLAGS=\"$(LDFLAGS)\" TAGS=\"$(GOBUILDTAGS)\" scripts/build.sh"
 
 .PHONY: build-image
 build-image:
 	docker build \
 		-t $(IMAGE_NAME) \
 		--build-arg LDFLAGS='$(LDFLAGS)' \
+		--build-arg TAGS='$(GOBUILDTAGS)' \
 		.
 	docker tag $(IMAGE_NAME) $(MUTABLE_IMAGE_NAME)
 
