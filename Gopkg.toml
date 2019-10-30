@@ -55,13 +55,15 @@
 
 [[override]]
   name = "github.com/docker/cnab-to-oci"
-  #version = "v0.7.1-beta1"
-  source = "github.com/eunomie/cnab-to-oci"
-  branch = "cli-bump"
+  version = "v0.3.0-beta1"
 
 [[override]]
   name = "golang.org/x/sys"
   revision = "f49334f85ddcf0f08d7fb6dd7363e9e6d6b777eb"
+
+[[override]]
+  name = "github.com/Microsoft/hcsshim"
+  revision = "2226e083fc390003ae5aa8325c3c92789afa0e7a"
 
 [prune]
   non-go = true
