@@ -7,7 +7,7 @@
             "name": "cnab",
             "builder": "docker",
             "configuration": {
-                "registry": "cnab"
+                "registry": "deislabs"
             }
         }
     },

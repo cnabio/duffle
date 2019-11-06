@@ -28,10 +28,19 @@
             }
         }
     },
-    "images": [
-
-    ],
-    "parameters": null,
-    "credentials": null,
-    "schemaVersion": "v1.0.0-WD"
+    "images": {
+        "redis-cache": {
+            "imageType": "docker",
+            "image": "redis:alpine",
+            "digest": "sha256:27e139dd0476133961d36e5abdbbb9edf9f596f80cc2f9c2e8f37b20b91d610d"
+        },
+        "mysql-database": {
+            "imageType": "docker",
+            "image": "microsoft/mssql-server-linux:latest",
+            "digest": "sha256:9b700672670bb3db4b212e8aef841ca79eb2fce7d5975a5ce35b7129a9b90ec0"
+        }
+    },
+    "parameters": {},
+    "credentials": {},
+    "schemaVersion": "v1.0.0"
 }
