@@ -29,9 +29,6 @@ Learn more about about CNAB and Duffle, check out our [docs](docs/README.md).
     /home/janedoe/.duffle/credentials
     ==> The following new files will be created:
     /home/janedoe/.duffle/repositories.json
-    ==> Generating a new secret keyring at /home/janedoe/.duffle/secret.ring
-    ==> Generating a new signing key with ID janedoe <janedoe@computer>
-    ==> Generating a new public keyring at /home/janedoe/.duffle/public.ring
     ```
 
 3. Build and install your first bundle (you can find the `examples` directory in this repository):

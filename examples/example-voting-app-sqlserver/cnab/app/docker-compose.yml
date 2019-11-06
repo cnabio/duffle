@@ -1,0 +1,55 @@
+version: "2"
+
+services:
+  voting-app:
+    build: ./voting-app/.
+    #volumes:
+    # - ./voting-app:/app
+    ports:
+      - "5000:80"
+    links:
+      - redis
+    networks:
+      - front-tier
+      - back-tier
+  redis:
+    image: redis:alpine
+    ports: ["6379"]
+    networks:
+      - back-tier
+
+  worker:
+    build: ./worker
+    links:
+      - db
+      - redis
+    networks:
+      - back-tier
+
+  db:
+    image: microsoft/mssql-server-linux:latest
+    ports: 
+      - "1433:1433"
+    environment:
+      SA_PASSWORD: "SuperSecretPassword1234"
+      ACCEPT_EULA: "Y"
+    networks:
+      - back-tier
+
+  result-app:
+    build: ./result-app/.
+    #volumes:
+    #  - ./result-app:/app
+    ports:
+      - "5001:80"
+    links:
+      - db
+    depends_on:
+      - db
+    networks:
+      - front-tier
+      - back-tier
+
+networks:
+  front-tier:
+  back-tier:

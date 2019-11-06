@@ -1,0 +1,37 @@
+{
+    "name": "example-voting-app-sqlserver",
+    "version": "0.1.0",
+    "schemaVersion": "v1.0.0-WD",
+    "invocationImages": [
+        {
+        "imageType": "docker",
+        "image": "cnab/example-voting-app-sqlserver:latest"
+        }
+    ],
+    "images": {
+        "redis-cache": {
+            "name": "Cache",
+            "description": "redis caching layer",
+            "image": "redis:alpine",
+            "uri": "redis:alpine",
+            "imageType": "docker",
+            "ref": {
+                "path": "./docker-compose.yaml",
+                "field": "services.redis.image"
+            }
+        },
+        "mysql-database": {
+            "name": "Database",
+            "description": "mysql database",
+            "image": "microsoft/mssql-server-linux:latest",
+            "uri": "microsoft/mssql-server-linux:latest",
+            "imageType": "docker",
+            "ref": {
+                "path": "./docker-compose.yaml",
+                "field": "services.db.image"
+            }
+        }
+    },
+    "parameters": {},
+    "credentials": {}
+}

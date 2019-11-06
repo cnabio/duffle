@@ -1,0 +1,10 @@
+- hosts: localhost
+  connection: local
+  gather_facts: False
+
+  tasks: 
+  - name: Delete a resource group
+    azure_rm_resourcegroup:
+      name: ansible-azurevm
+      state: absent
+      force: yes

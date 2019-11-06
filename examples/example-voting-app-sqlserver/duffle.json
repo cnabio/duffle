@@ -1,0 +1,37 @@
+{
+    "name": "example-voting-app-sqlserver",
+    "version": "0.1.0",
+    "description": "An example bundle showing the use of Docker Compose",
+    "keywords": [
+        "helloworld",
+        "cnab",
+        "tutorial"
+    ],
+    "maintainers": [
+        {
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "url": "https://example.com"
+        },
+        {
+            "name": "Jane Doe",
+            "email": "jane.doe@example.com",
+            "url": "https://example.com"
+        }
+    ],
+    "invocationImages": {
+        "cnab": {
+            "name": "cnab",
+            "builder": "docker",
+            "configuration": {
+                "registry": "deislabs"
+            }
+        }
+    },
+    "images": [
+
+    ],
+    "parameters": null,
+    "credentials": null,
+    "schemaVersion": "v1.0.0-WD"
+}
