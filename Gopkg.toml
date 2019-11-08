@@ -53,7 +53,7 @@
 
 [[constraint]]
   name = "github.com/pivotal/image-relocation"
-  version = "v0.5"
+  version = "v0.8"
 
 [[constraint]]
   name = "github.com/deislabs/cnab-go"

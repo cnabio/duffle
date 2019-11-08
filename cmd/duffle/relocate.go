@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 	"github.com/deislabs/cnab-go/bundle/loader"
 	"github.com/pivotal/image-relocation/pkg/image"
 	"github.com/pivotal/image-relocation/pkg/pathmapping"
+	"github.com/pivotal/image-relocation/pkg/transport"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/validation"
 
@@ -49,6 +51,8 @@ type relocateCmd struct {
 	repoPrefix        string
 	bundleIsFile      bool
 	relocationMapping string
+	skipTLSVerify     bool
+	caCertPaths       []string
 
 	// context
 	home home.Home
@@ -56,6 +60,7 @@ type relocateCmd struct {
 
 	// dependencies
 	mapping               pathmapping.PathMapping
+	transportConstructor  func([]string, bool) (*http.Transport, error)
 	imageStoreConstructor imagestore.Constructor
 	imageStore            imagestore.Store
 }
@@ -98,6 +103,8 @@ duffle relocate path/to/bundle.json --relocation-mapping path/to/relmap.json --r
 	cmd.MarkFlagRequired("relocation-mapping")
 	f.StringVarP(&relocate.repoPrefix, "repository-prefix", "p", "", "Prefix for relocated image names")
 	cmd.MarkFlagRequired("repository-prefix")
+	f.StringSliceVarP(&relocate.caCertPaths, "ca-cert-path", "", nil, "Path to CA certificate for verifying registry TLS certificates (can be repeated for multiple certificates)")
+	f.BoolVarP(&relocate.skipTLSVerify, "skip-tls-verify", "", false, "Skip TLS certificate verification for registries")
 
 	return cmd
 }
@@ -150,8 +157,15 @@ func (r *relocateCmd) setup() (*relocator.Relocator, func(), error) {
 		return nil, nop, err
 	}
 
-	r.imageStore, err = r.imageStoreConstructor(imagestore.WithArchiveDir(dest))
+	transport, err := transport.NewHttpTransport(r.caCertPaths, r.skipTLSVerify)
 	if err != nil {
+		return nil, nop, err
+	}
+
+	if r.imageStore, err = r.imageStoreConstructor(
+		imagestore.WithArchiveDir(dest),
+		imagestore.WithTransport(transport),
+	); err != nil {
 		return nil, nop, err
 	}
 

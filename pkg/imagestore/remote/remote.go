@@ -5,7 +5,6 @@ import (
 
 	"github.com/pivotal/image-relocation/pkg/image"
 	"github.com/pivotal/image-relocation/pkg/registry"
-	"github.com/pivotal/image-relocation/pkg/registry/ggcr"
 
 	"github.com/deislabs/duffle/pkg/imagestore"
 )
@@ -15,9 +14,9 @@ type remote struct {
 	registryClient registry.Client
 }
 
-func Create(...imagestore.Option) (imagestore.Store, error) {
+func Create(options ...imagestore.Option) (imagestore.Store, error) {
 	return &remote{
-		registryClient: ggcr.NewRegistryClient(),
+		registryClient: imagestore.CreateParams(options...).RegistryClient(),
 	}, nil
 }
 

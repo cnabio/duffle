@@ -117,7 +117,7 @@ func relocateFileToFile(t *testing.T, bundle string, expectedErr error, archiveD
 			return testMapping(originalImage, t)
 		},
 		imageStoreConstructor: func(option ...imagestore.Option) (store imagestore.Store, e error) {
-			archiveDirStub(imagestore.Create(option...).ArchiveDir)
+			archiveDirStub(imagestore.CreateParams(option...).ArchiveDir)
 			return is, nil
 		},
 	}

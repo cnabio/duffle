@@ -736,17 +736,19 @@
   version = "v3.0.0"
 
 [[projects]]
-  digest = "1:b63982d7e9a99a2446f1dc931376d69615b73fac5bf7fda9853e39fd91d64906"
+  digest = "1:3c80328ae530489ae3f65ff9eeecd64eb339bf3c73c94ea40dca6117ee2bb408"
   name = "github.com/pivotal/image-relocation"
   packages = [
     "pkg/image",
     "pkg/pathmapping",
     "pkg/registry",
     "pkg/registry/ggcr",
+    "pkg/registry/ggcr/path",
+    "pkg/transport",
   ]
   pruneopts = "NUT"
-  revision = "28a4e87a740db9ee4e0b105ec6bef4210558df47"
-  version = "v0.5"
+  revision = "912b6a616466db58504fee9a614a3ee23dbbca6c"
+  version = "v0.8"
 
 [[projects]]
   digest = "1:14715f705ff5dfe0ffd6571d7d201dd8e921030f8070321a79380d8ca4ec1a24"
@@ -1278,6 +1280,7 @@
     "github.com/pivotal/image-relocation/pkg/pathmapping",
     "github.com/pivotal/image-relocation/pkg/registry",
     "github.com/pivotal/image-relocation/pkg/registry/ggcr",
+    "github.com/pivotal/image-relocation/pkg/transport",
     "github.com/pkg/errors",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",

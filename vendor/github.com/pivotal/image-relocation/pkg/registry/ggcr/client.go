@@ -18,31 +18,79 @@ package ggcr
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/empty"
+	"github.com/google/go-containerregistry/pkg/v1/layout"
+
 	"github.com/pivotal/image-relocation/pkg/image"
 	"github.com/pivotal/image-relocation/pkg/registry"
 )
 
-type manifestWriter func(i v1.Image, n image.Name) error
-type indexWriter func(i v1.ImageIndex, n image.Name) error
+const outputDirPermissions = 0755
+
+// RegistryClient provides methods for building abstract images.
+// This interface is not intended for external consumption.
+type RegistryClient interface {
+	// ReadRemoteImage builds an abstract image from a repository.
+	ReadRemoteImage(n image.Name) (registry.Image, error)
+
+	// NewImageFromManifest builds an abstract image from an image manifest.
+	NewImageFromManifest(img v1.Image) registry.Image
+
+	// NewImageFromIndex builds an abstract image from an image index.
+	NewImageFromIndex(img v1.ImageIndex) registry.Image
+}
+
+type manifestWriter func(v1.Image, image.Name) error
+type indexWriter func(v1.ImageIndex, image.Name) error
 
 type client struct {
-	readRemoteImage  func(n image.Name) (registry.Image, error)
+	readRemoteImage  func(image.Name) (registry.Image, error)
 	writeRemoteImage manifestWriter
 	writeRemoteIndex indexWriter
 }
 
-// NewRegistryClient returns a new Client.
-func NewRegistryClient() registry.Client {
-	return &client{
-		readRemoteImage:  readRemoteImage(writeRemoteImage, writeRemoteIndex),
-		writeRemoteImage: writeRemoteImage,
-		writeRemoteIndex: writeRemoteIndex,
+var (
+	// Ensure client conforms to the relevant interfaces.
+	_ RegistryClient  = &client{}
+	_ registry.Client = &client{}
+)
+
+// Option represents a functional option for NewRegistryClient.
+type Option func(*client)
+
+// WithTransport overrides the default transport used for remote operations, default is http.DefaultTransport.
+func WithTransport(transport http.RoundTripper) Option {
+	return func(c *client) {
+		writeRemoteImageFunc := writeRemoteImage(transport)
+		writeRemoteIndexFunc := writeRemoteIndex(transport)
+
+		c.readRemoteImage = readRemoteImage(writeRemoteImageFunc, writeRemoteIndexFunc, transport)
+		c.writeRemoteImage = writeRemoteImageFunc
+		c.writeRemoteIndex = writeRemoteIndexFunc
 	}
 }
 
+// NewRegistryClient returns a new Client.
+func NewRegistryClient(options ...Option) *client {
+	client := &client{}
+
+	// default transport
+	WithTransport(http.DefaultTransport)(client)
+
+	// apply functional options
+	for _, opt := range options {
+		opt(client)
+	}
+
+	return client
+}
+
 func (r *client) Digest(n image.Name) (image.Digest, error) {
-	img, err := r.readRemoteImage(n)
+	img, err := r.ReadRemoteImage(n)
 	if err != nil {
 		return image.EmptyDigest, err
 	}
@@ -56,7 +104,7 @@ func (r *client) Digest(n image.Name) (image.Digest, error) {
 }
 
 func (r *client) Copy(source image.Name, target image.Name) (image.Digest, int64, error) {
-	img, err := r.readRemoteImage(source)
+	img, err := r.ReadRemoteImage(source)
 	if err != nil {
 		return image.EmptyDigest, 0, fmt.Errorf("failed to read image %v: %v", source, err)
 	}
@@ -68,10 +116,48 @@ func (r *client) Copy(source image.Name, target image.Name) (image.Digest, int64
 
 	targetDigest, s, err := img.Write(target)
 	if err != nil {
-		return image.EmptyDigest, 0 , fmt.Errorf("failed to write image %v: %v", target, err)
+		return image.EmptyDigest, 0, fmt.Errorf("failed to write image %v to %v: %v", source, target, err)
 	}
 	if sourceDigest != targetDigest {
 		return image.EmptyDigest, 0, fmt.Errorf("failed to preserve digest of image %v: source digest %v, target digest %v", source, sourceDigest, targetDigest)
 	}
 	return targetDigest, s, err
+}
+
+func (r *client) NewLayout(path string) (registry.Layout, error) {
+	if _, err := os.Stat(path); err != nil {
+		if !os.IsNotExist(err) {
+			return nil, err
+		}
+		if err := os.MkdirAll(path, outputDirPermissions); err != nil {
+			return nil, err
+		}
+	}
+
+	lp, err := layout.Write(path, empty.Index)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewImageLayout(r, lp), nil
+}
+
+func (r *client) ReadLayout(path string) (registry.Layout, error) {
+	lp, err := layout.FromPath(path)
+	if err != nil {
+		return nil, err
+	}
+	return NewImageLayout(r, lp), nil
+}
+
+func (r *client) ReadRemoteImage(n image.Name) (registry.Image, error) {
+	return r.readRemoteImage(n)
+}
+
+func (r *client) NewImageFromManifest(img v1.Image) registry.Image {
+	return newImageFromManifest(img, r.writeRemoteImage)
+}
+
+func (r *client) NewImageFromIndex(idx v1.ImageIndex) registry.Image {
+	return newImageFromIndex(idx, r.writeRemoteIndex)
 }
