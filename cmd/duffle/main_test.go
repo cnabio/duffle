@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -242,4 +243,75 @@ withNextTest:
 		_, mounted := op.Files["/cnab/app/relocation-mapping.json"]
 		is.Equal(testCase.relMapFile != "", mounted, "Failed on test: "+name)
 	}
+}
+
+func TestConfigureDriver(t *testing.T) {
+	is := assert.New(t)
+
+	tests := map[string]struct {
+		options map[string]string
+		envvars map[string]string
+	}{
+		"no options": {
+			map[string]string{},
+			map[string]string{},
+		},
+		"no env vars set": {
+			map[string]string{
+				"ONE": "first option",
+				"TWO": "second option",
+			},
+			map[string]string{},
+		},
+		"some env vars set": {
+			map[string]string{
+				"ONE":   "first option",
+				"TWO":   "second option",
+				"THREE": "third option",
+			},
+			map[string]string{
+				"TWO":   "FOO",
+				"THREE": "BAR",
+			},
+		},
+		"env var set to empty string": {
+			map[string]string{
+				"ONE": "first option",
+			},
+			map[string]string{
+				"ONE": "",
+			},
+		},
+	}
+
+	for name, testCase := range tests {
+		c := &fakeConfigurable{
+			opts: testCase.options,
+		}
+
+		for k, v := range testCase.envvars {
+			os.Setenv(k, v)
+		}
+
+		configureDriver(c)
+
+		for k := range testCase.envvars {
+			os.Unsetenv(k)
+		}
+
+		is.Equal(testCase.envvars, c.vals, fmt.Sprintf("Failed on test: %s", name))
+	}
+}
+
+type fakeConfigurable struct {
+	opts map[string]string
+	vals map[string]string
+}
+
+func (c *fakeConfigurable) Config() map[string]string {
+	return c.opts
+}
+
+func (c *fakeConfigurable) SetConfig(vals map[string]string) {
+	c.vals = vals
 }

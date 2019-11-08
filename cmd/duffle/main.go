@@ -118,16 +118,22 @@ func prepareDriver(driverName string) (driver.Driver, error) {
 		return nil, err
 	}
 
-	// Load any driver-specific config out of the environment.
 	if configurable, ok := driverImpl.(driver.Configurable); ok {
-		driverCfg := map[string]string{}
-		for env := range configurable.Config() {
-			driverCfg[env] = os.Getenv(env)
-		}
-		configurable.SetConfig(driverCfg)
+		configureDriver(configurable)
 	}
 
 	return driverImpl, nil
+}
+
+// configureDriver loads any driver-specific config out of the environment.
+func configureDriver(configurable driver.Configurable) {
+	driverCfg := map[string]string{}
+	for env := range configurable.Config() {
+		if val, ok := os.LookupEnv(env); ok {
+			driverCfg[env] = val
+		}
+	}
+	configurable.SetConfig(driverCfg)
 }
 
 func makeOpRelocator(relMapping string) (action.OperationConfigFunc, error) {
