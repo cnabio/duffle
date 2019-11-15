@@ -57,7 +57,7 @@ $ make build-all-bins
 To build for one specific OS / architecture:
 
 ```console
-$ OS=<desired OS> ARCH=<desired architecture> make build-bin
+$ GOOS=<desired OS> GOARCH=<desired architecture> make build-bin
 ```
 
 For convenience, you can build for the OS of your choice with amd64 architecture
