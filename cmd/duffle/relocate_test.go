@@ -8,13 +8,16 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"strings"
+	"regexp"
 	"testing"
 
 	"github.com/pivotal/image-relocation/pkg/image"
+	"github.com/pivotal/image-relocation/pkg/pathmapping"
+	"github.com/pivotal/image-relocation/pkg/transport"
 
 	"github.com/deislabs/duffle/pkg/duffle/home"
 	"github.com/deislabs/duffle/pkg/imagestore"
+	"github.com/deislabs/duffle/pkg/imagestore/construction"
 	"github.com/deislabs/duffle/pkg/imagestore/imagestoremocks"
 )
 
@@ -33,48 +36,127 @@ const (
 	originalImageDigestB = "sha256:14d6134d892aeccb7e142557fe746ccd0a8f736a747c195ef04c9f3f0f0bbd49"
 )
 
-func TestRelocateFileToFileSupportedImageTypes(t *testing.T) {
-	relocateFileToFile(t, "testdata/relocate/bundle.json", nil, func(archiveDir string) {
-		if archiveDir != "" {
-			t.Fatalf("archiveDir was %q, expected %q", archiveDir, "")
-		}
-	})
+func TestRelocate(t *testing.T) {
+	tests := map[string]struct {
+		bundle                  string
+		expectedArchiveDirRegex string
+		expectedErr             error
+	}{
+		"from file": {
+			"testdata/relocate/bundle.json",
+			"^$",
+			nil,
+		},
+		"from file with unsupported image type": {
+			"testdata/relocate/bundle-with-unsupported-image-type.json",
+			"^$",
+			errors.New("cannot relocate image c with imageType c: only oci and docker image types are currently supported"),
+		},
+		"from archive": {
+			"testdata/relocate/testrelocate-0.1.tgz",
+			"^.*testrelocate-0\\.1$",
+			nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			homedir := mustCreateTempDir(t, "dufflehome")
+			defer os.RemoveAll(homedir)
+
+			workdir := mustCreateTempDir(t, "relocatetest")
+			defer os.RemoveAll(workdir)
+
+			relMapPath := filepath.Join(workdir, "relmap.json")
+
+			cmd := initRelocateCmd(tc.bundle, homedir, relMapPath)
+			cmd.mapping = pathMappingStub(t)
+			cmd.imageStoreConstructor = imageStoreConstructorStub(t, tc.expectedArchiveDirRegex)
+
+			err := cmd.run()
+
+			assertErrorMessagesMatch(t, err, tc.expectedErr)
+
+			if tc.expectedErr == nil {
+				assertRelocationMap(t, relMapPath)
+			}
+		})
+	}
 }
 
-func TestRelocateThickBundleToFileSupportedImageTypes(t *testing.T) {
-	relocateFileToFile(t, "testdata/relocate/testrelocate-0.1.tgz", nil, func(archiveDir string) {
-		expectedSuffix := "testrelocate-0.1"
-		if !strings.HasSuffix(archiveDir, expectedSuffix) {
-			t.Fatalf("archiveDir was %q, expected it to end with %q", archiveDir, expectedSuffix)
-		}
-	})
-}
-
-func TestRelocateFileToFileUnsupportedImageType(t *testing.T) {
-	relocateFileToFile(t, "testdata/relocate/bundle-with-unsupported-image-type.json", errors.New("cannot relocate image c with imageType c: only oci and docker image types are currently supported"), func(archiveDir string) {
-		if archiveDir != "" {
-			t.Fatalf("archiveDir was %q, expected %q", archiveDir, "")
-		}
-	})
-}
-
-func relocateFileToFile(t *testing.T, bundle string, expectedErr error, archiveDirStub func(archiveDir string)) {
-
-	duffleHome, err := ioutil.TempDir("", "dufflehome")
+func mustCreateTempDir(t *testing.T, prefix string) string {
+	dirname, err := ioutil.TempDir("", "dufflehome")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(duffleHome)
 
-	work, err := ioutil.TempDir("", "relocatetest")
+	return dirname
+}
+
+func initRelocateCmd(bundle, homedir, relMapPath string) *relocateCmd {
+	return &relocateCmd{
+		inputBundle:           bundle,
+		repoPrefix:            testRepositoryPrefix,
+		bundleIsFile:          true,
+		relocationMapping:     relMapPath,
+		home:                  home.Home(homedir),
+		out:                   ioutil.Discard,
+		mapping:               pathmapping.FlattenRepoPathPreserveTagDigest,
+		transportConstructor:  transport.NewHttpTransport,
+		imageStoreConstructor: construction.NewLocatingConstructor(),
+	}
+}
+
+func pathMappingStub(t *testing.T) pathmapping.PathMapping {
+	return func(repoPrefix string, originalImage image.Name) image.Name {
+		if repoPrefix != testRepositoryPrefix {
+			t.Fatalf("Unexpected repository prefix %s", repoPrefix)
+		}
+		return mockMapping(t, originalImage)
+	}
+}
+
+func imageStoreConstructorStub(t *testing.T, expectedArchiveDirRegex string) imagestore.Constructor {
+	return func(option ...imagestore.Option) (store imagestore.Store, e error) {
+		archiveDir := imagestore.CreateParams(option...).ArchiveDir
+
+		regex, err := regexp.Compile(expectedArchiveDirRegex)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !regex.MatchString(archiveDir) {
+			t.Fatalf("archiveDir %q does not match regex %q", archiveDir, expectedArchiveDirRegex)
+		}
+
+		return mockImageStore(t), nil
+	}
+}
+
+// naïve test mapping, preserving any tag and/or digest
+// Note: unlike the real mapping, this produces names with more than two slash-separated components.
+func mockMapping(t *testing.T, originalImage image.Name) image.Name {
+	rn, err := image.NewName(path.Join(testRepositoryPrefix, originalImage.Path(), "relocated"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(work)
+	if tag := originalImage.Tag(); tag != "" {
+		rn, err = rn.WithTag(tag)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	if dig := originalImage.Digest(); dig != image.EmptyDigest {
+		rn, err = rn.WithDigest(dig)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	return rn
+}
 
-	relMapPath := filepath.Join(work, "relmap.json")
-
-	is := &imagestoremocks.MockStore{
+func mockImageStore(t *testing.T) imagestore.Store {
+	return &imagestoremocks.MockStore{
 		PushStub: func(dig image.Digest, src image.Name, dst image.Name) error {
 			type pair struct {
 				first  string
@@ -99,44 +181,23 @@ func relocateFileToFile(t *testing.T, bundle string, expectedErr error, archiveD
 			return nil
 		},
 	}
+}
 
-	cmd := &relocateCmd{
-		inputBundle: bundle,
-
-		repoPrefix:        testRepositoryPrefix,
-		bundleIsFile:      true,
-		relocationMapping: relMapPath,
-
-		home: home.Home(duffleHome),
-		out:  ioutil.Discard,
-
-		mapping: func(repoPrefix string, originalImage image.Name) image.Name {
-			if repoPrefix != testRepositoryPrefix {
-				t.Fatalf("Unexpected repository prefix %s", repoPrefix)
-			}
-			return testMapping(originalImage, t)
-		},
-		imageStoreConstructor: func(option ...imagestore.Option) (store imagestore.Store, e error) {
-			archiveDirStub(imagestore.CreateParams(option...).ArchiveDir)
-			return is, nil
-		},
+func assertErrorMessagesMatch(t *testing.T, actualErr, expectedErr error) {
+	if (actualErr != nil && expectedErr != nil && actualErr.Error() != expectedErr.Error()) ||
+		((actualErr == nil || expectedErr == nil) && actualErr != expectedErr) {
+		t.Fatalf("unexpected error %v (expected %v)", actualErr, expectedErr)
 	}
+}
 
-	if err := cmd.run(); (err != nil && expectedErr != nil && err.Error() != expectedErr.Error()) ||
-		((err == nil || expectedErr == nil) && err != expectedErr) {
-		t.Fatalf("unexpected error %v (expected %v)", err, expectedErr)
-	}
-
-	if expectedErr != nil {
-		return
-	}
-
-	// check relocation mapping file
+func assertRelocationMap(t *testing.T, relMapPath string) {
 	data, err := ioutil.ReadFile(relMapPath)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	relMap := make(map[string]string)
+
 	err = json.Unmarshal(data, &relMap)
 	if err != nil {
 		t.Fatal(err)
@@ -149,29 +210,9 @@ func relocateFileToFile(t *testing.T, bundle string, expectedErr error, archiveD
 	}
 
 	if !reflect.DeepEqual(relMap, expectedRelMap) {
-		t.Fatalf("output relocation mapping file has unexpected content: %v (expected %v)",
-			relMap, expectedRelMap)
+		t.Fatalf(
+			"output relocation mapping file has unexpected content: %v (expected %v)",
+			relMap, expectedRelMap,
+		)
 	}
-}
-
-// naïve test mapping, preserving any tag and/or digest
-// Note: unlike the real mapping, this produces names with more than two slash-separated components.
-func testMapping(originalImage image.Name, t *testing.T) image.Name {
-	rn, err := image.NewName(path.Join(testRepositoryPrefix, originalImage.Path(), "relocated"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if tag := originalImage.Tag(); tag != "" {
-		rn, err = rn.WithTag(tag)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	if dig := originalImage.Digest(); dig != image.EmptyDigest {
-		rn, err = rn.WithDigest(dig)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	return rn
 }

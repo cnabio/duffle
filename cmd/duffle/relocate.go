@@ -91,6 +91,7 @@ duffle relocate path/to/bundle.json --relocation-mapping path/to/relmap.json --r
 			relocate.home = home.Home(homePath())
 
 			relocate.mapping = pathmapping.FlattenRepoPathPreserveTagDigest
+			relocate.transportConstructor = transport.NewHttpTransport
 			relocate.imageStoreConstructor = construction.NewLocatingConstructor()
 
 			return relocate.run()
@@ -157,7 +158,7 @@ func (r *relocateCmd) setup() (*relocator.Relocator, func(), error) {
 		return nil, nop, err
 	}
 
-	transport, err := transport.NewHttpTransport(r.caCertPaths, r.skipTLSVerify)
+	transport, err := r.transportConstructor(r.caCertPaths, r.skipTLSVerify)
 	if err != nil {
 		return nil, nop, err
 	}
