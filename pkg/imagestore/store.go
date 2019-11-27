@@ -44,7 +44,8 @@ type Option func(Parameters) Parameters
 
 func CreateParams(options ...Option) Parameters {
 	b := Parameters{
-		Logs: ioutil.Discard,
+		Logs:      ioutil.Discard,
+		Transport: http.DefaultTransport,
 	}
 	for _, op := range options {
 		b = op(b)

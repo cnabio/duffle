@@ -1,6 +1,10 @@
 package imagestoremocks
 
-import "github.com/pivotal/image-relocation/pkg/image"
+import (
+	"net/http"
+
+	"github.com/pivotal/image-relocation/pkg/image"
+)
 
 type MockStore struct {
 	AddStub  func(im string) (string, error)
@@ -13,4 +17,16 @@ func (i *MockStore) Add(im string) (string, error) {
 
 func (i *MockStore) Push(dig image.Digest, src image.Name, dst image.Name) error {
 	return i.PushStub(dig, src, dst)
+}
+
+type MockRoundTripper struct{}
+
+func (r *MockRoundTripper) RoundTrip(*http.Request) (*http.Response, error) {
+	return nil, nil
+}
+
+type MockWriter struct{}
+
+func (w *MockWriter) Write(p []byte) (n int, err error) {
+	return 0, nil
 }

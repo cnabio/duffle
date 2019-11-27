@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/pivotal/image-relocation/pkg/image"
 	"github.com/pivotal/image-relocation/pkg/pathmapping"
@@ -77,9 +79,90 @@ func TestRelocate(t *testing.T) {
 
 			assertErrorMessagesMatch(t, err, tc.expectedErr)
 
-			if tc.expectedErr == nil {
+			if err == nil {
 				assertRelocationMap(t, relMapPath)
 			}
+		})
+	}
+}
+
+func TestRelocateTransportOptions(t *testing.T) {
+	tests := map[string]struct {
+		expectedCertPaths     []string
+		expectedSkipTLSVerify bool
+		expectedErr           error
+	}{
+		"defaults": {
+			nil,
+			false,
+			nil,
+		},
+		"one cert": {
+			[]string{"a"},
+			false,
+			nil,
+		},
+		"multiple certs": {
+			[]string{"a", "b", "c"},
+			false,
+			nil,
+		},
+		"skip TLS verify": {
+			nil,
+			true,
+			nil,
+		},
+		"construction error": {
+			nil,
+			false,
+			errors.New("i like turtles"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			homedir := mustCreateTempDir(t, "dufflehome")
+			defer os.RemoveAll(homedir)
+
+			workdir := mustCreateTempDir(t, "relocatetest")
+			defer os.RemoveAll(workdir)
+
+			expectedTransport := &http.Transport{}
+
+			cmd := initRelocateCmd("testdata/relocate/bundle.json", homedir, filepath.Join(workdir, "relmap.json"))
+
+			cmd.caCertPaths = tc.expectedCertPaths
+			cmd.skipTLSVerify = tc.expectedSkipTLSVerify
+
+			imageStoreContructorCalled := false
+			cmd.imageStoreConstructor = func(opts ...imagestore.Option) (store imagestore.Store, e error) {
+				imageStoreContructorCalled = true
+
+				p := imagestore.Parameters{}
+				for _, opt := range opts {
+					p = opt(p)
+				}
+
+				assert.Same(t, expectedTransport, p.Transport)
+
+				return &imagestoremocks.MockStore{
+					PushStub: func(image.Digest, image.Name, image.Name) error {
+						return nil
+					},
+				}, nil
+			}
+
+			transportContructorCalled := false
+			cmd.transportConstructor = func(certPaths []string, skipTLSVerify bool) (*http.Transport, error) {
+				transportContructorCalled = true
+				assert.ElementsMatch(t, tc.expectedCertPaths, certPaths)
+				assert.Equal(t, tc.expectedSkipTLSVerify, skipTLSVerify)
+				return expectedTransport, tc.expectedErr
+			}
+
+			assertErrorMessagesMatch(t, cmd.run(), tc.expectedErr)
+			assert.True(t, transportContructorCalled)
+			assert.Equal(t, tc.expectedErr == nil, imageStoreContructorCalled)
 		})
 	}
 }
@@ -119,16 +202,7 @@ func pathMappingStub(t *testing.T) pathmapping.PathMapping {
 func imageStoreConstructorStub(t *testing.T, expectedArchiveDirRegex string) imagestore.Constructor {
 	return func(option ...imagestore.Option) (store imagestore.Store, e error) {
 		archiveDir := imagestore.CreateParams(option...).ArchiveDir
-
-		regex, err := regexp.Compile(expectedArchiveDirRegex)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if !regex.MatchString(archiveDir) {
-			t.Fatalf("archiveDir %q does not match regex %q", archiveDir, expectedArchiveDirRegex)
-		}
-
+		assert.Regexp(t, expectedArchiveDirRegex, archiveDir)
 		return mockImageStore(t), nil
 	}
 }
