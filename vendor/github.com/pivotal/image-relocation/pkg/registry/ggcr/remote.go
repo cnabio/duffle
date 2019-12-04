@@ -18,9 +18,10 @@ package ggcr
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/google/go-containerregistry/pkg/v1/types"
 	"github.com/pivotal/image-relocation/pkg/registry"
-	"net/http"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -30,15 +31,14 @@ import (
 )
 
 var (
-	repoImageFunc      = remote.Image
 	resolveFunc        = authn.DefaultKeychain.Resolve
 	repoGetFunc        = remote.Get
 	repoWriteFunc      = remote.Write
 	repoIndexWriteFunc = remote.WriteIndex
 )
 
-func readRemoteImage(mfstWriter manifestWriter, idxWriter indexWriter) func(n image.Name) (registry.Image, error) {
-	return func(n image.Name) (i registry.Image, e error) {
+func readRemoteImage(mfstWriter manifestWriter, idxWriter indexWriter, transport http.RoundTripper) func(image.Name) (registry.Image, error) {
+	return func(n image.Name) (registry.Image, error) {
 		auth, err := resolve(n)
 		if err != nil {
 			return nil, err
@@ -56,7 +56,7 @@ func readRemoteImage(mfstWriter manifestWriter, idxWriter indexWriter) func(n im
 			return nil, err
 		}
 
-		desc, err := repoGetFunc(ref, remote.WithAuth(auth))
+		desc, err := repoGetFunc(ref, remote.WithAuth(auth), remote.WithTransport(transport))
 		if err != nil {
 			return nil, err
 		}
@@ -67,7 +67,7 @@ func readRemoteImage(mfstWriter manifestWriter, idxWriter indexWriter) func(n im
 			if err != nil {
 				return nil, err
 			}
-			return newImageFromIndex(idx, n, idxWriter), nil
+			return newImageFromIndex(idx, idxWriter), nil
 		default:
 			// assume all other media types are images since some images don't set the media type
 		}
@@ -76,36 +76,40 @@ func readRemoteImage(mfstWriter manifestWriter, idxWriter indexWriter) func(n im
 			return nil, err
 		}
 
-		return newImageFromManifest(img, n, mfstWriter), nil
+		return newImageFromManifest(img, mfstWriter), nil
 	}
 }
 
-func writeRemoteImage(i v1.Image, n image.Name) error {
-	auth, err := resolve(n)
-	if err != nil {
-		return err
-	}
+func writeRemoteImage(transport http.RoundTripper) func(v1.Image, image.Name) error {
+	return func(i v1.Image, n image.Name) error {
+		auth, err := resolve(n)
+		if err != nil {
+			return err
+		}
 
-	ref, err := getWriteReference(n)
-	if err != nil {
-		return err
-	}
+		ref, err := getWriteReference(n)
+		if err != nil {
+			return err
+		}
 
-	return repoWriteFunc(ref, i, remote.WithAuth(auth), remote.WithTransport(http.DefaultTransport))
+		return repoWriteFunc(ref, i, remote.WithAuth(auth), remote.WithTransport(transport))
+	}
 }
 
-func writeRemoteIndex(i v1.ImageIndex, n image.Name) error {
-	auth, err := resolve(n)
-	if err != nil {
-		return err
-	}
+func writeRemoteIndex(transport http.RoundTripper) func(v1.ImageIndex, image.Name) error {
+	return func(i v1.ImageIndex, n image.Name) error {
+		auth, err := resolve(n)
+		if err != nil {
+			return err
+		}
 
-	ref, err := getWriteReference(n)
-	if err != nil {
-		return err
-	}
+		ref, err := getWriteReference(n)
+		if err != nil {
+			return err
+		}
 
-	return repoIndexWriteFunc(ref, i, remote.WithAuth(auth), remote.WithTransport(http.DefaultTransport))
+		return repoIndexWriteFunc(ref, i, remote.WithAuth(auth), remote.WithTransport(transport))
+	}
 }
 
 func resolve(n image.Name) (authn.Authenticator, error) {

@@ -8,7 +8,6 @@ import (
 
 	"github.com/pivotal/image-relocation/pkg/image"
 	"github.com/pivotal/image-relocation/pkg/registry"
-	"github.com/pivotal/image-relocation/pkg/registry/ggcr"
 
 	"github.com/deislabs/duffle/pkg/imagestore"
 )
@@ -20,14 +19,14 @@ type ociLayout struct {
 }
 
 func Create(options ...imagestore.Option) (imagestore.Store, error) {
-	parms := imagestore.Create(options...)
+	parms := imagestore.CreateParams(options...)
 
 	layoutDir := filepath.Join(parms.ArchiveDir, "artifacts", "layout")
 	if err := os.MkdirAll(layoutDir, 0755); err != nil {
 		return nil, err
 	}
 
-	layout, err := ggcr.NewRegistryClient().NewLayout(layoutDir)
+	layout, err := parms.RegistryClient().NewLayout(layoutDir)
 	if err != nil {
 		return nil, err
 	}
@@ -38,12 +37,15 @@ func Create(options ...imagestore.Option) (imagestore.Store, error) {
 	}, nil
 }
 
-func LocateOciLayout(archiveDir string) (imagestore.Store, error) {
-	layoutDir := filepath.Join(archiveDir, "artifacts", "layout")
+func LocateOciLayout(options ...imagestore.Option) (imagestore.Store, error) {
+	parms := imagestore.CreateParams(options...)
+
+	layoutDir := filepath.Join(parms.ArchiveDir, "artifacts", "layout")
 	if _, err := os.Stat(layoutDir); os.IsNotExist(err) {
 		return nil, err
 	}
-	layout, err := ggcr.NewRegistryClient().ReadLayout(layoutDir)
+
+	layout, err := parms.RegistryClient().ReadLayout(layoutDir)
 	if err != nil {
 		return nil, err
 	}

@@ -42,7 +42,7 @@ func TestExport(t *testing.T) {
 	ex := Exporter{
 		source: source,
 		imageStoreConstructor: func(option ...imagestore.Option) (store imagestore.Store, e error) {
-			parms := imagestore.Create(option...)
+			parms := imagestore.CreateParams(option...)
 			const expectedPrefix = "examplebun-0.1.0"
 			configArchiveDirBase := filepath.Base(parms.ArchiveDir)
 			if !strings.HasPrefix(configArchiveDirBase, expectedPrefix) {
@@ -94,7 +94,7 @@ func TestExportCreatesFileProperly(t *testing.T) {
 		source:      "testdata/examplebun/bundle.json",
 		destination: filepath.Join(tempDir, "random-directory", "examplebun-whatev.tgz"),
 		imageStoreConstructor: func(option ...imagestore.Option) (store imagestore.Store, e error) {
-			parms := imagestore.Create(option...)
+			parms := imagestore.CreateParams(option...)
 			const expectedPrefix = "examplebun-0.1.0"
 			configArchiveDirBase := filepath.Base(parms.ArchiveDir)
 			if !strings.HasPrefix(configArchiveDirBase, expectedPrefix) {

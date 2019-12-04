@@ -9,6 +9,11 @@ import (
 	"github.com/deislabs/duffle/pkg/imagestore/remote"
 )
 
+var (
+	locatingConstructorRemote    = remote.Create
+	locatingConstructorOciLayout = ocilayout.LocateOciLayout
+)
+
 // NewConstructor creates an image store constructor which will, if necessary, create archive contents.
 func NewConstructor(remoteRepos bool) (imagestore.Constructor, error) {
 	// infer the concrete type of the image store from the input parameters
@@ -21,11 +26,11 @@ func NewConstructor(remoteRepos bool) (imagestore.Constructor, error) {
 // NewLocatingConstructor creates an image store constructor which will, if necessary, find existing archive contents.
 func NewLocatingConstructor() imagestore.Constructor {
 	return func(options ...imagestore.Option) (imagestore.Store, error) {
-		parms := imagestore.Create(options...)
+		parms := imagestore.CreateParams(options...)
 		if thin(parms.ArchiveDir) {
-			return remote.Create()
+			return locatingConstructorRemote(options...)
 		}
-		return ocilayout.LocateOciLayout(parms.ArchiveDir)
+		return locatingConstructorOciLayout(options...)
 	}
 }
 
