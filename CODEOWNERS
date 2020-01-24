@@ -3,6 +3,6 @@
 # Global Owners: These members are Core Maintainers of Duffle
 # Only certain critical files should cause all the owners to be added automatically to PR reviews
 # See https://github.com/deislabs/duffle/issues/745 for the rationale
-CODEOWNERS @technosophos @vdice @radu-matei @jeremyrickard @carolynvs @glyn @silvin-lubecki @jlegrone @youreddy
-LICENSE    @technosophos @vdice @radu-matei @jeremyrickard @carolynvs @glyn @silvin-lubecki @jlegrone @youreddy
-NOTICE     @technosophos @vdice @radu-matei @jeremyrickard @carolynvs @glyn @silvin-lubecki @jlegrone @youreddy
+CODEOWNERS @technosophos @vdice @radu-matei @jeremyrickard @carolynvs @glyn @silvin-lubecki @jlegrone
+LICENSE    @technosophos @vdice @radu-matei @jeremyrickard @carolynvs @glyn @silvin-lubecki @jlegrone
+NOTICE     @technosophos @vdice @radu-matei @jeremyrickard @carolynvs @glyn @silvin-lubecki @jlegrone
