@@ -10,6 +10,14 @@
   version = "v0.40.0"
 
 [[projects]]
+  digest = "1:fd279def5bb7de4890a728c1de1eac829423935ac06079fc2b9b9838d05e8de3"
+  name = "github.com/Azure/azure-sdk-for-go"
+  packages = ["services/resources/mgmt/2017-05-10/resources"]
+  pruneopts = "NUT"
+  revision = "2d1d76c9013c4feb6695a2346f0e66ea0ef77aa6"
+  version = "v11.3.0-beta"
+
+[[projects]]
   branch = "master"
   digest = "1:81f8c061c3d18ed1710957910542bc17d2b789c6cd19e0f654c30b35fd255ca5"
   name = "github.com/Azure/go-ansiterm"
@@ -21,13 +29,16 @@
   revision = "d6e3b3328b783f23731bc4d058875b0371ff8109"
 
 [[projects]]
-  digest = "1:da314556429036001a322965147bf09bfc11604fc5cea8b93f389eaeb4133e46"
+  digest = "1:3ddcd143a5df7698eacb5c2a797f1d75afc92da681038c438ceec62e5ed6e633"
   name = "github.com/Azure/go-autorest"
   packages = [
     "autorest",
     "autorest/adal",
     "autorest/azure",
+    "autorest/azure/auth",
     "autorest/date",
+    "autorest/to",
+    "autorest/validation",
   ]
   pruneopts = "NUT"
   revision = "1ff28809256a84bb6966640ff3d0371af82ccba4"
@@ -227,6 +238,14 @@
   pruneopts = "NUT"
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
   version = "v3.2.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:f9adc21a937e5da643ea14a3488cb7506788876737a5e205394e508627a6eec8"
+  name = "github.com/dimchansky/utfbom"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "d2133a1ce379ef6fa992b0514a77146c60db9d1c"
 
 [[projects]]
   digest = "1:e71d64468873ca819b91b975e67e71f349a89f41ab38040bcbd8840f5e193654"
@@ -897,10 +916,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:35ce874cf16f78a2da908ab28b0277497e36603d289db00d39da5200bc8ace08"
+  digest = "1:3a7d1bd6dd3c13c00f439c5bd6b9c63c330b2a2fa5646b20b9a20fd8978c99c7"
   name = "golang.org/x/crypto"
   packages = [
     "pbkdf2",
+    "pkcs12",
+    "pkcs12/internal/rc2",
     "ssh/terminal",
   ]
   pruneopts = "NUT"
@@ -1246,6 +1267,9 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2017-05-10/resources",
+    "github.com/Azure/go-autorest/autorest",
+    "github.com/Azure/go-autorest/autorest/azure/auth",
     "github.com/Masterminds/semver",
     "github.com/deislabs/cnab-go/action",
     "github.com/deislabs/cnab-go/bundle",
