@@ -120,3 +120,36 @@ push: push-image
 push-image:
 	docker push $(IMAGE_NAME)
 	docker push $(MUTABLE_IMAGE_NAME)
+
+################################################################################
+# Example Bundles Build / Validation                                           #
+################################################################################
+
+JSON_SCHEMA_URI  := https://cnab.io/v1/bundle.schema.json
+JSON_SCHEMA_FILE := /tmp/bundle.schema.json
+
+# bundle-all runs the provided make target on all bundles with a 'duffle.json' file in their directory
+define bundle-all
+	@for dir in $$(ls -1 examples); do \
+		if [[ -e "examples/$$dir/duffle.json" ]]; then \
+			BUNDLE=$$dir make --no-print-directory $(1) || exit $$? ; \
+		fi ; \
+	done
+endef
+
+.PHONY: init-validator
+init-validator:
+	@if ! $$(which ajv > /dev/null 2>&1); then npm install -g ajv-cli; fi
+	@if ! [[ -f $(JSON_SCHEMA_FILE) ]]; then curl -sLo $(JSON_SCHEMA_FILE) $(JSON_SCHEMA_URI); fi
+
+.PHONY: validate
+validate: init-validator
+ifndef BUNDLE
+	$(call bundle-all,validate)
+else
+	@echo "building and validating $(BUNDLE)"
+	@cd examples/$(BUNDLE) && \
+		duffle build -o bundle.json > /dev/null && \
+		ajv test -s $(JSON_SCHEMA_FILE) -d bundle.json --valid
+endif
+
