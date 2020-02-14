@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/deislabs/duffle/pkg/duffle"
+	"github.com/cnabio/duffle/pkg/duffle"
 )
 
 // Load parses the named file into a manifest.

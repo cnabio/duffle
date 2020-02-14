@@ -3,7 +3,7 @@ package mock
 import (
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/imagebuilder"
+	"github.com/cnabio/duffle/pkg/imagebuilder"
 )
 
 // test mock Builder is assignable to the imagebuilder.ImageBuilder interface

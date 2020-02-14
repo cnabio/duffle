@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deislabs/duffle/pkg/imagestore"
-	"github.com/deislabs/duffle/pkg/imagestore/imagestoremocks"
+	"github.com/cnabio/duffle/pkg/imagestore"
+	"github.com/cnabio/duffle/pkg/imagestore/imagestoremocks"
 )
 
 func TestNewLocatingConstructor(t *testing.T) {

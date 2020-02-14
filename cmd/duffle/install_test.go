@@ -11,7 +11,7 @@ import (
 	"github.com/deislabs/cnab-go/bundle/definition"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/cnabio/duffle/pkg/duffle/home"
 )
 
 func TestGetBundle(t *testing.T) {

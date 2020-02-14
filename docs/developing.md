@@ -4,8 +4,8 @@
 
 Cloning this repository and change directory to it:
 ```console
-$ go get -d github.com/deislabs/duffle/...
-$ cd $(go env GOPATH)/src/github.com/deislabs/duffle
+$ go get -d github.com/cnabio/duffle/...
+$ cd $(go env GOPATH)/src/github.com/cnabio/duffle
 ```
 
 ### Prerequisites
@@ -116,5 +116,4 @@ To create a release, simply push a tag and CI will do the rest. The tag should b
 ```
 Tags conform to [Semantic Versioning](https://semver.org/) in syntax and semantics, but must not start with `v`.
 
-Examples tags are: `0.3.0-beta.3` and `1.0.0`. 
-
+Examples tags are: `0.3.0-beta.3` and `1.0.0`.

@@ -8,8 +8,8 @@ import (
 	"github.com/deislabs/cnab-go/bundle/loader"
 	"github.com/spf13/cobra"
 
-	"github.com/deislabs/duffle/pkg/duffle/home"
-	"github.com/deislabs/duffle/pkg/packager"
+	"github.com/cnabio/duffle/pkg/duffle/home"
+	"github.com/cnabio/duffle/pkg/packager"
 )
 
 const importDesc = `

@@ -17,10 +17,10 @@ import (
 	"github.com/pivotal/image-relocation/pkg/pathmapping"
 	"github.com/pivotal/image-relocation/pkg/transport"
 
-	"github.com/deislabs/duffle/pkg/duffle/home"
-	"github.com/deislabs/duffle/pkg/imagestore"
-	"github.com/deislabs/duffle/pkg/imagestore/construction"
-	"github.com/deislabs/duffle/pkg/imagestore/imagestoremocks"
+	"github.com/cnabio/duffle/pkg/duffle/home"
+	"github.com/cnabio/duffle/pkg/imagestore"
+	"github.com/cnabio/duffle/pkg/imagestore/construction"
+	"github.com/cnabio/duffle/pkg/imagestore/imagestoremocks"
 )
 
 const (

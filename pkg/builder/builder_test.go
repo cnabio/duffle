@@ -9,8 +9,8 @@ import (
 	"github.com/deislabs/cnab-go/bundle"
 	"github.com/deislabs/cnab-go/bundle/definition"
 
-	"github.com/deislabs/duffle/pkg/duffle/manifest"
-	"github.com/deislabs/duffle/pkg/imagebuilder"
+	"github.com/cnabio/duffle/pkg/duffle/manifest"
+	"github.com/cnabio/duffle/pkg/imagebuilder"
 )
 
 // testImage represents a mock invocation image

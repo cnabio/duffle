@@ -49,5 +49,5 @@ cnab/wordpress      latest              533cfdfba95a        5 hours ago         
 ```
 
 ## Future Improvements
-- Handle non-docker images (issue [#513](https://github.com/deislabs/duffle/issues/513), [#494](https://github.com/deislabs/duffle/issues/494))
-- Handle exporting and importing from duffle's local bundle store (issue [#379](https://github.com/deislabs/duffle/issues/379))
+- Handle non-docker images (issue [#513](https://github.com/cnabio/duffle/issues/513), [#494](https://github.com/cnabio/duffle/issues/494))
+- Handle exporting and importing from duffle's local bundle store (issue [#379](https://github.com/cnabio/duffle/issues/379))

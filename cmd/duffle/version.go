@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/deislabs/duffle/pkg/version"
+	"github.com/cnabio/duffle/pkg/version"
 
 	"github.com/spf13/cobra"
 )

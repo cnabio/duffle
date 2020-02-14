@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/deislabs/duffle/pkg/duffle/manifest"
+	"github.com/cnabio/duffle/pkg/duffle/manifest"
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/command/image/build"

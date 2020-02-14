@@ -7,7 +7,7 @@ Maintainers MUST remain active. If they are unresponsive for >3 months, they wil
 
 New maintainers can be added to the project by a [super-majority](https://en.wikipedia.org/wiki/Supermajority#Two-thirds_vote) vote of the existing maintainers.
 
-A maintainer may step down by submitting an [issue](https://github.com/deislabs/duffle/issues/new) stating their intent.
+A maintainer may step down by submitting an [issue](https://github.com/cnabio/duffle/issues/new) stating their intent.
 
 ## Code of Conduct
 This project has adopted the [Microsoft Open Source Code of conduct](https://opensource.microsoft.com/codeofconduct/).
