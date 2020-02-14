@@ -46,7 +46,7 @@
   non-go = true
   unused-packages = true
   go-tests = true
-  
+
 [[constraint]]
   name = "github.com/docker/go"
   version = "1.5.1-1"

@@ -6,7 +6,7 @@ import (
 	"github.com/pivotal/image-relocation/pkg/image"
 	"github.com/pivotal/image-relocation/pkg/registry"
 
-	"github.com/deislabs/duffle/pkg/imagestore"
+	"github.com/cnabio/duffle/pkg/imagestore"
 )
 
 // remote is an image store which does not actually store images. It is used to represent thin bundles.

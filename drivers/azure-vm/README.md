@@ -38,7 +38,7 @@ Note that `imageType` is `azure-image` (indicating that it must be looked up in 
 ## Usage
 
 1. Run `make build-drivers`
-2. Add `$GOPATH/src/github.com/deislabs/duffle/bin` to your path
+2. Add `$GOPATH/src/github.com/cnabio/duffle/bin` to your path
 3. On the Duffle commands, set the driver to `azvm`
 
 ```console
@@ -74,5 +74,5 @@ To build images, install Packer, then edit `drivers/azure-vm/azure-packer.json`.
 From there, use something like this to build:
 
 ```console
-$ packer build -var-file keys.json azure-packer.json 
+$ packer build -var-file keys.json azure-packer.json
 ```

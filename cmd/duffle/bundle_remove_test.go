@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/duffle/home"
+	"github.com/cnabio/duffle/pkg/duffle/home"
 )
 
 func TestBundleRemove(t *testing.T) {

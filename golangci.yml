@@ -16,4 +16,4 @@ linters:
 
 linters-settings:
   goimports:
-    local-prefixes: github.com/deislabs/duffle
+    local-prefixes: github.com/cnabio/duffle

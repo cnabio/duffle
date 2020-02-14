@@ -10,8 +10,8 @@ import (
 	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
 
-	"github.com/deislabs/duffle/pkg/duffle/home"
-	"github.com/deislabs/duffle/pkg/repo"
+	"github.com/cnabio/duffle/pkg/duffle/home"
+	"github.com/cnabio/duffle/pkg/repo"
 )
 
 // NamedRepositoryList is a list of bundle references.

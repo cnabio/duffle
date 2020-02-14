@@ -8,7 +8,7 @@ import (
 	"github.com/deislabs/cnab-go/bundle"
 	"github.com/pivotal/image-relocation/pkg/image"
 
-	"github.com/deislabs/duffle/pkg/imagestore"
+	"github.com/cnabio/duffle/pkg/imagestore"
 )
 
 type Relocator struct {

@@ -19,15 +19,15 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/deislabs/duffle/pkg/builder"
-	"github.com/deislabs/duffle/pkg/crypto/digest"
-	"github.com/deislabs/duffle/pkg/duffle/home"
-	"github.com/deislabs/duffle/pkg/duffle/manifest"
-	"github.com/deislabs/duffle/pkg/imagebuilder"
-	"github.com/deislabs/duffle/pkg/imagebuilder/docker"
-	"github.com/deislabs/duffle/pkg/imagebuilder/mock"
-	"github.com/deislabs/duffle/pkg/ohai"
-	"github.com/deislabs/duffle/pkg/repo"
+	"github.com/cnabio/duffle/pkg/builder"
+	"github.com/cnabio/duffle/pkg/crypto/digest"
+	"github.com/cnabio/duffle/pkg/duffle/home"
+	"github.com/cnabio/duffle/pkg/duffle/manifest"
+	"github.com/cnabio/duffle/pkg/imagebuilder"
+	"github.com/cnabio/duffle/pkg/imagebuilder/docker"
+	"github.com/cnabio/duffle/pkg/imagebuilder/mock"
+	"github.com/cnabio/duffle/pkg/ohai"
+	"github.com/cnabio/duffle/pkg/repo"
 )
 
 const buildDesc = `

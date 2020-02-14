@@ -1,6 +1,6 @@
 const { events, Job, Group } = require("brigadier");
 
-const projectOrg = "deislabs";
+const projectOrg = "cnabio";
 const projectName = "duffle";
 
 const goImg = "quay.io/deis/lightweight-docker-go:v0.7.0";
@@ -55,7 +55,7 @@ function test() {
   job.mountPath = localPath;
   // Set a few environment variables.
   job.env = {
-      "SKIP_DOCKER": "true"
+    "SKIP_DOCKER": "true"
   };
   // Run Go unit tests
   job.tasks = [
@@ -125,7 +125,7 @@ function handleIssueComment(e, p) {
   comment = payload.body.comment.body.trim();
 
   // Here we determine if a comment should provoke an action
-  switch(comment) {
+  switch (comment) {
     case "/brig run":
       return runSuite(e, p);
     default:
@@ -145,7 +145,7 @@ function checkRequested(e, p) {
   name = payload.body.check_run.name;
 
   // Determine which check to run
-  switch(name) {
+  switch (name) {
     case "tests":
       return runTests(e, p);
     default:
@@ -186,7 +186,7 @@ class Notification {
     this.payload = e.payload;
     this.name = name;
     this.externalID = e.buildID;
-    this.detailsURL = `https://brigadecore.github.io/kashti/builds/${ e.buildID }`;
+    this.detailsURL = `https://brigadecore.github.io/kashti/builds/${e.buildID}`;
     this.title = "running check";
     this.text = "";
     this.summary = "";
@@ -202,7 +202,7 @@ class Notification {
   // Send a new notification, and return a Promise<result>.
   run() {
     this.count++;
-    var job = new Job(`${ this.name }-notification-${ this.count }`, "brigadecore/brigade-github-check-run:v0.1.0");
+    var job = new Job(`${this.name}-notification-${this.count}`, "brigadecore/brigade-github-check-run:v0.1.0");
     job.imageForcePull = true;
     job.env = {
       "CHECK_CONCLUSION": this.conclusion,
@@ -225,13 +225,13 @@ async function notificationWrap(job, note) {
     let res = await job.run();
     const logs = await job.logs();
     note.conclusion = "success";
-    note.summary = `Task "${ job.name }" passed`;
+    note.summary = `Task "${job.name}" passed`;
     note.text = "```" + res.toString() + "```\nTest Complete";
     return await note.run();
   } catch (e) {
     const logs = await job.logs();
     note.conclusion = "failure";
-    note.summary = `Task "${ job.name }" failed for ${ e.buildID }`;
+    note.summary = `Task "${job.name}" failed for ${e.buildID}`;
     note.text = "```" + logs + "```\nFailed with error: " + e.toString();
     try {
       await note.run();
@@ -242,4 +242,3 @@ async function notificationWrap(job, note) {
     throw e;
   }
 }
-

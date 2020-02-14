@@ -57,7 +57,7 @@ For thick images, it will load the images into the local registry.
 
 For thin images, it will (if necessary) pull the dependent images from a registry and load them into the local Docker/Moby daemon.
 
-In the future, `duffle import` will also validate each Docker image's digest in an exported bundle, which is important to ensure that the docker images have not been tampered with. [Issue #392](https://github.com/deislabs/duffle/issues/392) discusses a solution for enforcing digest validation when importing a bundle.
+In the future, `duffle import` will also validate each Docker image's digest in an exported bundle, which is important to ensure that the docker images have not been tampered with. [Issue #392](https://github.com/cnabio/duffle/issues/392) discusses a solution for enforcing digest validation when importing a bundle.
 
 ## Passing Parameters into the Invocation Image
 

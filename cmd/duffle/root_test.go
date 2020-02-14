@@ -12,7 +12,7 @@ import (
 
 	"github.com/deislabs/cnab-go/bundle"
 
-	"github.com/deislabs/duffle/pkg/version"
+	"github.com/cnabio/duffle/pkg/version"
 )
 
 func TestHelpWrittenToStdout(t *testing.T) {

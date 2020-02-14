@@ -8,12 +8,12 @@ import (
 
 	"github.com/pivotal/image-relocation/pkg/image"
 
-	"github.com/deislabs/duffle/pkg/imagestore/imagestoremocks"
-	"github.com/deislabs/duffle/pkg/relocator"
+	"github.com/cnabio/duffle/pkg/imagestore/imagestoremocks"
+	"github.com/cnabio/duffle/pkg/relocator"
 
 	"github.com/deislabs/cnab-go/bundle"
 
-	"github.com/deislabs/duffle/pkg/imagestore"
+	"github.com/cnabio/duffle/pkg/imagestore"
 )
 
 func TestRelocator_Relocate(t *testing.T) {

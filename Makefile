@@ -14,7 +14,7 @@ GIT_VERSION = $(shell git describe --always --abbrev=7 --dirty --match=NeVeRmAtC
 # Go build details                                                             #
 ################################################################################
 
-BASE_PACKAGE_NAME := github.com/deislabs/duffle
+BASE_PACKAGE_NAME := github.com/cnabio/duffle
 
 ################################################################################
 # Containerized development environment-- or lack thereof                      #
@@ -67,7 +67,7 @@ dep:
 
 .PHONY: goimports
 goimports:
-	$(DOCKER_CMD) sh -c "find . -name \"*.go\" | fgrep -v vendor/ | xargs goimports -w -local github.com/deislabs/duffle"
+	$(DOCKER_CMD) sh -c "find . -name \"*.go\" | fgrep -v vendor/ | xargs goimports -w -local github.com/cnabio/duffle"
 
 .PHONY: build-drivers
 build-drivers:

@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deislabs/duffle/pkg/imagestore/imagestoremocks"
+	"github.com/cnabio/duffle/pkg/imagestore/imagestoremocks"
 )
 
 func TestCreateParams(t *testing.T) {

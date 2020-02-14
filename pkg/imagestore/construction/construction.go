@@ -4,9 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/deislabs/duffle/pkg/imagestore"
-	"github.com/deislabs/duffle/pkg/imagestore/ocilayout"
-	"github.com/deislabs/duffle/pkg/imagestore/remote"
+	"github.com/cnabio/duffle/pkg/imagestore"
+	"github.com/cnabio/duffle/pkg/imagestore/ocilayout"
+	"github.com/cnabio/duffle/pkg/imagestore/remote"
 )
 
 var (

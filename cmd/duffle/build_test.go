@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/deislabs/duffle/pkg/repo"
+	"github.com/cnabio/duffle/pkg/repo"
 )
 
 func TestBuild(t *testing.T) {

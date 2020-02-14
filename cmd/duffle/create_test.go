@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deislabs/duffle/pkg/duffle/manifest"
+	"github.com/cnabio/duffle/pkg/duffle/manifest"
 )
 
 func TestCreateCmd(t *testing.T) {

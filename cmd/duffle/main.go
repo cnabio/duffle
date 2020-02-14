@@ -19,8 +19,8 @@ import (
 	"github.com/deislabs/cnab-go/utils/crud"
 	"github.com/spf13/cobra"
 
-	"github.com/deislabs/duffle/pkg/duffle/home"
-	"github.com/deislabs/duffle/pkg/reference"
+	"github.com/cnabio/duffle/pkg/duffle/home"
+	"github.com/cnabio/duffle/pkg/reference"
 )
 
 var (

@@ -14,7 +14,7 @@ Learn more about about CNAB and Duffle, check out our [docs](docs/README.md).
 
 ## Getting Started
 
-1. [Get the latest Duffle release for your operating system](https://github.com/deislabs/duffle/releases).
+1. [Get the latest Duffle release for your operating system](https://github.com/cnabio/duffle/releases).
 
 
 2. Run the command to set `duffle` up on your machine:
