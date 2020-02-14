@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/deislabs/cnab-go/bundle/loader"
+	"github.com/cnabio/cnab-go/bundle/loader"
 
 	"github.com/cnabio/duffle/pkg/imagestore"
 	"github.com/cnabio/duffle/pkg/imagestore/imagestoremocks"

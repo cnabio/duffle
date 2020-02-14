@@ -61,10 +61,6 @@ MUTABLE_IMAGE_NAME := $(DOCKER_REGISTRY)$(DOCKER_ORG)$(BASE_IMAGE_NAME):$(MUTABL
 # Utility targets                                                              #
 ################################################################################
 
-.PHONY: dep
-dep:
-	$(DOCKER_CMD) dep ensure -v
-
 .PHONY: goimports
 goimports:
 	$(DOCKER_CMD) sh -c "find . -name \"*.go\" | fgrep -v vendor/ | xargs goimports -w -local github.com/cnabio/duffle"
@@ -78,12 +74,6 @@ build-drivers:
 ################################################################################
 # Tests                                                                        #
 ################################################################################
-
-# Verifies there are no discrepancies between desired dependencies and the
-# tracked, vendored dependencies
-.PHONY: verify-vendored-code
-verify-vendored-code:
-	$(DOCKER_CMD) dep check
 
 .PHONY: lint
 lint:

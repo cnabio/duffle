@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver"
-	"github.com/deislabs/cnab-go/bundle"
+	"github.com/cnabio/cnab-go/bundle"
 	"github.com/pkg/errors"
 
 	"github.com/cnabio/duffle/pkg/duffle/manifest"

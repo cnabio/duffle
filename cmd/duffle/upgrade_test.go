@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deislabs/cnab-go/bundle"
+	"github.com/cnabio/cnab-go/bundle"
 
-	"github.com/deislabs/cnab-go/claim"
+	"github.com/cnabio/cnab-go/claim"
 )
 
 func TestUpgradePersistsClaim(t *testing.T) {

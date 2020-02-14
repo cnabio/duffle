@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deislabs/cnab-go/bundle/loader"
+	"github.com/cnabio/cnab-go/bundle/loader"
 	"github.com/stretchr/testify/assert"
 )
 

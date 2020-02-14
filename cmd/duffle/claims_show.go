@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/deislabs/cnab-go/claim"
+	"github.com/cnabio/cnab-go/claim"
 
 	"github.com/spf13/cobra"
 )

@@ -5,7 +5,7 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/deislabs/cnab-go/bundle/loader"
+	"github.com/cnabio/cnab-go/bundle/loader"
 	"github.com/spf13/cobra"
 
 	"github.com/cnabio/duffle/pkg/duffle/home"

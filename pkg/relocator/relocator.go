@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/deislabs/cnab-go/bundle"
+	"github.com/cnabio/cnab-go/bundle"
 	"github.com/pivotal/image-relocation/pkg/image"
 
 	"github.com/cnabio/duffle/pkg/imagestore"

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/deislabs/cnab-go/bundle"
+	"github.com/cnabio/cnab-go/bundle"
 
 	"github.com/cnabio/duffle/pkg/version"
 )
