@@ -1,0 +1,70 @@
+{
+    "name": "wordpress-mysql",
+    "version": "0.2.0",
+    "schemaVersion": "v1.0.0",
+    "invocationImages": {
+      "cnab": {
+        "name": "cnab",
+        "builder": "docker",
+        "configuration": {
+          "registry": "cnab"
+        }
+      }
+    },
+    "parameters": {
+      "resource_group": {
+        "defaultValue": "duffle-group",
+        "type": "string",
+        "destination": {
+          "env": "RESOURCE_GROUP"
+        }
+      },
+      "cluster_name": {
+        "defaultValue": "my-aks-cluster",
+        "type": "string",
+        "destination": {
+          "env": "CLUSTER_NAME"
+        }
+      },
+      "mysql_resource_group": {
+        "defaultValue": "aks-wordpress-mysql",
+        "type": "string",
+        "destination": {
+          "env": "MYSQL_RESOURCE_GROUP"
+        }
+      },
+      "mysql_db_service_name": {
+        "defaultValue": "mymysqldb",
+        "type": "string",
+        "destination": {
+          "env": "MYSQL_DB_SERVICE_NAME"
+        }
+      },
+      "mysql_location": {
+        "defaultValue": "westus",
+        "type": "string",
+        "destination": {
+          "env": "MYSQL_LOCATION"
+        }
+      }
+    },
+    "credentials": {
+      "azure_tokens": {
+        "path": "/root/.azure/accessTokens.json"
+      },
+      "azure_profile": {
+        "path": "/root/.azure/azureProfile.json"
+      },
+      "mysql_user": {
+        "env": "MYSQL_USER"
+      },
+      "mysql_password": {
+        "env": "MYSQL_PASSWORD"
+      }
+    },
+    "actions": {
+        "status": {
+            "modifies": false
+        }
+    }
+}

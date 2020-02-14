@@ -24,11 +24,19 @@
             "name": "cnab",
             "builder": "docker",
             "configuration": {
+<<<<<<< HEAD
                 "registry": "deislabs"
+=======
+                "registry": "cnab"
+>>>>>>> updates so examples build
             }
         }
     },
     "parameters": null,
     "credentials": null,
+<<<<<<< HEAD
     "schemaVersion": "v1.0.0-WD"
+=======
+    "schemaVersion": "v1.0.0"
+>>>>>>> updates so examples build
 }

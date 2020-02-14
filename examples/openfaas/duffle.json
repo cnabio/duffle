@@ -1,0 +1,77 @@
+{
+    "name": "johnmccabe/openfaas",
+    "version": "0.9.11",
+    "schemaVersion": "v1.0.0",
+    "description": "OpenFaaS: Serverless Functions made Simple",
+    "keywords": [
+        "openfaas",
+        "faas",
+        "serverless",
+        "swarm"
+    ],
+    "invocationImages": {
+        "cnab": {
+            "name": "cnab",
+            "builder": "docker",
+            "configuration": {
+                "registry": "cnab"
+            }
+        }
+    },
+    "images": {
+        "gateway": {
+            "imageType": "docker",
+            "image": "openfaas/gateway:0.9.11",
+            "digest": "sha256:64e7700911d16a58194e6a419b93c6b1afd819c35f3b06fdaf3a1119f9ad1784"
+        },
+        "swarm": {
+            "imageType": "docker",
+            "image": "openfaas/faas-swarm:0.5.0",
+            "digest": "sha256:2e5e560d77833cc25c18c18f44b73647ded5a5b4e4a0a5907bb8b1caad570c4e"
+        },
+        "streaming": {
+            "imageType": "docker",
+            "image": "nats-streaming:0.11.2",
+            "digest": "sha256:d70706ce2e92efa6daa193731cd3aec98aedf3c15c51c2cf5b7a6bbc80a43044"
+        },
+        "worker": {
+            "imageType": "docker",
+            "image": "openfaas/queue-worker:0.5.4",
+            "digest": "sha256:05b2de85c30e638a36204614f43dece64897db6d983f8191ebd5e98c3ff8edb5"
+        },
+        "prometheus": {
+            "imageType": "docker",
+            "image": "prom/prometheus:v2.3.1",
+            "digest": "sha256:0283ae2509e1ccc71830edf382713cc3906aa55ca9418c50911854223829bf0b"
+        },
+        "alertmanager": {
+            "imageType": "docker",
+            "image": "prom/alertmanager:v0.15.0",
+            "digest": "sha256:55c0d339205048ba46522ac3495bfcf9848669d39ea71b950bf6da86fc2d4f1b"
+        }
+    },
+    "maintainers": [
+        {
+            "name": "John McCabe",
+            "email": "john@johnmccabe.net",
+            "url": "https://github.com/johnmccabe"
+        }
+    ],
+    "parameters": {
+        "basic_auth": {
+            "type": "string",
+            "defaultValue": "true",
+            "destination": {
+                "env": "BASIC_AUTH"
+            }
+        }
+    },
+    "credentials": {
+        "basic-auth-user": {
+            "path": "/basic-auth-user.txt"
+        },
+        "basic-auth-password": {
+            "path": "/basic-auth-password.txt"
+        }
+    }
+}
