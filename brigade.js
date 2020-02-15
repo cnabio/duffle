@@ -175,9 +175,9 @@ function checkRequested(e, p) {
   // Determine which check to run
   switch (name) {
     case "tests":
-      return runTests(e, p, test);
+      return runCheck(e, p, test);
     case "validateExamples":
-      return runTests(e, p, validateExamples);
+      return runCheck(e, p, validateExamples);
     default:
       throw new Error(`No check found with name: ${name}`);
   }
@@ -187,8 +187,12 @@ function checkRequested(e, p) {
 // report their results independently to GitHub
 function runSuite(e, p) {
   return Promise.all([
-    runTests(e, p, test).catch((err) => { return err }),
-    runTests(e, p, validateExamples).catch((err) => { return err }),
+    // the test and validateExamples checks must run sequentially
+    runCheck(e, p, test)
+    .then(() => {
+      runCheck(e, p, validateExamples)
+    })
+    .catch((err) => { return err })
   ])
   .then((values) => {
     values.forEach((value) => {
@@ -197,8 +201,8 @@ function runSuite(e, p) {
   })
 }
 
-// runTests is a Check Run that is run as part of a Checks Suite
-function runTests(e, p, jobFunc) {
+// runCheck is a Check Run that is run as part of a Checks Suite
+function runCheck(e, p, jobFunc) {
   console.log("Check requested");
 
   var check = new Check(e, p, jobFunc(),

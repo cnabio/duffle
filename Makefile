@@ -129,7 +129,7 @@ push-image:
 # So, we fetch schema that are ref'd by the bundle.schema.json and supply to ajv
 BUNDLE_SCHEMA      := bundle.schema.json
 DEFINITIONS_SCHEMA := definitions.schema.json
-REMOTE_SCHEMA      := $(BUNDLE_SCEHMA) $(DEFINITIONS_SCHEMA)
+REMOTE_SCHEMA      := $(BUNDLE_SCHEMA) $(DEFINITIONS_SCHEMA)
 
 # bundle-all runs the provided make target on all bundles with a 'duffle.json' file in their directory
 define bundle-all
