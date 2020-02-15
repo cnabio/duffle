@@ -125,8 +125,11 @@ push-image:
 # Example Bundles Build / Validation                                           #
 ################################################################################
 
-JSON_SCHEMA_URI  := https://cnab.io/v1/bundle.schema.json
-JSON_SCHEMA_FILE := /tmp/bundle.schema.json
+# Unfortunately, the ajv cli does not yet support fetching remote references
+# So, we fetch schema that are ref'd by the bundle.schema.json and supply to ajv
+BUNDLE_SCHEMA      := bundle.schema.json
+DEFINITIONS_SCHEMA := definitions.schema.json
+REMOTE_SCHEMA      := $(BUNDLE_SCEHMA) $(DEFINITIONS_SCHEMA)
 
 # bundle-all runs the provided make target on all bundles with a 'duffle.json' file in their directory
 define bundle-all
@@ -137,19 +140,31 @@ define bundle-all
 	done
 endef
 
-.PHONY: init-validator
-init-validator:
-	@if ! $$(which ajv > /dev/null 2>&1); then npm install -g ajv-cli; fi
-	@if ! [[ -f $(JSON_SCHEMA_FILE) ]]; then curl -sLo $(JSON_SCHEMA_FILE) $(JSON_SCHEMA_URI); fi
+.PHONY: get-ajv
+get-ajv:
+	@if ! $$(which ajv > /dev/null 2>&1); then \
+		npm install -g ajv-cli; \
+	fi
+
+.PHONY: get-schema
+get-schema:
+	@for schema in $(REMOTE_SCHEMA); do \
+		if ! [[ -f /tmp/$$schema ]]; then \
+			curl -sLo /tmp/$$schema https://cnab.io/v1/$$schema ; \
+		fi ; \
+	done
 
 .PHONY: validate
-validate: init-validator
+validate: get-ajv get-schema
 ifndef BUNDLE
 	$(call bundle-all,validate)
 else
 	@echo "building and validating $(BUNDLE)"
 	@cd examples/$(BUNDLE) && \
 		duffle build -o bundle.json > /dev/null && \
-		ajv test -s $(JSON_SCHEMA_FILE) -d bundle.json --valid
+		ajv test \
+			-s /tmp/$(BUNDLE_SCHEMA) \
+			-r /tmp/$(DEFINITIONS_SCHEMA) \
+			-d bundle.json --valid
 endif
 
