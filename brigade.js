@@ -45,8 +45,8 @@ events.on("push", (e, p) => {
 events.on("check_suite:requested", runSuite);
 events.on("check_suite:rerequested", runSuite);
 events.on("check_run:rerequested", checkRequested);
-events.on("issue_comment:created", handleIssueComment);
-events.on("issue_comment:edited", handleIssueComment);
+events.on("issue_comment:created", (e, p) => Check.handleIssueComment(e, p, runSuite));
+events.on("issue_comment:edited", (e, p) => Check.handleIssueComment(e, p, runSuite));
 
 // **********************************************
 // Actions
@@ -144,23 +144,6 @@ function githubRelease(p, tag) {
   return job;
 }
 
-// handleIssueComment handles an issue_comment event, parsing the comment text
-// and determining whether or not to trigger an action
-function handleIssueComment(e, p) {
-  payload = JSON.parse(e.payload);
-
-  // Extract the comment body and trim whitespace
-  comment = payload.body.comment.body.trim();
-
-  // Here we determine if a comment should provoke an action
-  switch (comment) {
-    case "/brig run":
-      return runSuite(e, p);
-    default:
-      console.log(`No applicable action found for comment: ${comment}`);
-  }
-}
-
 // checkRequested is the default function invoked on a check_run:* event
 //
 // It determines which check is being requested (from the payload body)
@@ -203,8 +186,6 @@ function runSuite(e, p) {
 
 // runCheck is a Check Run that is run as part of a Checks Suite
 function runCheck(e, p, jobFunc) {
-  console.log("Check requested");
-
   var check = new Check(e, p, jobFunc(),
     `https://brigadecore.github.io/kashti/builds/${e.buildID}`);
   return check.run();
