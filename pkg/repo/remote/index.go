@@ -12,7 +12,7 @@ import (
 
 	"github.com/Masterminds/semver"
 
-	"github.com/deislabs/cnab-go/bundle"
+	"github.com/cnabio/cnab-go/bundle"
 )
 
 const (

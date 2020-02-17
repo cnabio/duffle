@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/deislabs/cnab-go/bundle"
-	"github.com/deislabs/cnab-go/bundle/loader"
+	"github.com/cnabio/cnab-go/bundle"
+	"github.com/cnabio/cnab-go/bundle/loader"
 	"github.com/docker/docker/pkg/archive"
 )
 

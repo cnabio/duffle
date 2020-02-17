@@ -11,8 +11,8 @@ import (
 
 	"github.com/cnabio/duffle/pkg/duffle/home"
 
-	"github.com/deislabs/cnab-go/bundle"
-	"github.com/deislabs/cnab-go/credentials"
+	"github.com/cnabio/cnab-go/bundle"
+	"github.com/cnabio/cnab-go/credentials"
 	"github.com/spf13/cobra"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 	yaml "gopkg.in/yaml.v2"

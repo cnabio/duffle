@@ -11,7 +11,7 @@ import (
 	"github.com/cnabio/duffle/pkg/imagestore/imagestoremocks"
 	"github.com/cnabio/duffle/pkg/relocator"
 
-	"github.com/deislabs/cnab-go/bundle"
+	"github.com/cnabio/cnab-go/bundle"
 
 	"github.com/cnabio/duffle/pkg/imagestore"
 )

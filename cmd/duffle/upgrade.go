@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/deislabs/cnab-go/action"
+	"github.com/cnabio/cnab-go/action"
 )
 
 const upgradeUsage = `perform the upgrade action in the CNAB bundle`

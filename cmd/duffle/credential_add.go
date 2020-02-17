@@ -10,7 +10,7 @@ import (
 
 	"github.com/cnabio/duffle/pkg/duffle/home"
 
-	"github.com/deislabs/cnab-go/credentials"
+	"github.com/cnabio/cnab-go/credentials"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

@@ -12,10 +12,10 @@ import (
 	"github.com/cnabio/duffle/pkg/duffle/home"
 	"github.com/cnabio/duffle/pkg/repo"
 
-	"github.com/deislabs/cnab-go/action"
-	"github.com/deislabs/cnab-go/bundle"
-	"github.com/deislabs/cnab-go/bundle/definition"
-	"github.com/deislabs/cnab-go/claim"
+	"github.com/cnabio/cnab-go/action"
+	"github.com/cnabio/cnab-go/bundle"
+	"github.com/cnabio/cnab-go/bundle/definition"
+	"github.com/cnabio/cnab-go/claim"
 	"github.com/spf13/cobra"
 )
 

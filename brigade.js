@@ -3,7 +3,7 @@ const { events, Job, Group } = require("brigadier");
 const projectOrg = "cnabio";
 const projectName = "duffle";
 
-const goImg = "quay.io/deis/lightweight-docker-go:v0.7.0";
+const goImg = "golang:1.13";
 const gopath = "/go"
 const localPath = gopath + `/src/github.com/${projectOrg}/${projectName}`;
 
@@ -55,12 +55,13 @@ function test() {
   job.mountPath = localPath;
   // Set a few environment variables.
   job.env = {
+    "GO111MODULE": "on",
     "SKIP_DOCKER": "true"
   };
   // Run Go unit tests
   job.tasks = [
     `cd ${localPath}`,
-    "make verify-vendored-code lint test"
+    "make build-all-bins test"
   ];
   return job;
 }
@@ -92,6 +93,7 @@ function githubRelease(p, tag) {
   parts = p.repo.name.split("/", 2);
   // Set a few environment variables.
   job.env = {
+    "GO111MODULE": "on",
     "SKIP_DOCKER": "true",
     "GITHUB_USER": parts[0],
     "GITHUB_REPO": parts[1],

@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/deislabs/cnab-go/driver"
+	"github.com/cnabio/cnab-go/driver"
 
 	"github.com/cnabio/duffle/pkg/duffle/home"
 
-	"github.com/deislabs/cnab-go/bundle"
-	"github.com/deislabs/cnab-go/credentials"
+	"github.com/cnabio/cnab-go/bundle"
+	"github.com/cnabio/cnab-go/credentials"
 	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
 )

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/deislabs/cnab-go/credentials"
+	"github.com/cnabio/cnab-go/credentials"
 )
 
 func TestPrintCredentials(t *testing.T) {
