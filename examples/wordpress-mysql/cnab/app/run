@@ -1,0 +1,67 @@
+#!/bin/sh
+set -e
+
+action=$CNAB_ACTION
+name=$CNAB_INSTALLATION_NAME
+mychart="stable/wordpress"
+greeting=${GREETING:-"Hi! Let's make provisioning a mysql service and installing wordpress on AKS even easier!"}
+
+echo "[== $greeting Duffle user ==]"
+case $action in
+    install)
+        echo "This installation assumes you already have an AKS cluster"
+        echo "Grabbing kubeconfig for cluster $CLUSTER_NAME in resource group: $RESOURCE_GROUP"
+        az aks get-credentials --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME
+
+        echo "Creating a resource group called $MYSQL_RESOURCE_GROUP for the mysql database service..."
+        az group create --name $MYSQL_RESOURCE_GROUP --location $MYSQL_LOCATION
+
+        echo "Creating a managed mysql database server..."
+        az mysql server create --resource-group $MYSQL_RESOURCE_GROUP --name $MYSQL_DB_SERVICE_NAME  --location $MYSQL_LOCATION --admin-user $MYSQL_USER --admin-password $MYSQL_PASSWORD --sku-name B_Gen5_1 --version 5.7 --ssl-enforcement Disabled
+
+        echo "Creating a database called bitnami_wordpress on your mysql database server..."
+        az mysql db create --name bitnami_wordpress --resource-group $MYSQL_RESOURCE_GROUP --server-name=$MYSQL_DB_SERVICE_NAME
+
+        # Allow Azure IPs to access this db service
+        az mysql server firewall-rule create --resource-group $MYSQL_RESOURCE_GROUP --server $MYSQL_DB_SERVICE_NAME --name "AllowAllWindowsAzureIps" --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
+
+        mysql_host="$MYSQL_DB_SERVICE_NAME.mysql.database.azure.com"
+
+        echo "Installing remote chart with connection to Azure MySQL..."
+        helm repo add stable https://kubernetes-charts.storage.googleapis.com
+        helm install $name $mychart --set externalDatabase.host=$mysql_host,externalDatabase.user=$MYSQL_USER@$MYSQL_DB_SERVICE_NAME,externalDatabase.password=$MYSQL_PASSWORD,mariadb.enabled=false
+
+        echo "Congratulations! Enjoy your new wordpress application running on AKS and connected to your newly provisioned mysql instance on Azure!"
+        ;;
+    uninstall)
+        echo "uninstall action"
+
+        echo "Grabbing kubeconfig for cluster $CLUSTER_NAME in resource group: $RESOURCE_GROUP"
+        az aks get-credentials --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME
+
+        helm delete $name
+        az group delete -n $MYSQL_RESOURCE_GROUP
+        ;;
+    upgrade)
+        echo "Upgrade action"
+
+        echo "Grabbing kubeconfig for cluster $CLUSTER_NAME in resource group: $RESOURCE_GROUP"
+        az aks get-credentials --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME
+
+        helm repo add stable https://kubernetes-charts.storage.googleapis.com
+        helm upgrade $name $mychart
+        ;;
+    status)
+        echo "Status action"
+
+        echo "Grabbing kubeconfig for cluster $CLUSTER_NAME in resource group: $RESOURCE_GROUP"
+        az aks get-credentials --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME
+
+        helm status $name
+        #TODO: check on mysql instance health
+        ;;
+    *)
+    echo "No action for $action"
+    ;;
+esac
+echo "Action $action complete for $name"

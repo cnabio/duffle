@@ -11,38 +11,55 @@
         }
       }
     },
+    "definitions": {
+      "resource_group": {
+        "default": "duffle-group",
+        "type": "string"
+      },
+      "cluster_name": {
+        "default": "my-aks-cluster",
+        "type": "string"
+      },
+      "mysql_resource_group": {
+        "default": "aks-wordpress-mysql",
+        "type": "string"
+      },
+      "mysql_db_service_name": {
+        "default": "mymysqldb",
+        "type": "string"
+      },
+      "mysql_location": {
+        "default": "eastus",
+        "type": "string"
+      }
+    },
     "parameters": {
       "resource_group": {
-        "defaultValue": "duffle-group",
-        "type": "string",
+        "definition": "resource_group",
         "destination": {
           "env": "RESOURCE_GROUP"
         }
       },
       "cluster_name": {
-        "defaultValue": "my-aks-cluster",
-        "type": "string",
+        "definition": "cluster_name",
         "destination": {
           "env": "CLUSTER_NAME"
         }
       },
       "mysql_resource_group": {
-        "defaultValue": "aks-wordpress-mysql",
-        "type": "string",
+        "definition": "mysql_resource_group",
         "destination": {
           "env": "MYSQL_RESOURCE_GROUP"
         }
       },
       "mysql_db_service_name": {
-        "defaultValue": "mymysqldb",
-        "type": "string",
+        "definition": "mysql_db_service_name",
         "destination": {
           "env": "MYSQL_DB_SERVICE_NAME"
         }
       },
       "mysql_location": {
-        "defaultValue": "westus",
-        "type": "string",
+        "definition": "mysql_location",
         "destination": {
           "env": "MYSQL_LOCATION"
         }
