@@ -1,7 +1,7 @@
 # Governance
 
 ## Project Maintainers
-[Project maintainers](CODEOWNERS) are responsible for activities around maintaining and updating Duffle, the reference implementation for the [CNAB spec](https://github.com/deislabs/cnab-spec). Final decisions on the project reside with the project maintainers.
+[Project maintainers](CODEOWNERS) are responsible for activities around maintaining and updating Duffle, the reference implementation for the [CNAB spec](https://github.com/cnabio/cnab-spec). Final decisions on the project reside with the project maintainers.
 
 Maintainers MUST remain active. If they are unresponsive for >3 months, they will be automatically removed unless a [super-majority](https://en.wikipedia.org/wiki/Supermajority#Two-thirds_vote) of the other project maintainers agrees to extend the period to be greater than 3 months.
 
