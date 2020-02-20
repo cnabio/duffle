@@ -33,7 +33,7 @@ Configuration is sent to drivers via environment variables. For example, setting
 
 ## Custom Drivers
 
-Custom drivers are implemented following the pattern of `git` plugins: When a driver is requested (`-d mydriver`) and Duffle does not have built-in support for that driver name, it will seek `$PATH` for a program named `duffle-mydriver` (prepending `duffle-` to the driver name).
+Custom drivers are implemented following the pattern of `git` plugins: When a driver is requested (`-d mydriver`) and Duffle does not have built-in support for that driver name, it will seek `$PATH` for a program named `cnab-mydriver` (prepending `cnab-` to the driver name).
 
 If a suitable executable is found, Duffle will execute that program, using the action requested. The environment in which that command executes will be pre-populated with the current environment variables. Credential sets will be passed as well. And the operation will be sent as a JSON body on STDIN:
 
@@ -94,7 +94,7 @@ If the `--handles` flag is set, this will return `docker,oci,qcow` and exit with
 
 Under all other cases, it will attempt to read STDIN, pipe that through the `jq` command, and print the `action` found in the JSON body.
 
-By naming this file `duffle-foo` and placing it in the `$PATH`, we can execute it as a driver:
+By naming this file `cnab-foo` and placing it in the `$PATH`, we can execute it as a driver:
 
 ```console
 $ duffle -d foo install myname technosophos/helloworld:0.1.0
@@ -105,12 +105,12 @@ Note that when it comes to execution order, it will be invoked as follows:
 
 - When Duffle loads, it will look for an internal driver named `foo`.
   - If Duffle finds an internal driver named `foo` (which it won't), it will execute the internal version
-  - If Duffle does not find an internal driver named `foo`, it will create a stub command executor for `duffle-foo`.
-- When Duffle determines what image type the `bundle.json`, it will run `duffle-foo --handles`.
+  - If Duffle does not find an internal driver named `foo`, it will create a stub command executor for `cnab-foo`.
+- When Duffle determines what image type the `bundle.json`, it will run `cnab-foo --handles`.
   - If the declared image type is not in the returned list, Duffle will return an error and quit.
-- When the operation is ready, Duffle will run `duffle-foo` and pipe the JSON data into `duffle-foo`'s standard input.
-  - if `duffle-foo` returns with an exit code > 1, Duffle will generate an error and exit
-  - if `duffle-foo` returns an exit code 0, Duffle will mark this as a successful operation
+- When the operation is ready, Duffle will run `cnab-foo` and pipe the JSON data into `cnab-foo`'s standard input.
+  - if `cnab-foo` returns with an exit code > 1, Duffle will generate an error and exit
+  - if `cnab-foo` returns an exit code 0, Duffle will mark this as a successful operation
 
 ### Parameters and Credentials for Custom Drivers
 
