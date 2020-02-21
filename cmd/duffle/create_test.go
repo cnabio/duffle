@@ -45,9 +45,40 @@ func TestCreateCmd(t *testing.T) {
 	}
 
 	// This is the Canonical JSON representation. http://wiki.laptop.org/go/Canonical_JSON
-	expected := `{"description":"A short description of your bundle","invocationImages":{"cnab":{"builder":"docker","configuration":{"registry":"deislabs"},"name":"cnab"}},"keywords":["test-bundle","cnab","tutorial"],"maintainers":[{"email":"john.doe@example.com","name":"John Doe","url":"https://example.com"},{"email":"jane.doe@example.com","name":"Jane Doe","url":"https://example.com"}],"name":"test-bundle","schemaVersion":"v1.0.0-WD","version":"0.1.0"}`
+	expected := `{
+	"name": "test-bundle",
+	"version": "0.1.0",
+	"schemaVersion": "v1.0.0-WD",
+	"description": "A short description of your bundle",
+	"keywords": [
+		"test-bundle",
+		"cnab",
+		"tutorial"
+	],
+	"maintainers": [
+		{
+			"email": "john.doe@example.com",
+			"name": "John Doe",
+			"url": "https://example.com"
+		},
+		{
+			"email": "jane.doe@example.com",
+			"name": "Jane Doe",
+			"url": "https://example.com"
+		}
+	],
+	"invocationImages": {
+		"cnab": {
+			"name": "cnab",
+			"builder": "docker",
+			"configuration": {
+				"registry": "deislabs"
+			}
+		}
+	}
+}`
 
 	if string(mbytes) != expected {
-		t.Errorf("Expected duffle.json output to look like this:\n\n%s\n\nGot:\n\n%s", expected, string(mbytes))
+		t.Errorf("Expected duffle.json output to look like this:\n%s\nGot:\n%s", expected, string(mbytes))
 	}
 }
