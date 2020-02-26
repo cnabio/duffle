@@ -1,5 +1,5 @@
 # Duffle: The CNAB Installer
-![Build Status](http://badges.technosophos.me/v1/github/build/cnab/duffle/badge.svg?branch=master)
+![Build Status](https://badges.deislabs.io/v1/github/check/46880/cnabio/duffle/badge.svg?branch=master)
 
 
 Duffle is the reference implementation of the [CNAB specification][cnab]. It
