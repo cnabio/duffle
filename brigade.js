@@ -16,10 +16,14 @@ const releaseTagRegex = /^refs\/tags\/([0-9]+(?:\.[0-9]+)*(?:\-.+)?)$/;
 // **********************************************
 
 events.on("exec", (e, p) => {
-  return Group.runEach([
+  return Group.runAll([
     test(),
-    validateExamples()
-  ]);
+    testViaDocker()
+  ])
+  .then(() => {
+    validateExamples().run();
+  })
+  .catch((err) => { return err });
 })
 
 events.on("push", (e, p) => {
@@ -37,6 +41,7 @@ events.on("push", (e, p) => {
     // This runs tests then builds and publishes "edge" images
     return Group.runEach([
       test(),
+      testViaDocker(),
       buildAndPublishImage(p, "")
     ]);
   }
@@ -88,6 +93,27 @@ function validateExamples() {
     `install ${sharedStorage.path}/duffle-linux-amd64 /usr/local/bin/duffle`,
     "duffle init",
     "make validate"
+  ];
+  return job;
+}
+
+function testViaDocker() {
+  // Create a new job to run Go tests via Docker
+  // to ensure Docker-based builds are functional
+  var job = new Job("tests-via-docker", "docker:stable-dind");
+  // Set privileged true to enable Docker-in-Docker
+  job.privileged = true;
+  // Set a few environment variables.
+  job.env = {
+    "GO111MODULE": "on",
+  };
+  // Run Go unit tests
+  job.tasks = [
+    "apk add --update --no-cache make",
+    "dockerd-entrypoint.sh &",
+    "sleep 20",
+    "cd /src",
+    "make build-all-bins test"
   ];
   return job;
 }
@@ -159,8 +185,10 @@ function checkRequested(e, p) {
   switch (name) {
     case "tests":
       return runCheck(e, p, test);
-    case "validateExamples":
+    case "validate-examples":
       return runCheck(e, p, validateExamples);
+    case "tests-via-docker":
+      return runCheck(e, p, testViaDocker);
     default:
       throw new Error(`No check found with name: ${name}`);
   }
@@ -169,19 +197,15 @@ function checkRequested(e, p) {
 // Here we can add additional Check Runs, which will run in parallel and
 // report their results independently to GitHub
 function runSuite(e, p) {
-  return Promise.all([
-    // the test and validateExamples checks must run sequentially
-    runCheck(e, p, test)
-    .then(() => {
-      runCheck(e, p, validateExamples)
-    })
-    .catch((err) => { return err })
+  return Group.runAll([
+    runCheck(e, p, test),
+    runCheck(e, p, testViaDocker)
   ])
-  .then((values) => {
-    values.forEach((value) => {
-      if (value instanceof Error) throw value;
-    });
+  .then(() => {
+    // the test and validateExamples checks must run sequentially
+    runCheck(e, p, validateExamples)
   })
+  .catch((err) => { return err });
 }
 
 // runCheck is a Check Run that is run as part of a Checks Suite
