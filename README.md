@@ -103,7 +103,7 @@ Learn more about about CNAB and Duffle, check out our [docs](docs/README.md).
     * To build and install bundles, you need access to a Docker engine - it can be Docker for Mac, Docker for Windows, Docker on Linux, or a remote Docker engine. Duffle uses the Docker engine to build the invocation images, as well as for running actions inside invocation images.
     * Duffle has a driver architecture for different ways of executing actions inside invocation images, and more drivers will be available in the future.
     * Learn more about what a bundle is and its components [here](https://github.com/cnabio/cnab-spec/blob/master/100-CNAB.md).
-    * Get a feel for what CNAB bundles written for duffle look like by referencing the [examples directory](./examples).
+    * Get a feel for what CNAB bundles written for Duffle look like by referencing the [examples directory](./examples).
 
 ## Developing Duffle
 
