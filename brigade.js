@@ -110,11 +110,11 @@ function testViaDocker() {
   };
   // Run Go unit tests
   job.tasks = [
-    "apk add --update --no-cache make git",
-    "dockerd-entrypoint.sh &",
+    "apk add --update --no-cache make git > /dev/null",
+    "dockerd-entrypoint.sh > /dev/null 2>&1 &",
     "sleep 20",
     "cd /src",
-    "make build test"
+    "make build-all-bins test"
   ];
   return job;
 }
@@ -125,8 +125,8 @@ function buildAndPublishImage(project, version) {
   var job = new Job("build-and-publish-image", builderImg);
   job.privileged = true;
   job.tasks = [
-    "apk add --update --no-cache make git",
-    "dockerd-entrypoint.sh &",
+    "apk add --update --no-cache make git > /dev/null",
+    "dockerd-entrypoint.sh > /dev/null 2>&1 &",
     "sleep 20",
     "cd /src",
     `docker login ${dockerRegistry} -u ${project.secrets.dockerhubUsername} -p ${project.secrets.dockerhubPassword}`,
