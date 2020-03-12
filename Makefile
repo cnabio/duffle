@@ -22,7 +22,7 @@ BASE_PACKAGE_NAME := github.com/cnabio/duffle
 
 ifneq ($(SKIP_DOCKER),true)
 	PROJECT_ROOT := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-	DEV_IMAGE := quay.io/deis/lightweight-docker-go:v0.7.0
+	DEV_IMAGE := golang:1.13
 	DOCKER_CMD := docker run \
 		-it \
 		--rm \
