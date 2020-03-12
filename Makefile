@@ -23,12 +23,18 @@ BASE_PACKAGE_NAME := github.com/cnabio/duffle
 ifneq ($(SKIP_DOCKER),true)
 	PROJECT_ROOT := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 	DEV_IMAGE := golang:1.13
-	DOCKER_CMD := docker run \
-		-it \
+	DOCKER_CMD_PREFIX := docker run \
 		--rm \
 		-e SKIP_DOCKER=true \
 		-v $(PROJECT_ROOT):/go/src/$(BASE_PACKAGE_NAME) \
-		-w /go/src/$(BASE_PACKAGE_NAME) $(DEV_IMAGE)
+		-w /go/src/$(BASE_PACKAGE_NAME)
+
+DOCKER_INTERACTIVE ?= true
+ifeq ($(DOCKER_INTERACTIVE),true)
+	DOCKER_CMD_PREFIX := $(DOCKER_CMD_PREFIX) -it
+endif
+
+DOCKER_CMD := $(DOCKER_CMD_PREFIX) $(DEV_IMAGE)
 endif
 
 ################################################################################

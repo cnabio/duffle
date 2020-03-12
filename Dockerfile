@@ -6,7 +6,7 @@ COPY cmd/ cmd/
 COPY pkg/ pkg/
 COPY go.mod .
 COPY go.sum .
-RUN go build -ldflags "$LDFLAGS" -o bin/duffle ./cmd/...
+RUN GO111MODULE=on go build -ldflags "$LDFLAGS" -o bin/duffle ./cmd/...
 
 FROM alpine:3.8
 RUN apk add --no-cache bash make jq ca-certificates && update-ca-certificates

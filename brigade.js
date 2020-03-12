@@ -106,14 +106,15 @@ function testViaDocker() {
   // Set a few environment variables.
   job.env = {
     "GO111MODULE": "on",
+    "DOCKER_INTERACTIVE": "false",
   };
   // Run Go unit tests
   job.tasks = [
-    "apk add --update --no-cache make",
+    "apk add --update --no-cache make git",
     "dockerd-entrypoint.sh &",
     "sleep 20",
     "cd /src",
-    "make build-all-bins test"
+    "make build test"
   ];
   return job;
 }
