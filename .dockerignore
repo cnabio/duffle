@@ -2,3 +2,4 @@
 !cmd/
 !pkg/
 !vendor/
+!go.*

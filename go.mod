@@ -3,104 +3,55 @@ module github.com/cnabio/duffle
 go 1.13
 
 require (
-	cloud.google.com/go v0.53.0
-	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78
-	github.com/Azure/go-autorest v13.3.3+incompatible
+	cloud.google.com/go v0.53.0 // indirect
+	github.com/Azure/go-autorest v13.3.3+incompatible // indirect
 	github.com/Masterminds/semver v1.5.0
-	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5
-	github.com/Microsoft/hcsshim v0.8.7
-	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5
-	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412
-	github.com/beorn7/perks v1.0.1
+	github.com/Microsoft/hcsshim v0.8.7 // indirect
+	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/cnabio/cnab-go v0.8.2-beta1
-	github.com/containerd/cgroups v0.0.0-20200204152634-780d21166089
-	github.com/containerd/containerd v1.3.0
-	github.com/containerd/continuity v0.0.0-20200107194136-26c1120b8d41
-	github.com/containerd/cri v1.11.1
-	github.com/containerd/fifo v0.0.0-20191213151349-ff969a566b00
-	github.com/containerd/typeurl v0.0.0-20200205145503-b45ef1f1f737
-	github.com/davecgh/go-spew v1.1.1
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/containerd/cgroups v0.0.0-20200204152634-780d21166089 // indirect
+	github.com/containerd/continuity v0.0.0-20200107194136-26c1120b8d41 // indirect
+	github.com/containerd/cri v1.11.1 // indirect
+	github.com/containerd/fifo v0.0.0-20191213151349-ff969a566b00 // indirect
+	github.com/containerd/typeurl v0.0.0-20200205145503-b45ef1f1f737 // indirect
 	github.com/docker/cli v0.0.0-20191017083524-a8ff7f821017
-	github.com/docker/compose-on-kubernetes v0.4.17
+	github.com/docker/compose-on-kubernetes v0.4.17 // indirect
 	github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible
 	github.com/docker/docker v1.4.2-0.20181229214054-f76d6a078d88
-	github.com/docker/docker-credential-helpers v0.6.3
 	github.com/docker/go v1.5.1-1
 	github.com/docker/go-connections v0.4.0
-	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c
-	github.com/docker/go-metrics v0.0.0-20181218153428-b84716841b82
-	github.com/docker/go-units v0.4.0
-	github.com/fatih/color v1.9.0
+	github.com/fatih/color v1.9.0 // indirect
 	github.com/ghodss/yaml v1.0.0
-	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
-	github.com/gogo/googleapis v1.3.2
-	github.com/gogo/protobuf v1.3.1
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
-	github.com/golang/protobuf v1.3.3
-	github.com/google/btree v1.0.0
-	github.com/google/go-containerregistry v0.0.0-20191015185424-71da34e4d9b3
-	github.com/google/gofuzz v1.1.0
-	github.com/googleapis/gnostic v0.4.0
-	github.com/gophercloud/gophercloud v0.8.0
-	github.com/gorilla/mux v1.7.4
+	github.com/gogo/googleapis v1.3.2 // indirect
+	github.com/google/gofuzz v1.1.0 // indirect
+	github.com/googleapis/gnostic v0.4.0 // indirect
+	github.com/gophercloud/gophercloud v0.8.0 // indirect
+	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/gosuri/uitable v0.0.4
-	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
-	github.com/hashicorp/go-version v1.2.0
-	github.com/imdario/mergo v0.3.8
-	github.com/inconshreveable/mousetrap v1.0.0
-	github.com/json-iterator/go v1.1.9
-	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
-	github.com/konsorten/go-windows-terminal-sequences v1.0.2
-	github.com/mattn/go-colorable v0.1.4
-	github.com/mattn/go-isatty v0.0.12
-	github.com/mattn/go-runewidth v0.0.8
-	github.com/matttproud/golang_protobuf_extensions v1.0.1
-	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
-	github.com/miekg/pkcs11 v1.0.3
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
-	github.com/modern-go/reflect2 v1.0.1
+	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
+	github.com/hashicorp/go-version v1.2.0 // indirect
+	github.com/imdario/mergo v0.3.8 // indirect
+	github.com/json-iterator/go v1.1.9 // indirect
+	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/mattn/go-runewidth v0.0.8 // indirect
 	github.com/oklog/ulid v1.3.1
 	github.com/opencontainers/go-digest v1.0.0-rc1
-	github.com/opencontainers/image-spec v1.0.1
-	github.com/opencontainers/runc v0.1.1
-	github.com/opencontainers/runtime-spec v1.0.1
-	github.com/petar/GoLLRB v0.0.0-20190514000832-33fb24c13b99
+	github.com/petar/GoLLRB v0.0.0-20190514000832-33fb24c13b99 // indirect
 	github.com/pivotal/image-relocation v0.0.0-20191111101224-e94aff6df06c
 	github.com/pkg/errors v0.9.1
-	github.com/pmezard/go-difflib v1.0.0
-	github.com/prometheus/client_golang v1.1.0
-	github.com/prometheus/client_model v0.2.0
-	github.com/prometheus/common v0.9.1
-	github.com/prometheus/procfs v0.0.8
-	github.com/qri-io/jsonpointer v0.1.0
-	github.com/qri-io/jsonschema v0.1.1
+	github.com/prometheus/common v0.9.1 // indirect
+	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
-	github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2
 	github.com/technosophos/moniker v0.0.0-20180509230615-a5dbd03a2245
-	github.com/theupdateframework/notary v0.6.1
-	go.opencensus.io v0.22.3
-	golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678
+	golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678 // indirect
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
-	golang.org/x/sys v0.0.0-20200212091648-12a6c2dcc1e4
-	golang.org/x/text v0.3.2
-	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	google.golang.org/appengine v1.6.5
-	google.golang.org/genproto v0.0.0-20200212174721-66ed5ce911ce
-	google.golang.org/grpc v1.27.1
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
-	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.2.8
-	k8s.io/api v0.0.0-20191016110408-35e52d86657a
 	k8s.io/apimachinery v0.0.0-20191004115801-a2eda9f80ab8
-	k8s.io/client-go v0.0.0-20191016111102-bec269661e48
-	vbom.ml/util v0.0.0-20180919145318-efcd4e0f9787
 )
 
 replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309

@@ -16,10 +16,14 @@ const releaseTagRegex = /^refs\/tags\/([0-9]+(?:\.[0-9]+)*(?:\-.+)?)$/;
 // **********************************************
 
 events.on("exec", (e, p) => {
-  return Group.runEach([
+  return Group.runAll([
     test(),
-    validateExamples()
-  ]);
+    testViaDocker()
+  ])
+  .then(() => {
+    validateExamples().run();
+  })
+  .catch((err) => { return err });
 })
 
 events.on("push", (e, p) => {
@@ -37,6 +41,7 @@ events.on("push", (e, p) => {
     // This runs tests then builds and publishes "edge" images
     return Group.runEach([
       test(),
+      testViaDocker(),
       buildAndPublishImage(p, "")
     ]);
   }
@@ -76,19 +81,42 @@ function test() {
   return job;
 }
 
+// Standard Docker-In-Docker setup tasks that jobs below will use
+dindSetupTasks = [
+  "apk add --update --no-cache make git > /dev/null",
+  "dockerd-entrypoint.sh > /dev/null 2>&1 &",
+  // wait for docker daemon to set up
+  "sleep 20"
+];
+
+function testViaDocker() {
+  // Create a new job to run Go tests via Docker
+  // to ensure Docker-based builds are functional
+  var job = new Job("tests-via-docker", "docker:stable-dind");
+  // Set privileged true to enable Docker-in-Docker
+  job.privileged = true;
+  // Set a few environment variables.
+  job.env = {
+    "DOCKER_INTERACTIVE": "false",
+  };
+  job.tasks = dindSetupTasks.concat([
+    "cd /src",
+    "make build-all-bins test"
+  ]);
+  return job;
+}
+
 function validateExamples() {
   var job = new Job("validate-examples", builderImg);
   job.privileged = true;
   job.storage = sharedStorage;
-  job.tasks = [
-    "apk add --update --no-cache curl git make npm",
-    "dockerd-entrypoint.sh &",
-    "sleep 20",
+  job.tasks = dindSetupTasks.concat([
+    "apk add --update --no-cache curl npm > /dev/null",
     "cd /src",
     `install ${sharedStorage.path}/duffle-linux-amd64 /usr/local/bin/duffle`,
     "duffle init",
     "make validate"
-  ];
+  ]);
   return job;
 }
 
@@ -97,15 +125,12 @@ function buildAndPublishImage(project, version) {
   let dockerOrg = project.secrets.dockerhubOrg || "deislabs";
   var job = new Job("build-and-publish-image", builderImg);
   job.privileged = true;
-  job.tasks = [
-    "apk add --update --no-cache make git",
-    "dockerd-entrypoint.sh &",
-    "sleep 20",
+  job.tasks = dindSetupTasks.concat([
     "cd /src",
     `docker login ${dockerRegistry} -u ${project.secrets.dockerhubUsername} -p ${project.secrets.dockerhubPassword}`,
     `DOCKER_REGISTRY=${dockerRegistry} DOCKER_ORG=${dockerOrg} VERSION=${version} make build-image push-image`,
     `docker logout ${dockerRegistry}`
-  ];
+  ]);
   return job;
 }
 
@@ -159,8 +184,10 @@ function checkRequested(e, p) {
   switch (name) {
     case "tests":
       return runCheck(e, p, test);
-    case "validateExamples":
+    case "validate-examples":
       return runCheck(e, p, validateExamples);
+    case "tests-via-docker":
+      return runCheck(e, p, testViaDocker);
     default:
       throw new Error(`No check found with name: ${name}`);
   }
@@ -172,16 +199,16 @@ function runSuite(e, p) {
   return Promise.all([
     // the test and validateExamples checks must run sequentially
     runCheck(e, p, test)
-    .then(() => {
-      runCheck(e, p, validateExamples)
-    })
-    .catch((err) => { return err })
+      .then(() => {
+        runCheck(e, p, validateExamples)
+      }).catch((err) => { return err }),
+    runCheck(e, p, testViaDocker).catch((err) => { return err }),
   ])
   .then((values) => {
     values.forEach((value) => {
       if (value instanceof Error) throw value;
     });
-  })
+  });
 }
 
 // runCheck is a Check Run that is run as part of a Checks Suite
