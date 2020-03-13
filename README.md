@@ -1,5 +1,5 @@
 # Duffle: The CNAB Installer
-![Build Status](http://badges.technosophos.me/v1/github/build/deislabs/duffle/badge.svg?branch=master)
+![Build Status](https://badges.deislabs.io/v1/github/check/46880/cnabio/duffle/badge.svg?branch=master)
 
 
 Duffle is the reference implementation of the [CNAB specification][cnab]. It
@@ -29,9 +29,6 @@ Learn more about about CNAB and Duffle, check out our [docs](docs/README.md).
     /home/janedoe/.duffle/credentials
     ==> The following new files will be created:
     /home/janedoe/.duffle/repositories.json
-    ==> Generating a new secret keyring at /home/janedoe/.duffle/secret.ring
-    ==> Generating a new signing key with ID janedoe <janedoe@computer>
-    ==> Generating a new public keyring at /home/janedoe/.duffle/public.ring
     ```
 
 3. Build and install your first bundle (you can find the `examples` directory in this repository):
@@ -72,7 +69,7 @@ Learn more about about CNAB and Duffle, check out our [docs](docs/README.md).
      ---> Running in d2294cc8b7fd
      ---> 69abe3476d43
     Successfully built 69abe3476d43
-    Successfully tagged deislabs/helloworld-cnab:87d786be507769a4913c90d85134c85727c85f41
+    Successfully tagged cnab/helloworld-cnab:87d786be507769a4913c90d85134c85727c85f41
     ==> Successfully built bundle helloworld:0.1.1
     ```
 
@@ -105,8 +102,8 @@ Learn more about about CNAB and Duffle, check out our [docs](docs/README.md).
     *Notes:*
     * To build and install bundles, you need access to a Docker engine - it can be Docker for Mac, Docker for Windows, Docker on Linux, or a remote Docker engine. Duffle uses the Docker engine to build the invocation images, as well as for running actions inside invocation images.
     * Duffle has a driver architecture for different ways of executing actions inside invocation images, and more drivers will be available in the future.
-    * Learn more about what a bundle is and its components [here](https://github.com/deislabs/cnab-spec/blob/master/100-CNAB.md).
-    * Get a feel for what CNAB bundles look like by referencing the [bundles repo](https://github.com/deislabs/bundles) on github.
+    * Learn more about what a bundle is and its components [here](https://github.com/cnabio/cnab-spec/blob/master/100-CNAB.md).
+    * Get a feel for what CNAB bundles written for Duffle look like by referencing the [examples directory](./examples).
 
 ## Developing Duffle
 

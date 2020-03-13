@@ -120,3 +120,51 @@ push: push-image
 push-image:
 	docker push $(IMAGE_NAME)
 	docker push $(MUTABLE_IMAGE_NAME)
+
+################################################################################
+# Example Bundles Build / Validation                                           #
+################################################################################
+
+# Unfortunately, the ajv cli does not yet support fetching remote references
+# So, we fetch schema that are ref'd by the bundle.schema.json and supply to ajv
+BUNDLE_SCHEMA      := bundle.schema.json
+DEFINITIONS_SCHEMA := definitions.schema.json
+REMOTE_SCHEMA      := $(BUNDLE_SCHEMA) $(DEFINITIONS_SCHEMA)
+
+# bundle-all runs the provided make target on all bundles with a 'duffle.json' file in their directory
+define bundle-all
+	@for dir in $$(ls -1 examples); do \
+		if [[ -e "examples/$$dir/duffle.json" ]]; then \
+			BUNDLE=$$dir make --no-print-directory $(1) || exit $$? ; \
+		fi ; \
+	done
+endef
+
+.PHONY: get-ajv
+get-ajv:
+	@if ! $$(which ajv > /dev/null 2>&1); then \
+		npm install -g ajv-cli; \
+	fi
+
+.PHONY: get-schema
+get-schema:
+	@for schema in $(REMOTE_SCHEMA); do \
+		if ! [[ -f /tmp/$$schema ]]; then \
+			curl -sLo /tmp/$$schema https://cnab.io/v1/$$schema ; \
+		fi ; \
+	done
+
+.PHONY: validate
+validate: get-ajv get-schema
+ifndef BUNDLE
+	$(call bundle-all,validate)
+else
+	@echo "building and validating $(BUNDLE)"
+	@cd examples/$(BUNDLE) && \
+		duffle build -o bundle.json > /dev/null && \
+		ajv test \
+			-s /tmp/$(BUNDLE_SCHEMA) \
+			-r /tmp/$(DEFINITIONS_SCHEMA) \
+			-d bundle.json --valid
+endif
+

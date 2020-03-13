@@ -1,22 +1,25 @@
 const { events, Job, Group } = require("brigadier");
+const { Check } = require("@brigadecore/brigade-utils");
 
 const projectOrg = "cnabio";
 const projectName = "duffle";
 
+const builderImg = "docker:stable-dind"
 const goImg = "golang:1.13";
 const gopath = "/go"
 const localPath = gopath + `/src/github.com/${projectOrg}/${projectName}`;
 
 const releaseTagRegex = /^refs\/tags\/([0-9]+(?:\.[0-9]+)*(?:\-.+)?)$/;
 
-const noopJob = { run: () => { return Promise.resolve() } }
-
 // **********************************************
 // Event Handlers
 // **********************************************
 
 events.on("exec", (e, p) => {
-  return test().run();
+  return Group.runEach([
+    test(),
+    validateExamples()
+  ]);
 })
 
 events.on("push", (e, p) => {
@@ -42,16 +45,22 @@ events.on("push", (e, p) => {
 events.on("check_suite:requested", runSuite);
 events.on("check_suite:rerequested", runSuite);
 events.on("check_run:rerequested", checkRequested);
-events.on("issue_comment:created", handleIssueComment);
-events.on("issue_comment:edited", handleIssueComment);
+events.on("issue_comment:created", (e, p) => Check.handleIssueComment(e, p, runSuite));
+events.on("issue_comment:edited", (e, p) => Check.handleIssueComment(e, p, runSuite));
 
 // **********************************************
 // Actions
 // **********************************************
 
+sharedStorage = {
+  enabled: true,
+  path: "/duffle-binaries"
+}
+
 function test() {
   // Create a new job to run Go tests
   var job = new Job("tests", goImg);
+  job.storage = sharedStorage;
   job.mountPath = localPath;
   // Set a few environment variables.
   job.env = {
@@ -61,7 +70,24 @@ function test() {
   // Run Go unit tests
   job.tasks = [
     `cd ${localPath}`,
-    "make build-all-bins test"
+    "make build-all-bins test",
+    `cp bin/* ${sharedStorage.path}`
+  ];
+  return job;
+}
+
+function validateExamples() {
+  var job = new Job("validate-examples", builderImg);
+  job.privileged = true;
+  job.storage = sharedStorage;
+  job.tasks = [
+    "apk add --update --no-cache curl git make npm",
+    "dockerd-entrypoint.sh &",
+    "sleep 20",
+    "cd /src",
+    `install ${sharedStorage.path}/duffle-linux-amd64 /usr/local/bin/duffle`,
+    "duffle init",
+    "make validate"
   ];
   return job;
 }
@@ -69,7 +95,7 @@ function test() {
 function buildAndPublishImage(project, version) {
   let dockerRegistry = project.secrets.dockerhubRegistry || "docker.io";
   let dockerOrg = project.secrets.dockerhubOrg || "deislabs";
-  var job = new Job("build-and-publish-image", "docker:stable-dind");
+  var job = new Job("build-and-publish-image", builderImg);
   job.privileged = true;
   job.tasks = [
     "apk add --update --no-cache make git",
@@ -118,23 +144,6 @@ function githubRelease(p, tag) {
   return job;
 }
 
-// handleIssueComment handles an issue_comment event, parsing the comment text
-// and determining whether or not to trigger an action
-function handleIssueComment(e, p) {
-  payload = JSON.parse(e.payload);
-
-  // Extract the comment body and trim whitespace
-  comment = payload.body.comment.body.trim();
-
-  // Here we determine if a comment should provoke an action
-  switch (comment) {
-    case "/brig run":
-      return runSuite(e, p);
-    default:
-      console.log(`No applicable action found for comment: ${comment}`);
-  }
-}
-
 // checkRequested is the default function invoked on a check_run:* event
 //
 // It determines which check is being requested (from the payload body)
@@ -149,7 +158,9 @@ function checkRequested(e, p) {
   // Determine which check to run
   switch (name) {
     case "tests":
-      return runTests(e, p);
+      return runCheck(e, p, test);
+    case "validateExamples":
+      return runCheck(e, p, validateExamples);
     default:
       throw new Error(`No check found with name: ${name}`);
   }
@@ -158,89 +169,24 @@ function checkRequested(e, p) {
 // Here we can add additional Check Runs, which will run in parallel and
 // report their results independently to GitHub
 function runSuite(e, p) {
-  // For now, this is the one-stop shop running build, lint and test targets
-  return runTests(e, p);
+  return Promise.all([
+    // the test and validateExamples checks must run sequentially
+    runCheck(e, p, test)
+    .then(() => {
+      runCheck(e, p, validateExamples)
+    })
+    .catch((err) => { return err })
+  ])
+  .then((values) => {
+    values.forEach((value) => {
+      if (value instanceof Error) throw value;
+    });
+  })
 }
 
-// runTests is a Check Run that is run as part of a Checks Suite
-function runTests(e, p) {
-  console.log("Check requested");
-
-  // Create Notification object (which is just a Job to update GH using the Checks API)
-  var note = new Notification(`tests`, e, p);
-  note.conclusion = "";
-  note.title = "Run Tests";
-  note.summary = "Running the test targets for " + e.revision.commit;
-  note.text = "This test will ensure build, linting and tests all pass.";
-
-  // Send notification, then run, then send pass/fail notification
-  return notificationWrap(test(), note);
-}
-
-// **********************************************
-// Classes/Helpers
-// **********************************************
-
-// A GitHub Check Suite notification
-class Notification {
-  constructor(name, e, p) {
-    this.proj = p;
-    this.payload = e.payload;
-    this.name = name;
-    this.externalID = e.buildID;
-    this.detailsURL = `https://brigadecore.github.io/kashti/builds/${e.buildID}`;
-    this.title = "running check";
-    this.text = "";
-    this.summary = "";
-
-    // count allows us to send the notification multiple times, with a distinct pod name
-    // each time.
-    this.count = 0;
-
-    // One of: "success", "failure", "neutral", "cancelled", or "timed_out".
-    this.conclusion = "neutral";
-  }
-
-  // Send a new notification, and return a Promise<result>.
-  run() {
-    this.count++;
-    var job = new Job(`${this.name}-notification-${this.count}`, "brigadecore/brigade-github-check-run:v0.1.0");
-    job.imageForcePull = true;
-    job.env = {
-      "CHECK_CONCLUSION": this.conclusion,
-      "CHECK_NAME": this.name,
-      "CHECK_TITLE": this.title,
-      "CHECK_PAYLOAD": this.payload,
-      "CHECK_SUMMARY": this.summary,
-      "CHECK_TEXT": this.text,
-      "CHECK_DETAILS_URL": this.detailsURL,
-      "CHECK_EXTERNAL_ID": this.externalID
-    };
-    return job.run();
-  }
-}
-
-// Helper to wrap a job execution between two notifications.
-async function notificationWrap(job, note) {
-  await note.run();
-  try {
-    let res = await job.run();
-    const logs = await job.logs();
-    note.conclusion = "success";
-    note.summary = `Task "${job.name}" passed`;
-    note.text = "```" + res.toString() + "```\nTest Complete";
-    return await note.run();
-  } catch (e) {
-    const logs = await job.logs();
-    note.conclusion = "failure";
-    note.summary = `Task "${job.name}" failed for ${e.buildID}`;
-    note.text = "```" + logs + "```\nFailed with error: " + e.toString();
-    try {
-      await note.run();
-    } catch (e2) {
-      console.error("failed to send notification: " + e2.toString());
-      console.error("original error: " + e.toString());
-    }
-    throw e;
-  }
+// runCheck is a Check Run that is run as part of a Checks Suite
+function runCheck(e, p, jobFunc) {
+  var check = new Check(e, p, jobFunc(),
+    `https://brigadecore.github.io/kashti/builds/${e.buildID}`);
+  return check.run();
 }
