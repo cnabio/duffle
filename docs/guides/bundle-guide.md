@@ -124,5 +124,5 @@ The output of `duffle install` comes from the run script. `hello world` is print
 
 ## Notes and Next steps
 
-- There are alternatives to defining a custom `run` tool. See examples of more complex and different bundles [here](../../examples).
+- There are alternatives to defining a custom `run` tool. See examples of more complex and different bundles [here](/examples).
 - Read more about the CNAB spec in the [docs](https://github.com/cnabio/cnab-spec/blob/master/100-CNAB.md)
