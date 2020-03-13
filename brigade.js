@@ -81,21 +81,13 @@ function test() {
   return job;
 }
 
-function validateExamples() {
-  var job = new Job("validate-examples", builderImg);
-  job.privileged = true;
-  job.storage = sharedStorage;
-  job.tasks = [
-    "apk add --update --no-cache curl git make npm",
-    "dockerd-entrypoint.sh &",
-    "sleep 20",
-    "cd /src",
-    `install ${sharedStorage.path}/duffle-linux-amd64 /usr/local/bin/duffle`,
-    "duffle init",
-    "make validate"
-  ];
-  return job;
-}
+// Standard Docker-In-Docker setup tasks that jobs below will use
+dindSetupTasks = [
+  "apk add --update --no-cache make git > /dev/null",
+  "dockerd-entrypoint.sh > /dev/null 2>&1 &",
+  // wait for docker daemon to set up
+  "sleep 20"
+];
 
 function testViaDocker() {
   // Create a new job to run Go tests via Docker
@@ -105,17 +97,26 @@ function testViaDocker() {
   job.privileged = true;
   // Set a few environment variables.
   job.env = {
-    "GO111MODULE": "on",
     "DOCKER_INTERACTIVE": "false",
   };
-  // Run Go unit tests
-  job.tasks = [
-    "apk add --update --no-cache make git > /dev/null",
-    "dockerd-entrypoint.sh > /dev/null 2>&1 &",
-    "sleep 20",
+  job.tasks = dindSetupTasks.concat([
     "cd /src",
     "make build-all-bins test"
-  ];
+  ]);
+  return job;
+}
+
+function validateExamples() {
+  var job = new Job("validate-examples", builderImg);
+  job.privileged = true;
+  job.storage = sharedStorage;
+  job.tasks = dindSetupTasks.concat([
+    "apk add --update --no-cache curl npm > /dev/null",
+    "cd /src",
+    `install ${sharedStorage.path}/duffle-linux-amd64 /usr/local/bin/duffle`,
+    "duffle init",
+    "make validate"
+  ]);
   return job;
 }
 
@@ -124,15 +125,12 @@ function buildAndPublishImage(project, version) {
   let dockerOrg = project.secrets.dockerhubOrg || "deislabs";
   var job = new Job("build-and-publish-image", builderImg);
   job.privileged = true;
-  job.tasks = [
-    "apk add --update --no-cache make git > /dev/null",
-    "dockerd-entrypoint.sh > /dev/null 2>&1 &",
-    "sleep 20",
+  job.tasks = dindSetupTasks.concat([
     "cd /src",
     `docker login ${dockerRegistry} -u ${project.secrets.dockerhubUsername} -p ${project.secrets.dockerhubPassword}`,
     `DOCKER_REGISTRY=${dockerRegistry} DOCKER_ORG=${dockerOrg} VERSION=${version} make build-image push-image`,
     `docker logout ${dockerRegistry}`
-  ];
+  ]);
   return job;
 }
 
