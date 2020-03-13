@@ -196,15 +196,19 @@ function checkRequested(e, p) {
 // Here we can add additional Check Runs, which will run in parallel and
 // report their results independently to GitHub
 function runSuite(e, p) {
-  return Group.runAll([
-    runCheck(e, p, test),
-    runCheck(e, p, testViaDocker)
-  ])
-  .then(() => {
+  return Promise.all([
     // the test and validateExamples checks must run sequentially
-    runCheck(e, p, validateExamples)
-  })
-  .catch((err) => { return err });
+    runCheck(e, p, test)
+      .then(() => {
+        runCheck(e, p, validateExamples)
+      }).catch((err) => { return err }),
+    runCheck(e, p, testViaDocker).catch((err) => { return err }),
+  ])
+  .then((values) => {
+    values.forEach((value) => {
+      if (value instanceof Error) throw value;
+    });
+  });
 }
 
 // runCheck is a Check Run that is run as part of a Checks Suite
