@@ -8,10 +8,10 @@ RUN apk add --update git curl openssh bash-completion && \
     unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /bin && \
     rm -f terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
     apk update && \
-    apk add bash py-pip && \
-    apk add --virtual=build gcc libffi-dev musl-dev openssl-dev python-dev make && \
-    pip install --upgrade pip && \
-    pip install azure-cli
+    apk add bash py3-pip && \
+    apk add --virtual=build gcc libffi-dev musl-dev openssl-dev python3-dev make && \
+    pip3 install --upgrade pip && \
+    pip3 install azure-cli
 
 COPY Dockerfile /cnab/Dockerfile
 COPY app /cnab/app
