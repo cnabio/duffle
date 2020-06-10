@@ -3,8 +3,17 @@
 
 
 Duffle is the reference implementation of the [CNAB specification][cnab]. It
-provides a comprehensive mapping of _all_ features of the specification, serving
-both as a tool to install and manage bundles, and author bundles at a low level.
+provides a comprehensive mapping of all features of the CNAB Core specification
+as of version [1.0.1](https://github.com/cnabio/cnab-spec/tree/cnab-core-1.0.1).
+
+Duffle's main utility, now that much of its internal code has migrated to the
+official [cnab-go] Golang library, is to demonstrate working proof-of-concepts
+of additions or modifications to applicable CNAB specifications.  Of course,
+Duffle may still be used to install, manage and author bundles at a low level.
+
+Future conformance updates per the Core and other CNAB specifications are
+intended to be added in the aforementioned [cnab-go] library, rather than
+here.  Duffle may be kept to date via updating this dependency.
 
 The community has created implementations of the CNAB spec with
 [opinionated takes on authoring bundles][cnab-tools]. Some even use Duffle's
@@ -112,3 +121,4 @@ See the [Developer's Guide](docs/developing.md).
 [cnab]: https://cnab.io
 [cnab-tools]: https://cnab.io/community-projects/#tools
 [cnab-sdk]: https://cnab.io/community-projects/#sdk
+[cnab-go]: https://github.com/cnabio/cnab-go
