@@ -13,7 +13,9 @@ Duffle may still be used to install, manage and author bundles at a low level.
 
 Future conformance updates per the Core and other CNAB specifications are
 intended to be added in the aforementioned [cnab-go] library, rather than
-here.  Duffle may be kept to date via updating this dependency.
+in Duffle, which will not be updated going forward. Duffle will remain a reference
+implementation of the CNAB spec as of v1.0.1. If you are interested in using an 
+up-to-date CNAB tool, check out https://cnab.io/community-projects/#tools.
 
 The community has created implementations of the CNAB spec with
 [opinionated takes on authoring bundles][cnab-tools]. Some even use Duffle's
