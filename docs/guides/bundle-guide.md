@@ -2,7 +2,7 @@
 
 A `bundle` is a CNAB package. In its slimmest form, a bundle contains metadata (in a `bundle.cnab` file) which points to a image (we call that the "invocation image") that contains instructions (in a `run` file) on how to install and configure a multi-component cloud native application.
 
-In this guide, you will create a CNAB bundle which does `echo` commands for various actions similar to the [helloworld](https://github.com/cnabio/duffle/blob/master/examples/helloworld/cnab/app/run) example.
+In this guide, you will create a CNAB bundle which does `echo` commands for various actions similar to the [helloworld](https://github.com/cnabio/duffle/blob/main/examples/helloworld/cnab/app/run) example.
 
 ## Create the Directory Structure
 
@@ -125,4 +125,4 @@ The output of `duffle install` comes from the run script. `hello world` is print
 ## Notes and Next steps
 
 - There are alternatives to defining a custom `run` tool. See examples of more complex and different bundles [here](/examples).
-- Read more about the CNAB spec in the [docs](https://github.com/cnabio/cnab-spec/blob/master/100-CNAB.md)
+- Read more about the CNAB spec in the [docs](https://github.com/cnabio/cnab-spec/blob/main/100-CNAB.md)

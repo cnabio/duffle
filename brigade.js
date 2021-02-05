@@ -37,7 +37,7 @@ events.on("push", (e, p) => {
         githubRelease(p, version).run();
       });
   }
-  if (e.revision.ref == "refs/heads/master") {
+  if (e.revision.ref == "refs/heads/main") {
     // This runs tests then builds and publishes "edge" images
     return Group.runEach([
       test(),
