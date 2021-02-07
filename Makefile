@@ -149,7 +149,7 @@ endef
 .PHONY: get-ajv
 get-ajv:
 	@if ! $$(which ajv > /dev/null 2>&1); then \
-		npm install -g ajv-cli; \
+		npm install -g ajv-cli@3.3.0; \
 	fi
 
 .PHONY: get-schema
