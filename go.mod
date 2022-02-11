@@ -4,19 +4,15 @@ go 1.13
 
 require (
 	cloud.google.com/go v0.53.0 // indirect
-	github.com/Azure/go-autorest v13.3.3+incompatible // indirect
 	github.com/Masterminds/semver v1.5.0
 	github.com/Microsoft/hcsshim v0.8.7 // indirect
-	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/cnabio/cnab-go v0.8.2-beta1
 	github.com/containerd/cgroups v0.0.0-20200204152634-780d21166089 // indirect
 	github.com/containerd/continuity v0.0.0-20200107194136-26c1120b8d41 // indirect
-	github.com/containerd/cri v1.11.1 // indirect
 	github.com/containerd/fifo v0.0.0-20191213151349-ff969a566b00 // indirect
 	github.com/containerd/typeurl v0.0.0-20200205145503-b45ef1f1f737 // indirect
 	github.com/docker/cli v0.0.0-20191017083524-a8ff7f821017
-	github.com/docker/compose-on-kubernetes v0.4.17 // indirect
-	github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible
+	github.com/docker/distribution v2.8.0+incompatible
 	github.com/docker/docker v1.4.2-0.20181229214054-f76d6a078d88
 	github.com/docker/go v1.5.1-1
 	github.com/docker/go-connections v0.4.0
@@ -28,7 +24,6 @@ require (
 	github.com/gophercloud/gophercloud v0.8.0 // indirect
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/gosuri/uitable v0.0.4
-	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/json-iterator/go v1.1.9 // indirect
@@ -36,7 +31,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.8 // indirect
 	github.com/oklog/ulid v1.3.1
 	github.com/opencontainers/go-digest v1.0.0-rc1
-	github.com/petar/GoLLRB v0.0.0-20190514000832-33fb24c13b99 // indirect
 	github.com/pivotal/image-relocation v0.0.0-20191111101224-e94aff6df06c
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/common v0.9.1 // indirect
