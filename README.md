@@ -1,6 +1,6 @@
 # Duffle: The CNAB Installer
-![Build Status](https://badges.deislabs.io/v1/github/check/46880/cnabio/duffle/badge.svg?branch=main)
 
+🚨 **The Duffle project has been archived and is no longer maintained. See https://cnab.io/community-projects/ for current implementations of the CNAB specification.**
 
 Duffle is the reference implementation of the [CNAB specification][cnab]. It
 provides a comprehensive mapping of all features of the CNAB Core specification
